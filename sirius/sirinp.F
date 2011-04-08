@@ -2846,7 +2846,7 @@ C
      *            '.FROZEN','.DIRFOC','.NODIIS','.MAX DI','.C2DIIS',
      *            '.MAX ER','.NO BAC','.COREHO','.CORERE','.HF OCC',
      *            '.ELECTR','.AUTOCC','.FC MVO','.SINGLY','.SHIFT ',
-     *            '.MEP   '/
+     *            'xxxxxxx'/
 C
 C     ***** PROCESS INPUT FOR SCFINP *****
 C
@@ -3068,8 +3068,8 @@ C *** Option 25 >SHIFT < Shift level
  125  READ(LUCMD,*) DEFLVL
       DEFLVL = -ABS(DEFLVL)
       GO TO 100
-C     Option 26 >MEP   <
- 126  MEP = .TRUE.
+C     Option 26 >xxx   <
+ 126  CONTINUE
       GO TO 100
 C
  2000 CONTINUE

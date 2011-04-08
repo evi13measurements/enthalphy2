@@ -334,16 +334,6 @@ csonia 04/10/95
         WRITE(LUPRI,'(8X,A22,F20.12)') 'Polarization energy:  ', EPOQM3
         WRITE(LUPRI,'(8X,A22,F20.12)') 'van der Waals energy: ', ECLVDW
         WRITE(LUPRI,'(8X,A22,F20.12)') 'Total QM/MM energy:   ', ESOLT
-      ELSE IF (QMMM) THEN
-        WRITE(LUPRI,'(/5X,A/)') 'QM/MM calculation converged :'
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Charge contribution:    ',ECHART
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Dipole contribution:    ',EDIPT 
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Quadrupole contribution:',EQUADT
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Octuple contribution:   ',EOCTUP
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Electronic Pol. energy: ',EDELD 
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Nuclear pol. energy:    ',EDNUC
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Multipole Pol. energy:  ',EDMULT
-        WRITE(LUPRI,'(5X,A24,F20.12)') 'Total QM/MM energy:     ',ESOLT
       ELSE
         ESOLT = D0
       END IF
@@ -385,7 +375,6 @@ C        ... DIIS-DFT or QC-DFT optimization
      &          POTNUC,(EMCSCF-POTNUC-ESOLT)
          END IF
          IF (DOCCSD .AND. .NOT.(QM3)) LDUMP = .FALSE.
-         IF (DOCCSD .AND. .NOT.(QMMM)) LDUMP = .FALSE.
          IF (LDUMP) THEN
             LAPRPC = 'ENERGY  '
             CALL WRIPRO(EMCSCF,"SCF/DFT   ",0,
@@ -396,9 +385,6 @@ C        ... DIIS-DFT or QC-DFT optimization
          WRITE (LUPRI,5030) GRDNRM
       END IF
 
-      IF (QMMM .AND. MMPROP) THEN
-        CALL MM_PROPS(WRK(KFREE),LFREE,IPQMMM)
-      ENDIF 
 
  5000 FORMAT(/T6,'Spin multiplicity:',T31,I5,
      *       /T6,'Spatial symmetry:',T31,I5,
@@ -481,10 +467,6 @@ C        CALL GETNO(CVEC,ICSYM,OCCNO,UNO,CMO,ORDER,NATORB,NOAVER,
 C    *              MOISNO,INDXCI,WRK,KFRSAV,LFRSAV,LUPRI,IPRINT)
          CALL MEMREL('SIROUT.MOLDEN.GETNO',WRK,KFRSAV,KREL1,KFREE,LFREE)
        END IF
-
-       IF (MEP) THEN
-         CALL DOMEP(WRK(KCMO),WRK,KFREE,LFREE)
-       ENDIF
 
        KREL2 = KFREE
        CALL MEMGET('REAL', KAOSO, N2BASX,      WRK, KFREE, LFREE)

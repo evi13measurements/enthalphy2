@@ -1125,7 +1125,7 @@ C
       CHARACTER WORD*7, PROMPT*1, TABDIR(NDIR)*7, TABLE(NTABLE)*7,
      *          REWORD*12, RWORD*6, WORD1*7
       DATA TABDIR/'*END OF', '*PARALL', '*WALK  ', '*OPTIMI', '*NMDDRV',
-     &            '*MOLBAS', '*PCM   ', '*QM3   ', '*QMMM  ', '*READIN'/
+     &            '*MOLBAS', '*PCM   ', '*QM3   ', 'xxxxxxx', '*READIN'/
       DATA TABLE /'.PRINT ', '.ITERAT', '.PRIERR',
      &            '.INTEGR', '.WAVE F', '.PROPER', !  6
      &            '.INPTES', '.PARALL', '.DIRECT',
@@ -1564,7 +1564,7 @@ C
       WRITE (LUPRI,'(1X,A)') SEPARATOR
 C
 C     TABDIR : '*END OF', '*PARALL', '*WALK  ', '*OPTIMI', '*NMDDRV',
-C              '*MOLBAS', '*PCM   ', '*QM3   ', '*QMMM  ', '*READIN',
+C              '*MOLBAS', '*PCM   ', '*QM3   ', 'xxxxxxx', '*READIN',
 C              '*GEN1IN'
 C
 C     Initialize for REAINP and READIN (reading of .mol input file)
@@ -1645,9 +1645,8 @@ C     "*QM3   " input
         CALL QM3INP(WORD)
       GO TO 200
 C
-C     "*QMMM  " input
+C     "xxxxxxx" input
     9 CONTINUE
-        CALL QMMMIN(WORD)
       GO TO 200
 C
 C     "*READIN" input ( DEPRECATED !!! Use "*MOLBAS")

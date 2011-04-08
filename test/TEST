@@ -53,7 +53,7 @@ prop_exci_aosoppcc"
 SHORTNOCC="$SHORT_ENERGY $SHORTDFT $SHORTGOPT $SHORTPROP $SHORTRSP $SHORTWALK $SHORTREST $AOSOPPA"
 SHORTQM3="hfmm_1 cc2mm_spc_fop \
 dftmm_1 dftmm_2 dftmm_3 dftmm_4 dftmm_5 dftmm_6 dftmm_7 dftmm_8 dftmm_9 \
-qmmm1 qmmm2 qmmm3 qmmm4 qmmm5 qmmm6 qmmm7 qmmm8"
+"
 #
 SHORTCC="cc_rsp_alpha2 cc_rsp_beta cc_rsp_beta2 cc_rsp_betafreq \
 cc_rsp_betafreq2 cc_fop_drw2e cc_fop_prop cc_fop_prop2 cc_exgr_prop \
@@ -99,14 +99,11 @@ LONG="$LONG $LONGCC $LONG_CHOLESKY"
 PARALLEL="energy_parallel geoopt_parallel prop_parallel rsp_parallel \
 dft_parallell_properties parallel_lucita_gasci"
 #
-QMMM="qmmm1 qmmm2 qmmm3 qmmm4 qmmm5 qmmm6 qmmm7 qmmm8"
-#
 PARQM3="par_hfmm_1 par_dftmm_1 par_dftmm_3 par_dftmm_4 par_dftmm_5 \
 par_dftmm_6 par_dftmm_7 dftmm_8 dftmm_9"
 #
-DEBUG="qmmm_debug1 qmmm_debug2"
 #
-LONGPAR="$PARALLEL $QMMM $PARQM3 $DEBUG"
+LONGPAR="$PARALLEL $PARQM3"
 #
 DFT="dft_b3lyp_cart dft_b3lyp_nosym dft_b3lyp_sym dft_blyp_nosym \
 dft_blyp_sym dft_energy_sym dft_lda_cart dft_lda_nosym dft_lda_sym \
@@ -350,26 +347,11 @@ while [ -n "$1" ]; do
    fi
    testcase="$testcase $PARALLEL"; 
    shift ;;
-  "parqmmm" )
-   if [ "$paramlist" = "" ]; then
-     paramlist="-N 4"
-   fi
-   testcase="$testcase $QMMM";
-   shift ;;
   "parqm3" )
    if [ "$paramlist" = "" ]; then
      paramlist="-N 4"
    fi
    testcase="$testcase $PARQM3";
-   shift ;;
-  "debug" )
-   if [ "$paramlist" = "" ]; then
-     paramlist="-N 4"
-   fi
-   testcase="$testcase $DEBUG";
-   shift ;;
-  "qmmm" )
-   testcase="$testcase $QMMM";
    shift ;;
   "longpar" )
    if [ "$paramlist" = "" ]; then

@@ -111,19 +111,14 @@ C-----------------------------------------------
 C
       ECMCON = ZERO
          
-      IF (.NOT. NYQMMM) THEN
-        CALL CC_QM3E(ECMCON,EPOL,EEL,EELEL,EREP,AODEN,
+      CALL CC_QM3E(ECMCON,EPOL,EEL,EELEL,EREP,AODEN,
      &             WORK,LWORK)
-      ELSE IF (NYQMMM) THEN
-        CALL CC_QMMME(ECMCON,EPOL,EEL,EELEL,EREP,AODEN,
-     &             WORK,LWORK)
-      END IF
 C
 C----------------------------
 C     Calculate new E(QM/MM):
 C----------------------------
 C
-      IF (.NOT. (OLDTG) .AND. .NOT. (NYQMMM)) THEN
+      IF (.NOT. OLDTG ) THEN
         ECMCU = (ECCGRS - EELEL) + ECMCON 
         ECCGRS1 = (ECCGRS - EELEL)
       ELSE
@@ -197,7 +192,6 @@ C       First the MM/MM energy with the QM induced
 C       dipole moments:
 C-------------------------------------------------
 C
-        IF (.NOT. NYQMMM) THEN
          WRITE(LUPRI,'(//1X,72A)') ('-',J=1,72)
          WRITE(LUPRI,'(1X,A56,A16)')
      * '|<<<<<<<<<<<<<<< The MM/MM classical interaction energy ',
@@ -215,12 +209,6 @@ C
           WRITE(LUPRI,'(1X,A1,A50,A7,F12.8,A2)') '|',
      *  '  E_field = - Mu_perm* E^ext                            ',
      *  '|      ',PEDIP1,' |'
-         ELSE
-          WRITE(LUPRI,'(1X,72A)') ('-',J=1,72)
-          WRITE(LUPRI,'(1X,A1,A50,A7,F12.8,A2)') '|',
-     *  '  Epol  = - 1/2*Sum_a[ MYind_a*E^site_a ]         ',
-     *  '|      ',EMMPOL,' |'
-         END IF 
          WRITE(LUPRI,'(1X,72A)') ('-',J=1,72)
          WRITE(LUPRI,'(1X,A1,A50,A7,F12.8,A2)') '|',
      *  '  Evdw  = Sum_a[ A_ma/|R_ma|^12 - B_ma/|R_ma|^6 ] ',
@@ -337,12 +325,6 @@ C
      *              ZERO,ZERO,ZERO,1,0,0,0)
 
 C------------------------------------------------------
-C       Print information concerning the reaction field
-C------------------------------------------------------
-
-        CALL RFQMMM()
-
-C------------------------------------------------------
 
       ELSE 
 C
@@ -379,19 +361,6 @@ C**************************************************************
 C
 C     QM3: JK+AO+OC+KMI,01
 C     Purpose: Only calculation of E(QM/MM)
-C     QMMM: sneskov, 09
-C     Purpose: Updates the induced dipoles besides calculating E(QM/MM)
-C
-C     In new QMMM implementation (NYQMMM) the strategy is as follows
-C     1) Calculate F^sta=F^el+F^mul+F^nuc
-C     2) Calculate induced dipole by transforming with relay 
-C     matrix(MMMAT) or by iterative means (MMITER)
-C     3) Put induced moments to file
-C     4) Calculate Epol=-1/2sum_a\mu^ind_aF^sta_a
-C     5) Calculate Eelesta=-sum_s<N_s>
-C
-C     Also the LGFILE keyword is reset such that a new G matrix is
-C     written to file when TGT is called next time.
 C
 C**************************************************************
 C
