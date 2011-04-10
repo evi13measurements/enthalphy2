@@ -120,7 +120,7 @@ C
       CALL GETTIM(CSTR,WSTR)
       WRITE (LUPRI,'(/1X,78A1/A/1X,78A1)') ('-',I=1,78),
      &   '  RESPONSE  -  '//
-     &   'an MCSCF, MC-srDFT, DFT, and SOPPA response property program',
+     &   'an MCSCF, DFT, and SOPPA response property program',
      &   ('-',I=1,78)
 C
 C     *************************
