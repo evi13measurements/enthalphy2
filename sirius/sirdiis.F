@@ -486,8 +486,7 @@ Chj      ... if (GEOWLK) then
          EMCGEO = EMCOLD
          DEPGEO = DEPRED
       END IF
-C ahs parallel QMMM initialization (send QMMM data to nodes)
-C      IF (QMMM .AND. NODTOT .GE. 1) CALL PARQMMM_INIT()
+C
   100 CONTINUE
          ITDIIS = ITDIIS + 1
          JTDIIS = JTDIIS + 1
@@ -684,19 +683,6 @@ C
          ELSE
             EELEL = 0.0D0
          END IF
-
-         IF (QMMM) THEN
-            IF (IPQMMM .GT. 1) CALL TIMER('START ',TIMSTR,TIMEND)
-            CALL MEMGET('REAL',KFCSOL,NNBAST,WRK,KFREE,LFREE)
-            CALL DZERO(WRK(KFCSOL),NNBAST)
-            CALL QMMMFCK(DAOSAV(1,1),DAOSAV(1,2),
-     &                  WRK(KFCSOL),ESOLT,
-     &                  WRK(KFREE),LFREE,IPQMMM)
-            CALL DAXPY(NNBAST,D1,WRK(KFCSOL),1,FAOSAV(1,INDEVC,1),1)
-            CALL MEMREL('DIIS_CTL.QMMMFCK',WRK,KFRSAV,
-     &                  KFCSOL,KFREE,LFREE)
-            IF (IPQMMM .GT. 1) CALL TIMER('QMMM  ',TIMSTR,TIMEND)
-         ENDIF
 
          IF (FLAG(16)) THEN
             CALL MEMGET('REAL',KFCSOL,NNBAST,WRK,KFREE,LFREE)
@@ -1377,13 +1363,15 @@ C
       END IF
 C
 C        Transform integrals for abacus or response, 
-C        if converged and if not followed by higher level.
+C        if converged and if not followed by higher level,
+C        and if not Cholesky decomposition
 C
       IF (ICONV .NE. 0 .AND. ABS(ITRFIN) .LE. 10 .AND.
-     &    .NOT.(DOMP2 .OR. DOCI .OR. DOMC) ) THEN
+     &    .NOT.(DOMP2 .OR. DOCI .OR. DOMC) .AND.
+     &    .NOT. CHOINT) THEN
          IF (IPRI6 .GE. 0) WRITE (LUPRI,'(/A,I3,A)')
-     *      ' >>> Transforming 2-el. integrals acc. to'//
-     *      ' .FINAL TRANSFORMATION =',ITRFIN,' <<<'
+     &      ' >>> Transforming 2-el. integrals acc. to'//
+     &      ' .FINAL TRANSFORMATION =',ITRFIN,' <<<'
          JTRLVL = ITRFIN
          CALL TRACTL(JTRLVL,CMO,WRK(KFREE),LFREE)
       END IF

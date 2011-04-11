@@ -404,22 +404,6 @@ C
          END IF
       END IF
 
-      IF (QMMM) THEN
-         IF (TDHF) THEN
-C            IF (IPQMMM .GT. 1) CALL TIMER('START ',TIMSTR,TIMEND)
-            CALL QMMMQRO(VECB,VECC,
-     *                   ETRS,XINDX,WRK(KZYMB),WRK(KZYMC),
-     *                   UDV,WRK(KFREE),LFREE,
-     *                   KZYVA,KZYVB,KZYVC,ISYMA,ISYMB,ISYMC,CMO,MJWOP,
-     *                   ISPINA,ISPINB,ISPINC)
-            CALL QMMMQRO(VECC,VECB,
-     *                   ETRS,XINDX,WRK(KZYMC),WRK(KZYMB),
-     *                   UDV,WRK(KFREE),LFREE,
-     *                   KZYVA,KZYVC,KZYVB,ISYMA,ISYMC,ISYMB,CMO,MJWOP,
-     *                   ISPINA,ISPINC,ISPINB)
-C            IF (IPQMMM .GT. 1) CALL TIMER('QMMMQRO',TIMSTR,TIMEND)
-         END IF
-      END IF
 C
       IF (FLAG(16)) THEN
          CALL MEMGET('INTE',KSYRLM,(2*LSOLMX+1),WRK,KFREE,LFREE)
