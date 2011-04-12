@@ -209,6 +209,12 @@ C
           WRITE(LUPRI,'(1X,A1,A50,A7,F12.8,A2)') '|',
      *  '  E_field = - Mu_perm* E^ext                            ',
      *  '|      ',PEDIP1,' |'
+         ELSE
+          WRITE(LUPRI,'(1X,72A)') ('-',J=1,72)
+          WRITE(LUPRI,'(1X,A1,A50,A7,F12.8,A2)') '|',
+     *  '  Epol  = - 1/2*Sum_a[ MYind_a*E^site_a ]         ',
+     *  '|      ',EMMPOL,' |'
+         END IF 
          WRITE(LUPRI,'(1X,72A)') ('-',J=1,72)
          WRITE(LUPRI,'(1X,A1,A50,A7,F12.8,A2)') '|',
      *  '  Evdw  = Sum_a[ A_ma/|R_ma|^12 - B_ma/|R_ma|^6 ] ',
@@ -229,7 +235,6 @@ C
      *    '|      ',EMM_MM,' |'
           WRITE(LUPRI,'(1X,72A,//)') ('-',J=1,72)
          END IF
-        END IF
 C
 C--------------------------------------------
 C  Second the CC/MM interaction energy terms:
