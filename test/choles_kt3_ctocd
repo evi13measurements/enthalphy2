@@ -86,7 +86,7 @@ else
 fi
 
 # KT3 energy
-CRIT1=`$GREP "Final * DFT energy: * -383\.23834166" $log | wc -l`
+CRIT1=`$GREP "Final * DFT energy: * -383\.2383416" $log | wc -l`
 TEST[1]=$CRIT1
 CTRL[1]=1
 ERROR[1]="KT3 ENERGY NOT CORRECT"
