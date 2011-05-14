@@ -137,7 +137,7 @@ C
          NINFO = NINFO + 1
          WRITE(LUPRI,'(3(/A),//A)')
      &   ' INFO: Cholesky decomposed two-electron integrals can',
-     &   ' only be applied for IFCTYP equal to 2-3, 11-13 or 22.'
+     &   ' only be applied for IFCTYP equal to 2-3, 11-13 or 22.',
      &   ' You may have to implement the request yourself !',
      &   ' Proceeding with standard AO-integral direct '//
      &     'Fock matrix construction.'
