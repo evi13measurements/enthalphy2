@@ -386,30 +386,30 @@ C        ... DIIS-DFT or QC-DFT optimization
       END IF
 
 
- 5000 FORMAT(/T6,'Spin multiplicity:',T31,I5,
-     *       /T6,'Spatial symmetry:',T31,I5,
-     *       /T6,'Total charge of molecule:',T31,I5)
- 5010 FORMAT(/T6,'This was a CI-NO calculation.')
- 5012 FORMAT(/T6,'This was a CI calculation.')
- 5020 FORMAT( T6,'State number:',T31,I5,
-     *      //T6,'Final MCSCF energy:',T31,F20.12,A,
-     *       /T6,'Nuclear repulsion:',T31,F20.12,
-     *       /T6,'Electronic energy:',T31,F20.12)
- 5021 FORMAT(/T6,'Final HF energy:',T31,F20.12,A,
-     *       /T6,'Nuclear repulsion:',T31,F20.12,
-     *       /T6,'Electronic energy:',T31,F20.12)
- 5022 FORMAT(/T6,'Final DFT energy:',T31,F20.12,A,
-     *       /T6,'Nuclear repulsion:',T31,F20.12,
-     *       /T6,'Electronic energy:',T31,F20.12)
- 5023 FORMAT(/T6,'Final HF-SRDFT energy:',T31,F20.12,
-     *       /T6,'Nuclear repulsion:',T31,F20.12,
-     *       /T6,'Electronic energy:',T31,F20.12)
- 5024 FORMAT( T6,'State number:',T31,I5,
-     *      //T6,'Final MC-SRDFT energy:',T31,F20.12,A,
-     *       /T6,'Nuclear repulsion:',T31,F20.12,
-     *       /T6,'Electronic energy:',T31,F20.12)
- 5025 FORMAT( T6,'Solvation  energy:',T31,F20.12)
- 5030 FORMAT(/T6,'Final gradient norm:',T31,F20.12)
+ 5000 FORMAT(/T4,'@ Spin multiplicity:',T31,I5,
+     *       /T4,'@ Spatial symmetry:',T31,I5,
+     *       /T4,'@ Total charge of molecule:',T31,I5)
+ 5010 FORMAT(/T4,'@ This was a CI-NO calculation.')
+ 5012 FORMAT(/T4,'@ This was a CI calculation.')
+ 5020 FORMAT( T4,'@ State number:',T31,I5,
+     *      //T4,'@ Final MCSCF energy:',T31,F20.12,A,
+     *       /T4,'@ Nuclear repulsion:',T31,F20.12,
+     *       /T4,'@ Electronic energy:',T31,F20.12)
+ 5021 FORMAT(/T4,'@ Final HF energy:',T31,F20.12,A,
+     *       /T4,'@ Nuclear repulsion:',T31,F20.12,
+     *       /T4,'@ Electronic energy:',T31,F20.12)
+ 5022 FORMAT(/T4,'@ Final DFT energy:',T31,F20.12,A,
+     *       /T4,'@ Nuclear repulsion:',T31,F20.12,
+     *       /T4,'@ Electronic energy:',T31,F20.12)
+ 5023 FORMAT(/T4,'@ Final HF-SRDFT energy:',T31,F20.12,
+     *       /T4,'@ Nuclear repulsion:',T31,F20.12,
+     *       /T4,'@ Electronic energy:',T31,F20.12)
+ 5024 FORMAT( T4,'@ State number:',T31,I5,
+     *      //T4,'@ Final MC-SRDFT energy:',T31,F20.12,A,
+     *       /T4,'@ Nuclear repulsion:',T31,F20.12,
+     *       /T4,'@ Electronic energy:',T31,F20.12)
+ 5025 FORMAT( T4,'@ Solvation  energy:',T31,F20.12)
+ 5030 FORMAT(/T4,'@ Final gradient norm:',T31,F20.12)
 C
 C       stamp date, time, and hostname to LUPRI
         CALL TSTAMP(' ',LUPRI)
@@ -468,6 +468,10 @@ C    *              MOISNO,INDXCI,WRK,KFRSAV,LFRSAV,LUPRI,IPRINT)
          CALL MEMREL('SIROUT.MOLDEN.GETNO',WRK,KFRSAV,KREL1,KFREE,LFREE)
        END IF
 
+       IF (DOMEP) THEN
+         CALL CALC_MEP(WRK(KCMO),WRK,KFREE,LFREE)
+       ENDIF
+
        KREL2 = KFREE
        CALL MEMGET('REAL', KAOSO, N2BASX,      WRK, KFREE, LFREE)
        CALL MEMGET('REAL', KUCMO, NORBT*NBAST, WRK, KFREE, LFREE)
@@ -502,11 +506,11 @@ C
             END IF
          END IF
          IF (IPRI4 .GT. 10) THEN
-            CALL PRORB(WRK(KCMO),.FALSE.,LUPRI)
+            CALL PRORB(WRK(KCMO), .FALSE., LUPRI)
          ELSE
-            CALL PRORB(WRK(KCMO),.TRUE.,LUPRI)
+            CALL PRORB(WRK(KCMO),  .TRUE., LUPRI)
          END IF
-C        CALL PRORB(CMO,PROCC,IOUT)
+C        CALL PRORB(CMO, PROCC, IOUT [,THRPRI_in])
       END IF
 C
 C *** Print out of wavefunction in MCSCF orbital basis ***

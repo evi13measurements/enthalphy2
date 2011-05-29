@@ -13,6 +13,24 @@
 #       he/she ran 'configure', the you should modify the
 #       DALTON definition to pint to that place.
 
+
+# radovan: this is to figure out whether TEST is called from test directory
+#          or from outside
+SCRIPT_DIR="${0%/*}"
+# if the script was started from the base directory with ./TEST, then the
+# expansion returns a period, if it was started directly with TEST then the
+# expansion returns the script file name
+if [ "$SCRIPT_DIR" == "." -o "$SCRIPT_DIR" == "$0" ]; then
+  SCRIPT_DIR="$PWD"
+# if the script was not called with an absolute path, then we need to add the
+# current working directory to the relative path of the script
+elif [ "${SCRIPT_DIR:0:1}" != "/" ]; then
+  SCRIPT_DIR="$PWD/$SCRIPT_DIR"
+fi
+cd $SCRIPT_DIR
+
+exitcode=0
+
 if [ -x '/usr/bin/time' ]; then
  TIMING_OF="/usr/bin/time" #hjaaj sep07: gnu time gives more info than built-in time
 else
@@ -28,7 +46,7 @@ ESSENTIAL=""
 SHORT_ENERGY="energy_direct energy_direct_eri energy_douglaskroll energy_nosymm energy_restart \
 energy_symm energy_zmat energy_nevpt2_gs energy_nevpt2_ex energy_hsrohf energy_hsrohf_qc \
 energy_lucita_gasci"
-SHORTDFT="dft_hcth120 dft_camb3lyp dft_pbe dft_open_b3lyp"
+SHORTDFT="dft_hcth120 dft_camb3lyp dft_pbe dft_open_b3lyp dft_qr_sym"
 SHORTGOPT="geoopt_cartsad geoopt_cartsad2 geoopt_constrain1a \
 geoopt_constrain1b geoopt_delintsad geoopt_exci2 geoopt_numgrd \
 geoopt_preopt geoopt_prop geoopt_prop2 geoopt_redintmin geoopt_vrml"
@@ -47,9 +65,8 @@ rsp_sresqr rsp_ctocdhyper prop_spinspin5 prop_nolondon_soppacc rsp_soppaccexci \
 rsp_soppaccpolar rsp_g_rohf rsp_g_rohf_dir rsp_g_cas \
 rsp_g_rohf_ecc rsp_hfc rsp_zfs rsp_zfs_mc rsp_absorp rsp_prop_file"
 SHORTWALK="walk_gradex walk_image walk_modeflw walk_polar walk_vibave walk_vibave2"
-SHORTREST="r12_sym dpt_h2s dft_qr_sym"
-AOSOPPA="prop_exci_ao prop_exci_aorpa prop_exci_aorpad prop_exci_aosoppa \
-prop_exci_aosoppcc"
+SHORTREST="r12_sym dpt_h2s"
+AOSOPPA="prop_exci_ao prop_exci_aorpa prop_exci_aorpad prop_exci_aosoppa prop_exci_aosoppcc"
 SHORTNOCC="$SHORT_ENERGY $SHORTDFT $SHORTGOPT $SHORTPROP $SHORTRSP $SHORTWALK $SHORTREST $AOSOPPA"
 SHORTQM3="hfmm_1 cc2mm_spc_fop \
 dftmm_1 dftmm_2 dftmm_3 dftmm_4 dftmm_5 dftmm_6 dftmm_7 dftmm_8 dftmm_9 \
@@ -109,7 +126,8 @@ DFT="dft_b3lyp_cart dft_b3lyp_nosym dft_b3lyp_sym dft_blyp_nosym \
 dft_blyp_sym dft_energy_sym dft_lda_cart dft_lda_nosym dft_lda_sym \
 dft_optimize_nosym dft_optimize_sym dft_lb94 dft_qr_sym dft_qr_nosym \
 dft_lda_molhes_nosym dft_b3lyp_molhes_nosym dft_b3lyp_magsus_nosym \
-dft_polar dft_cr_sym dft_open_lr dft_properties_sym dft_properties_nosym"
+dft_polar dft_cr_sym dft_open_lr dft_properties_sym dft_properties_nosym \
+dft_camb3lyp_magsus"
 #
 DPT="dpt_hf dpt_h2s dpt_h2s_finp dpt_hbr_finm dpt_h2s_finm \
 dpt_hbr dpt_hbr_finp dpt_h2s_ff"
@@ -410,7 +428,7 @@ while [ -n "$1" ]; do
    "qm3" )
    testcase="$testcase $QM3"; 
    shift ;;
-   *paral* )  # assume parallel test if "paral" in name
+   *paral* | par* )  # assume parallel test if "paral" in name or name starts with "par"
    if [ "$paramlist" = "" ]; then
      paramlist="-N 4"
    fi
@@ -634,6 +652,7 @@ do
         if [ "$trouble" -eq 1 ]; then
             problems="$problems $item"
         fi
+        exitcode=1
       elif [ "$keep" = "false" ]; then
         #rm -f $dalfile.dal $dalfile.BAS $checkfile $logfile $item.info
         rm -f $dalfile.dal $dalfile.BAS $checkfile $item.info # keep $logfile, can be interesting to look closer at
@@ -697,10 +716,12 @@ if [ "$perl_style" -gt 0 ]; then
         perl_fail="`grep -A1 'tests have failed' $perl_log | tail -1`"
         problems="$problems $perl_fail"
         myprint "THERE IS A PROBLEM in perl-style tests"
+        exitcode=1
     else
         passedall="THERE IS A PROBLEM IN TEST CASE(S)"
         myprint ""
         myprint "WARNING WARNING: Perl-style tests died unexpectedly!"
+        exitcode=1
     fi
     myprint ""
     myprint "Perl-style tests finished!"
@@ -746,4 +767,4 @@ fi
 rm "$tmpfile"
 myprint "date and time         : `date`"
 
-exit 0
+exit $exitcode

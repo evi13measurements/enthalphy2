@@ -23,28 +23,12 @@
 !
 #include <single.h>
 C
-#ifdef UNDEF
-========================================================================
-/* Comdeck log */
-970819-hjaaj
-RHSINP: removed CALL SETSIR, has for some time been in ABAINP in
-  abadrv.F; added IPRTRA, IPRIN4 and IPRIN6 to parameter list 
-  and removed WORK,LWORK from parameter list (was used in CALL SETSIR).
-941114-hjaaj
-RHSIDE: IFCTYP(MXDMAT) and ISYMDM(MXDMAT)
-MAKEGD: NODIFC in parameter list to ABARHS
-930210-hjaaj
-  MAKEGD: skip ISYM if DOSYM(ISYM) false (DOSYM should also be used
-          in determination of DCORGD in abatro.u)
-930205-hjaaj
-  defined parameter D1 in SOLRH1
-891108-hjaaj
-  use CALL RDONEL to read ONEHAMIL in CHKRES and TR1TST
-  removed open and close of LUONEL in MAKEGD
-  removed COP and ICOP in parameterlist to CHKRES and TR1TST
-  disabled TR1TST because not used in present version
-===========================================================================
-#endif
+!===========================================================================
+!  FILE : abarhs.F
+!
+!  rhs = "Right Hand Side" of linear response equations for molecular
+!        Hessian and more.
+!===========================================================================
 C  /* Deck rhsinp */
       SUBROUTINE RHSINP(WORD)
 #include <implicit.h>
@@ -987,14 +971,15 @@ C           **********************
 C           ***** CMO and DV *****
 C           **********************
 C
-            CALL RDSIFC('CMO',FOUND,WORK(KCMO),WORK(KGETFD),LGETFD)
+            CALL RD_SIRIFC('CMO',FOUND,WORK(KCMO),WORK(KGETFD),LGETFD)
             IF (.NOT.FOUND)
      &         CALL QUIT('RHSIDE error: CMO not found on SIRIFC')
             IF (NASHT .GT. 0) THEN
                IF (NODV) THEN
                   CALL DZERO(WORK(KDV),  NNASHX)
                ELSE
-                  CALL RDSIFC('DV',FOUND,WORK(KDV),WORK(KGETFD),LGETFD)
+                  CALL RD_SIRIFC('DV',FOUND,WORK(KDV),
+     &               WORK(KGETFD),LGETFD)
                   IF (.NOT.FOUND)
      &            CALL QUIT('RHSIDE error: DV not found on SIRIFC')
                END IF
@@ -1049,7 +1034,7 @@ C           ******************************
 C           ***** Read Fock matrix F *****
 C           ******************************
 C
-            CALL RDSIFC('FOCK',FOUND,WORK(KFOCK),WORK(KWRKGD),LWRKGD)
+            CALL RD_SIRIFC('FOCK',FOUND,WORK(KFOCK),WORK(KWRKGD),LWRKGD)
             IF (.NOT.FOUND)
      &      CALL QUIT('RHSIDE error: FOCK not found on SIRIFC')
 C
@@ -1297,7 +1282,7 @@ C
 C           Case 2: Densities read in
 C
             ELSE
-               CALL RDSIFC('PV',FOUND,PV,WORK(KFREE),LFREE)
+               CALL RD_SIRIFC('PV',FOUND,PV,WORK(KFREE),LFREE)
                IF (.NOT.FOUND)
      &            CALL QUIT('RHSIDE error: PV not found on SIRIFC')
             END IF
@@ -2872,16 +2857,16 @@ C  /* Deck ofabmo */
       DIMENSION CMO(NCMOT), DV(NASHT,NASHT), FMAT(N2ORBT), WORK(LWORK)
       LOGICAL FOUND
 C
-      CALL RDSIFC('CMO',FOUND,CMO,WORK,LWORK)
+      CALL RD_SIRIFC('CMO',FOUND,CMO,WORK,LWORK)
       IF (.NOT.FOUND) CALL QUIT('OFABMO error: CMO not found on SIRIFC')
       IF (NASHT .GT. 0) THEN
          IF (NNASHX .GT. LWORK) CALL STOPIT('OFABMO',' ',LWORK,NNASHX)
-         CALL RDSIFC('DV',FOUND,WORK,WORK,LWORK)
+         CALL RD_SIRIFC('DV',FOUND,WORK,WORK,LWORK)
          IF (.NOT.FOUND)
      &      CALL QUIT('OFABMO error: DV not found on SIRIFC')
          CALL DSPTSI(NASHT,WORK,DV)
       END IF
-      CALL RDSIFC('FOCK',FOUND,FMAT,WORK,LWORK)
+      CALL RD_SIRIFC('FOCK',FOUND,FMAT,WORK,LWORK)
       IF (.NOT.FOUND)
      &   CALL QUIT('OFABMO error: FOCK not found on SIRIFC')
       RETURN
@@ -4509,3 +4494,4 @@ C
 C
       RETURN
       END
+! -- end of abarhs.F --

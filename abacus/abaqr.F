@@ -253,7 +253,7 @@ cs
 #include <nuclei.h>
 #include <symmet.h>
       LOGICAL PASS, HFCLC, CICLC, TRIPLE, EXECLC, FOUND
-      CHARACTER*8 LABEL, KDLAB(9*MXCENT)
+      CHARACTER*8 LABEL, DLAB(9*MXCENT)
       DIMENSION WORK(LWORK)
 C
       IF (SKIP) RETURN
@@ -276,10 +276,10 @@ C
       KWORK1 = KXINDX + LCINDX
       LWORK1 = LWORK - KWORK1
 C
-      CALL RDSIFC('CMO',FOUND,WORK(KCMO),WORK(KWORK1),LWORK1)
+      CALL RD_SIRIFC('CMO',FOUND,WORK(KCMO),WORK(KWORK1),LWORK1)
       IF (.NOT.FOUND) CALL QUIT('AQRDRV error: CMO not found on SIRIFC')
       IF (NASHT .GT. 0) THEN
-         CALL RDSIFC('DV',FOUND,WORK(KWORK1),WORK(KWORK1),LWORK1)
+         CALL RD_SIRIFC('DV',FOUND,WORK(KWORK1),WORK(KWORK1),LWORK1)
          IF (.NOT.FOUND)
      &      CALL QUIT('AQRDRV error: DV not found on SIRIFC')
          CALL DSPTSI(NASHT,WORK(KWORK1),WORK(KUDV))
@@ -308,21 +308,21 @@ cs
          NCOMP  = 0
          NPATOM = 0
          CALL GET1IN(DUMMY,'DIPLEN ',NCOMP,WORK(KWORK2),LWORK2,
-     &               KDLAB,WORK(KIDSYM),WORK(KIDADR),
+     &               DLAB,WORK(KIDSYM),WORK(KIDADR),
      &               IDUMMY,.TRUE.,NPATOM,.TRUE.,DUMMY,.FALSE.,DUMMY,
      &               IPRINT)
          NLAB = 3
-         CALL LABCOP(NLAB,NLBTOT,KDLAB,WORK(KIDSYM),LABAPP,LABSYM)
+         CALL LABCOP(NLAB,NLBTOT,DLAB,WORK(KIDSYM),LABAPP,LABSYM)
 C
 cs
          IF (VERDET .OR. MCD) THEN
             IF (NOLOND) THEN
                CALL GET1IN(DUMMY,'ANGMOM ',NCOMP,WORK(KWORK2),LWORK2,
-     &                     KDLAB,WORK(KIDSYM),WORK(KIDADR),
+     &                     DLAB,WORK(KIDSYM),WORK(KIDADR),
      &                     IDUMMY,.TRUE.,NPATOM,.TRUE.,DUMMY,.FALSE.,
      &                     DUMMY,IPRINT)
                NLAB = 3
-               CALL LABCOP(NLAB,NLBTOT,KDLAB,WORK(KIDSYM),
+               CALL LABCOP(NLAB,NLBTOT,DLAB,WORK(KIDSYM),
      &                     LABAPP,LABSYM)
             ELSE
               CALL LABCOP(1,NLBTOT,'XLONMAG ',ISYMAX(1,2),LABAPP,LABSYM)
@@ -334,11 +334,11 @@ C
                NCOMP  = 0
                NPATOM = 0
                CALL GET1IN(DUMMY,'HBDO   ',NCOMP,WORK(KWORK2),LWORK2,
-     &                     KDLAB,WORK(KIDSYM),WORK(KIDADR),
+     &                     DLAB,WORK(KIDSYM),WORK(KIDADR),
      &                     IDUMMY,.TRUE.,NPATOM,.TRUE.,DUMMY,.FALSE.,
      &                     DUMMY,IPRINT)
                NLAB = 3
-               CALL LABCOP(NLAB,NLBTOT,KDLAB,WORK(KIDSYM),LABAPP,
+               CALL LABCOP(NLAB,NLBTOT,DLAB,WORK(KIDSYM),LABAPP,
      &                     LABSYM)
             ENDIF
          END IF

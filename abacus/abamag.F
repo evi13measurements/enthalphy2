@@ -65,23 +65,24 @@ C
      &           '" not recognized in EXPECT.'
             CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
             CALL QUIT('Illegal keyword in EXPECT')
- 1          CONTINUE
+
+ 1          CONTINUE !         .SHIELD
                NST    = .TRUE.
                GOTO 100
- 2          CONTINUE
+ 2          CONTINUE !         .SPIN-S
                SST    = .TRUE.
                GOTO 100
- 3          CONTINUE
+ 3          CONTINUE !         .DIASUS
                MDIASU = .TRUE.
                GOTO 100
- 4          CONTINUE
+ 4          CONTINUE !         .SKIP
                MSKIP  = .TRUE.
                GOTO 100
- 5          CONTINUE
+ 5          CONTINUE !         .PRINT
                READ (LUCMD,*) MPRINT
                IF (MPRINT .EQ. IPRDEF) ICHANG = ICHANG - 1
                GOTO 100
- 6          CONTINUE
+ 6          CONTINUE !         .NODC
                MNODC  = .TRUE.
                GOTO 100
  7          CONTINUE
@@ -186,9 +187,12 @@ C
 C     Initialize MAGONE
 C
 #include <implicit.h>
+#include <priunit.h>
 #include <mxcent.h>
 #include <abainf.h>
 #include <magone.h>
+COBL/AMT CAM magnetizabilities fix
+#include <suscpt.h>
 C
 
       MPRINT = IPRDEF
@@ -209,6 +213,8 @@ C
       MNQCC  = NQCC
       ALLCOM = .NOT. DODRCT
       MPQUAD = 40
+COBL/AMT CAM magnetizabilities fix
+      DONETWOLOP = .FALSE.
       RETURN
       END
 C  /* Deck magint */
@@ -334,11 +340,13 @@ c        but currently, it is implemented only without symmetry.
 c        In case of no symmetry present, both methods should give
 c        identical results.
          IF(NSYM.GT.1) THEN
-            WRITE(LUPRI,*)"Symmetry -> DSO by analytical integration."
+            WRITE(LUPRI,'(/A)')
+     &         "Symmetry -> DSO by analytical integration."
             CALL MAGDRV(SPNDSO,WORK(KDENMA),WORK(KFOCMA),
      &           WORK(KLAST),LWRK,MPRINT,MNODC,MNODV,WORD,NCOMP)
          ELSE
-            WRITE(LUPRI,*)"No symmetry -> DSO by numerical integration."
+            WRITE(LUPRI,'(/A)')
+     &         "No symmetry -> DSO by numerical integration."
             CALL DZERO(SPNDSO,MXCOOR*MXCOOR)
             CALL NUMDSO(SPNDSO,NUCIND,WORK(KLAST),LWRK)
          ENDIF
@@ -945,7 +953,7 @@ C
       DOINT(1,2) = .FALSE.
       DOINT(2,1) = .FALSE.
 C
-C     Although not obvious, this is a test of wether we are calculating
+C     Although not obvious, this is a test of whether we are calculating
 C     spin-spin couplings
 C
       IF (KPATOM .EQ. 1) THEN
@@ -966,7 +974,7 @@ C
       ELSE IF (KPATOM .EQ. 2) THEN
 C
 C     We have a loop outside over all symmetry independent nuclei (needed
-C     in order to save memory in direct and parallell calculations)
+C     in order to save memory in direct and parallel calculations)
 C     K.Ruud, nov.-94
 C
          NPATOM = 1
@@ -1223,12 +1231,12 @@ C
  9             CONTINUE
                   ANISON = .TRUE.
                GOTO 100
- 10            CONTINUE
+ 10            CONTINUE !        .ISOTOP
                   SPNISO = .TRUE.
                   READ (LUCMD, *) (ISOTPS(IS), IS = 1, NATOMS)
                   ABUND = D0
                GOTO 100
- 11            CONTINUE
+ 11            CONTINUE !        .COUPLI
                   READ (LUCMD, *)  NUCSPI
                   READ (LUCMD, *) (IPOINT(IS), IS = 1, NUCSPI)
                   IF (NUCSPI .GT. 0) THEN
@@ -1596,11 +1604,11 @@ C
 C
 C     Allocate work space for necessary information to be read by RSPMC
 C
-      CALL RDSIFC('CMO',FOUND,CMO,WORK,LWORK)
+      CALL RD_SIRIFC('CMO',FOUND,CMO,WORK,LWORK)
       IF (.NOT.FOUND) CALL QUIT('TRPRH1 error: CMO not found on SIRIFC')
       IF (NASHT .GT. 0) THEN
          IF (LWORK.LT.NNASHX)CALL STOPIT('TRPRH1','UDV',LWORK,NNASHX)
-         CALL RDSIFC('DV',FOUND,WORK,WORK,LWORK)
+         CALL RD_SIRIFC('DV',FOUND,WORK,WORK,LWORK)
          IF (.NOT.FOUND)
      &      CALL QUIT('TRPRH1 error: DV not found on SIRIFC')
             CALL DSPTSI(NASHT,WORK,UDV)
@@ -2039,17 +2047,19 @@ cLig <> added the dimensions of sftpmat and sftmmat
      &          ANIS(NUCDEP), ASYM(NUCDEP), SPAR(NUCDEP), APAR(NUCDEP),
      &          ANIS2(NUCDEP), ASYM2(NUCDEP), SKEW(NUCDEP),
      &          SPAN(NUCDEP), CSTRA(*), SCTRA(*),
-     &          SFTPMAT(3,3,MXCENT),SFTMMAT(3,3,MXCENT)
-cLig >> added include abainf.h and trkoor.h
+     &          SFTPMAT(3,3,MXCENT), SFTMMAT(3,3,MXCENT)
+cLig >> added abainf.h and trkoor.h
 #include <abainf.h>
 #include <trkoor.h>
 cLig <<
 #include <symmet.h>
 #include <sigma.h>
 #include <cbisol.h>
-C
-CTOCD
+C GAGORG:
+#include <orgcom.h>
+C CTOCD
 #include <ctocdcc.h>
+
       LOGICAL PRTSHI(NUCIND)
       LOGICAL ALLATM
       DIMENSION IPATOM(MXCENT)
@@ -2095,27 +2105,24 @@ C
          CALL TITLER('ABACUS - CHEMICAL SHIELDINGS','*',124)
       END IF
 C
-cLig >> added CTOCD-DZ results title
       IF (CTOCD .AND. (.NOT. CTOMAG)) THEN
+cLig >> added CTOCD-DZ results title
         CALL HEADER('CTOCD-DZ results',1)
       ENDIF
-cLig <<
       CALL HEADER('Shielding tensors in symmetry coordinates (ppm)',-1)
+      IF (CTOCD .OR. CTOMAG) THEN
 cLig >> added call to FCPRI for shieldings
-      IF(CTOCD .OR. CTOMAG)  THEN
-        CALL FCPRI(SIGMADZ,'CTOCD',CSTRA,SCTRA)
+         CALL FCPRI(SIGMADZ,'CTOCD',CSTRA,SCTRA)
       ELSE
-cLig <<
-        CALL FCPRI(SIGMAT,'SIGMAS',CSTRA,SCTRA)
-cLig <> ENDIF
+         CALL FCPRI(SIGMAT,'SIGMAS',CSTRA,SCTRA)
       ENDIF
       NUCINS = NUCIND
       IF (SOLVNT) NUCINS = NUCINS - 1
 C
 C     Transform to non-symmetry basis
 C
-cLig >> added the call to TRADIP ... for CTOCD
       IF(CTOCD .OR. CTOMAG)  THEN
+cLig >> added the call to TRADIP ... for CTOCD
          CALL TRADIP(SIGMADZ,DMAT,CSTRA,SCTRA,3*NUCDEP,2,2)
          CALL TRADIP(SIGMAR,PMAT,CSTRA,SCTRA,3*NUCDEP,2,2)
          IF (DONS) THEN
@@ -2130,12 +2137,10 @@ cLig >> added the call to TRADIP ... for CTOCD
          CALL DCOPY(9*NUCDEP,DMAT,1,TMAT,1)
          CALL DAXPY(9*NUCDEP,D1,PMAT,1,TMAT,1)
       ELSE
-cLig <<
         CALL TRADIP(SIGMAT,TMAT,CSTRA,SCTRA,3*NUCDEP,2,2)
         CALL TRADIP(SIGMAR,PMAT,CSTRA,SCTRA,3*NUCDEP,2,2)
         CALL DCOPY(9*NUCDEP,TMAT,1,DMAT,1)
         CALL DAXPY(9*NUCDEP,-D1,PMAT,1,DMAT,1)
-cLig <> closed the IF
       ENDIF
 C
 CTOCD
@@ -2171,13 +2176,19 @@ C
   100 CONTINUE
 C
       CALL AROUND('Summary of chemical shieldings')
-      WRITE (LUPRI,'(1X,A)') 'Definitions from J.Mason, Solid '//
-     &       'state Nuc.Magn.Res. 2 (1993), 285'
-      WRITE (LUPRI,'()')
-      WRITE (LUPRI,'(1X,A,/,1X,A)')
-     & '@1atom   shielding       dia      para     skew '/
+      WRITE (LUPRI,'(A/)') '@1  Definitions from J. Mason, Solid '//
+     &       'state Nuc. Magn. Res. 2 (1993), 285'
+      IF (NOLOND) THEN
+         WRITE(LUPRI,'(A/A,3F20.12)')
+     &    '@1 London orbitals (GIAOs) not used.',
+     &    '@1 Gauge origin    (bohr):', (GAGORG(I),I=1,3)
+      ELSE
+         WRITE(LUPRI,'(A)') '@1 London orbitals (GIAOs) has been used.'
+      END IF 
+      WRITE (LUPRI,'(/A/A)')
+     & '@1 atom   shielding       dia      para     skew '/
      &  /'     span     (aniso     asym)',
-     & '@1----------------------------------------------'/
+     & '@1 ----------------------------------------------'/
      &  /'------------------------------'
       IATOM = 0
       DO 300 I = 1, NUCINS
@@ -2190,7 +2201,7 @@ C
                DIAPAR = 'diamagnetic '
             END IF
             IF (PRTSHI(I))          ! Selected atom if CTOMAG
-     &      WRITE (LUPRI,'(1X,2A,7F10.4)') '@1',
+     &      WRITE (LUPRI,'(2A,7F10.4)') '@1 ',
      &         NAMDEP(IATOM),AVETOT(IATOM),AVEDIA(IATOM),AVEPAR(IATOM),
      &         SKEW(IATOM),SPAN(IATOM),ANIS2(IATOM),ASYM2(IATOM)
          END IF
@@ -2199,13 +2210,19 @@ C
       WRITE (LUPRI,'()')
 C
       CALL AROUND('Summary of chemical shieldings')
-      WRITE (LUPRI,'(1X,A)') 'Definitions from Smith, Palke and'//
-     &       ' Grieg, Concepts in Mag.Res. 4 (1992), 107'
-      WRITE (LUPRI,'()')
-      WRITE (LUPRI,'(1X,A,/,1X,A)')
-     & '@2atom   shielding       dia      para     aniso'/
+      WRITE (LUPRI,'(A/)') '@2  Definitions from Smith, Palke, and'//
+     &       ' Grieg, Concepts in Mag. Res. 4 (1992), 107'
+      IF (NOLOND) THEN
+         WRITE(LUPRI,'(A/A,3F20.12)')
+     &    '@2 London orbitals (GIAOs) not used.',
+     &    '@2 Gauge origin    (bohr):', (GAGORG(I),I=1,3)
+      ELSE
+         WRITE(LUPRI,'(A)') '@2 London orbitals (GIAOs) has been used.'
+      END IF 
+      WRITE (LUPRI,'(/A/A)')
+     & '@2 atom   shielding       dia      para     aniso'/
      &  /'      asym        S        A',
-     & '@2----------------------------------------------'/
+     & '@2 ----------------------------------------------'/
      &  /'------------------------------'
       IATOM = 0
       DO 310 I = 1, NUCINS
@@ -2218,7 +2235,7 @@ C
                DIAPAR = 'diamagnetic '
             END IF
             IF (PRTSHI(I))          ! Selected atom if CTOMAG
-     &      WRITE (LUPRI,'(1X,2A,7F10.4)') '@2',
+     &      WRITE (LUPRI,'(2A,7F10.4)') '@2 ',
      &         NAMDEP(IATOM),AVETOT(IATOM),AVEDIA(IATOM),AVEPAR(IATOM),
      &         ANIS(IATOM),ASYM(IATOM),SPAR(IATOM),APAR(IATOM)
          END IF
@@ -2821,6 +2838,24 @@ C MBH+JK
      &                       'Isotropic PSO contribution:',PSO   ,' Hz',
      &                       'Isotropic SD contribution :',SD    ,' Hz',
      &                       'Isotropic FC contribution :',FC    ,' Hz'
+CSPAS: trying to print the whole tensor
+                        DO ICOOR1 = 1, 3
+                           DO ICOOR2 = 1, 3
+                              IADR1 = 3*(IATOM1 - 1) + ICOOR1
+                              IADR2 = 3*(IATOM2 - 1) + ICOOR2
+                        COUPLM(ICOOR1,ICOOR2) = CHESS(IADR1,IADR2,1)
+     &                                                *FACTOR
+                           END DO
+                        END DO
+                    CALL TITLER('Total Coupling Tensor in Hz','-',-1)
+                        WRITE(LUPRI,'(16X,3(A14,1X),/)') 'x','y','z'
+                        WRITE(LUPRI,'(16X,A,2X,1P,3(G14.7,1X))')
+     &                       'x',(COUPLM(1,J), J=1,3)
+                        WRITE(LUPRI,'(16X,A,2X,1P,3(G14.7,1X))')
+     &                       'y',(COUPLM(2,J), J=1,3)
+                        WRITE(LUPRI,'(16X,A,2X,1P,3(G14.7,1X))')
+     &                       'z',(COUPLM(3,J), J=1,3)
+CKeinSPASmehr: trying to print the whole tensor
                      END IF
                   END IF
                END IF
@@ -3009,6 +3044,24 @@ C
      &                       'Isotropic PSO contribution:',PSO   ,' Hz',
      &                       'Isotropic SD contribution :',SD    ,' Hz',
      &                       'Isotropic FC contribution :',FC    ,' Hz'
+CSPAS: trying to print the whole tensor
+                        DO ICOOR1 = 1, 3
+                           DO ICOOR2 = 1, 3
+                              IADR1 = 3*(IATOM1 - 1) + ICOOR1
+                              IADR2 = 3*(IATOM2 - 1) + ICOOR2
+                        COUPLM(ICOOR1,ICOOR2) = CHESS(IADR1,IADR2,1)
+     &                                                *FACTOR
+                           END DO
+                        END DO
+                    CALL TITLER('Total Coupling Tensor in Hz','-',-1)
+                        WRITE(LUPRI,'(16X,3(A14,1X),/)') 'x','y','z'
+                        WRITE(LUPRI,'(16X,A,2X,1P,3(G14.7,1X))')
+     &                       'x',(COUPLM(1,J), J=1,3)
+                        WRITE(LUPRI,'(16X,A,2X,1P,3(G14.7,1X))')
+     &                       'y',(COUPLM(2,J), J=1,3)
+                        WRITE(LUPRI,'(16X,A,2X,1P,3(G14.7,1X))')
+     &                       'z',(COUPLM(3,J), J=1,3)
+CKeinSPASmehr: trying to print the whole tensor
                            END IF
                            END IF
  100                    CONTINUE

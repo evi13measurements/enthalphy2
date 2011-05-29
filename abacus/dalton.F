@@ -204,7 +204,7 @@ C
      &               '*',115)
 
          WRITE (LUPRI,'(T5,A)')
-     &'This is output from DALTON Release 2011 (Rev. 0, Apr. 2011)'
+     &'This is output from DALTON Release 2011 (Rev. 0, May 2011)'
 
          WRITE (LUPRI,'(3X,A)') SEPARATOR(1:76)
          WRITE (LUPRI,'(T5,A)')
@@ -228,8 +228,8 @@ C
      &'"Dalton, a molecular electronic structure program,',
      &'Release DALTON2011 (2011), see http://daltonprogram.org"'
 C
-         WRITE (LUPRI,'(1X,A)') SEPARATOR
-         WRITE (LUPRI,'(T5,A//,(T3,A,T29,A,T59,A,T71,A))')
+         WRITE (LUPRI,'(3X,A)') SEPARATOR(1:76)
+         WRITE (LUPRI,'(/T5,A//,(T3,A,T29,A,T59,A,T71,A))')
      *'Authors in alphabetical order '//
      &  '(major contribution(s) in parenthesis):',
      *'Celestino Angeli,','University of Ferrara,','Italy',
@@ -251,6 +251,8 @@ C
      &  '(doublet spin, ESR in RESPONS)',
      *'Lara Ferrighi,','Aarhus University,','Denmark',
      &  '(PCM Cubic response)',
+     *'Heike Fliegl,','University of Helsinki,','Finland',
+     &  '(CCSD(R12))',
      *'Luca Frediani,','University of Tromsoe,','Norway','(PCM)',
      *'Christof Haettig,','Ruhr University Bochum,','Germany',
      &  '(CC module)',
@@ -287,6 +289,8 @@ C
      *'Ola B. Lutnaes,','University of Oslo,','Norway','(DFT Hessian)',
      *'Kurt V. Mikkelsen,','University of Copenhagen,','Denmark',
      &  '(MC-SCRF and QM/MM code)',
+     *'Christian Neiss,','Univ. Erlangen-Nürnberg,','Germany',
+     &  '(CCSD(R12))',
      *'Christian B. Nielsen,','University of Copenhagen,','Denmark',
      &  '(QM/MM code)',
      *'Patrick Norman,','University of Linkoeping,','Sweden',
@@ -323,6 +327,8 @@ C
      &  '(MC-SCRF)',
      *'Peter R. Taylor,','VLSCI/Univ. of Melbourne,','Australia',
      &  '(Symmetry handling ABACUS, integral transformation)',
+     *'David P. Tew,','University of Bristol,','England',
+     &  '(CCSD(R12))',
      *'Olav Vahtras,','KTH Stockholm,','Sweden',
      &  '(triplet response, spin-orbit, ESR, TDDFT, open-shell DFT)',
      *'David J. Wilson,','La Trobe University,','Australia',
@@ -387,6 +393,7 @@ C
 
          LABEL1 = 'ALL_DONE'
          STHELP = 'THE_END   '
+         ZERO   = 0.0D0
          CALL WRIPRO(0.0D0,STHELP,666,
      *               LABEL1,LABEL1,LABEL1,LABEL1,
      *               ZERO,ZERO,ZERO,1,0,0,0)
@@ -429,6 +436,7 @@ C     ... I am a "slave" ... (MYNUM .ne. MASTER)
 
             LABEL1 = 'ALL_DONE'
             STHELP = 'THE_END   '
+            ZERO   = 0.0D0
             CALL WRIPRO(0.0D0,STHELP,666,
      *                  LABEL1,LABEL1,LABEL1,LABEL1,
      *                  ZERO,ZERO,ZERO,1,0,0,0)
@@ -489,6 +497,7 @@ C
 
       LABEL1 = 'ALL_DONE'
       STHELP = 'THE_END   '
+      ZERO   = 0.0D0
       CALL WRIPRO(0.0D0,STHELP,666,
      *            LABEL1,LABEL1,LABEL1,LABEL1,
      *            ZERO,ZERO,ZERO,1,0,0,0)
@@ -515,7 +524,6 @@ C
          CALL PVMXEXIT
       END IF
 #endif
-
 
       CALL QEXIT('DALTON main')
       END
@@ -544,11 +552,14 @@ C         slave nodes. /hjaaj June 2005
 #else
         CALL GETENV('WRKMEM',WRKMEM)
         CALL GETENV('BASDIR',BASDIR)
+        !debug! write (0,*) 'GETENV WRKMEM ',WRKMEM
+        !debug! write (0,*) 'GETENV BASDIR ',BASDIR
 #endif
         READ(WRKMEM, '(I20)', ERR=10) LMWORK
         IF (LMWORK .GE. 0) GO TO 20
-   10     WRITE(LUERR,'(/3A)')
-     &    ' DALTON: WRKMEM conversion error; WRKMEM = "',WRKMEM,'"'
+   10     WRITE(LUERR,'(/3A/A,I20)')
+     &    ' DALTON: WRKMEM conversion error; WRKMEM = "',WRKMEM,'"',
+     &    ' DALTON: read as LMWORK = ',LMWORK
           LMWORK = 0
    20   CONTINUE
 C

@@ -49,7 +49,7 @@ C
 C
       CALL QENTER('PR1INT')
 #ifdef VAR_DEBUG
-      write (lupri,*) 'PR1INT called with ',WORD
+      write (lupri,*) 'DEBUG: PR1INT called with ',WORD
 #endif
 C
       NCOMP  = 0
@@ -301,7 +301,6 @@ C
       FMMORI = .FALSE. ! in orgcom.h
       DO I = 1, NTABLE
          IF (TABLE(I) .EQ. WORD) THEN
-cLig <> added goto 75 and 76 for RANGMO and RPSO
             GO TO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,
      &             19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,
      &             34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,
@@ -900,7 +899,7 @@ C
  30   CONTINUE
          INTTYP = 28
          IF (IPRINT .GT. 5) WRITE (LUPRI,'(/A/)')
-     &        'Calculation of nuclear shielding tensor integrals'
+     &       'Calculation of nuclear shielding tensor integrals'
          CALL SETATM(WORK(KATOM),NATOM,INTTYP)
          CALL NSTTYP(NOPTYP,INTREP,LABINT,WORK(KATOM),NATOM,' NST',
      &               INTADR)
@@ -3948,8 +3947,7 @@ C  /* Deck efntyp */
       CALL QENTER('EFNTYP')
 
       NOPTYP = 3*NATOM
-      IF (INTDIR .AND. FORQM3 .AND. RUNQM3) NOPTYP = 3
-      IF (QMMM .AND. RUNQM3) NOPTYP = 3
+      IF (RUNQM3) NOPTYP = 3
       CALL NTYPTS(NOPTYP)
 C
       ITYP = 0
@@ -4030,7 +4028,7 @@ C  /* Deck efgtyp */
 #endif
 C
       NOPTYP = 6*NATOM
-      IF (QMMM .AND. RUNQM3) NOPTYP = 6
+      IF (RUNQM3) NOPTYP = 6
       CALL NTYPTS(NOPTYP)
       CALL IZERO(IFGTBL,6*NUCIND*(MAXREP + 1))
 C
