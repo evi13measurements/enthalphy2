@@ -103,7 +103,6 @@ abacus/abaort.F
 abacus/abapcm.F
 abacus/abaptr.F
 abacus/abaqm3.F
-abacus/abaqmmm.F
 abacus/abaqpg.F
 abacus/abaqr.F
 abacus/abarhs.F
@@ -280,7 +279,6 @@ cc/cc_pqi.F
 cc/cc_qaos.F
 cc/cc_qm3.F
 cc/cc_qmat.F
-cc/cc_qmmm.F
 cc/cc_qr2rs.F
 cc/cc_r12.F
 cc/cc_r12a2.F
@@ -531,7 +529,6 @@ rsp/rspoli.F
 rsp/rsporp.F
 rsp/rspprp.F
 rsp/rspqm3.F
-rsp/rspqmmm.F
 rsp/rspqrx3.F
 rsp/rspsol.F
 rsp/rspsol1.F
@@ -593,7 +590,6 @@ sirius/sirpcm.F
 sirius/sirpcmder.F
 sirius/sirpop.F
 sirius/sirqm3.F
-sirius/sirqmmm.F
 sirius/sirsav.F
 sirius/sirset.F
 sirius/sirsol.F
@@ -603,6 +599,7 @@ sirius/sirtr1.F
 sirius/sirtra.F
 sirius/sirupd.F
 sirius/symchk.F
+sirius/sir_mep.F
 soppa/ccsd_tcmepkx.F
 soppa/dc_calc.F
 soppa/dc_eres.F
