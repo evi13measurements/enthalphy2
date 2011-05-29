@@ -65,14 +65,10 @@ endif()
 if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
     set(CMAKE_Fortran_FLAGS         "-DVAR_PGF90")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-g -O0 -Mframe")
-    set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -mcmodel=medium -fast -Munroll")
+    set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -fast -Munroll")
     if(ENABLE_64BIT_INTEGERS)
         set(CMAKE_Fortran_FLAGS
-            "${CMAKE_Fortran_FLAGS} -m64 -i8"
-            )
-    else()
-        set(CMAKE_Fortran_FLAGS
-            "${CMAKE_Fortran_FLAGS} -m32"
+            "${CMAKE_Fortran_FLAGS} -m64 -i8 -mcmodel=medium"
             )
     endif()
     if(ENABLE_BOUNDS_CHECK)
