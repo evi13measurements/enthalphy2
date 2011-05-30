@@ -331,7 +331,6 @@ C
 #include <efield.h>
 #include <cbisol.h>
 #include <qm3.h>
-#include <qmmm.h>
 #include <huckel.h>
 #include <drw2el.h>
 #include <elweak.h>

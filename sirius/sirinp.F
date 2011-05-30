@@ -215,7 +215,7 @@ C
       PARAMETER (THR_DEFAULT=1.0D-5, THRRHF_MP2=1.0D-6)
 C
 C Used from common blocks:
-C   GNRINF : WESTA,EMBEDDING,QM3,QMMM, ...
+C   GNRINF : WESTA,EMBEDDING,QM3 ...
 C   INFINP : ...,ITRLVL,ITRFIN,..., DO*, DIRFCK,...
 C   INFORB : NSYM,?
 C   INFVAR : MAXOCC,NWOPT,JWOP(2,*),JWOPSY
@@ -1605,7 +1605,7 @@ C
 C  Do we use embedding ?
 C  (that is, is QM part embedded in environment)
 C
-      EMBEDDING = FLAG(16) .or. PCM .or. QM3 .or. QMMM
+      EMBEDDING = FLAG(16) .or. PCM .or. QM3
 C
 C ***  PRINT INPUT DATA *****
 C
@@ -4997,7 +4997,7 @@ C   INFMP2 : NFRMP2(*)
 C   DFTCOM : DFTRUN, DOSRBCK, ...
 C   DFTACB : DFTIPT, DFTBR1, DFTBR2
 C   siripc : INPPRC
-C   gnrinf : NEWSYM,EMBEDDING,QM3,QMMM,?
+C   gnrinf : NEWSYM,EMBEDDING,QM3,?
 C   pcmlog : PCM
 C
 #include <priunit.h>
@@ -5351,7 +5351,6 @@ C
        END IF
        IF (PCM)  WRITE (IWUNIT,'(/10X,A)') 'SOLVATION MODEL: PCM'
        IF (QM3)  WRITE (IWUNIT,'(/10X,A)') 'MODEL: QM3'
-       IF (QMMM) WRITE (IWUNIT,'(/10X,A)') 'MODEL: QMMM'
       END IF
 C
 C ***** Wave function specifications

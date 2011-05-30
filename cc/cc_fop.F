@@ -93,7 +93,6 @@ C
 #include <maxaqn.h>
 #include <symmet.h>
 #include <qm3.h>
-!#include <qmmm.h>
 #include <ccqrinf.h>
 C
       LOGICAL CCMMCONV,DIELCONV,CCDC

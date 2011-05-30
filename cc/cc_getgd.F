@@ -1871,7 +1871,6 @@ c=====================================================================*
 #include <ccn2rsp.h>
 #include <ccslvinf.h>
 #include <qm3.h>
-!#include <qmmm.h>
 
       PARAMETER( ONE = 1.0D00 , XMONE = -1.0D0)
       DIMENSION GD(*),WORK(LWORK)

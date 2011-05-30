@@ -520,7 +520,7 @@ C
      *      ,EPSOL
          END IF
 
-         IF (QM3 .OR. QMMM) THEN
+         IF (QM3) THEN
           WRITE(LUPRI,*) 'QM/MM response calculation'
          END IF
 
@@ -967,7 +967,7 @@ C
      *      ,EPSOL
          END IF
 
-         IF (QM3 .OR. QMMM) THEN
+         IF (QM3) THEN
           WRITE(LUPRI,*) 'QM/MM response calculation'
          END IF
 

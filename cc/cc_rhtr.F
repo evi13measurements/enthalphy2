@@ -72,7 +72,6 @@ C
 #include <eribuf.h>
 #include <ccslvinf.h>
 #include <qm3.h>
-!#include <qmmm.h>
 #include <ccnoddy.h>
 #include <r12int.h>
 #include <ccr12int.h>

@@ -92,7 +92,6 @@ C
 #include <infpri.h>
 #include <gnrinf.h>
 #include <qm3.h>
-#include <qmmm.h>
 C
 C
 C EXTERNAL FUNCTIONS

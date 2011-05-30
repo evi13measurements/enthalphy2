@@ -191,7 +191,6 @@ c/* Deck CC_BMAT */
 #include "ccsections.h"
 #include "ccslvinf.h"
 #include "qm3.h"
-!#include "qmmm.h"
 
 * local parameters:
       CHARACTER MSGDBG*(17)
@@ -2437,7 +2436,6 @@ c/* Deck CCBMAT2 */
 #include <ccsections.h>
 #include <ccslvinf.h>
 #include <qm3.h>
-!#include <qmmm.h>
 
 
 * local parameters:

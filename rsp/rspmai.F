@@ -1525,7 +1525,7 @@ C
      *      ,EPSOL
          END IF
 
-         IF (QM3 .OR. QMMM) THEN
+         IF (QM3) THEN
            WRITE(LUPRI,'(A)') ' QM/MM response calculation'
          ENDIF
 
@@ -2071,7 +2071,7 @@ C
      *      ,EPSINF
          END IF
 
-         IF (QM3 .OR. QMMM) THEN
+         IF (QM3) THEN
            WRITE(LUPRI,'(A)') ' QM/MM response calculation'
          ENDIF 
 
@@ -4630,7 +4630,7 @@ C
      *      ,EPSOL
          END IF
 C
-         IF (QM3 .OR. QMMM) THEN
+         IF (QM3) THEN
            WRITE(LUPRI,'(A)') ' QM/MM response calculation'
          ENDIF
 

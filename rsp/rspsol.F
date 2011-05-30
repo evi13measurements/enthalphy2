@@ -128,7 +128,6 @@ C---------------------
 #include <gnrinf.h>
 #include <infpar.h>
 #include <mxcent.h>
-#include <qmmm.h>
 C gnrinf.h for QM3 by CBN+JK 03.01.06
 C---------------------
 C

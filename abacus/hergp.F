@@ -2028,7 +2028,6 @@ C
 #include "gnrinf.h"
 #endif
 #include "qm3.h"
-#include "qmmm.h"
 
 C
       IF (IPRINT .GE. 0) CALL HEADER('Isotopic Masses',-1)
@@ -2061,7 +2060,7 @@ C
         WRITE (LUPRI,'(/A,3F12.6)')
      &     ' Center-of-mass coordinates (a.u.):',(ORIGIN(K),K=1,3)
       END IF
-      IF (QM3. OR. QMMM) THEN
+      IF (QM3) THEN
         QMCOM(1) = ORIGIN(1)
         QMCOM(2) = ORIGIN(2)
         QMCOM(3) = ORIGIN(3)

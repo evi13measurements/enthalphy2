@@ -520,7 +520,6 @@ c/* Deck CC_FMATNEW */
 #include <dummy.h>
 #include <r12int.h>
 #include <qm3.h>
-!#include <qmmm.h>
 
 * local parameters:
       CHARACTER MSGDBG*(17)
@@ -3837,7 +3836,6 @@ c/* Deck CCFMAT2 */
 #include <ccfield.h>
 #include <ccslvinf.h>
 #include <qm3.h>
-!#include <qmmm.h>
 
 * local parameters:
       CHARACTER MSGDBG*(17)

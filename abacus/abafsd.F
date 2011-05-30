@@ -1719,7 +1719,6 @@ C
 #include <cbisol.h>
 #include <infinp.h>
 #include <pcmlog.h>
-#include <qmmm.h>
 #include <efield.h>
 #include <infpar.h>
       DIMENSION OMATX(N2BASX), OMATY(N2BASX), OMATZ(N2BASX),

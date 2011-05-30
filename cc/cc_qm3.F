@@ -373,7 +373,6 @@ C
 #include <priunit.h>
 #include <dummy.h>
 #include <mxcent.h>
-#include <qmmm.h>
 #include <qm3.h>
 #include <iratdef.h>
 #include <maxorb.h>

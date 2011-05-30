@@ -504,7 +504,6 @@ C
 #include <onecom.h>
 #include <nuclei.h>
 #include <symmet.h>
-#include <qmmm.h>
 cDM added to pass vectors to MAGPCMSEC
 #include <pcmdef.h>
 #include <pcm.h>

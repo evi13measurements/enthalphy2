@@ -5,9 +5,9 @@ c     File: gnrinf.h -- general information for DALTON
 c
 C
 C     EMBEDDING : QM part is embedded in environment (solvent or e.g. protein)
-C                 May 2011/hjaaj: EMBEDDING = FLAG(16) .or. PCM .or. QM3 .or. QMMM
+C                 May 2011/hjaaj: EMBEDDING = FLAG(16) .or. PCM .or. QM3
 C                 (For now, EMBEDDING is defined in sirius/sirinp.F because this is
-C                 the first instance where all of FLAG(16), PCM, QM3, QMMM are set)
+C                 the first instance where all of FLAG(16), PCM, QM3 are set)
 C                            
       LOGICAL TESTIN, OPTWLK, RNHERM, RNSIRI, RNABAC, GEOCNV,
      &        HRINPC, SRINPC, RDINPC, RDMLIN, PARCAL, DIRCAL,
@@ -15,7 +15,7 @@ C
      &        DOCCSD, OPTNEW, NEWSYM, NEWBAS, NEWPRP, RELCAL,
      &        TOTSYM, NMWALK, DKTRAN, GEOALL, WESTA,  SEGAUX,
      &        ERFEXP, DOSRIN, SRINTS, CHI1ST,
-     &        EMBEDDING, QM3, QMMM
+     &        EMBEDDING, QM3
 C
       COMMON /GNRINF/ 
      &        ! double:
@@ -35,5 +35,4 @@ C
       PARAMETER (LBASDIR = 600)
       CHARACTER*(LBASDIR) BASDIR
       COMMON /GNRCHR/ BASDIR
-      PARAMETER (QMMM = .FALSE.)
 C --- end of gnrinf.h ---

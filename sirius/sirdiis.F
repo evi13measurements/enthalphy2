@@ -314,7 +314,6 @@ C
 #include <r12int.h>
 #include <qm3.h>
 #include "incore.h"
-#include <qmmm.h>
 #include <infpar.h>
 C
 Cholesky
@@ -352,7 +351,7 @@ C
       CALL SIRH1(H1AO,WRK(KFREE),LFREE)
 C
       IF (LUW4 .NE. LUPRI .OR. IPR_DIIS .LE. 1) THEN
-      IF (FLAG(16) .OR. PCM .OR. QM3 .OR. QMMM) THEN
+      IF (FLAG(16) .OR. PCM .OR. QM3) THEN
       IF (.NOT.AUTOCC) THEN
          WRITE (LUW4,'(/A)')
      &      ' Iter      Total energy       Solvation energy    '//
@@ -462,8 +461,7 @@ C------------------
       DODIFDEN = .NOT.FLAG(49) .AND. .NOT.HSROHF
      &     .AND. .NOT.DODFT    .AND. .NOT.DOHFSRDFT
      &     .AND. .NOT.FLAG(16) .AND. .NOT.PCM
-     &     .AND. .NOT.QM3      .AND. .NOT. QMMM
-     &     .AND. .NOT.AOSAVE
+     &     .AND. .NOT.QM3      .AND. .NOT.AOSAVE
 C------------------
 Chjaaj: DIFDEN does not work with solvent/PCM/QM3
 C       because FC_sol is added to the old FC matrix, but not the new!
@@ -737,7 +735,7 @@ C    &               ERRVEC,WRK,KFRSAV,LFRSAV,IPR_DIIS)
             CALL FLSHFO(LUPRI)
          END IF
          IF (LUW4 .NE. LUPRI .OR. IPR_DIIS .LE. 1) THEN
-            IF (FLAG(16) .OR. PCM .OR. QM3 .OR. QMMM) THEN
+            IF (FLAG(16) .OR. PCM .OR. QM3) THEN
                IF (.NOT.AUTOCC) THEN
                   WRITE (LUW4,'(I4,1P,G20.12,G20.12,D15.5,D12.2)')
      &               ITDIIS,EMCSCF,ESOLT,GRDNRM,EMCDIF
@@ -1288,13 +1286,13 @@ C
 C
        IF (IPRENR .GT. 0) THEN
          WRITE (LUW4,'(//A)') ' *** SCF orbital energy analysis ***'
-         IF (FLAG(16) .OR. PCM .OR. QM3 .OR. QMMM)
+         IF (FLAG(16) .OR. PCM .OR. QM3)
      &     WRITE (LUW4,'(A)') '    (incl. solvent contribution)'
          CALL RHFENR(IPRI4,LUW4,FCAO, WRK(KFREE),LFREE)
 C-------------------
          IF (LUPRI .NE. LUW4) THEN
             WRITE (LUPRI,'(//A)') ' *** SCF orbital energy analysis ***'
-            IF (FLAG(16) .OR. PCM .OR. QM3 .OR. QMMM)
+            IF (FLAG(16) .OR. PCM .OR. QM3)
      &        WRITE (LUPRI,'(A)') '    (incl. solvent contribution)'
             CALL RHFENR(IPRI6,LUPRI,FCAO, WRK(KFREE),LFREE)
          END IF

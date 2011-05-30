@@ -2630,7 +2630,6 @@ C
 #include <ccsdinp.h>
 #include <ccsections.h>
 #include <qm3.h>
-!#include <qmmm.h>
 #include <ccfield.h>
 #include <leinf.h>
 C
@@ -2746,7 +2745,6 @@ C
 #include <ccfield.h>
 #include <leinf.h>
 #include <qm3.h>
-!#include <qmmm.h>
       INDEX(I,J) = MAX(I,J)*(MAX(I,J) - 3)/2 + I + J
 C
       CALL QENTER('CC_LCC2FF')
@@ -2839,7 +2837,6 @@ C
 #include <ccfield.h>
 #include <leinf.h>
 #include <qm3.h>
-!#include <qmmm.h>
 C
       LOGICAL ETRAN,FCKCON
 C

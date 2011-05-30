@@ -462,7 +462,6 @@ c /* deck cc_xieta1 */
 #include <dummy.h>
 #include <ccsections.h>
 #include <qm3.h>
-!#include <qmmm.h>
 #include <ccnoddy.h>
 #include <cch2d.h>
 #include <ccrc1rsp.h>
