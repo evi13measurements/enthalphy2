@@ -167,7 +167,7 @@ echo "   ***************************************** "
 echo "   **** OUTPUT FROM DALTON SHELL SCRIPT **** "
 echo "   ***************************************** "
 echo
-echo "   Dalton Release DALTON2011 (Mar. 2011)"
+echo "   Dalton Release DALTON2011 (May 2011)"
 echo;
 echo "   Invocation: $0 $paramlist"
 echo; echo "   `date`"
@@ -207,7 +207,7 @@ if [ -d "$TMPDIR" -a -w "$TMPDIR" ]; then
      if [ -s $WRKDIR/$potfil.$POTEXT -a -r $WRKDIR/$potfil.$POTEXT ]; then
         cp $WRKDIR/$potfil.$POTEXT POTENTIAL.INP
      else
-        echo "$WRKDIR/$potfil.$POTEXT for QM/MM does not exist or is not readable"
+        echo "$WRKDIR/$potfil.$POTEXT for QM/MM (QM3) does not exist or is not readable"
         ierr=1
      fi
    fi
@@ -305,6 +305,7 @@ if [ -s $outnam.tar.gz ] ; then
 else
     echo "$outnam.tar.gz has not been created and has thus not been copied to $WRKDIR"
 fi
+
 
 if [ $opto -eq 1 ] ; then
    if [ -s $WRKDIR/$OUTFIL -a -r $WRKDIR/$OUTFIL ]; then
