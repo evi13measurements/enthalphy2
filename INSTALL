@@ -34,7 +34,7 @@ The configure script configures a prepared Makefile, whereas CMake creates a
 new Makefile based on default parameters which can be modified.
 
 Configuring using the configure script is the traditional method to build
-Dalton. This method is well tested.
+Dalton. This method is well tested and the recommended method.
 
 Building Dalton using CMake is a new and alternative method and since the
 support for CMake has been only recently added, some problems may still appear.
