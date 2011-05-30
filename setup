@@ -19,7 +19,7 @@ usage = '''
   Examples:
     ./%prog --fc=gfortran --debug
     ./%prog --fc=ifort --cc=icc --prefix=/path/to/build/dir/
-    ./%prog --fc=mpif90 --cc=mpicc --mpi --math="-L/opt/intel/mkl/10.2.6.038/lib/32 -lmkl_lapack -lmkl_intel -lmkl_intel_thread -lmkl_core -lguide -lpthread"
+    ./%prog --fc=mpif90 --cc=mpicc --mpi
     ./%prog --fc=pgf90 --cc=pgcc --nomath
     ./%prog --auto'''
 
@@ -40,28 +40,28 @@ group.add_option('--fc',
                  action='store',
                  dest='fc',
                  default=None,
-                 help='set the Fortran compiler [default: pick automatically]',
+                 help='set the Fortran compiler [default: pick automatically or based on FC=...]',
                  metavar='STRING')
 group.add_option('--cc',
                  type='string',
                  action='store',
                  dest='cc',
                  default=None,
-                 help='set the C compiler [default: pick automatically]',
+                 help='set the C compiler [default: pick automatically or based on CC=...]',
                  metavar='STRING')
 group.add_option('--cpp',
                  type='string',
                  action='store',
                  dest='cpp',
                  default=None,
-                 help='set the C++ compiler [default: pick automatically]',
+                 help='set the C++ compiler [default: pick automatically or based on CXX=...]',
                  metavar='STRING')
 group.add_option('--math',
                  type='string',
                  action='store',
                  dest='math',
                  default=None,
-                 help='provide math library to link [default: pick automatically]',
+                 help='provide math library to link [default: pick automatically or based on MATH_ROOT=...]',
                  metavar='STRING')
 group.add_option('--nomath',
                  action='store_true',
@@ -194,20 +194,20 @@ if not options.auto:
 command += ' cmake'
 
 if options.nomath:
-    command += ' -DENABLE_EXTERNAL_MATH=0'
+    command += ' -DENABLE_EXTERNAL_MATH=OFF'
 if options.math:
     command += ' -DUSERDEFINED_LIBS="%s"' % options.math
 if options.mpi:
-    command += ' -DENABLE_MPI=1'
+    command += ' -DENABLE_MPI=ON'
 if options.omp:
-    command += ' -DENABLE_OMP=1'
+    command += ' -DENABLE_OMP=ON'
 
 if options.int64:
-    command += ' -DENABLE_64BIT_INTEGERS=1'
+    command += ' -DENABLE_64BIT_INTEGERS=ON'
 if options.check:
-    command += ' -DENABLE_BOUNDS_CHECK=1'
+    command += ' -DENABLE_BOUNDS_CHECK=ON'
 if options.coverage:
-    command += ' -DENABLE_CODE_COVERAGE=1'
+    command += ' -DENABLE_CODE_COVERAGE=ON'
 if options.install:
     command += ' -DCMAKE_INSTALL_PREFIX=' + options.install
 if options.scratch:
@@ -224,11 +224,17 @@ if options.cmake:
 
 command += ' %s' % root_directory
 
-print '   CMake command: %s\n' % command
+build_path = options.prefix
+
+if os.path.isdir(build_path):
+    print 'aborting setup - build directory %s exists already' % build_path
+    print 'please first remove it and then rerun setup'
+    sys.exit()
+
 if options.show:
     sys.exit()
 
-build_path = options.prefix
+print '   CMake command: %s\n' % command
 
 if not os.path.isdir(build_path):
     # if you change this to proper python make it mkdir *with parent*
@@ -260,8 +266,3 @@ if normal_cmake_termination:
     print '   $ ccmake ' + root_directory
     print '   $ make'
 
-    file_name = 'rebuild'
-    f = open(build_path + file_name, 'w')
-    f.write('%s; make' % command)
-    f.close()
-    os.system('chmod 700 %s' % build_path + file_name)
