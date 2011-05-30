@@ -474,12 +474,7 @@ C CCMM02,JA+AO
 C-------------------------------------
 C
       IF (CCMM) THEN
-         IF (.NOT. NYQMMM) THEN
-            CALL CCMM_RHSTG(WORK(KFOCK),WORK(KEND1),LWRK1)
-         ELSE IF (NYQMMM) THEN
-            CALL CCMM_ADDG(WORK(KFOCK),WORK(KEND1),LWRK1)
-C            CALL CCMM_TGT(WORK(KFOCK),WORK(KEND1),LWRK1)
-         END IF
+        CALL CCMM_RHSTG(WORK(KFOCK),WORK(KEND1),LWRK1)
       ENDIF
 C
       IF (IPRINT .GT.15) THEN
@@ -1248,12 +1243,7 @@ C CCMM02,JA+AO
 C-------------------------------------
 C
         IF (CCMM) THEN
-           IF (.NOT. NYQMMM) THEN
-              CALL CCMM_RHSTG(WORK(KFIELD),WORK(KEND2),LWRK2)
-           ELSE IF (NYQMMM) THEN
-              CALL CCMM_ADDG(WORK(KFIELD),WORK(KEND2),LWRK2)
-C              CALL CCMM_TGT(WORK(KFIELD),WORK(KEND2),LWRK2)
-           END IF
+          CALL CCMM_RHSTG(WORK(KFIELD),WORK(KEND2),LWRK2)
         ENDIF
 C
 C----------------------------------
@@ -8566,12 +8556,7 @@ C CCMM02,JA+AO
 C-------------------------------------
 C
          IF (CCMM) THEN
-            IF (.NOT. NYQMMM) THEN
-               CALL CCMM_RHSTG(WORK(KFOCK),WORK(KEND1),LWRK1)
-            ELSE IF (NYQMMM) THEN
-               CALL CCMM_ADDG(WORK(KFOCK),WORK(KEND1),LWRK1)
-C               CALL CCMM_TGT(WORK(KFOCK),WORK(KEND1),LWRK1)
-            END IF
+           CALL CCMM_RHSTG(WORK(KFOCK),WORK(KEND1),LWRK1)
          ENDIF
 C
 C-------------------------------------

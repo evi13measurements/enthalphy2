@@ -1643,22 +1643,12 @@ C
      *                    MODEL,WORK(KEND2),LEND2)
 C
           IF (CCMM) THEN
-            IF (.NOT. NYQMMM) THEN
-              CALL CCMM_GTR(WORK(KDELTA1(ITRAN)),
+            CALL CCMM_GTR(WORK(KDELTA1(ITRAN)),
      *                   WORK(KDELTA2),ISYRES,
      *                   LISTA,IDLSTA,ISYCTR,
      *                   LISTB,IDLSTB,ISYMTB,
      *                   LISTC,IDLSTC,ISYMTC,
      *                   MODEL,WORK(KEND2),LEND2)
-C 
-            ELSE IF (NYQMMM) THEN
-              RSPTYP='G'
-              CALL CCMM_QRTRANSFORMER(WORK(KDELTA1(ITRAN)),
-     *                   WORK(KDELTA2),ISYRES,
-     *                   LISTB,IDLSTB,ISYMTB,
-     *                   LISTC,IDLSTC,ISYMTC,
-     *                   MODEL,RSPTYP,WORK(KEND2),LEND2)
-            END IF
           END IF
         END IF
 

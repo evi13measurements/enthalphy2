@@ -388,16 +388,6 @@ C
          CALL FLSHFO(LUPRI)
         END IF
 C
-C 
-        IF (NYQMMM) THEN
-          
-          RSPTYP='K'
-          CALL CCMM_QRTRANSFORMER(WORK(KTHETA1),WORK(KTHETA2),ISYMAB,
-     *                         LISTB,IDLSTB,ISYMB,
-     *                         LISTA,IDLSTA,ISYMA,
-     *                         MODELW,RSPTYP,WORK(KEND1),LWRK1)
-
-        ELSE IF (.NOT. NYQMMM) THEN
           KTGB  = KEND1 
           KEND2 = KTGB + N2BST(ISYMB)
           LWRK2 = LWORK   - KEND2 
@@ -536,8 +526,6 @@ C
             CALL DAXPY(NT2AM(ISYMAB),ONE,WORK(KETA2),1,WORK(KTHETA2),1)
 C
           END IF
-
-        END IF ! NYQMMM
 
 *---------------------------------------------------------------------*
 * write result vector to output:

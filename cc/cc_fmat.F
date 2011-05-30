@@ -1011,16 +1011,11 @@ C     DOUBLE PRECISION ECURRSAV
       END DO
  
 * Solvent contribution to one-electron integrals. 
-* T^g contribution to transformation. SLV98,OC, CCMM JK, NYQMMM KS
+* T^g contribution to transformation. SLV98,OC, CCMM JK
       IF (CCSLV) THEN
          IF (.NOT.CCMM) CALL CCSL_RHSTG(WORK(KFOCK0),WORK(KEND0),LWRK0)
          IF (CCMM) THEN
-            IF (.NOT. NYQMMM) THEN
-               CALL CCMM_RHSTG(WORK(KFOCK0),WORK(KEND0),LWRK0)
-            ELSE IF (NYQMMM) THEN
-               CALL CCMM_ADDG(WORK(KFOCK0),WORK(KEND0),LWRK0)
-C               CALL CCMM_TGT(WORK(KFOCK0),WORK(KEND0),LWRK0)
-            END IF
+           CALL CCMM_RHSTG(WORK(KFOCK0),WORK(KEND0),LWRK0)
          END IF
       ENDIF
 C
@@ -2149,7 +2144,7 @@ C
        ENDIF
 C
 C-------------------------------------------
-C     SLV98,OC, CCMM JK, NYQMMM KS 10
+C     SLV98,OC, CCMM JK
 C     Calculate T^{gB} solvent contribution.
 C     Unsquared T2 is required!
 C-------------------------------------------
@@ -2173,18 +2168,9 @@ C
      *                    WORK(KT1AMPA),WORK(KT2AMPA),ISYAMP,'F',
      *                    WORK(KEND3),LWRK3)
            IF (CCMM) THEN
-              IF (.NOT. NYQMMM) THEN
-                 CALL CCMM_LTRB(WORK(KTHETA1),WORK(KTHETA2),
+             CALL CCMM_LTRB(WORK(KTHETA1),WORK(KTHETA2),
      *                    WORK(KT1AMPA),WORK(KT2AMPA),ISYAMP,'F',
      *                    WORK(KEND3),LWRK3)
-              ELSE IF (NYQMMM) THEN
-                 CALL CCMM_TRANSFORMER(WORK(KTHETA1),WORK(KTHETA2),
-     *                         WORK(KT1AMPA),WORK(KT2AMPA),MODEL,ISYAMP,
-     *                         'F',WORK(KEND3),LWRK3)
-C                 CALL CCMM_TGTBAR(WORK(KTHETA1),WORK(KTHETA2),
-C     *                         WORK(KT1AMPA),WORK(KT2AMPA),MODEL,ISYAMP,
-C     *                         'F',WORK(KEND3),LWRK3)
-              END IF
            END IF
          ELSE IF (LISTL(1:2).NE.'L0') THEN
            IF (.NOT. CCMM) CALL CCSL_PBTR(WORK(KTHETA1),WORK(KTHETA2),
@@ -2195,22 +2181,13 @@ C     *                         'F',WORK(KEND3),LWRK3)
      *                                    ISYAMP,MODEL,
      *                                    WORK(KEND2),LWRK2)
            IF (CCMM) THEN
-             IF (.NOT. NYQMMM) THEN
-               CALL CCMM_PBTR(WORK(KTHETA1),WORK(KTHETA2),
+             CALL CCMM_PBTR(WORK(KTHETA1),WORK(KTHETA2),
      *                              ISYRES,
      *                              LISTL,IDLSTL, WORK(KZETA1),
      *                              ISYCTR,
      *                              LISTR,IDLSTR, WORK(KT1AMPA),
      *                              ISYAMP,MODEL,
      *                              WORK(KEND2),LWRK2)
-             ELSE IF (NYQMMM) THEN
-               RSPTYP='F'
-               CALL CCMM_QRTRANSFORMER(WORK(KTHETA1),WORK(KTHETA2),
-     *                              ISYRES,
-     *                              LISTL,IDLSTL,ISYCTR,
-     *                              LISTR,IDLSTR,ISYAMP,
-     *                              MODEL,RSPTYP,WORK(KEND2),LWRK2)
-             END IF
            END IF 
          END IF
       ENDIF
@@ -3980,7 +3957,7 @@ C
 C---------------------------------------------------------------------------
 C     Solvent contribution to one-electron integrals. 
 C     T^g contribution to transformation.
-C    SLV98,OC, NYQMMM10 KS
+C    SLV98,OC
 C------------------------------------------------------------------------------
 C
          IF (CCSLV .AND. (.NOT. CCMM)) THEN             
@@ -3988,12 +3965,7 @@ C
          ENDIF
 C
          IF (CCMM) THEN
-            IF (.NOT. NYQMMM) THEN
-               CALL CCMM_RHSTG(WORK(KONEH),WORK(KEND0),LWRK0)
-            ELSE IF (NYQMMM) THEN
-               CALL CCMM_ADDG(WORK(KONEH),WORK(KEND0),LWRK0)
-C               CALL CCMM_TGT(WORK(KONEH),WORK(KEND0),LWRK0)
-            END IF
+           CALL CCMM_RHSTG(WORK(KONEH),WORK(KEND0),LWRK0)
          ENDIF
 C-----------------------------------------------------------------
 
@@ -4026,7 +3998,7 @@ C
 C-----------------------------------------------------------------------------------------
 C     Solvent contribution to one-electron integrals. 
 C     T^g contribution to transformation.
-C     SLV98,OC, NYQMMM10 KS
+C     SLV98,OC
 C------------------------------------------------------------------------------
 C
          IF (CCSLV .AND. (.NOT. CCMM)) THEN
@@ -4034,12 +4006,7 @@ C
          ENDIF
 C
          IF (CCMM) THEN
-            IF (.NOT. NYQMMM) THEN
-               CALL CCMM_RHSTG(WORK(KFIELD),WORK(KEND0),LWRK0)
-            ELSE IF (NYQMMM) THEN
-               CALL CCMM_ADDG(WORK(KFIELD),WORK(KEND0),LWRK0)
-C               CALL CCMM_TGT(WORK(KFIELD),WORK(KEND0),LWRK0)
-            END IF
+           CALL CCMM_RHSTG(WORK(KFIELD),WORK(KEND0),LWRK0)
          ENDIF
 C------------------------------------------------------------------------------
 C
