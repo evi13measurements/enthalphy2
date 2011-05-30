@@ -1,0 +1,1 @@
+git rev-parse HEAD 2> /dev/null
