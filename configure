@@ -669,7 +669,7 @@ fi
 # Observe, that the minimal value is not 0, it is 1 because
 # some compilers do not like arrays with no elements.
 
-$ECHO '\nDALTON uses almost 7 million *8 words (56 Megabytes) of static'
+$ECHO '\nDALTON uses almost 56 Megabytes of static'
 $ECHO 'allocations, in addition to the dynamic allocation.'
 $ECHO '\nDALTON has the possibility to reserve an amount of static memory'
 $ECHO 'for storing two-electron integrals in direct and parallel calculations'
@@ -683,21 +683,26 @@ if [ "$answer" = "y" ]; then
 #   only accept positive numbers
     while [ $incore_memory_words -le 0 ]
     do
-       $ECHO 'How many millions of *8 words to use for storing 2-el.integrals? \c'
-       read incore_memory_words
+       $ECHO 'How many MB to use for storing 2-el. integrals? \c'
+
+       read incore_memory_mb
+
+       # convert
+       incore_memory_mw=`echo "$incore_memory_mb*1048576/8000000" | bc`
+       incore_memory_words=`expr $incore_memory_mw \* 1000000`
+
 #      check that user hasn't just hit return (giving an empty string)
        if [ "$incore_memory_words" = "" ]; then incore_memory_words=0; fi
-       incore_memory_words=`expr $incore_memory_words \* 1000000`
+
 #      in case $incore_memory_wordse was not a number it will now be an empty string, if so reset to zero.
        if [ "$incore_memory_words" = "" ]; then incore_memory_words=0; fi
     done
-    $ECHO '\n-->Program will be installed with '$incore_memory_words' words used for storing 2-el.integrals'
+    $ECHO '\n-->Program will be installed with '$incore_memory_mb' MB ('$incore_memory_words' words) used for storing 2-el. integrals'
     
 else
     incore_memory_words=1
 fi
 
-#
 $ECHO '\nMaximum amount of work memory for dynamic allocations can be'
 $ECHO 'changed at run time with the environment variable WRKMEM (work memory in *8 words)'
 $ECHO 'or by using the -M option to the dalton script (in MB).'
