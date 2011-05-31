@@ -669,7 +669,7 @@ fi
 # Observe, that the minimal value is not 0, it is 1 because
 # some compilers do not like arrays with no elements.
 
-$ECHO '\nDALTON uses almost 56 Megabytes of static'
+$ECHO '\nDALTON uses almost 97 Megabytes of static'
 $ECHO 'allocations, in addition to the dynamic allocation.'
 $ECHO '\nDALTON has the possibility to reserve an amount of static memory'
 $ECHO 'for storing two-electron integrals in direct and parallel calculations'
