@@ -60,6 +60,12 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
             "${CMAKE_Fortran_FLAGS} -check bounds -fpstkchk -check pointers -check uninit -check output_conversion -traceback"
             )
     endif()
+    # remove optimization in cc/cc_r12a2.F
+    # (see dalton-wizards discussion from May 31, 2011)
+    set_source_files_properties(cc/cc_r12a2.F
+        PROPERTIES COMPILE_FLAGS
+        "-O0"
+        )
 endif()
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
