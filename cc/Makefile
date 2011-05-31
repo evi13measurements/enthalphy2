@@ -79,6 +79,10 @@ cc_ftstnew.o: cc_ftstnew.F
 	$(F90) $(INCLUDES) $(CPPFLAGS) $(SAFEFFLAGS) -c cc_ftstnew.F 
 cc_r12ccsd.o: cc_r12ccsd.F
 	$(F90) $(INCLUDES) $(CPPFLAGS) $(SAFEFFLAGS) -c cc_r12ccsd.F 
+# ifort (version 12) 32-bit integers has problems compiling cc_r12a2.F
+# (the 64-bit integer version works ok -- strange ...)
+cc_r12a2.o: cc_r12a2.F
+	$(F90) $(INCLUDES) $(CPPFLAGS) $(SAFE_FFLAGS_for_ifort) -c $*.F 
 
 io : crayio.o
 
@@ -89,6 +93,7 @@ clean :
 	$(RM) -f *.o *~ *.lst *.i *.L i.*.f v.i.*.f *.a
 
 tags:;          $(RM) -f tags ; etags  *.F
+
 
 Makefile.depend depend: ../include/*.h
 	../tools/check_depend $(INCLUDES) > Makefile.depend
