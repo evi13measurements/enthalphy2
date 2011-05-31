@@ -699,28 +699,35 @@ fi
 
 #
 $ECHO '\nMaximum amount of work memory for dynamic allocations can be'
-$ECHO 'changed at run time with the environment variable WRKMEM'
-$ECHO 'or by using the -M option to the run script: "dalton -M mb ...".'
-$ECHO 'We recommend at least 20 million *8 words work memory,'
+$ECHO 'changed at run time with the environment variable WRKMEM (work memory in *8 words)'
+$ECHO 'or by using the -M option to the dalton script (in MB).'
+$ECHO 'We recommend at least 150 MB work memory,'
 $ECHO 'larger for correlated calculations, but it should for maximum'
 $ECHO 'efficiency NOT exceed available physical memory.\n'
+
 work_memory_words=0
 # only accept positive numbers
 while [ $work_memory_words -le 0 ]
 do
-    $ECHO 'How many millions of *8 words to use as default for work memory? \c'
+    $ECHO 'How many MB to use as default for work memory (hit return for default of 1000 MB)? \c'
+
     if test "$do_quick_config" = y; then
-       work_memory_words=50
+       work_memory_mb=1000
     else 
-       read work_memory_words
+       read work_memory_mb
     fi
-#   check that user hasn't just hit return (giving an empty string)
-    if [ "$work_memory_words" = "" ]; then work_memory_words=0; fi
-    work_memory_words=`expr $work_memory_words \* 1000000`
-#   in case $work_memory_words was not a number it will now be an empty string, if so reset to zero.
+
+    # if user hit return, use default
+    if [ "$work_memory_mb" = "" ]; then work_memory_mb=1000; fi
+
+    # convert
+    work_memory_mw=`echo "$work_memory_mb*1048576/8000000" | bc`
+    work_memory_words=`expr $work_memory_mw \* 1000000`
+
+    # in case $work_memory_mb was not a number, $work_memory_words is now an empty string, if so reset to zero.
     if [ "$work_memory_words" = "" ]; then work_memory_words=0; fi
 done
-$ECHO '\n-->Program will be installed with a default work memory of '$work_memory_words' words'
+$ECHO '\n-->Program will be installed with a default work memory of '$work_memory_mb' MB ('$work_memory_words' words)'
 
 #
 # Determine location for executable and run script
