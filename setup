@@ -226,12 +226,13 @@ command += ' %s' % root_directory
 
 build_path = options.prefix
 
+if options.show:
+    print '   CMake command: %s\n' % command
+    sys.exit()
+
 if os.path.isdir(build_path):
     print 'aborting setup - build directory %s exists already' % build_path
     print 'please first remove it and then rerun setup'
-    sys.exit()
-
-if options.show:
     sys.exit()
 
 print '   CMake command: %s\n' % command
