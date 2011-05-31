@@ -704,23 +704,23 @@ $ECHO 'or by using the -M option to the run script: "dalton -M mb ...".'
 $ECHO 'We recommend at least 20 million *8 words work memory,'
 $ECHO 'larger for correlated calculations, but it should for maximum'
 $ECHO 'efficiency NOT exceed available physical memory.\n'
-memsiz=0
+work_memory_words=0
 # only accept positive numbers
-while [ $memsiz -le 0 ]
+while [ $work_memory_words -le 0 ]
 do
     $ECHO 'How many millions of *8 words to use as default for work memory? \c'
     if test "$do_quick_config" = y; then
-       memsiz=50
+       work_memory_words=50
     else 
-       read memsiz
+       read work_memory_words
     fi
 #   check that user hasn't just hit return (giving an empty string)
-    if [ "$memsiz" = "" ]; then memsiz=0; fi
-    memsiz=`expr $memsiz \* 1000000`
-#   in case $memsiz was not a number it will now be an empty string, if so reset to zero.
-    if [ "$memsiz" = "" ]; then memsiz=0; fi
+    if [ "$work_memory_words" = "" ]; then work_memory_words=0; fi
+    work_memory_words=`expr $work_memory_words \* 1000000`
+#   in case $work_memory_words was not a number it will now be an empty string, if so reset to zero.
+    if [ "$work_memory_words" = "" ]; then work_memory_words=0; fi
 done
-$ECHO '\n-->Program will be installed with a default work memory of '$memsiz' words'
+$ECHO '\n-->Program will be installed with a default work memory of '$work_memory_words' words'
 
 #
 # Determine location for executable and run script
@@ -827,7 +827,7 @@ case "$WHICH" in
     rs6000)
           case $opsys in
           2)
-             cpp="-w -P -DSYS_AIX -DSYS_AIX23 -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+             cpp="-w -P -DSYS_AIX -DSYS_AIX23 -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
              if [ $splitfiles = 'true' ] ; then
                 cpp="$cpp -DVAR_SPLITFILES"
              fi
@@ -842,7 +842,7 @@ case "$WHICH" in
              inc='-I../include'
              cpp=${cpp}" -DIMPLICIT_NONE";;
           *)
-             cpp="-WF,-DSYS_AIX,-DVAR_MFDS,-D'INSTALL_WRKMEM=$memsiz',-D'INSTALL_MMWORK=$incoresiz'"
+             cpp="-WF,-DSYS_AIX,-DVAR_MFDS,-D'INSTALL_WRKMEM=$work_memory_words',-D'INSTALL_MMWORK=$incoresiz'"
              if [ $splitfiles = 'true' ] ; then
                 cpp="$cpp,-DVAR_SPLITFILES"
              fi
@@ -870,7 +870,7 @@ case "$WHICH" in
              cpp=${cpp}",-DVAR_INT64"
           fi;;
     iris4d)
-          cpp="-DSYS_IRIX -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="-DSYS_IRIX -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           case $opsys in
                IRIX64)  opt='-O2 -64 -mips4 -G 0 -OPT:Olimit=0 -woff 2290'
                        copt='-O2 -64 -mips4 -G 0 -OPT:Olimit=0'
@@ -894,7 +894,7 @@ case "$WHICH" in
           inc='-I../include'
           cpp=${cpp}" -DIMPLICIT_NONE";;
     cray)
-          cpp="-DSYS_CRAY -DVAR_INT64 -DVAR_MFDS -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz' -DVAR_VECTOR"
+          cpp="-DSYS_CRAY -DVAR_INT64 -DVAR_MFDS -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz' -DVAR_VECTOR"
           if [ "$mesp" != "dummy" ]; then
                 cpp="$cpp $parop"
           fi
@@ -903,7 +903,7 @@ case "$WHICH" in
           opt="-Wf\"-i 64 -a stack -dp\" -Wl\"-i ./equivalences\" -Wp\"-F\""
           def='cray.x';;
     cray_t90)
-          cpp="-DSYS_T90 -DVAR_INT64 -DVAR_MFDS -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz' -DVAR_VECTOR"
+          cpp="-DSYS_T90 -DVAR_INT64 -DVAR_MFDS -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz' -DVAR_VECTOR"
           if [ "$mesp" != "dummy" ]; then
              cpp="$cpp $parop"
           fi
@@ -912,7 +912,7 @@ case "$WHICH" in
           opt="-O nofastint -d p -Wl\"-i ./equivalences\" -Wp\"-F\""
           def='t90.x';;
     cray_t3e)
-          cpp="-DSYS_T3D -DVAR_INT64 -DVAR_MFDS -DVAR_NONAMELIST -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="-DSYS_T3D -DVAR_INT64 -DVAR_MFDS -DVAR_NONAMELIST -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ "$mesp" != "dummy" ]; then
              cpp="$cpp -D$parop"
           fi
@@ -922,7 +922,7 @@ case "$WHICH" in
           def='t3d.x'
           LIB="crilib.cld -Wl,-Dstreams=on -lmfastv";;
     nec)
-          cpp="-DSYS_NEC DVAR_INT64 D'INSTALL_WRKMEM=$memsiz' D'INSTALL_MMWORK=$incoresiz' USX DVAR_MFDS DVAR_REAL DVAR_VECTOR"
+          cpp="-DSYS_NEC DVAR_INT64 D'INSTALL_WRKMEM=$work_memory_words' D'INSTALL_MMWORK=$incoresiz' USX DVAR_MFDS DVAR_REAL DVAR_VECTOR"
           if [ "$mesp" = "dummy" ]; then
              cpp="-cpp $cpp"
           else
@@ -932,7 +932,7 @@ case "$WHICH" in
           cpp=${cpp}" DIMPLICIT_NONE"
           opt='-float0 -w double8 -ptr byte -b -pvctl noassume loopcnt=10000000 -fopp';;
     alpha)
-          cpp="$cpp -DSYS_DEC -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="$cpp -DSYS_DEC -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ "$mesp" != "dummy" ]; then
              cpp="$cpp -D$parop"
              set_parallel_def $mesp
@@ -941,7 +941,7 @@ case "$WHICH" in
           cpp=${cpp}" -DIMPLICIT_NONE"
           opt='-fast -fpe3 -warn nouncalled';;
     sun4)
-          cpp="-DSYS_SUN -DVAR_MFDS -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="-DSYS_SUN -DVAR_MFDS -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ $splitfiles = 'true' ] ; then
               cpp="$cpp -DVAR_SPLITFILES"
           fi
@@ -953,7 +953,7 @@ case "$WHICH" in
           cpp=${cpp}" -DIMPLICIT_NONE"
           opt='-fast';;
     hp)
-          cpp="-DSYS_HPUX -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="-DSYS_HPUX -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ "$mesp" != "dummy" ]; then
               cpp="$cpp -D$parop"
               set_parallel_def $mesp
@@ -986,7 +986,7 @@ case "$WHICH" in
           copt=${copt}" -AC99"
           cpp=${cpp}$;;
     linux-alpha)
-          cpp="$cpp -DHAVE_GCPP -DSYS_DEC -DVAR_INT64 -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="$cpp -DHAVE_GCPP -DSYS_DEC -DVAR_INT64 -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ "$mesp" != "dummy" ]; then
               cpp="$cpp -D$parop"
               set_def $mesp
@@ -999,7 +999,7 @@ case "$WHICH" in
           cpp=${cpp}" -DIMPLICIT_NONE"
           copt='-fast';;
     linux|cygwin) 
-          cpp="-DSYS_LINUX -DVAR_MFDS -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="-DSYS_LINUX -DVAR_MFDS -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ $splitfiles = 'true' ] ; then
              cpp="$cpp -DVAR_SPLITFILES"
           else
@@ -1113,7 +1113,7 @@ case "$WHICH" in
           inc='-I../include'
           cpp=${cpp}" -DIMPLICIT_NONE";;
     darwin) 
-          cpp="-DSYS_LINUX -DVAR_MFDS -D'INSTALL_WRKMEM=$memsiz' -D'INSTALL_MMWORK=$incoresiz'"
+          cpp="-DSYS_LINUX -DVAR_MFDS -D'INSTALL_WRKMEM=$work_memory_words' -D'INSTALL_MMWORK=$incoresiz'"
           if [ "$mesp" != "dummy" ]; then
               cpp="$cpp -D$parop"
               set_parallel_def $mesp
