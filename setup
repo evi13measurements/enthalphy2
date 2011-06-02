@@ -9,9 +9,13 @@ import string
 import subprocess
 from optparse import OptionParser, OptionGroup
 
+if sys.version < '2.4':
+    print 'setup requires python version >= 2.4'
+    sys.exit(1)
+
 root_directory = os.path.realpath(__file__)[:-5]
 
-default_path = root_directory + 'build/'
+default_path = root_directory + 'build'
 
 # define example usage
 
@@ -142,33 +146,21 @@ parser.add_option_group(group)
 
 (options, args) = parser.parse_args()
 
-# find out whether cmake exists
+def cmake_is_available():
+    p = subprocess.Popen('cmake --version',
+                         shell=True,
+                         stdin=subprocess.PIPE,
+                         stdout=subprocess.PIPE)
+    return ('cmake version' in p.communicate()[0])
 
-def which(program):
-    import os
-    def is_exe(fpath):
-        return os.path.exists(fpath) and os.access(fpath, os.X_OK)
-    fpath, fname = os.path.split(program)
-    if fpath:
-        if is_exe(program):
-            return program
-    else:
-        for path in os.environ["PATH"].split(os.pathsep):
-            exe_file = os.path.join(path, program)
-            if is_exe(exe_file):
-                return exe_file
-
-    return None
-
-if not which('cmake'):
+if not cmake_is_available():
     # there is no cmake
     # print info
-    print '   You are not running autoconf/automake tools!'
-    print '   This code is built using cmake'
+    print '   This code is built using CMake'
     print
-    print '   cmake is not found'
-    print '   get cmake at http://www.cmake.org/'
-    print '   on many clusters cmake is installed'
+    print '   CMake is not found'
+    print '   get CMake at http://www.cmake.org/'
+    print '   on many clusters CMake is installed'
     print '   but you have to load it first:'
     print '   $ module load cmake'
     # and exit
