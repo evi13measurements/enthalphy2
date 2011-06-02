@@ -156,13 +156,13 @@ def cmake_is_available():
 if not cmake_is_available():
     # there is no cmake
     # print info
-    print '   This code is built using CMake'
+    print '   This script uses CMake to build the code'
     print
-    print '   CMake is not found'
-    print '   get CMake at http://www.cmake.org/'
-    print '   on many clusters CMake is installed'
-    print '   but you have to load it first:'
-    print '   $ module load cmake'
+    print '   however: cmake command was not found - what to do ?'
+    print '   1) On many clusters CMake is installed'
+    print '      but you have to load it first:'
+    print '      $ module load cmake'
+    print '   2) get CMake at http://www.cmake.org/'
     # and exit
     sys.exit()
 
