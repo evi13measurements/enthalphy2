@@ -78,6 +78,10 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
         set(CMAKE_Fortran_FLAGS
             "${CMAKE_Fortran_FLAGS} -m64 -i8 -mcmodel=medium"
             )
+    else()
+        set(CMAKE_Fortran_FLAGS
+            "${CMAKE_Fortran_FLAGS} -m32"
+            )
     endif()
     if(ENABLE_BOUNDS_CHECK)
         set(CMAKE_Fortran_FLAGS
