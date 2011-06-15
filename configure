@@ -121,10 +121,10 @@ fi
 
 if [ -z "$1" ]; then
     case $opsys in
-        AIX )     ARCH="-aix";;
-        CYGWIN* ) ARCH="-cygwin";;
-        Darwin )  ARCH="-darwin";;
-        IRIX|IRIX64 ) ARCH="-sgi;;
+        AIX )     ARCH="-aix"    ;;
+        CYGWIN* ) ARCH="-cygwin" ;;
+        Darwin )  ARCH="-darwin" ;;
+        IRIX|IRIX64 ) ARCH="-sgi";;
         Linux|FreeBSD ) if [ "`uname -m`" = alpha ]; then
                   ARCH="-linux-alpha"
                   $ECHO "* linux alpha tested only with COMPAQ fort compiler *\n"
@@ -669,7 +669,7 @@ fi
 # Observe, that the minimal value is not 0, it is 1 because
 # some compilers do not like arrays with no elements.
 
-$ECHO '\nDALTON uses almost 97 Megabytes of static'
+$ECHO '\nDALTON uses almost 100 Megabytes of static'
 $ECHO 'allocations, in addition to the dynamic allocation.'
 $ECHO '\nDALTON has the possibility to reserve an amount of static memory'
 $ECHO 'for storing two-electron integrals in direct and parallel calculations'
@@ -703,12 +703,12 @@ else
     incore_memory_words=1
 fi
 
-$ECHO '\nMaximum amount of work memory for dynamic allocations can be'
-$ECHO 'changed at run time with the environment variable WRKMEM (work memory in *8 words)'
-$ECHO 'or by using the -M option to the dalton script (in MB).'
-$ECHO 'We recommend at least 150 MB work memory,'
+$ECHO '\nMaximum amount of work memory for dynamic allocations can be changed'
+$ECHO 'at run time with the environment variable WRKMEM (in REAL*8 words = megabytes/8)'
+$ECHO 'or by using the -M option to the run script: "dalton -M mb ..." (in megabytes).'
+$ECHO 'We recommend at least 200 MB work memory,'
 $ECHO 'larger for correlated calculations, but it should for maximum'
-$ECHO 'efficiency NOT exceed available physical memory.\n'
+$ECHO 'efficiency NOT exceed available physical memory per CPU in parallel calculations.\n'
 
 work_memory_words=0
 # only accept positive numbers
