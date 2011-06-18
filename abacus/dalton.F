@@ -203,14 +203,14 @@ C
          CALL TITLER('DALTON2011 - An electronic structure program',
      &               '*',115)
 
-         WRITE (LUPRI,'(T5,A)')
-     &'This is output from DALTON Release 2011 (Rev. 0, June 2011)'
+         WRITE (LUPRI,'(T5,A)') 'This is output from DALTON '//
+     &      'Release Dalton2011 (Rev. 0, June 2011)'
 
          WRITE (LUPRI,'(3X,A)') SEPARATOR(1:76)
          WRITE (LUPRI,'(T5,A)')
      &'NOTE:',
      &' ',
-     &'This is an experimental code for the evaluation of molecular',
+     &'DALTON is an experimental code for the evaluation of molecular',
      &'properties using (MC)SCF, DFT, CI, and CC wave functions.',
      &'The authors accept no responsibility for the performance of',
      &'the code or for the correctness of the results.',
@@ -226,7 +226,7 @@ C
      &'an appropriate citation would be:',
      &' ',
      &'"Dalton, a molecular electronic structure program,',
-     &'Release DALTON2011 (2011), see http://daltonprogram.org"'
+     &'Release Dalton2011 (2011), see http://daltonprogram.org"'
 C
          WRITE (LUPRI,'(3X,A)') SEPARATOR(1:76)
          WRITE (LUPRI,'(/T5,A//,(T3,A,T29,A,T59,A,T71,A))')
