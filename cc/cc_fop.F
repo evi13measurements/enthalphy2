@@ -883,13 +883,9 @@ C
               CALL DZERO(WORK(KRHO1),NT1AMX)
               IF (.NOT.CCS) CALL DZERO(WORK(KRHO2),NT2AMX)
               LR = '0'
-              DTIME = SECOND()
+              CALL TIMER('START ',TIMSTR,TIMEND)
               CALL CCMM_LTRB(WORK(KRHO1),WORK(KRHO2),DUM1,DUM2,
      *                       ISYMOP,LR,WORK(KWRK4),LWRK4)
-              IF (IPRINT .GT. 5) THEN
-                WRITE(LUPRI,*)'Time used in CCMM_LTRB (CC_FOP):',
-     *                         SECOND() - DTIME
-              END IF
               CALL TIMER('LR=R',TIMSTR,TIMEND)
               CALL FLSHFO(LUPRI)
 C
@@ -937,6 +933,7 @@ C
 C
 C---------------------------------------------------
 C CCMM02,JA+AO qm/mm part 1 end
+C NYQMMM10, KS
 C---------------------------------------------------
 
       CALL FLSHFO(LUPRI)
