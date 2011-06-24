@@ -13,6 +13,22 @@
 #       he/she ran 'configure', the you should modify the
 #       DALTON definition to pint to that place.
 
+
+# radovan: this is to figure out whether TEST is called from test directory
+#          or from outside
+SCRIPT_DIR="${0%/*}"
+# if the script was started from the base directory with ./TEST, then the
+# expansion returns a period, if it was started directly with TEST then the
+# expansion returns the script file name
+if [ "$SCRIPT_DIR" == "." -o "$SCRIPT_DIR" == "$0" ]; then
+  SCRIPT_DIR="$PWD"
+# if the script was not called with an absolute path, then we need to add the
+# current working directory to the relative path of the script
+elif [ "${SCRIPT_DIR:0:1}" != "/" ]; then
+  SCRIPT_DIR="$PWD/$SCRIPT_DIR"
+fi
+cd $SCRIPT_DIR
+
 if [ -x '/usr/bin/time' ]; then
  TIMING_OF="/usr/bin/time" #hjaaj sep07: gnu time gives more info than built-in time
 else
@@ -45,21 +61,20 @@ ALL="$SHORT $MEDIUM $LONG $CC3"
 # function usage(): print usage information 
 #########################################################################
 usage() {
- cat << %EOF%
-usage: TEST [-h|-help|--help] [-keep] [-reftest] [-bell] [-benchmark]
+ cat <<%EOF%
+Usage: $0 [-h|-help|--help] [-keep] [-reftest] [-benchmark]
             [-param "option list"] [-dalton script] [-log logfile] testcase
 
        -h | -help | --help  : show this help description
        -keep                : keep *.mol, *.dal, *.check and *.log files
        -reftest             : test reference file(s); do not run any calculations
-       -bell                : sound bell each time a test fails
        -benchmark           : print CPU time for each testcase as part of the summary
        -param "option list" : pass "option list" to dalton-script
        -dalton script       : use script instead of the default
                               dalton-script "`pwd`/../dalton" (absolute path) 
-       -log logfile         : write output into logfile instead of the "TESTLOG"
+       -log logfile         : write output into logfile instead of to "TESTLOG"
 
-       where testcase might be one of the following:
+       and where testcase might be one of the following:
           essential            -- run a minimal set of essential testcases
           short                -- run all short testcases
           medium               -- run all medium length testcases
@@ -98,7 +113,6 @@ help=""
 keep="false"
 paramlist=""
 reftest=""
-bell=""
 benchmark=""
 listing="TESTLOG"
 emptystring="                                "
@@ -117,7 +131,6 @@ while [ -n "`echo $1 | grep '-'`" ]; do
      "-keep" ) keep="true"; shift;;
      -param* ) shift; paramlist="$1"; shift;;
      "-reftest" ) reftest="true"; shift;;
-     "-bell" ) bell="true"; shift;;
      "-benchmark" ) benchmark="true"; shift;;
      * ) echo "---> ERROR: $1 is an unknown option!"; usage;;
    esac
@@ -168,23 +181,22 @@ while [ -e $testdir ]; do
     testdir=${testdir}x
 done
 mkdir $testdir 
-cp functions $testdir
+#cp functions $testdir   ## functions not used in "test_cc"
 cd $testdir || exit 1
-
 
 #########################################################################
 # check files for test listing:
 #########################################################################
-if [  -s $listing ]; then
+if [ -s $listing ]; then
    echo "$listing already exists... should it be deleted first? (y/n)"
    read answer
-   if [ "$answer" = "yes"  -o  "$answer" = "y" ]; then
-     echo > $listing
+   if [ "$answer" = "yes"  -o  "$answer" = "y" -o "$answer" = "Y" ]; then
+       rm -f $listing
    fi
 fi
 
 myprint "#####################################################################"
-myprint "                          DALTON test suite"
+myprint "                       DALTON cc test suite"
 myprint "#####################################################################"
 myprint "invoked with          : $TESTparams"
 myprint "date and time         : `date`"
@@ -199,6 +211,7 @@ myprint "test cases            : $testcase"
 #########################################################################
 passedall="ALL TESTS ENDED PROPERLY!"
 problems=""
+exitcode=0
 numresult=0
 num_reftests_not_found=0
 for item in ${testcase}
@@ -238,16 +251,14 @@ do
   while [ "$step" -le "$numsteps" ]
   do
       if [ "$multi" -eq 1 ]; then
-          if [ "$step" -gt 1 ]; then
-              myprint ""
-              myprint "start $item step $step:"
-              myprint "-----------------------------------------------------------"
-          fi
+          myprint "-----------------------------------------------------------"
+          myprint "  Start $item step $step of $numsteps :"
+          myprint "-----------------------------------------------------------"
           molfile=$item
           dalfile=$item'__'$step
           logfile=./$item'__'$step'_'$item.log
           checkfile=./$item'__'$step.check
-          reffile=./$item'__'$step.ref
+          reffile=../trueresult/$item'__'$step.ref
       else
           molfile=$item
           dalfile=$item
@@ -293,7 +304,25 @@ do
           myprint ""
           myprint "evaluate output file $logfile:"
           myprint "-----------------------------------------------------------"
-          checkout=`sh $checkfile $logfile | tee -a $listing`
+
+          checkout=`$checkfile $logfile | tee -a $listing`
+
+          # Successful tests report "TEST ENDED PROPERLY" unless
+          # the test is meant to return non-zero exit code.  These
+          # return "TEST ENDED AS EXPECTED".  In the latter case, we
+          # change it to "TEST ENDED PROPERLY" if the exit code was
+          # nonzero, otherwise we return "DALTON SCRIPT ERROR"
+
+          if [ "$checkout" = "TEST ENDED PROPERLY" ]; then
+              [ "$failed" = "true" ] && checkout="TEST FAILED ABNORMALLY"
+          elif [ "$checkout" = "TEST ENDED AS EXPECTED" ]; then
+              echo "checkout=$checkout, failed=$failed"
+              if [ "$failed" = "true" ]; then
+                  checkout="TEST ENDED PROPERLY"
+              else
+                  checkout="DALTON SCRIPT ERROR"                  
+              fi
+          fi
           if [ "$benchmark" = "true" ]; then
               if [ `$GREP "CPU  time used in DALTON" $logfile | wc -l` = 1 ]; then
                   CPU_usage=`$GREP "CPU  time used in DALTON" $logfile | sed s/">>>> Total CPU  time used in DALTON\:"/""/`
@@ -315,13 +344,11 @@ do
       passed=`echo $checkout | grep "TEST ENDED PROPERLY"`
       if [ -z "$passed" ]; then
         trouble=`expr $trouble \+ 1`
-        if [ "$bell" = "true" ]; then
-          echo "\a"
-        fi
         passedall="THERE IS A PROBLEM IN TEST CASE(S)"
         if [ "$trouble" -eq 1 ]; then
             problems="$problems $item"
         fi
+        exitcode=1
       elif [ "$keep" = "false" ]; then
         #rm -f $dalfile.dal $dalfile.BAS $checkfile $logfile $item.info
         rm -f $dalfile.dal $dalfile.BAS $checkfile $item.info # keep $logfile, can be interesting to look closer at
@@ -352,20 +379,21 @@ myprint ""
 
 if [ "$benchmark" = "true" ]; then
     if [ "$numresult" -gt 0  ]; then
-        ind=1
-        while [ "$ind" -le "$numresult" ]
+      ind=1
+      while [ "$ind" -le "$numresult" ]
         do
           namelength=`expr length ${testlist[$ind]}`
           spclength=`expr 32 \- $namelength`
           spc=`expr substr "$emptystring" 1 $spclength`
           myprint "	${testlist[$ind]}$spc${timelist[$ind]}"
           ind=`expr $ind \+ 1`
-        done
-        echo
+      done
+      myprint ""
     fi
 fi
 
-echo $passedall | tee -a $listing
-echo $problems  | tee -a $listing
+myprint "$passedall"
+myprint "$problems"
+myprint "date and time         : `date`"
 
-exit 0
+exit $exitcode
