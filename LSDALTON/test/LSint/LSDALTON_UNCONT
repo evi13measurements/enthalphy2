@@ -21,7 +21,7 @@ cat > LSDALTON_UNCONT.info <<'%EOF%'
    LSDALTON_UNCONT
    -------------
    Molecule:         2 HCN molecules placed 20 atomic units apart
-   Wave Function:    B3LYP/STO-2G
+   Wave Function:    B3LYP/STO-2G(H)+6-31G(N)+pc-0(C)
    Test Purpose:     Check .UNCONT  Keyword
 %EOF%
 
@@ -31,7 +31,7 @@ cat > LSDALTON_UNCONT.info <<'%EOF%'
 cat > LSDALTON_UNCONT.mol <<'%EOF%'
 ATOMBASIS
 2 HCN molecules placed 20 atomic units apart
-STRUCTURE IS NOT OPTIMIZED. STO-2G basis 
+STRUCTURE IS NOT OPTIMIZED. STO-2G(H)+6-31G(N)+pc-0(C) basis
 Atomtypes=3 Nosymmetry
 Charge=1. Atoms=2 Basis=STO-2G
 H   0.000   0.000  -1.000 
