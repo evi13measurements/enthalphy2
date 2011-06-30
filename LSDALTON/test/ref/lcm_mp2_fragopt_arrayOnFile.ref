@@ -1,0 +1,1318 @@
+  
+     ******************************************************************    
+     **********  LSDALTON - An electronic structure program  **********    
+     ******************************************************************    
+  
+      This is output from LINSCA DALTON (Release 1.0 )
+            Authors:                                  
+      Trygve Helgaker,       University of Oslo,           Norway 
+      Poul Joergensen,       Aarhus University,            Denmark
+      Jeppe Olsen,           Aarhus University,            Denmark
+      Sonia Coriani,         University of Trieste,        Italy  
+      Stinne Hoest,          Aarhus University,            Denmark
+      Branislav Jansik,      Aarhus University,            Denmark
+      Joanna Kauczor,        Aarhus University,            Denmark
+      Thomas Kjaergaard,     Aarhus University,            Denmark
+      Kasper Kristensen,     Aarhus University,            Denmark
+      Simen Reine,           University of Oslo,           Norway 
+      Pawel Salek,           KTH Stockholm,                Sweden 
+      Andreas Thorvaldsen,   University of Tromsoe,        Norway 
+      Lea Thoegersen,        Aarhus University,            Denmark
+     NOTE:
+      
+     This is an experimental code for the evaluation of molecular
+     properties using SCF wave functions. The authors
+     accept no responsibility for the performance of the code or
+     for the correctness of the results.
+      
+     The code (in whole or part) is provided under a licence and
+     is not to be reproduced for further distribution without
+     the written permission of the authors or their representatives.
+      
+     See the home page "http://www.kjemi.uio.no/software/dalton"
+     for further information.
+      
+     If results obtained with this code are published,
+     an appropriate citation would be:
+      
+     "LSDalton, a molecular electronic structure program, Release 2010,
+      written by <INSERT AUTHOR LIST>"
+
+
+ 
+     Date and time (Linux)  : Thu Oct 14 22:50:40 2010 
+     Host name              : kkmac.local                             
+                      
+ -----------------------------------------
+          PRINTING THE MOLECULE.INP FILE 
+ -----------------------------------------
+                      
+  BASIS                                   
+  6-31G                                   
+                                          
+                                          
+  Atomtypes=1 Nosymmetry Angstrom                             
+  Charge=1.0 Atoms=24                                         
+  H          0.000000      0.0000000    0.0000000             
+  H          0.500000      0.4000000    0.3000000             
+  H          4.000000      0.0000000    0.0000000             
+  H          4.300000      0.56000000    0.38000000           
+  H          8.000000      0.0000000    0.0000000             
+  H          8.400000     -0.51000000    -0.28000000          
+  H          12.000000      0.0000000    0.0000000            
+  H          12.5500000     -0.32000000    0.28000000         
+  H          16.000000      0.0000000    0.0000000            
+  H          16.31000000    0.51000000    -0.37000000         
+            WARNING: SINCE YOU HAVE MORE THAN 10 ATOMS OF THIS
+                TYPE I WILL NOT PRINT THEM ALL TO LIMIT OUTPUT
+                      
+ -----------------------------------------
+          PRINTING THE DALTON.INP FILE 
+ -----------------------------------------
+                      
+  **DALTON INPUT                          
+  .RUN LINSCA                             
+  .DIRECT                                 
+  **INTEGRAL                              
+  .LINSCA                                 
+  **WAVE FUNCTIONS                        
+  .HF                                     
+  *LINSCA                                 
+  .ARH                                    
+  .NOINCREM                               
+  .START                                  
+  TRILEVEL                                
+  .CONVTHR                                
+  1.0d-5                                  
+  .LCMBF                                  
+  **DEC                                   
+  .DoHartreeFock                          
+  .MP2                                    
+  .initial                                
+  1.0 1.0 1.0                             
+  .steps                                  
+  4.0 4.0 4.0                             
+  .optimizationThr                        
+  1e-6                                    
+  .ccThr                                  
+  1e-9                                    
+  .singleFragment                         
+  6                                       
+  .array4OnFile                           
+  *END OF INPUT                           
+  
+  MOLPRINT IS SET TO       0
+  Integral threshold is set to the default 1.00D-15
+  Coordinates are entered in Angstroms and converted to atomic units.
+  Conversion factor : 1 bohr = 0.52917721 A
+   
+  CALLING BUILD BASIS WITH DEFAULT REGULAR BASIS
+   
+
+ Default basis set library used:
+        /Users/kasperkristensen/bin/Dalton-october/basis/                     
+ OPENING FILE/Users/kasperkristensen/bin/Dalton-october/basis/6-31G
+ NO SEGMENTATION IS USED
+   
+BASISSETLIBRARY
+ Number of Basisset           1
+ BASISSET:  6-31G                                             
+  CHARGES:   1
+                      
+                      
+THE MOLECULE
+ --------------------------------------------------------------------
+    Molecular Charge                 :    0.0000
+    Regular basisfunctions             :       48
+    Auxiliary basisfunctions           :        0
+    Huckel basisfunctions              :        0
+    Primitive Regular basisfunctions   :       96
+    Primitive Auxiliary basisfunctions :        0
+    Primitive Huckel basisfunctions    :        0
+ --------------------------------------------------------------------
+                      
+                      
+ --------------------------------------------------------------------
+  atom  charge  Atomicbasis    GHOST   nPrimREG  nContREG
+ --------------------------------------------------------------------
+     1   1.000  6-31G           F              4           2
+     2   1.000  6-31G           F              4           2
+     3   1.000  6-31G           F              4           2
+     4   1.000  6-31G           F              4           2
+     5   1.000  6-31G           F              4           2
+     6   1.000  6-31G           F              4           2
+     7   1.000  6-31G           F              4           2
+     8   1.000  6-31G           F              4           2
+     9   1.000  6-31G           F              4           2
+    10   1.000  6-31G           F              4           2
+    11   1.000  6-31G           F              4           2
+    12   1.000  6-31G           F              4           2
+    13   1.000  6-31G           F              4           2
+    14   1.000  6-31G           F              4           2
+    15   1.000  6-31G           F              4           2
+    16   1.000  6-31G           F              4           2
+    17   1.000  6-31G           F              4           2
+    18   1.000  6-31G           F              4           2
+    19   1.000  6-31G           F              4           2
+    20   1.000  6-31G           F              4           2
+    21   1.000  6-31G           F              4           2
+    22   1.000  6-31G           F              4           2
+    23   1.000  6-31G           F              4           2
+    24   1.000  6-31G           F              4           2
+                      
+  ATOM  NAME  ISOTOPE        X             Y             Z     
+    1    H          1    0.00000000    0.00000000    0.00000000
+    2    H          1    0.94486307    0.75589045    0.56691784
+    3    H          1    7.55890454    0.00000000    0.00000000
+    4    H          1    8.12582238    1.05824663    0.71809593
+    5    H          1   15.11780907    0.00000000    0.00000000
+    6    H          1   15.87369952   -0.96376033   -0.52912332
+    7    H          1   22.67671361    0.00000000    0.00000000
+    8    H          1   23.71606298   -0.60471236    0.52912332
+    9    H          1   30.23561814    0.00000000    0.00000000
+   10    H          1   30.82143324    0.96376033   -0.69919867
+   11    H          1   37.79452268    0.00000000    0.00000000
+   12    H          1   38.55041313   -0.96376033   -0.52912332
+   13    H          1   45.35342721    0.00000000    0.00000000
+   14    H          1   45.92034505    0.68030141    1.13383568
+   15    H          1   52.91233175    0.00000000    0.00000000
+   16    H          1   53.85719482    0.75589045    0.58581510
+   17    H          1   60.47123629    0.00000000    0.00000000
+   18    H          1   61.03815413   -0.71809593   -0.98265759
+   19    H          1   68.03014082    0.00000000    0.00000000
+   20    H          1   68.97500389    0.68030141    1.09604116
+   21    H          1   75.58904536    0.00000000    0.00000000
+   22    H          1   76.34493581   -0.68030141    1.05824663
+   23    H          1   83.14794989    0.00000000    0.00000000
+   24    H          1   84.09281296   -0.47243153    0.83147950
+                      
+                      
+Atoms and basis sets
+  Total number of atoms        :     24
+  THE  REGULAR   is on R =   0
+---------------------------------------------------------------------
+ atom label charge  basisset            prim cont basis
+---------------------------------------------------------------------
+      1 H      1.000 6-31G                      4        2 [4s|2s]                  
+      2 H      1.000 6-31G                      4        2 [4s|2s]                  
+      3 H      1.000 6-31G                      4        2 [4s|2s]                  
+      4 H      1.000 6-31G                      4        2 [4s|2s]                  
+      5 H      1.000 6-31G                      4        2 [4s|2s]                  
+      6 H      1.000 6-31G                      4        2 [4s|2s]                  
+      7 H      1.000 6-31G                      4        2 [4s|2s]                  
+      8 H      1.000 6-31G                      4        2 [4s|2s]                  
+      9 H      1.000 6-31G                      4        2 [4s|2s]                  
+     10 H      1.000 6-31G                      4        2 [4s|2s]                  
+     11 H      1.000 6-31G                      4        2 [4s|2s]                  
+      : :        :       :                      :        :        :                 
+---------------------------------------------------------------------
+total         24                              96      48
+---------------------------------------------------------------------
+                      
+ Configuration - as obtained from new input structure:
+     DFT LSint thresholds:                     0.10D-08    0.20D-09    0.20D-11
+     DFT LSint threshold for number of electrons:                      0.10D-02
+     DFT LSint radial quadrature accuracy/ang.  expansion order:  0.1000D-10  31
+
+   You have requested Augmented Roothaan-Hall optimization
+   => explicit averaging is turned off!
+Expand trust radius if ratio is larger than:            0.75
+Contract trust radius if ratio is smaller than:         0.25
+On expansion, trust radius is expanded by a factor      1.20
+On contraction, trust radius is contracted by a factor  0.70
+
+ Maximum size of subspace in ARH linear equations:           2
+
+LINSCF configuration :
+Density subspace min. method    : None                    
+Density optimization : Augmented RH optimization          
+
+
+ Maximum size of Fock/density queue in averaging:          10
+Convergence threshold for gradient:   0.10E-04
+ End of configuration from new input structure!
+
+ >>>  CPU Time used in *INPUT          is   0.01 seconds
+ Level 1 atomic calculation on 6-31G Charge   1
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ >>>  CPU Time used in CS_GCATOM       is   0.01 seconds
+ >>>  CPU Time used in CS_GCATOM       is   0.00 seconds
+ >>>  CPU Time used in CS_GCATOM       is   0.00 seconds
+ >>>  CPU Time used in CS_GCATOM       is   0.00 seconds
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.01 seconds
+*************************************************************************************************###
+ it        E(HF)            dE(HF)      DSMexit  DSM_alpha RHshift    AO gradient     OAO gradient     ###
+******************************************************************  *******************************###
+  1     -0.3410549973    0.00000000000    0.00      0.00000    0.00    0.00E+00    0.20E+00  ###
+*******************************************************************************************%%%
+ Trust Radius   Max element     Norm     RHshift   Ratio  Dpar/Dtot  Ndens(FIFO)    SCF it %%%
+*******************************************************************************************%%%
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.01 seconds
+  2     -0.3488197504   -0.00776475307    0.00      0.00000    0.00    0.00E+00    0.13E-01  ###
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.01 seconds
+  3     -0.3488518065   -0.00003205613   -1.00      0.00000    0.00    0.00E+00    0.39E-04  ###
+ >>>  CPU Time used in *ATOM           is   0.06 seconds
+ >>>  CPU Time used in OVERLAP         is   0.01 seconds
+ >>>  CPU Time used in *S              is   0.01 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.02 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.00 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.08 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.00 seconds
+ >>>  CPU Time used in *H1             is   0.33 seconds
+ First density: Trilevel procedure 
+ Level 2 molecular calculation
+ >>>  CPU Time used in OVERLAP         is   0.01 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.02 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.00 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.07 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.00 seconds
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.75 seconds
+  Iteration 0 energy:  -10.1994776383387     
+ Preparing to do S^1/2 decomposition...
+ >>>  CPU Time used in LWDIAG          is   0.00 seconds
+ Preparing to do S^1/2 decomposition...
+ >>>  CPU Time used in LWDIAG          is   0.00 seconds
+Matrix S     has nnz=       201 sparsity:     35.069 %
+Matrix AO D  has nnz=       349 sparsity:     60.764 %
+Matrix AO F  has nnz=       216 sparsity:     37.500 %
+ micthrs =  1.000000000000000E-002
+ >>>  CPU Time used in INIT SCF        is   0.00 seconds
+** Get Fock matrix number   1
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.76 seconds
+ >>>  CPU Time used in FCK_FO          is   1.55 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+*************************************************************************************************###
+ it        E(HF)            dE(HF)      DSMexit  DSM_alpha RHshift    AO gradient     OAO gradient     ###
+******************************************************************  *******************************###
+  1    -12.3722215789    0.00000000000    0.00      0.00000    0.00    0.00E+00    0.61E-02  ###
+*******************************************************************************************%%%
+ Trust Radius   Max element     Norm     RHshift   Ratio  Dpar/Dtot  Ndens(FIFO)    SCF it %%%
+*******************************************************************************************%%%
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   1
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.229 MB
+  Max allocated memory, type(matrix)          171.102 kB
+  Max allocated memory, real                   31.060 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.021 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 139.500 kB
+  Allocated memory,     type(matrix)          139.500 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+** Make average of the last F and D matrices
+Matrix AO D  has nnz=       349 sparsity:     60.764 %
+Matrix AO F  has nnz=       286 sparsity:     49.653 %
+Matrix OAO D has nnz=        11 sparsity:      2.083 %
+Matrix OAO F has nnz=       336 sparsity:     58.333 %
+ >>>  CPU Time used in AVERAG          is   0.00 seconds
+** Get new density 
+ OAO gradnorm  2.500640858151109E-003
+ Number of densities in queue:           0
+CROP scheme, truncated subspace (CORE) - max. no. of vectors is  2
+ First mu:   0.00000000000000     
+  Error of red space iteration  1:      0.0000022679 (mu =   0.00, xmax = 0.581240E-03, xnorm = 0.275180E-02, THR = 0.250064E-04)
+Newton equations converged in  1 iterations!
+ >>>  CPU Time used in CROP solver     is   0.00 seconds
+ >>>  CPU Time used in NEW D           is   0.00 seconds
+No. of matmuls in get_density:    25
+ >>>  CPU Time used in G_DENS          is   0.00 seconds
+ >>>  CPU Time used in SCF iteration   is   1.55 seconds
+** Get Fock matrix number   2
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.76 seconds
+ 0.35000 (xmax)     0.00058    0.00275    0.00    1.1489    0.0000         0          1    %%%
+ Trust radius based on max element!
+ Large ratio, double trust-radius
+ Absolute max element allowed is  0.350000000000000      , resetting trust radius!
+ Absolute max step allowed is  0.600000000000000       , resetting trust radius!
+ >>>  CPU Time used in FCK_FO          is   1.55 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+  2    -12.3722294795   -0.00000790068    0.00      0.00000    0.00    0.00E+00    0.91E-03  ###
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   2
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.229 MB
+  Max allocated memory, type(matrix)          207.000 kB
+  Max allocated memory, real                   31.060 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.021 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 148.500 kB
+  Allocated memory,     type(matrix)          148.500 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+ >>>  CPU Time used in **ITER          is   3.10 seconds
+
+Total no. of matmuls in SCF optimization:         66
+
+ Number of occupied orbitals:          12
+ Number of virtual orbitals:          12
+
+ Number of occupied orbital energies to be found:           1
+ Number of virtual orbital energies to be found:           1
+
+
+Calculation of HOMO-LUMO gap
+============================
+
+    E(LUMO):                         0.237627 au
+   -E(HOMO):                        -0.579204 au
+   ------------------------------
+    HOMO-LUMO Gap (iteratively):     0.816831 au
+
+ >>>  CPU Time used in HL GAP          is   0.86 seconds
+
+********************************************************
+ it       dE(HF)       DSMexit   RHshift    RHinfo 
+********************************************************
+  1    0.00000000000    0.0000    0.0000    0.0000000
+  2   -0.00000790068    0.0000    0.0000    0.0000000
+
+======================================================================
+                   LINSCF ITERATIONS:
+  It.nr.               Energy                    Gradient norm
+======================================================================
+    1           -12.37222157886396090021      0.611452494273400D-02
+    2           -12.37222947954278851057      0.912765823217859D-03
+
+      SCF converged !!!! 
+         >>> Final results from LSDALTON <<<
+
+
+      Final HF energy:                   -12.372229479543
+      Nuclear repulsion:                  22.020035605876
+      Electronic energy:                 -34.392265085419
+
+ L2 minimization done!
+ >>>  CPU Time used in *START          is   6.54 seconds
+ Preparing to do S^1/2 decomposition...
+ >>>  CPU Time used in LWDIAG          is   0.00 seconds
+Matrix S     has nnz=       781 sparsity:     33.941 %
+Matrix AO D  has nnz=       347 sparsity:     15.104 %
+Matrix AO F  has nnz=         0 sparsity:      0.000 %
+ micthrs =  1.000000000000000E-002
+ >>>  CPU Time used in INIT SCF        is   0.00 seconds
+** Get Fock matrix number   1
+ Using purely new Integrals
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.02 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.07 seconds
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ >>>  CPU Time used in FCK_FO          is   1.62 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+*************************************************************************************************###
+ it        E(HF)            dE(HF)      DSMexit  DSM_alpha RHshift    AO gradient     OAO gradient     ###
+******************************************************************  *******************************###
+  1    -12.3722294797    0.00000000000    0.00      0.00000    0.00    0.00E+00    0.70E+01  ###
+*******************************************************************************************%%%
+ Trust Radius   Max element     Norm     RHshift   Ratio  Dpar/Dtot  Ndens(FIFO)    SCF it %%%
+*******************************************************************************************%%%
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   1
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.335 MB
+  Max allocated memory, type(matrix)          270.133 kB
+  Max allocated memory, real                   31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 216.000 kB
+  Allocated memory,     type(matrix)          216.000 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+** Make average of the last F and D matrices
+Matrix AO D  has nnz=       347 sparsity:     15.104 %
+Matrix AO F  has nnz=      1144 sparsity:     49.653 %
+Matrix OAO D has nnz=      1339 sparsity:     58.160 %
+Matrix OAO F has nnz=      1404 sparsity:     60.938 %
+ >>>  CPU Time used in AVERAG          is   0.00 seconds
+** Get new density 
+ OAO gradnorm   1.13503609917686     
+ Number of densities in queue:           0
+CROP scheme, truncated subspace (CORE) - max. no. of vectors is  2
+ First mu: -0.617187500000000     
+  Error of red space iteration  1:      0.1469104031 (mu =  -0.62, xmax = 0.104220E+00, xnorm = 0.675936E+00, THR = 0.113504E-01)
+  Error of red space iteration  2:      0.0048831943 (mu =  -0.62, xmax = 0.919272E-01, xnorm = 0.599819E+00, THR = 0.113504E-01)
+ mumax = -0.617187500000000     
+  Error of red space iteration  3:      0.0748199159 (mu =   0.00, xmax = 0.126825E+00, xnorm = 0.830413E+00, THR = 0.113504E-01)
+  Error of red space iteration  4:      0.0416089607 (mu =   0.00, xmax = 0.131082E+00, xnorm = 0.856350E+00, THR = 0.113504E-01)
+  Error of red space iteration  5:      0.0013986905 (mu =   0.00, xmax = 0.136340E+00, xnorm = 0.888425E+00, THR = 0.113504E-01)
+Newton equations converged in  5 iterations!
+ >>>  CPU Time used in CROP solver     is   0.01 seconds
+ >>>  CPU Time used in NEW D           is   0.00 seconds
+No. of matmuls in get_density:    59
+ >>>  CPU Time used in G_DENS          is   0.02 seconds
+ >>>  CPU Time used in SCF iteration   is   1.64 seconds
+** Get Fock matrix number   2
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ 0.35000 (xmax)     0.13634    0.88842    0.00    1.1151    0.0000         0          1    %%%
+ Trust radius based on max element!
+ % Too large difference between trust-radius and actual step.  Reduce trust-radius
+ % h(old), h(new):  0.350000000000000       0.245000000000000     
+ >>>  CPU Time used in FCK_FO          is   1.71 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+  2    -13.4964400075   -1.12421052783    0.00      0.00000    0.00    0.00E+00    0.73E+00  ###
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   2
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.335 MB
+  Max allocated memory, type(matrix)          522.000 kB
+  Max allocated memory, real                   31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 252.000 kB
+  Allocated memory,     type(matrix)          252.000 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+** Make average of the last F and D matrices
+Matrix AO D  has nnz=      1327 sparsity:     57.639 %
+Matrix AO F  has nnz=      1140 sparsity:     49.479 %
+Matrix OAO D has nnz=      1306 sparsity:     56.684 %
+Matrix OAO F has nnz=      1406 sparsity:     61.024 %
+ >>>  CPU Time used in AVERAG          is   0.00 seconds
+** Get new density 
+ OAO gradnorm  0.117592225806598     
+ Number of densities in queue:           1
+CROP scheme, truncated subspace (CORE) - max. no. of vectors is  2
+ First mu:   0.00000000000000     
+  Error of red space iteration  1:      0.0063892347 (mu =   0.00, xmax = 0.152318E-01, xnorm = 0.104598E+00, THR = 0.117592E-02)
+  Error of red space iteration  2:      0.0007002484 (mu =   0.00, xmax = 0.145210E-01, xnorm = 0.996795E-01, THR = 0.117592E-02)
+Newton equations converged in  2 iterations!
+ >>>  CPU Time used in CROP solver     is   0.01 seconds
+ >>>  CPU Time used in NEW D           is   0.00 seconds
+No. of matmuls in get_density:    44
+ >>>  CPU Time used in G_DENS          is   0.01 seconds
+ >>>  CPU Time used in SCF iteration   is   1.72 seconds
+** Get Fock matrix number   3
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ 0.24500 (xmax)     0.01452    0.09968    0.00    1.0136    0.9773         1          2    %%%
+ Trust radius based on max element!
+ Large ratio, double trust-radius
+ Absolute max element allowed is  0.350000000000000      , resetting trust radius!
+ Absolute max step allowed is  0.600000000000000       , resetting trust radius!
+ >>>  CPU Time used in FCK_FO          is   1.71 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+  3    -13.5082613132   -0.01182130574    0.00      0.00000    0.00    0.00E+00    0.96E-02  ###
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   3
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.335 MB
+  Max allocated memory, type(matrix)          558.000 kB
+  Max allocated memory, real                   31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 288.000 kB
+  Allocated memory,     type(matrix)          288.000 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+** Make average of the last F and D matrices
+Matrix AO D  has nnz=      1350 sparsity:     58.594 %
+Matrix AO F  has nnz=      1140 sparsity:     49.479 %
+Matrix OAO D has nnz=      1301 sparsity:     56.510 %
+Matrix OAO F has nnz=      1401 sparsity:     60.851 %
+ >>>  CPU Time used in AVERAG          is   0.00 seconds
+** Get new density 
+ OAO gradnorm  1.630174778241614E-003
+ Number of densities in queue:           2
+CROP scheme, truncated subspace (CORE) - max. no. of vectors is  2
+ First mu:   0.00000000000000     
+  Error of red space iteration  1:      0.0001242331 (mu =   0.00, xmax = 0.435914E-03, xnorm = 0.136448E-02, THR = 0.163017E-04)
+  Error of red space iteration  2:      0.0000280124 (mu =   0.00, xmax = 0.419718E-03, xnorm = 0.132325E-02, THR = 0.163017E-04)
+  Error of red space iteration  3:      0.0000036298 (mu =   0.00, xmax = 0.414765E-03, xnorm = 0.130599E-02, THR = 0.163017E-04)
+Newton equations converged in  3 iterations!
+ >>>  CPU Time used in CROP solver     is   0.01 seconds
+ >>>  CPU Time used in NEW D           is   0.00 seconds
+No. of matmuls in get_density:    51
+ >>>  CPU Time used in G_DENS          is   0.01 seconds
+ >>>  CPU Time used in SCF iteration   is   1.72 seconds
+** Get Fock matrix number   4
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ 0.35000 (xmax)     0.00041    0.00131    0.00    1.0535    0.8019         2          3    %%%
+ Trust radius based on max element!
+ Large ratio, double trust-radius
+ Absolute max element allowed is  0.350000000000000      , resetting trust radius!
+ Absolute max step allowed is  0.600000000000000       , resetting trust radius!
+ >>>  CPU Time used in FCK_FO          is   1.72 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+  4    -13.5082635305   -0.00000221722    0.00      0.00000    0.00    0.00E+00    0.91E-03  ###
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   4
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.335 MB
+  Max allocated memory, type(matrix)          594.000 kB
+  Max allocated memory, real                   31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 324.000 kB
+  Allocated memory,     type(matrix)          324.000 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+** Make average of the last F and D matrices
+Matrix AO D  has nnz=      1224 sparsity:     53.125 %
+Matrix AO F  has nnz=      1141 sparsity:     49.566 %
+Matrix OAO D has nnz=      1280 sparsity:     55.556 %
+Matrix OAO F has nnz=      1401 sparsity:     60.851 %
+ >>>  CPU Time used in AVERAG          is   0.00 seconds
+** Get new density 
+ OAO gradnorm  1.535578584209180E-004
+ Number of densities in queue:           3
+CROP scheme, truncated subspace (CORE) - max. no. of vectors is  2
+ First mu:   0.00000000000000     
+  Error of red space iteration  1:      0.0000097155 (mu =   0.00, xmax = 0.462718E-04, xnorm = 0.136650E-03, THR = 0.153558E-05)
+  Error of red space iteration  2:      0.0000026161 (mu =   0.00, xmax = 0.447385E-04, xnorm = 0.132229E-03, THR = 0.153558E-05)
+  Error of red space iteration  3:      0.0000001747 (mu =   0.00, xmax = 0.441656E-04, xnorm = 0.130368E-03, THR = 0.153558E-05)
+Newton equations converged in  3 iterations!
+ >>>  CPU Time used in CROP solver     is   0.01 seconds
+ >>>  CPU Time used in NEW D           is   0.00 seconds
+No. of matmuls in get_density:    50
+ >>>  CPU Time used in G_DENS          is   0.01 seconds
+ >>>  CPU Time used in SCF iteration   is   1.73 seconds
+** Get Fock matrix number   5
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ 0.35000 (xmax)     0.00004    0.00013    0.00    1.0050    0.9883         3          4    %%%
+ Trust radius based on max element!
+ Large ratio, double trust-radius
+ Absolute max element allowed is  0.350000000000000      , resetting trust radius!
+ Absolute max step allowed is  0.600000000000000       , resetting trust radius!
+ >>>  CPU Time used in FCK_FO          is   1.71 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+  5    -13.5082635504   -0.00000001998    0.00      0.00000    0.00    0.00E+00    0.14E-04  ###
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   5
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.335 MB
+  Max allocated memory, type(matrix)          630.000 kB
+  Max allocated memory, real                   31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 360.000 kB
+  Allocated memory,     type(matrix)          360.000 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+** Make average of the last F and D matrices
+Matrix AO D  has nnz=      1228 sparsity:     53.299 %
+Matrix AO F  has nnz=      1141 sparsity:     49.566 %
+Matrix OAO D has nnz=      1273 sparsity:     55.295 %
+Matrix OAO F has nnz=      1401 sparsity:     60.851 %
+ >>>  CPU Time used in AVERAG          is   0.00 seconds
+** Get new density 
+ OAO gradnorm  2.859197115092936E-006
+ Number of densities in queue:           4
+CROP scheme, truncated subspace (CORE) - max. no. of vectors is  2
+ First mu:   0.00000000000000     
+  Error of red space iteration  1:      0.0000003460 (mu =   0.00, xmax = 0.428462E-06, xnorm = 0.196893E-05, THR = 0.285920E-07)
+  Error of red space iteration  2:      0.0000000348 (mu =   0.00, xmax = 0.417354E-06, xnorm = 0.201155E-05, THR = 0.285920E-07)
+  Error of red space iteration  3:      0.0000000053 (mu =   0.00, xmax = 0.414112E-06, xnorm = 0.199648E-05, THR = 0.285920E-07)
+Newton equations converged in  3 iterations!
+ >>>  CPU Time used in CROP solver     is   0.01 seconds
+ >>>  CPU Time used in NEW D           is   0.00 seconds
+No. of matmuls in get_density:    50
+ >>>  CPU Time used in G_DENS          is   0.01 seconds
+ >>>  CPU Time used in SCF iteration   is   1.73 seconds
+** Get Fock matrix number   6
+ Using purely new Integrals
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ 0.35000 (xmax)     0.00000    0.00000    0.00    1.0651    0.9400         4          5    %%%
+ Trust radius based on max element!
+ Large ratio, double trust-radius
+ Absolute max element allowed is  0.350000000000000      , resetting trust radius!
+ Absolute max step allowed is  0.600000000000000       , resetting trust radius!
+ >>>  CPU Time used in FCK_FO          is   1.71 seconds
+ >>>  CPU Time used in G_GRAD          is   0.00 seconds
+  6    -13.5082635505   -0.00000000001    0.00      0.00000    0.00    0.00E+00    0.41E-06  ###
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics, iteration   6
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Max allocated memory, TOTAL                  31.335 MB
+  Max allocated memory, type(matrix)          666.000 kB
+  Max allocated memory, real                   31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+
+  Allocated memory,     TOTAL                 396.000 kB
+  Allocated memory,     type(matrix)          396.000 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+ >>>  CPU Time used in **ITER          is  10.24 seconds
+
+Total no. of matmuls in SCF optimization:        392
+
+ Number of occupied orbitals:          12
+ Number of virtual orbitals:          36
+
+ Number of occupied orbital energies to be found:           1
+ Number of virtual orbital energies to be found:           1
+
+
+Calculation of HOMO-LUMO gap
+============================
+
+    E(LUMO):                         0.204805 au
+   -E(HOMO):                        -0.565088 au
+   ------------------------------
+    HOMO-LUMO Gap (iteratively):     0.769892 au
+
+ >>>  CPU Time used in HL GAP          is   0.90 seconds
+
+********************************************************
+ it       dE(HF)       DSMexit   RHshift    RHinfo 
+********************************************************
+  1    0.00000000000    0.0000    0.0000    0.0000000
+  2   -1.12421052783    0.0000    0.0000    0.0000000
+  3   -0.01182130574    0.0000    0.0000    0.0000000
+  4   -0.00000221722    0.0000    0.0000    0.0000000
+  5   -0.00000001998    0.0000    0.0000    0.0000000
+  6   -0.00000000001    0.0000    0.0000    0.0000000
+
+======================================================================
+                   LINSCF ITERATIONS:
+  It.nr.               Energy                    Gradient norm
+======================================================================
+    1           -12.37222947967633146504      0.701497891203180D+01
+    2           -13.49644000750974370817      0.725951974444603D+00
+    3           -13.50826131324808798695      0.958214028870950D-02
+    4           -13.50826353046804939595      0.905402049428531D-03
+    5           -13.50826355044904758529      0.137267835130420D-04
+    6           -13.50826355045482429773      0.408607126653478D-06
+
+      SCF converged !!!! 
+         >>> Final results from LSDALTON <<<
+
+
+      Final HF energy:                   -13.508263550455
+      Nuclear repulsion:                  22.020035605876
+      Electronic energy:                 -35.528299156331
+
+
+
+
+                       Permanent dipole moment
+                       -----------------------
+               au              Debye           10**-30 C m
+           0.334812E-02      0.851009E-02      0.283866E-01
+
+
+                       Dipole moment components
+                       ------------------------
+               au              Debye           10**-30 C m
+ x        -0.313038E-02     -0.795665E-02     -0.265405E-01
+ y         0.112410E-02      0.285718E-02      0.953052E-02
+ z        -0.383435E-03     -0.974596E-03     -0.325090E-02
+
+
+
+ >>>  CPU Time used in LSDALTON RSP    is   0.01 seconds
+ *****************************************************
+ **     CPU-TIME USED IN LSDALTON RESPONSE:   1.469899999999669E-002    **
+ *****************************************************
+ >>>  CPU Time used in *SCF            is  11.20 seconds
+
+Total no. of matmuls used:                       414
+Total no. of Fock/KS matrix evaluations:           8
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+                  Memory statistics          
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+  Allocated memory (TOTAL):                 0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (type(matrix)):          0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (real):                  0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (integer):               0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (logical):               0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (linkshell):             0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (integrand):             0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (integralitem):          0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (overlap):               0 byte  - Should be zero - otherwise a leakage is present
+  Allocated memory (ODitem):                0 byte  - Should be zero - otherwise a leakage is present
+  Max allocated memory, TOTAL                  31.458 MB
+  Max allocated memory, type(matrix)          666.000 kB
+  Max allocated memory, real(realk)            31.069 MB
+  Max allocated memory, integer               164.508 kB
+  Max allocated memory, logical                 0.000 Byte
+  Max allocated memory, linkshell               0.000 Byte
+  Max allocated memory, integrand             560.000 kB
+  Max allocated memory, integralitem           31.030 MB
+  Max allocated memory, Overlap               279.633 kB
+  Max allocated memory, ODitem                 81.375 kB
+*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*
+
+
+
+=============================================================================
+             -- Divide, Expand & Consolidate Coupled-Cluster -- v: 0.02   
+=============================================================================
+ Main author: Marcin Ziolkowski @ AU 2009,2010
+ Co-authors : Kasper Kristensen (kasperk@chem.au.dk)
+
+
+Calculations in GC basis
+
+Lsitem has been read from file
+
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.02 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.00 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.08 seconds
+ >>>  CPU Time used in CS_INPUT-Molecu is   0.00 seconds
+ Jengine integrals are calculated using passes with maxPrimPass=          64
+ >>>  CPU Time used in st-Kbuild       is   0.86 seconds
+ >>>  CPU Time used in OVERLAP         is   0.01 seconds
+
+-- Full moleculecular info --
+
+Number of electrons        :     24
+Number of atoms            :     24
+Number of basis func.      :     48
+Number of aux. basis func. :      0
+Number of occ. orbitals    :     12
+Number of virt. orbitals   :     36
+
+Molecule initialized
+
+
+DEC fragment calculation is carried out...
+
+
+ ================================================ 
+                  DEC-CC driver                   
+ ================================================ 
+
+
+--------------------------
+   DEC input parameters   
+--------------------------
+
+Occ.      init. radius =      0.00
+Unocc.    init. radius =      1.00
+Occ. b.   init. radius =      1.00
+Unocc. b. init. radius =      1.00
+Mulliken charge thr.   =    0.010
+Convergence Occ-Buff.  =  0.1E-05
+Convergence Unoc-Targ. =  0.1E-05
+Convergence Unoc-Buff. =  0.1E-05
+MaxIter Occ-Buff.      =   10
+MaxIter Unocc-Targ.    =   10
+MaxIter Unocc-Buff.    =   10
+Occ-Buff. step         =   4.00
+Unocc-Targ. step       =   4.00
+Unocc-Buff. step       =   4.00
+Reoptimization         = F
+Reoptimization MaxIter =   10
+Optimization           = T
+Optimize buffers       = T
+Optimize unocc. buffer = T
+Pair fragment thresh.  =   1000.00
+Fragmentation debug    = F
+DEC driver debug       = F
+Print level            =    0
+
+--------------------------
+  Coupled-cluster input  
+--------------------------
+
+Wave function          = MP2  
+MaxIter                =  100
+Convergence            =  0.1E-08
+Debug mode             = F
+Use CROP               = T
+CROP subspace          =    3
+Preconditioner         = T
+Precond. B             = T
+
+
+ ORBITAL INFORMATION
+ -------------------
+    Atom type     Occ Orbitals     Unocc Orbitals 
+     1    H            1                1
+     2    H            0                2
+     3    H            0                2
+     4    H            1                1
+     5    H            0                2
+     6    H            1                1
+     7    H            0                2
+     8    H            1                1
+     9    H            1                1
+    10    H            0                2
+    11    H            0                2
+    12    H            1                1
+    13    H            1                1
+    14    H            0                2
+    15    H            0                2
+    16    H            1                1
+    17    H            0                2
+    18    H            1                1
+    19    H            1                1
+    20    H            0                2
+    21    H            1                1
+    22    H            0                2
+    23    H            0                2
+    24    H            1                1
+ Total:               12               36
+
+
+ -----------------------------------------------
+ -- Calculations just for fragment :    6
+ -----------------------------------------------
+
+
+-- Atomic fragments generator
+
+-------------------
+ Fragment =    6
+-------------------
+
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+  6           0.122    0.0000000000   -0.0040712461
+
+ ====================================================
+             Initital fragment information
+ ----------------------------------------------------
+ Fragment number                   :   6
+ Fragment energy                   :   -0.0040712461
+ Occupied buffer radius            :      1.00
+ Virtual target radius             :      1.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   1
+ Number of orbitals in virt total  :   3
+ Number of atoms in atomic extent  :   2
+ ====================================================
+
+
+Starting fragment optimization for fragment:    6
+*************************************************
+
+ Carrying out initial fragment opt. step
+
+Fragment optimization: Starting overall loop:    1
+--------------------------------------------------
+
+
+-> Optimization of the virtual target, big loop   1
+
+ Unocc target radius has been increased to:       5.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+  6           0.113    0.0000000000   -0.0170226937
+
+ VirtTarget:           1           1
+ Fragment energy                   :   -0.0170226937
+ Occupied buffer radius            :      1.00
+ Virtual target radius             :      5.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   3
+ Number of orbitals in virt total  :   3
+
+Virtual target opt.: Overall loop, VirtTarget loop, EnergyDiff:    1   1    0.0129514476
+
+ Unocc target radius has been increased to:       9.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 10           0.478    0.0000000000   -0.0170126567
+
+ VirtTarget:           1           2
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      1.00
+ Virtual target radius             :      9.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+
+Virtual target opt.: Overall loop, VirtTarget loop, EnergyDiff:    1   2    0.0000100370
+
+ Unocc target radius has been increased to:      13.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Increasing virt target radius did not change the number of orbitals
+ Unocc target radius has been increased to:      17.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 10           1.351    0.0000000000   -0.0170126520
+
+ VirtTarget:           1           4
+ Fragment energy                   :   -0.0170126520
+ Occupied buffer radius            :      1.00
+ Virtual target radius             :     17.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :  15
+ Number of orbitals in virt total  :  15
+
+Virtual target opt.: Overall loop, VirtTarget loop, EnergyDiff:    1   4    0.0000000047
+
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+
+ *****************************************************************************
+ Virtual target loop converged!
+ Big loop number            :   1
+ Virt target loop number    :   4
+ Energy change in this loop :   -0.0129414106
+ New virt target radius     :     13.00
+ Old virt target radius     :      1.00
+ No. virt target orbitals   :   9
+ *****************************************************************************
+
+ EXITING VirtTarget:           1           4
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      1.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+
+ -> Optimization of the occupied buffer, big loop:   1
+
+ Occ buffer radius has been increased to :       5.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Increasing occ buffer radius did not change the total number of orbitals
+ Occ buffer radius has been increased to :       9.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 11           0.649    0.0000000000   -0.0170127237
+
+ OccBuffer:           1           2
+ Fragment energy                   :   -0.0170127237
+ Occupied buffer radius            :      9.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   3
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+Occupied buffer opt.: Overall loop, OccBuff loop, EnergyDiff:    1   2    0.0000000670
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+
+ *****************************************************************************
+ Occupied buffer loop converged!
+ Big loop number           :   1
+ Occ buffer loop number    :   2
+ Energy change in this loop :    0.0000000000
+ New occ buffer radius     :      5.00
+ Old occ buffer radius     :      1.00
+ No. occ total  orbitals   :   1
+ *****************************************************************************
+
+warning :: overwriting fragment info file 
+fragment_000006.info                                                            
+ EXITING OccBuffer:           1           2
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+
+ -> Optimization of the virtual buffer, big loop:   1
+
+ Unocc buffer radius has been increased to :       5.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 10           1.358    0.0000000000   -0.0170126516
+
+ UnOccBuffer:           1           1
+ Fragment energy                   :   -0.0170126516
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      5.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :  15
+Virtual buffer opt.: Overall loop, VirtBuffer loop, EnergyDiff:    1   1    0.0000000051
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+
+ *****************************************************************************
+ Virtual buffer loop converged!
+ Big loop number            :   1
+ Virt buffer loop number    :   1
+ Energy change in this loop :    0.0000000000
+ New virt buffer radius     :      1.00
+ Old virt buffer radius     :      1.00
+ No. virt orbitals (total)  :   9
+ *****************************************************************************
+
+warning :: overwriting fragment info file 
+fragment_000006.info                                                            
+ EXITING UnoccBuffer:           1           1
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+  Energy difference for big step    1:     0.0129414106
+ Expansions of virt. target, occ. buffer, virt. buffer? T T F
+
+Fragment optimization: Starting overall loop:    2
+--------------------------------------------------
+
+
+-> Optimization of the virtual target, big loop   2
+
+ Unocc target radius has been increased to:      17.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 10           1.348    0.0000000000   -0.0170126520
+
+ VirtTarget:           2           1
+ Fragment energy                   :   -0.0170126520
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     17.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :  15
+ Number of orbitals in virt total  :  15
+
+Virtual target opt.: Overall loop, VirtTarget loop, EnergyDiff:    2   1    0.0000000047
+
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+
+ *****************************************************************************
+ Virtual target loop converged!
+ Big loop number            :   2
+ Virt target loop number    :   1
+ Energy change in this loop :    0.0000000000
+ New virt target radius     :     13.00
+ Old virt target radius     :     13.00
+ No. virt target orbitals   :   9
+ *****************************************************************************
+
+warning :: overwriting fragment info file 
+fragment_000006.info                                                            
+ EXITING VirtTarget:           2           1
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+
+ -> Optimization of the occupied buffer, big loop:   2
+
+ Occ buffer radius has been increased to :       9.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 11           0.674    0.0000000000   -0.0170127237
+
+ OccBuffer:           2           1
+ Fragment energy                   :   -0.0170127237
+ Occupied buffer radius            :      9.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   3
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+Occupied buffer opt.: Overall loop, OccBuff loop, EnergyDiff:    2   1    0.0000000670
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+
+ *****************************************************************************
+ Occupied buffer loop converged!
+ Big loop number           :   2
+ Occ buffer loop number    :   1
+ Energy change in this loop :    0.0000000000
+ New occ buffer radius     :      5.00
+ Old occ buffer radius     :      5.00
+ No. occ total  orbitals   :   1
+ *****************************************************************************
+
+warning :: overwriting fragment info file 
+fragment_000006.info                                                            
+ EXITING OccBuffer:           2           1
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+
+ -> Optimization of the virtual buffer, big loop:   2
+
+ Unocc buffer radius has been increased to :       5.00
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+ Calculating two-electron (virt occ | virt occ) integrals...
+ Done constructing two-electron (virt occ | virt occ) integrals...
+ 10           1.355    0.0000000000   -0.0170126516
+
+ UnOccBuffer:           2           1
+ Fragment energy                   :   -0.0170126516
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      5.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :  15
+Virtual buffer opt.: Overall loop, VirtBuffer loop, EnergyDiff:    2   1    0.0000000051
+
+-- Initializing fragment on atom :    6
+ >>>  CPU Time used in OVERLAP         is   0.00 seconds
+
+ *****************************************************************************
+ Virtual buffer loop converged!
+ Big loop number            :   2
+ Virt buffer loop number    :   1
+ Energy change in this loop :    0.0000000000
+ New virt buffer radius     :      1.00
+ Old virt buffer radius     :      1.00
+ No. virt orbitals (total)  :   9
+ *****************************************************************************
+
+warning :: overwriting fragment info file 
+fragment_000006.info                                                            
+ EXITING UnoccBuffer:           2           1
+ Fragment energy                   :   -0.0170126567
+ Occupied buffer radius            :      5.00
+ Virtual target radius             :     13.00
+ Virtual buffer radius             :      1.00
+ Number of orbitals in occ target  :   1
+ Number of orbitals in occ total   :   1
+ Number of orbitals in virt target :   9
+ Number of orbitals in virt total  :   9
+  Energy difference for big step    2:     0.0000000000
+ Expansions of virt. target, occ. buffer, virt. buffer? F F F
+ =======================================================
+      Quiting optimization of fragment  :   6
+ -------------------------------------------------------
+ DONE: Number of big steps               :   2
+ DONE: Fragment energy                   :   -0.0170126567
+ DONE: Occupied buffer radius            :      5.00
+ DONE: Virtual target radius             :     13.00
+ DONE: Virtual buffer radius             :      1.00
+ DONE: Number of orbitals in occ target  :   1
+ DONE: Number of orbitals in occ total   :   1
+ DONE: Number of orbitals in virt target :   9
+ DONE: Number of orbitals in virt total  :   9
+ DONE: Number of atoms in atomic extent  :   6
+ =======================================================
+
+ Fragment calculation done, saving atomic fragment to file
+warning :: overwriting fragment info file 
+fragment_000006.info                                                            
+
+ ------------------------------------------------------------
+ SINGLE SUMMARY (atom,energy):     6    -0.1701265670E-01
+ ------------------------------------------------------------
+
+Orbitals removed
+Full molecular data deleted
+Integral program finalized
+
+------------------------------------------------------
+Total CPU  time used in DEC :                9.604 s
+Total Wall time used in DEC :               16.214 s
+Hostname       : kkmac.local                                       
+Job finished   : Date: 14/10/2010   Time: 22:51:14
+------------------------------------------------------
+
+
+
+
+=============================================================================
+                          -- end of DEC program --                           
+=============================================================================
+
+
+
+ >>>  CPU Time used in LSDALTON        is  27.75 seconds

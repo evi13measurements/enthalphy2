@@ -1,0 +1,102 @@
+#!/bin/sh
+#
+# This is the script for generating files for a specific Dalton test job.
+#
+# For the .check file ksh or bash is preferred, otherwise use sh
+# (and hope it is not the old Bourne shell, which will not work)
+#
+if [ -x /bin/ksh ]; then
+   CHECK_SHELL='#!/bin/ksh'
+elif [ -x /bin/bash ]; then
+   CHECK_SHELL='#!/bin/bash'
+else
+   CHECK_SHELL='#!/bin/sh'
+fi
+
+
+#######################################################################
+#  TEST DESCRIPTION
+#######################################################################
+cat > LSDALTON_ETUVIL.info <<'%EOF%'
+   LSDALTON_ETUVIL
+   -------------
+   Molecule:         Methane with -OH
+   Wave Function:    HF
+   Test Purpose:     Check .ETUVIL keyword
+%EOF%
+
+#######################################################################
+#  MOLECULE INPUT
+#######################################################################
+cat > LSDALTON_ETUVIL.mol <<'%EOF%'
+ATOMBASIS
+distorted Methane with -OH
+b3lyp/6-31+g(d,p) optimized geo.
+Atomtypes=3 Nosymmetry 
+Charge=1. Atoms=4 Basis=6-31G
+H    0.520821    0.080551    1.451675
+H    1.965224   -1.097271    0.053015
+H    0.989971    1.157250   -0.160167
+H   -1.303842   -0.036443   -0.048756
+Charge=6.    Atoms=1  Basis=6-31G
+C    0.430423    0.005605    0.364687
+Charge=8.    Atoms=1  Basis=3-21G
+O    1.023374   -1.101579   -0.177807
+%EOF%
+
+#######################################################################
+#  DALTON INPUT
+#######################################################################
+cat > LSDALTON_ETUVIL.dal <<'%EOF%'
+**INTEGRALS
+.ETUVIL
+**WAVE FUNCTIONS
+.HF
+*END OF INPUT
+%EOF%
+
+#######################################################################
+#  CHECK SCRIPT
+#######################################################################
+echo $CHECK_SHELL >LSDALTON_ETUVIL.check
+cat >> LSDALTON_ETUVIL.check <<'%EOF%'
+log=$1
+
+if [ `uname` = Linux ]; then
+   GREP="egrep -a"
+else
+   GREP="egrep"
+fi
+
+
+CRIT1=`$GREP "Final HF energy\:  *   -111\.171821545" $log | wc -l`
+TEST[1]=`expr  $CRIT1`
+CTRL[1]=1
+ERROR[1]="ENERGY NOT CORRECT -"
+
+# Memory test
+CRIT1=`$GREP "Allocated memory \(TOTAL\): * 0 byte" $log | wc -l`
+TEST[2]=`expr  $CRIT1`
+CTRL[2]=1
+ERROR[2]="Memory leak -"
+
+PASSED=1
+for i in 1 2
+do
+   if [ ${TEST[i]} -ne ${CTRL[i]} ]; then
+      echo ${ERROR[i]}
+      PASSED=0
+   fi
+done
+
+if [ $PASSED -eq 1 ]
+then
+   echo TEST ENDED PROPERLY
+   exit 0
+else
+   echo THERE IS A PROBLEM
+   exit 1
+fi
+
+%EOF%
+#######################################################################

@@ -1,0 +1,271 @@
+Here is the bug and to-do list for the linsca branch.
+
+Add to list whenever you find something that needs to be done. When fixing a bug or
+something on the to-do list, don't remove it but instead put down your name and the date
+in the right hand column.
+
+	Bug list
+=============================
+
+			[Noted by], (date)	To be fixed by		Priority	[Fixed by], (date):
+
+-----------------------------------------------------------------------------------------------------------
+XC gives wrong energy	Stinne, Simen		Thomas                  High		maybe fixed 
+with the LSint code	(04-09-09)
+-----------------------------------------------------------------------------------------------------------
+OMP grid-genereation    Simen                   Thomas                  High               
+speed issue             (28-09-09)                                                               
+-----------------------------------------------------------------------------------------------------------
+OMP LinK failes         Simen                   Thomas                  Medium
+on huge                 (28-09-09)                                                               
+-----------------------------------------------------------------------------------------------------------
+Old/new input           Stinne                  Simen                   Medium             
+discrepancy             (22-09-09)                                                               
+-----------------------------------------------------------------------------------------------------------
+
+
+Bugs on Huge (AIX, xlf90/xlc):
+==============================
+-----------------------------------------------------------------------------------------------------------
+Test fck3/dft_ethane_nosym_fck3 fails with 
+"Wrong number of electrons in DFTINT"
+                        Stinne			Thomas			Medium
+                        (26-04-10)
+-----------------------------------------------------------------------------------------------------------
+Test LSint/LS_ethane_pari_b3lyp fails:
+Iteration 0 energy: -0.66872836E+266
+			Stinne			Simen
+                        (26-04-10)
+-----------------------------------------------------------------------------------------------------------
+Test LSint/LS_fragment_df_overlap fails with
+"DPOTRF error in linsolv_df"
+                        Stinne			Simen
+                        (26-04-10)
+-----------------------------------------------------------------------------------------------------------
+Test LSint/LS_ethane_jengine_gradient fails
+                        Stinne			Simen
+                        (26-04-10)
+-----------------------------------------------------------------------------------------------------------
+	To-do list
+=============================
+
+			Comments:		To be fixed by		Priority	[Fixed by], (date):
+For Coulomb:
+============
+
+-----------------------------------------------------------------------------------------------------------
+FMM E_1/2					Thomas                  Low
+-----------------------------------------------------------------------------------------------------------
+Linear solver					Brano                   High
+-----------------------------------------------------------------------------------------------------------
+Screening		Works, but must be	Thomas                  High
+			tested
+-----------------------------------------------------------------------------------------------------------
+OpenMP			GridGeneration		Thomas                  High		 Thomas 
+                        FMM                     Simen                   High             Simen  (15-09-09)
+-----------------------------------------------------------------------------------------------------------
+MPI						?			Low
+-----------------------------------------------------------------------------------------------------------
+FMM			df-Interface		Thomas                  High             Thomas & Simen
+                        Electron-nuclear attr.  Simen                   High             Simen  (16-09-09)
+                        Speed-ups               Simen                   High
+                        New interface           Simen                   Low
+-----------------------------------------------------------------------------------------------------------
+Jengine                 3-cent linear scaling   Simen                   High
+                        Passes with FMM         Simen                   High             Simen (11-10-09)
+                        3-cent overlap speed-up Simen                   High
+                        Integral prefactor      Simen                   High
+-----------------------------------------------------------------------------------------------------------
+Memory                  Reduction               All                     High
+-----------------------------------------------------------------------------------------------------------
+Intrinsics		Boys function		Brano                   High             Brano
+-----------------------------------------------------------------------------------------------------------
+
+
+For exchange:
+=============
+
+-----------------------------------------------------------------------------------------------------------
+Fragmentation					Thomas                  High
+-----------------------------------------------------------------------------------------------------------
+Incremental		Trilevel		Brano                   Medium			
+			II_xc			Thomas                  Medium 			Thomas
+			KS matrix		Thomas                  Medium
+-----------------------------------------------------------------------------------------------------------
+MBIE						Thomas			Low
+-----------------------------------------------------------------------------------------------------------
+DF exchange					Simen                   Low
+-----------------------------------------------------------------------------------------------------------
+
+
+For exchange-correlation:
+=========================
+
+-----------------------------------------------------------------------------------------------------------
+Speedup!					Thomas, Simen           High            Simen (02-10-09)
+-----------------------------------------------------------------------------------------------------------
+
+
+General:
+========
+Complete Implementation of ODmatrices           Thomas                  Low
+-----------------------------------------------------------------------------------------------------------
+Memmory allocation in allocatintegrals scales 
+poorly with large nprim for large angular momentum 
+for now TURN OFF PASS (.NO PASS)       	      	Thomas/Simen		Low		
+----------------------------------------------------------------------------------------------------------- 
+
+===========================================================================================================
+                                Thomas's ToDo List in Prioritized order
+===========================================================================================================
+
+-----------------------------------------------------------------------------------------------------------
+Fragmentation           FMM/lin solver/perform  Thomas			1
+-----------------------------------------------------------------------------------------------------------
+Multipole moments	Gab matrix screenin	Thomas			2 
+-----------------------------------------------------------------------------------------------------------
+Meomry                  overview-frag-GAO       Thomas                  3
+-----------------------------------------------------------------------------------------------------------
+OpenMP                  GridGen,Speed issue!    Thomas			4
+-----------------------------------------------------------------------------------------------------------
+Incremental		KS matrix		Thomas			Medium
+Incremental		II_xc -FLAG OMP		Thomas			Low          
+-----------------------------------------------------------------------------------------------------------
+Complete Implementation of ODmatrices           Thomas                  Low	       	      
+-----------------------------------------------------------------------------------------------------------
+MBIE						Thomas			Low                    
+-----------------------------------------------------------------------------------------------------------
+FMM E_1/2					Thomas			Low
+-----------------------------------------------------------------------------------------------------------
+SPARSITY in XC                                  Thomas                  Low
+       
+===========================================================================================================
+                                Simen's ToDo List in Prioritized order
+===========================================================================================================
+
+-----------------------------------------------------------------------------------------------------------
+OMP on huge             Bug reported by Stinne                          done          Simen
+Old/new input discr.    Bug reported by Stinne                          Medium
+Seg.fault titin/grendel Bug reported by Stinne                          done
+-----------------------------------------------------------------------------------------------------------
+FMM                     Open MP                                         done          Simen  (15-09-09)
+                        Electron-nuclear attraction                     done          Simen  (16-09-09)
+                        df-interface                                    done          Simen  (02-10-09)
+                        overlap-df-J interface                          done          Simen  (19-10-09)
+                        Speed-ups                                       2
+                        New interface                                   Low
+-----------------------------------------------------------------------------------------------------------
+Jengine                 Passes working with FMM                         done          Simen  (11-10-09)
+                        Integral prefactor                              Medium
+                        Linear scaling three-center overlap-integrals   done          Simen  (18-10-09)
+                        Fast three-center overlap-integrals             3
+-----------------------------------------------------------------------------------------------------------
+DF-exchange             Theory and new driver                           Low
+-----------------------------------------------------------------------------------------------------------
+General                 Integer 64-bit, omp code                        1
+
+
+===========================================================================================================
+                                Brano's ToDo List in Prioritized order
+===========================================================================================================
+
+-----------------------------------------------------------------------------------------------------------
+least change								High
+linear scaling solver & lea sparsity
+Titin + water backup
+-----------------------------------------------------------------------------------------------------------
+
+===========================================================================================================
+                                Stinne's ToDo List in Prioritized order
+===========================================================================================================
+
+-----------------------------------------------------------------------------------------------------------
+Test new level shift routines for CROP solver with truncation
+Restore Hessian restart option
+run insulin
+run insulin with water
+-----------------------------------------------------------------------------------------------------------
+
+Documentation with Doxygen: Remove the files/routines from this list when you have finished documenting them.
+=============================================================================================================
+
+mat-operations.f90 is documented, except for the following
+routines. If the author(s) would please take care of that... 
+------------------------------------------------------------
+mat_cholesky
+mat_inverse_triang
+mat_simtran
+mat_clean
+mat_to_minus_one_half
+mat_gershgorin_minmax
+mat_mo_precond_complex, 
+mat_mo_precond2_complex, 
+mat_mo_deprecond_complex,
+mat_mpixbcast,
+mat_mpixrecv,
+mat_mpixsend,
+
+Files (in linears, unless indicated otherwise) assigned
+to author (if your are not the author, please find him/her
+and let him/her know!)
+-------------------------------------------------------
+
+Andreas/Sonia/Kasper/Joanna?
+====================
+rsp_utilities.f90 - Should be cleaned up
+
+Sonia
+======
+rsp_solver.f90
+linrsp_interface.f90 
+
+Brano
+=======
+minimize.f90
+lsmpi.f90
+lowdin.f90 
+leastchange.f90
+ecdata_module.f90
+
+Andreas
+===========
+birefring.f90  
+rsp_equations.f90
+prop_contribs.f90
+prop_test.f90
+vib_prop.f90
+lsutil/matrix_defop.f90
+lsutil/matrix_genop.f90
+
+Thomas/Simen
+==============
+lsutil library, except matrix files
+LSint library
+lsdalton_modules.f90
+configuration.f90 (partly)
+
+Simen
+=======
+Should fck3 and mm libraries be documented??
+scratch.f90 (Commented out??)
+fock-eval.f90
+dalton_interface.f90
+
+Thomas
+=======
+Quadraticrsp_interface.f90
+rsp-typedef.f90
+
+Joanna
+========
+rsp_complex.f90
+cgop.f90
+queue-operations4.f90
+queue-typedef4.f90
+
+Kasper
+=======
+rsp_damped_tpa.f90
+rsp_residues.f90
+lin_lao.f90
+

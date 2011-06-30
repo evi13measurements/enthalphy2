@@ -1,0 +1,118 @@
+#!/bin/sh
+#
+# This is the script for generating files for a specific Dalton test job.
+#
+# For the .check file ksh or bash is preferred, otherwise use sh
+# (and hope it is not the old Bourne shell, which will not work)
+#
+if [ -x /bin/ksh ]; then
+   CHECK_SHELL='#!/bin/ksh'
+elif [ -x /bin/bash ]; then
+   CHECK_SHELL='#!/bin/bash'
+else
+   CHECK_SHELL='#!/bin/sh'
+fi
+
+
+#######################################################################
+#  TEST DESCRIPTION
+#######################################################################
+cat > LSDALTON_DaLink.info <<'%EOF%'
+   LSDALTON_DaLink
+   -------------
+   Molecule:         6 HCN molecules placed 20 atomic units apart
+   Wave Function:    B3LYP/STO-2G
+   Test Purpose:     Check DaLink integrals
+%EOF%
+
+#######################################################################
+#  MOLECULE INPUT
+#######################################################################
+cat > LSDALTON_DaLink.mol <<'%EOF%'
+BASIS
+STO-2G
+5 HCN molecules placed 20 atomic units apart
+STRUCTURE IS NOT OPTIMIZED. STO-2G basis 
+Atomtypes=3 Nosymmetry
+Charge=1. Atoms=6
+H   0.000   0.000  -1.000 
+H   0.000  20.000  -1.000 
+H   0.000  40.000  -1.000
+H   0.000  60.000  -1.000 
+H   0.000  80.000  -1.000 
+H   0.000 100.000  -1.000 
+Charge=7. Atoms=6
+N   0.000   0.000   1.500
+N   0.000  20.000   1.500
+N   0.000  40.000   1.500
+N   0.000  60.000   1.500
+N   0.000  80.000   1.500
+N   0.000 100.000   1.500
+Charge=6. Atoms=6
+C   0.000   0.000   0.000
+C   0.000  20.000   0.000
+C   0.000  40.000   0.000
+C   0.000  60.000   0.000
+C   0.000  80.000   0.000
+C   0.000 100.000   0.000
+%EOF%
+
+#######################################################################
+#  DALTON INPUT
+#######################################################################
+cat > LSDALTON_DaLink.dal <<'%EOF%'
+**INTEGRALS
+.DALINK
+**WAVE FUNCTIONS
+.DFT
+KT3
+!*DENSOPT
+!.NOINCREM
+*END OF INPUT
+%EOF%
+
+#######################################################################
+#  CHECK SCRIPT
+#######################################################################
+echo $CHECK_SHELL >LSDALTON_DaLink.check
+cat >> LSDALTON_DaLink.check <<'%EOF%'
+log=$1
+
+if [ `uname` = Linux ]; then
+   GREP="egrep -a"
+else
+   GREP="egrep"
+fi
+
+# Energy
+CRIT1=`$GREP "Final * DFT energy\: * \-534\.71353994" $log | wc -l`
+TEST[1]=`expr   $CRIT1`
+CTRL[1]=1
+ERROR[1]="DFT ENERGY NOT CORRECT -"
+
+# Memory test
+CRIT1=`$GREP "Allocated memory \(TOTAL\): * 0 byte" $log | wc -l`
+TEST[2]=`expr  $CRIT1`
+CTRL[2]=1
+ERROR[2]="Memory leak -"
+
+PASSED=1
+for i in 1 2
+do
+   if [ ${TEST[i]} -ne ${CTRL[i]} ]; then
+      echo ${ERROR[i]}
+      PASSED=0
+   fi
+done
+
+if [ $PASSED -eq 1 ]
+then
+   echo TEST ENDED PROPERLY
+   exit 0
+else
+   echo THERE IS A PROBLEM
+   exit 1
+fi
+
+%EOF%
+#######################################################################
