@@ -614,7 +614,7 @@ DO I=1,L !number of unique charges in basisset
   ENDIF
 
   IF(nprim .NE. 0)THEN
-    ! 2*(nAngmom)-1 is the degenracy for given angularmomentum 
+    ! 2*(nAngmom)-1 is the degeneracy for given angular momentum 
     Totalnprim=(nprim+IAUG)*(2*(nAngmom)-1)+Totalnprim
     TotalnOrbitals=(nOrbitals+IAUG)*(2*(nAngmom)-1)+TotalnOrbitals
 
@@ -876,7 +876,7 @@ DO WHILE( J .LT. nprim)
            &'Thomas Kjaergaard'
       CALL LSQUIT('Increase maxBASISsegment in TYPE-DEF.f90 file',lupri)
      ENDIF
-     WRITE(LUPRI,*) 'INSIDE UNCONTRACTED'
+     !WRITE(LUPRI,*) 'INSIDE UNCONTRACTED'
      !uncontracted basis set are forced uncontracted with .UNCONT
      
      READ (STRING, '(F16.9)') Exp
