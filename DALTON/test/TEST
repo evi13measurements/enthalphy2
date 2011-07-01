@@ -34,7 +34,7 @@ if [ -x '/usr/bin/time' ]; then
 else
  TIMING_OF=" "
 fi
-DALTON="`pwd`/../bin/dalton"
+DALTON="`pwd`/../../bin/dalton"
 
 #########################################################################
 # define all the different test suites

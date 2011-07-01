@@ -44,20 +44,20 @@ OBJS_MPI_DUMMY = gp/mpi_dummy.o gp/mpi_dummyc.o
 #
 dalton: $(INSTALLDIR)/dalton Makefile.config
 
-$(INSTALLDIR)/dalton: ./dalton.gnr $(INSTALLDIR)/dalton.setup
+$(INSTALLDIR)/dalton: ./dalton.gnr ./dalton.setup
 	@echo "---------------> Updating dalton script because dalton.setup or dalton.gnr changed ..."
-	cat $(INSTALLDIR)/dalton.setup ./dalton.gnr > $(INSTALLDIR)/dalton
+	cat ./dalton.setup ./dalton.gnr > $(INSTALLDIR)/dalton
 	chmod 755 $(INSTALLDIR)/dalton
 
-$(INSTALLDIR)/dalton.setup: configure
+./dalton.setup: configure
 	$(warning "---------------> dalton.setup non-existent or older than configure")
-	$(error "-----------> Please rerun configure (or touch $(INSTALLDIR)/dalton.setup)")
+	$(error "-----------> Please rerun configure (or touch ./dalton.setup)")
 
 # running make revealed that Makefile.config is automatically a target
 # because it enters in an include statement.
 Makefile.config: configure
 	$(warning "---------------> Makefile.config non-existent or older than configure")
-	$(error "-----------> Please rerun configure (or touch Makefile.config)")
+	$(error "-----------> Please rerun configure (or touch ./Makefile.config)")
 
 #
 #     Most common build of Dalton
@@ -78,36 +78,36 @@ linux.x: $(MODULES)
 	$(OBJSLAVE) $(OBJSAMFI) $(OBJS_MPI_DUMMY) $(DALTON_LIBS) $(LIBS)
 	mv ./dalton.x $(INSTALLDIR)/dalton.x
 #
-#     Linux MPI parallel build (first create sequential build dalton.x, then dalpar.x)
+#     Linux MPI parallel build (first create sequential build dalton.x, then dalton_mpi.x)
 #
 linuxparallel.x: linux.x
-	@echo "---------------> Linking parallel dalpar.x for linux ..."
+	@echo "---------------> Linking parallel dalton_mpi.x for linux ..."
 	$(LOADER) $(FFLAGS) \
-	-o ./dalpar.x abacus/dalton.o $(OBJSLAVE) $(OBJSAMFI) \
+	-o ./dalton_mpi.x abacus/dalton.o $(OBJSLAVE) $(OBJSAMFI) \
 	$(DALTON_LIBS) $(LIBS) $(MPI_LIB_PATH) $(MPI_LIB)
-	mv ./dalpar.x $(INSTALLDIR)/dalpar.x
+	mv ./dalton_mpi.x $(INSTALLDIR)/dalton_mpi.x
 #
-#	MPI parallel build (first create sequential build dalton.x, then dalpar.x)
+#	MPI parallel build (first create sequential build dalton.x, then dalton_mpi.x)
 #
 parallel.x: dalton.x
-	@echo "---------------> Linking parallel dalpar.x ..."
+	@echo "---------------> Linking parallel dalton_mpi.x ..."
 	$(LOADER) $(FFLAGS) \
-	-o ./dalpar.x abacus/dalton.o $(OBJSLAVE) $(OBJSAMFI) \
+	-o ./dalton_mpi.x abacus/dalton.o $(OBJSLAVE) $(OBJSAMFI) \
 	$(DALTON_LIBS) $(LIBS) $(MPI_LIB_PATH) $(MPI_LIB)
-	mv ./dalpar.x $(INSTALLDIR)/dalpar.x
+	mv ./dalton_mpi.x $(INSTALLDIR)/dalton_mpi.x
 #
 #
 #	Build with PVMe
 #	We will never need MPILIB when using PVM
 #       First build master, then slave
 #
-dalpvm.x: $(MODULES)
+dalton_pvm.x: $(MODULES)
 	$(LOADER) $(FFLAGS) \
-	-o $(INSTALLDIR)/dalpvm.x abacus/dalton.o \
+	-o $(INSTALLDIR)/dalton_pvm.x abacus/dalton.o \
 	$(OBJSLAVE) $(OBJSAMFI) $(LIBS) \
 	$(DALTON_LIBS) $(PVM_LIB_PATH) \
 	$(PVM_LIBS) $(PVM_INC_PATH)
-	$(LOADER) $(FFLAGS) -o $(INSTALLDIR)/node.x $(OBJNODE) $(OBJSLAVE) \
+	$(LOADER) $(FFLAGS) -o $(INSTALLDIR)/dalton_pvmnode.x $(OBJNODE) $(OBJSLAVE) \
 	$(OBJSAMFI) $(LIBS) $(DALTON_LIBS) $(PVM_LIB_PATH) \
 	$(PVM_LIBS)  $(PVM_INC_PATH)
 #
@@ -122,12 +122,12 @@ cray.x: $(MODULES)
 #
 t3d.x: $(MODULES)
 	$(LOADER) $(FFLAGS) $(MPI_LIB_PATH) $(MPI_LIB) \
-	-o $(INSTALLDIR)/dalpar.x $(OBJSLAVE) \
+	-o $(INSTALLDIR)/dalton_mpi.x $(OBJSLAVE) \
 	$(LIBS) $(OBJSAMFI) $(DALTON_LIBS)
 
 t90.x: $(MODULES)
 	$(LOADER) $(FFLAGS) $(MPI_LIB_PATH) $(MPI_LIB) \
-	-o $(INSTALLDIR)/dalpar.x $(IO_OBJS) $(OBJSLAVE) \
+	-o $(INSTALLDIR)/dalton_mpi.x $(IO_OBJS) $(OBJSLAVE) \
 	$(LIBS) $(OBJSAMFI) $(DALTON_LIBS)
 #
 #	Update all dependencies

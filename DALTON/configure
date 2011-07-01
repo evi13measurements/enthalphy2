@@ -15,7 +15,8 @@
 # Revised 970401 hjaaj
 # Linux support added 970414 by Konrad Hinsen.
 # HP revisions 970505-ekd/Konrad Hinsen. Combined by kr 080597
-# Fixed strange echo behaviour for linux 990830-pawel salek
+#
+#
 # Check specific processor for optimization flags for linux machines 
 # (uname -m) -mpentiumpro for i686, -mpentium for i586, and -m486 otherwise
 # 990831-ekd
@@ -387,7 +388,7 @@ if [ "$answer" = "y" ]; then
 #        parlibp='-L$(PVM_ROOT)/lib/$(PVM_ARCH)'
 #        parlib='-lfpvm3 -lpvm3'
 #        parnodp='$(HOME)/pvm3/bin/$(PVM_ARCH)'
-#        parnod='node.x'
+#        parnod='dalton_pvmnode.x'
     fi
 fi
 #
@@ -741,14 +742,13 @@ $ECHO '\n-->Program will be installed with a default work memory of '$work_memor
 curr=`pwd`
 $ECHO '\n-->Current directory is '$curr'\n'
 
-INSTALL_DIR=$curr/bin
-get_yes_or_no 'Use ./bin as installation directory for binaries and scripts?' y
+INSTALL_DIR=$curr/../bin
+get_yes_or_no 'Use default ../bin as installation directory for DALTON binaries and scripts?' y
 
 while [ "$answer" = "n" ]
 do
     $ECHO 'Please enter another installation directory: \c'
     read INSTALL_DIR
-    $ECHO '\n-->DALTON executable and script will be placed in '$INSTALL_DIR' directory\n'
     if [ ! -d "$INSTALL_DIR" ]; then
         $ECHO "ERROR: $INSTALL_DIR does not exist, will be created now."
         mkdir "$INSTALL_DIR"; mkdir_ok=$?
@@ -757,18 +757,26 @@ do
     else
         answer="ok"
     fi
+
 done
+
+# make sure INSTALL_DIR exists, also if ../bin
 if [ ! -d "$INSTALL_DIR" ]; then
    mkdir "$INSTALL_DIR"
 fi
+
+#   Make sure  pathname to INSTALL_DIR is absolute path and not relative path
+cd $INSTALL_DIR; INSTALL_DIR=`pwd`; cd $OLDPWD
+
+$ECHO '\n-->DALTON executable and script will be placed in '$INSTALL_DIR' directory\n'
 
 #
 # Determine default basis set library location
 #
 
-basdir=$curr'/basis/'
-$ECHO '\n-->Default basis set directory will be '$basdir''
-if [ -d "$basdir" ]; then 
+INSTALL_BASDIR=$curr'/../basis/'
+$ECHO '\n-->Default basis set directory will be '$INSTALL_BASDIR''
+if [ -d "$INSTALL_BASDIR" ]; then 
   get_yes_or_no '\nUse this directory as default basis set directory?' y
 else
   $ECHO "Sorry, this directory does not exist."
@@ -778,11 +786,14 @@ fi
 while [ "$answer" = "n" ]
 do
     $ECHO '\nPlease choose another default basis set directory (must end with /) \c'
-    read basdir
-    $ECHO '\n-->Default basis set directory will be '$basdir'\n'
-    if [ ! -d "$basdir" ]; then $ECHO "Sorry, this directory does not exist"
+    read INSTALL_BASDIR
+    $ECHO '\n-->Default basis set directory will be '$INSTALL_BASDIR'\n'
+    if [ ! -d "$INSTALL_BASDIR" ]; then $ECHO "Sorry, this directory does not exist"
     else answer="ok"; fi
 done
+
+#   Make sure  pathname to INSTALL_BASDIR is absolute path and not relative path
+cd $INSTALL_BASDIR; INSTALL_BASDIR=`pwd`; cd $OLDPWD
 
 #
 # Determine default scratch disk space for calculations
@@ -1196,12 +1207,13 @@ rm configure_conftest.c configure_conftest > /dev/null 2>&1
 
 # added by Bin Gao, other plugins may be used in DALTON
 # 1) Gen1Int
-$ECHO "\nGen1Int is a tool package for computing the one-electron integrals as well as"
-$ECHO "their high-order magnetic and geometric derivatives using London atomic-orbitals."
+$ECHO "\nGen1Int is a tool package for computing many different one-electron integrals."
 $ECHO "Please see http://sourceforge.net/projects/gen1int for more details and"
 $ECHO "the instruction of installation. Before enabling this feature, make sure you have"
 $ECHO "successfully compiled the library of Gen1Int (libgen1int.a)."
-get_yes_or_no "\nDo you want to install Gen1Int?" n
+$ECHO "\n--> In DALTON release Dalton2011 Gen1Int is only used for ECPs; activating Gen1Int"
+$ECHO   "--> makes it possible to calculate many more types of ECPs than in Dalton 2.0"
+get_yes_or_no "\nDo you want to activate Gen1Int package for ECPs in DALTON?" n
 if [ "$answer" = "y" ]; then
   $ECHO "\n-->Trying to find Gen1Int (libgen1int.a) ..."
   lib_genint=`locate libgen1int.a`
@@ -1220,7 +1232,10 @@ if [ "$answer" = "y" ]; then
     cpp="-DBUILD_GEN1INT $cpp"
     LIB="$LIB $lib_genint"
   else
-    $ECHO "\n-->Gen1Int will not be installed!"
+    $ECHO "\n-->Gen1Int libary was not found and Gen1Int code will not be activated!"
+    $ECHO "\n-->You can still activate Gen1Int manually by modifying Makefile.config as follows:"
+    $ECHO   "-- -->(1) Adding -DBUILD_GEN1INT to CPPFLAGS"
+    $ECHO   "-- -->(2) Appending libgen1int.a to LIBS"
   fi
 fi
 
@@ -1429,11 +1444,11 @@ backup -v $INSTALL_DIR/dalton
 #
 DALEXE="dalton.x"
 if [ $mesp = 'pvm' ]; then
-    DALEXE="dalpvm.x"
+    DALEXE="dalton_pvm.x"
 fi
 mpirun=`which mpirun 2>/dev/null` || mpirun=mpirun
 
-cat <<EOF > $INSTALL_DIR/dalton.setup
+cat <<EOF > ./dalton.setup
 #!/bin/bash
 ################################################################################
 #                                                                              #
@@ -1448,15 +1463,15 @@ cat <<EOF > $INSTALL_DIR/dalton.setup
 #
 # location of executeables
 DALTON="$INSTALL_DIR/$DALEXE"
-DALMPI="$INSTALL_DIR/dalpar.x"
+DALMPI="$INSTALL_DIR/dalton_mpi.x"
 
 MPIRUN="$mpirun"
 # set TMPDIR (if not defined by e.g. NQS) and WRKDIR
 [ -z "\$TMPDIR" ] && TMPDIR="$worksp"
 
-INSTALL_BASDIR="$basdir"
+INSTALL_BASDIR="$INSTALL_BASDIR"
 EOF
-cat $INSTALL_DIR/dalton.setup dalton.gnr > $INSTALL_DIR/dalton
+cat dalton.setup dalton.gnr > $INSTALL_DIR/dalton
 
 chmod 755 $INSTALL_DIR/dalton
 
