@@ -192,6 +192,7 @@ if [ $optn -gt 1 ] ; then
 else
    if [ -s $LSDALTON -a -x $LSDALTON ]; then
       $LSDALTON
+      lsdalton_exitcode=$?
    else
       echo; echo  "FATAL ERROR:"
       echo "$LSDALTON does not exist or is not executeable"
@@ -199,7 +200,15 @@ else
    fi
 fi
 
-filelist="SIRIUS.RST RESULTS.RSP RSPVEC SIRIFC DALTON.NCA UNIT1 UNIT2 DALTON.MOL DALTON.ORB DALTON.IRC DALTON.BAS DALTON.TRJ DALTON.CM DALTON.HES DALTON.MOPUN DALTON.WLK molden.inp dens.restart"
+if [ $lsdalton_exitcode -ne 0 ] ; then
+   echo; echo  "SERIOUS ERROR:"
+   echo "LSDALTON finished with non-zero exit code: $lsdalton_exitcode"
+   echo; echo "File list in scratch directory:";echo
+   ls -lt
+   du -h
+fi
+
+filelist="LSDALTON.ERR SIRIUS.RST RESULTS.RSP RSPVEC SIRIFC DALTON.NCA UNIT1 UNIT2 DALTON.MOL DALTON.ORB DALTON.IRC DALTON.BAS DALTON.TRJ DALTON.CM DALTON.HES DALTON.MOPUN DALTON.WLK molden.inp dens.restart"
 
 for i in $filelist ; do
    if [ -s $i -a -r $i ] ; then
@@ -233,11 +242,11 @@ fi
       fi
    else
       backup -v $WRKDIR/$outnam.$OUTEXT
-      if [ -s DALTON.OUT -a -r DALTON.OUT ]; then
-         cp DALTON.OUT $WRKDIR/$outnam.$OUTEXT
-         [ -f newDALTON.OUT ] && cp -f newDALTON.OUT $WRKDIR/$outnam.new.$OUTEXT
+      if [ -s LSDALTON.OUT -a -r LSDALTON.OUT ]; then
+         cp LSDALTON.OUT $WRKDIR/$outnam.$OUTEXT
+         [ -f newLSDALTON.OUT ] && cp -f newLSDALTON.OUT $WRKDIR/$outnam.new.$OUTEXT
       else
-         echo "DALTON.OUT has not been created from the present run."
+         echo "LSDALTON.OUT has not been created from the present run."
          if [ $optD -eq 1 ] ; then
             echo "$TMPDIR/$outnam is therefore not deleted by this script."
          fi
@@ -250,3 +259,7 @@ cd $WRKDIR
 if [ $optD -eq 1 ] ; then
    rm -rf $TMPDIR/$outnam
 fi
+
+exit $lsdalton_exitcode
+
+# end of LSDALTON job script
