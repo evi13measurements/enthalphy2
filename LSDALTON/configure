@@ -503,35 +503,31 @@ $ECHO '\n   Current directory is '$curr'\n'
 # use absolute path for include
 lsdalroot=$curr
 
-INSTALL_DIR=$curr
-get_yes_or_no 'Use current directory as installation directory for binaries and scripts?' y
+INSTALL_DIR=$curr/../bin
+get_yes_or_no 'Use default ../bin as installation directory for LSDALTON binaries and scripts?' y
 
 while [ "$answer" = "n" ]
 do
     $ECHO 'Please enter another installation directory: '
     read INSTALL_DIR
     if [ ! -d "$INSTALL_DIR" ]; then
-      $ECHO "ERROR: $INSTALL_DIR does not exist\n"
-	answer2=
-	while [ "$answer2" != "y" -a "$answer2" != "n" ]
-	do
-	   $ECHO 'Do you want me to create this directory? [y/n] '
-	   read answer2
-	done
-      if [ "$answer2" = "y" ]; then
-	   mkdir "$INSTALL_DIR"
-         answer="ok"
-	fi
+        $ECHO "ERROR: $INSTALL_DIR does not exist, will be created now."
+        mkdir "$INSTALL_DIR"; mkdir_ok=$?
+        if [ $mkdir_ok ]; then answer="ok"
+        else $ECHO "Sorry, the specified directory could not be created"; fi
     else
         answer="ok"
     fi
 
-#   Make sure  pathname to INSTALL_DIR is absolute path and not relative path
-    if [ "$answer" = "ok" ]; then
-       cd $INSTALL_DIR; INSTALL_DIR=`pwd`; cd $OLDPWD
-    fi
-
 done
+
+# make sure INSTALL_DIR exists, also if ../bin
+if [ ! -d "$INSTALL_DIR" ]; then
+   mkdir "$INSTALL_DIR"
+fi
+
+#   Make sure  pathname to INSTALL_DIR is absolute path and not relative path
+cd $INSTALL_DIR; INSTALL_DIR=`pwd`; cd $OLDPWD
 
 $ECHO '\n   LSDALTON executable and script will be placed in '$INSTALL_DIR' directory\n\n'
 
@@ -539,14 +535,17 @@ $ECHO '\n   LSDALTON executable and script will be placed in '$INSTALL_DIR' dire
 # Determine default basis set library location
 #
 
-basdir=$curr'/basis/'
+INSTALL_BASDIR=$curr'/../basis/'
 
-get_yes_or_no 'Use '$basdir' as default basis set directory?' y
+get_yes_or_no 'Use '$INSTALL_BASDIR' as default basis set directory?' y
 if [ "$answer" = "n" ];  then
-    $ECHO 'Please enter default basis set directory (must end with /)\n'
-    read basdir
-    $ECHO '\n   Default basis set directory will be '$basdir'\n\n'
+    $ECHO 'Please enter antoher default basis set directory (must end with /)\n'
+    read INSTALL_BASDIR
+    $ECHO '\n   Default basis set directory will be '$INSTALL_BASDIR'\n\n'
 fi
+
+#   Make sure  pathname to INSTALL_BASDIR is absolute path and not relative path
+cd $INSTALL_DBASIR; INSTALL_BASDIR=`pwd`; cd $OLDPWD
 
 #
 # Determine default scratch disk space for calculations
@@ -561,8 +560,8 @@ elif [ -d '/scr' ]; then
 elif [ -d '/temp' ]; then
     worksp='/temp'
 else
-    $ECHO '\nI did not find /work, /scratch, /scr or /temp. I will use /tmp\n'
-    worksp='/tmp/'
+    $ECHO '\nI did not find /work, /scratch, /scr, or /temp. I will use /tmp\n'
+    worksp='/tmp'
 fi
 
     $ECHO '\n   Job specific directories under '$worksp'/$USER\n   will be used for temporary files when running LSDALTON\n\n'
@@ -607,7 +606,7 @@ MAKE="make"
 case "$WHICH" in
     rs6000) case $opsys in
 		2) if [ "$mesp" = "dummy" ]; then
-                   cpp="-w -P -DSYS_AIX -DSYS_AIX23 -D'INSTALL_BASDIR=\"$basdir\"' -D$parop"
+                   cpp="-w -P -DSYS_AIX -DSYS_AIX23 -D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"' -D$parop"
                    if [ "$mesp" = "mpi" ]; then
                       def='parallel.x'
                    else
@@ -620,9 +619,9 @@ case "$WHICH" in
             *)
                cppsep=','
                if [ "$mesp" = "dummy" ]; then
-                    cpp="-WF,-DSYS_AIX,-D'INSTALL_BASDIR=\"$basdir\"'"
+                    cpp="-WF,-DSYS_AIX,-D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"'"
                else
-                    cpp="-WF,-DSYS_AIX,-D'INSTALL_BASDIR=\"$basdir\"',-D$parop"
+                    cpp="-WF,-DSYS_AIX,-D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"',-D$parop"
 		        set_parallel_def $mesp
                     copt="$copt -DVAR_MPI"
 		   fi
@@ -640,11 +639,11 @@ case "$WHICH" in
             ;;
        linux) 
           if [ "$mesp" = "dummy" -a $F90 != "ifc" ]; then
-             cpp="-DSYS_LINUX -D_FILE_OFFSET_BITS=64 -D'INSTALL_BASDIR=\"$basdir\"'"
+             cpp="-DSYS_LINUX -D_FILE_OFFSET_BITS=64 -D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"'"
           elif [ "$mesp" = "dummy" -a $F90 = "ifc" ]; then
-             cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$basdir\"'"
+             cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"'"
           else
-            cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$basdir\"' -D$parop"
+            cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"' -D$parop"
             set_parallel_def $mesp
           fi
           case $F90 in
@@ -739,9 +738,9 @@ case "$WHICH" in
           cpp=${cpp}" -DVAR_LINSCA -DIMPLICIT_NONE";
           ;;
     darwin) if [ "$mesp" = "dummy" ]; then
-              cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$basdir\"'"
+              cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"'"
             else       
-              cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$basdir\"' -D$parop"
+              cpp="-DSYS_LINUX -D'INSTALL_BASDIR=\"$INSTALL_BASDIR\"' -D$parop"
               set_parallel_def $mesp
             fi
           if [ `echo $F90 | grep -c gfortran` -eq 1 -o "$F90" = mpif90 ]; then
@@ -1009,7 +1008,7 @@ $ECHO '\n   Updating the LSDALTON run-script in '$INSTALL_DIR'\n'
 #
 DALEXE="lsdalton.x"
 if [ $mesp = 'pvm' ]; then
-    DALEXE="lsdalpvm.x"
+    DALEXE="lsdalton_pvm.x"
 fi
 mpirun=`which mpirun 2>/dev/null` || mpirun=mpirun
 
@@ -1027,7 +1026,8 @@ cat <<EOF > $INSTALL_DIR/lsdalton
 #
 # location of executeables
 LSDALTON="$INSTALL_DIR/$DALEXE"
-DALMPI="$INSTALL_DIR/dalpar.x"
+#LSDALMPI="$INSTALL_DIR/lsdalton_mpi.x"
+
 MPIRUN="$mpirun"
 # set TMPDIR (if not defined by e.g. NQS) and WRKDIR
 [ -z "\$TMPDIR" ] && TMPDIR="$worksp/\$USER"
