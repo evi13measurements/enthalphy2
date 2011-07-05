@@ -26,7 +26,7 @@ To make the scripts and executables:
       make >& make.log &
       # when you have the executable(s) we recommend that you test them:
       cd test/
-      TEST -keep -benchmark all > TEST_all.log 2>&1 &
+      ./TEST -keep -benchmark all > TEST_all.log 2>&1 &
       # if you have created an mpi version of DALTON:
       #    edit and adapt ./parTEST.sh to your local system
       #    submit parTEST.sh
@@ -44,7 +44,7 @@ To make the scripts and executables:
       make >& make.log &
       # when you have the executable we recommend that you test it:
       cd test/
-      TEST -keep -benchmark all > TEST_all.log 2>&1 &
+      ./TEST -keep -benchmark all > TEST_all.log 2>&1 &
       # Check if the tests are passed
       cd ../../
 
