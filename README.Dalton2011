@@ -1,0 +1,63 @@
+July 5, 2011
+
+This file, README.Dalton2011, contains some general information about
+how to create the Dalton2011 scripts and executables, and how to test them.
+
+The distribution is a source distribution, no executables are provided.
+That is, you must run the appropriate scripts and commands yourself
+to create scripts and executables for production calculations.
+The default location of these will be in the ./bin subdirectory
+(which is empty when you have a fresh copy of the Dalton2011 distributioon).
+
+If you have a site licence, one way to fulfill your obligations to make the
+source codes unavailable to the general user is to make the DALTON and
+LSDALTON directories unreadable by the general user. You are welcome to
+tell the general user that she/he can get access to the source code by
+getting a personal licence.
+
+===============================================================================
+To make the scripts and executables:
+
+* DALTON:
+      cd DALTON
+      ./configure
+      # check compilers and compiler options in ./Makefile.config
+      # created by configure
+      make >& make.log &
+      # when you have the executable(s) we recommend that you test them:
+      cd test/
+      TEST -keep -benchmark all > TEST_all.log 2>&1 &
+      # if you have created an mpi version of DALTON:
+      #    edit and adapt ./parTEST.sh to your local system
+      #    submit parTEST.sh
+      #
+      # Check if the tests are passed
+      cd ../../
+
+* LSDALTON:
+      cd LSDALTON
+      ./configure
+      # check compilers and compiler options in ./Makefile.config
+      # created by configure
+      # NB! this version of LSDALTON can only be parallelized with
+      # openMP, not with MPI.
+      make >& make.log &
+      # when you have the executable we recommend that you test it:
+      cd test/
+      TEST -keep -benchmark all > TEST_all.log 2>&1 &
+      # Check if the tests are passed
+      cd ../../
+
+===============================================================================
+
+If you encounter problems with getting working executables, you can contact us on
+   dalton-admin@kjemi.uio.no
+
+For any other problems with Dalton2011 (e.g. input questions), please use the Dalton users mailing list:
+   dalton-users@kjemi.uio.no
+
+===============================================================================
+
+On behalf of the Dalton2011 authors, Hans Jørgen Aa. Jensen.
+
+===============================================================================
