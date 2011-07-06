@@ -78,7 +78,7 @@ TEST[1]=`expr   $CRIT1`
 CTRL[1]=1
 ERROR[1]="HESSIAN EIGENVALUE NOT CORRECT -"
 
-CRIT1=`$GREP "Final HF energy: * -99.6831820[1-2]" $log | wc -l`
+CRIT1=`$GREP "Final HF energy: * -99.68318[1-2]" $log | wc -l`
 TEST[2]=`expr	$CRIT1`
 CTRL[2]=1
 ERROR[2]="ENERGY NOT CORRECT -"
