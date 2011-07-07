@@ -1211,9 +1211,12 @@ $ECHO "\nGen1Int is a tool package for computing many different one-electron int
 $ECHO "Please see http://sourceforge.net/projects/gen1int for more details and"
 $ECHO "the instruction of installation. Before enabling this feature, make sure you have"
 $ECHO "successfully compiled the library of Gen1Int (libgen1int.a)."
+$ECHO "\n--> DALTON release Dalton2011 could calculate more types of ECPs than in Dalton 2.0"
+$ECHO   "--> please check Chapter 'The basis sets supplied with DALTON' in the manual for details."
 $ECHO "\n--> In DALTON release Dalton2011 Gen1Int is only used for ECPs; activating Gen1Int"
-$ECHO   "--> makes it possible to calculate many more types of ECPs than in Dalton 2.0"
-get_yes_or_no "\nDo you want to activate Gen1Int package for ECPs in DALTON?" n
+$ECHO   "--> makes it possible to calculate geometric derivatives of ECPs;"
+$ECHO   "--> we will release patch later for magnetic derivatives and other properties."
+get_yes_or_no "\nDo you want to activate Gen1Int package in DALTON?" n
 if [ "$answer" = "y" ]; then
   $ECHO "\n-->Trying to find Gen1Int (libgen1int.a) ..."
   lib_genint=`locate libgen1int.a`
