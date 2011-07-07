@@ -1213,9 +1213,10 @@ $ECHO "the instruction of installation. Before enabling this feature, make sure 
 $ECHO "successfully compiled the library of Gen1Int (libgen1int.a)."
 $ECHO "\n--> DALTON release Dalton2011 could calculate more types of ECPs than in Dalton 2.0"
 $ECHO   "--> please check Chapter 'The basis sets supplied with DALTON' in the manual for details."
-$ECHO "\n--> In DALTON release Dalton2011 Gen1Int is only used for ECPs; activating Gen1Int"
-$ECHO   "--> makes it possible to calculate geometric derivatives of ECPs;"
-$ECHO   "--> we will release patch later for magnetic derivatives and other properties."
+$ECHO "\n--> Activating Gen1Int makes it possible to calculate geometric derivatives"
+$ECHO   "--> of ECPs (geometry optimization with ECPs is not implemented yet);"
+$ECHO   "--> we will release patch later for geometric optimization, magnetic"
+$ECHO   "--> derivatives using London atomic orbitals and other properties."
 get_yes_or_no "\nDo you want to activate Gen1Int package in DALTON?" n
 if [ "$answer" = "y" ]; then
   $ECHO "\n-->Trying to find Gen1Int (libgen1int.a) ..."
