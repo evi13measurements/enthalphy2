@@ -359,11 +359,7 @@ ELSE
                                                               &,BASDIR
 END IF
 
-LENBAS = 0
-DO I = 1, 60
-  IF (BASDIR(I:I) .EQ. ' ') EXIT 
-  LENBAS = LENBAS + 1
-ENDDO
+LENBAS = INDEX(BASDIR,' ') - 1
 
 IF (BASDIR(LENBAS:LENBAS) .NE. '/') THEN
   LENBAS = LENBAS + 1

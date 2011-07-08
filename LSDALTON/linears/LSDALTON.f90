@@ -298,23 +298,23 @@ WRITE(LUPRI,*)' '
          WRITE (LUPRI,'(5X,A)')&
      &  ' This is output from LSDALTON (Release Dalton2011)',&
      &  '       Authors:                                  ',&
-     &  ' Sonia Coriani,         University of Trieste,        Italy  ',&
-     &  ' Trygve Helgaker,       University of Oslo,           Norway ',&
-     &  ' Stinne Hoest,          Aarhus University,            Denmark',&
-     &  ' Branislav Jansik,      Aarhus University,            Denmark',&
-     &  ' Poul Joergensen,       Aarhus University,            Denmark',&
-     &  ' Joanna Kauczor,        Aarhus University,            Denmark',&
-     &  ' Thomas Kjaergaard,     Aarhus University,            Denmark',&
-     &  ' Kasper Kristensen,     Aarhus University,            Denmark',&
-     &  ' Jeppe Olsen,           Aarhus University,            Denmark',&
-     &  ' Simen Reine,           University of Oslo,           Norway ',&
-     &  ' Pawel Salek,           KTH Stockholm,                Sweden ',&
-     &  ' Andreas Thorvaldsen,   University of Tromsoe,        Norway ',&
-     &  ' Lea Thoegersen,        Aarhus University,            Denmark',&
-     &  ' Vladimir Rybkin,       University of Oslo,           Norway ',&
-     &  ' Vebjoern Bakken,       University of Oslo,           Norway ',&
-     &  ' Mark Watson,           University of Oslo,           Norway ',&
-     &  ' Andreas Krapp,         University of Oslo,           Norway '
+     &  ' Sonia Coriani,            University of Trieste,        Italy  ',&
+     &  ' Trygve Helgaker,          University of Oslo,           Norway ',&
+     &  ' Stinne Hoest,             Aarhus University,            Denmark',&
+     &  ' Branislav Jansik,         Aarhus University,            Denmark',&
+     &  ' Poul Joergensen,          Aarhus University,            Denmark',&
+     &  ' Joanna Kauczor,           Aarhus University,            Denmark',&
+     &  ' Thomas Kjaergaard,        Aarhus University,            Denmark',&
+     &  ' Kasper Kristensen,        Aarhus University,            Denmark',&
+     &  ' Jeppe Olsen,              Aarhus University,            Denmark',&
+     &  ' Simen Reine,              University of Oslo,           Norway ',&
+     &  ' Pawel Salek,              KTH Stockholm,                Sweden ',&
+     &  ' Andreas J. Thorvaldsen,   University of Tromsoe,        Norway ',&
+     &  ' Lea Thoegersen,           Aarhus University,            Denmark',&
+     &  ' Vladimir Rybkin,          University of Oslo,           Norway ',&
+     &  ' Vebjoern Bakken,          University of Oslo,           Norway ',&
+     &  ' Mark Watson,              University of Oslo,           Norway ',&
+     &  ' Andreas Krapp,            University of Oslo,           Norway '
 !         WRITE (LUPRI,'(/1X,69A1/)') ('-',I=1,69)
 
          WRITE (LUPRI,'(5X,A)')&
