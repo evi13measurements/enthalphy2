@@ -258,7 +258,7 @@ We now describe this Makefile.config file line by line, before we discuss a numb
   \item{-DUSE\_UNDERSCORES} required to define the communication between fortran and C files.
   \end{description}
 \item Line 15: Empty by default. Used if for some reason, any additional directories should be included.
-\item Line 16: Libraries you wish to include. -lguide and -lpthread are required for openmp parallelization. See Section \ref{mkl:ifort} for more details on how to link to mkl and other libraries
+\item Line 16: Libraries you wish to include. -lguide and -lpthread are required for openmp parallelization. See Section \ref{mkl:ifort} for more details on how to link to mkl and other libraries. If you use the newest version of ifort you need to replace -lguide with -openmp. 
 \item Line 17: the install directory 
 \item Line 18: \lsdalton\ provides its own blas and lapack libraries, located in the pdpack directory. These should only be used
 if no mathematical libraries are available, since they slow down the code significantly. 
