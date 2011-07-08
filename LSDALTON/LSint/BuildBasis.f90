@@ -331,7 +331,7 @@ SUBROUTINE GET_BASISSET_LIB(LUPRI,BASDIR,LENBAS,doprint)
 !* OBTAIN A STRING CONTAINING THE BASISSET LIBRARY AND LENGTH=LENBAS 
 !****************************************************************
 implicit none
-CHARACTER(len=70):: BASDIR
+CHARACTER(len=120):: BASDIR
 INTEGER          :: IDUMMY,IERR,LENBAS,I,LUPRI
 logical          :: doprint
 #if defined(SYS_AIX)||defined(SYS_CRAY)||defined(SYS_IRIX)||defined(SYS_NEC)||defined(SYS_CONVEX)||defined(SYS_T3D)||defined(SYS_SUN)||defined (SYS_LINUX)||defined(SYS_HPUX)||defined(SYS_HAL)||defined(SYS_T90)||defined(SYS_DEC)
@@ -359,7 +359,7 @@ ELSE
                                                               &,BASDIR
 END IF
 
-LENBAS = INDEX(BASDIR,' ') - 1
+LENBAS = LNBLNK(BASDIR)
 
 IF (BASDIR(LENBAS:LENBAS) .NE. '/') THEN
   LENBAS = LENBAS + 1
