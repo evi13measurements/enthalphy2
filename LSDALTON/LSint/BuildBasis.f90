@@ -63,7 +63,7 @@ LOGICAL            :: doprint
 CHARACTER(len=80),OPTIONAL  :: BASISSETNAME
 !
 INTEGER,pointer         :: CHARGES(:)
-CHARACTER(len=70)  :: BASISDIR
+CHARACTER(len=120)  :: BASISDIR
 INTEGER            :: LENBAS,LUBAS,NEND,i,j,k,IPOLST,IAUG
 LOGICAL            :: FILE_EXIST,POLFUN,CONTRACTED
 CHARACTER(len=140) :: STRING
@@ -125,7 +125,7 @@ DO I=1,J
  natomtypes = natomtypes + k
  IF(present(BASISSETNAME)) call mem_dealloc(CHARGES)
 ENDDO
-IF(natomtypes.EQ.0)CALL LSQUIT('Error trying to build basis but found no atoms')
+IF(natomtypes.EQ.0)CALL LSQUIT('Error trying to build basis but found no atoms',lupri)
 CALL INIT_BASISSETINFO_TYPES(BASINFO,natomtypes)
 
 atomtype = 0
@@ -334,14 +334,13 @@ implicit none
 CHARACTER(len=120):: BASDIR
 INTEGER          :: IDUMMY,IERR,LENBAS,I,LUPRI
 logical          :: doprint
-#if defined(SYS_AIX)||defined(SYS_CRAY)||defined(SYS_IRIX)||defined(SYS_NEC)||defined(SYS_CONVEX)||defined(SYS_T3D)||defined(SYS_SUN)||defined (SYS_LINUX)||defined(SYS_HPUX)||defined(SYS_HAL)||defined(SYS_T90)||defined(SYS_DEC)
-
+integer,external :: LNBLNK
+#if defined(SYS_AIX)||defined (SYS_LINUX)
 #if defined (SYS_T3D) || defined (SYS_T90)
       CALL PXFGETENV ('BASDIR',6,BASDIR,IDUMMY,IERR)
 #else
       CALL GETENV ('BASDIR',BASDIR)
 #endif
-
 #endif
 
 IF (BASDIR(1:1) .NE. '/') THEN
@@ -570,7 +569,7 @@ INTEGER             :: ELEMENT,Totalnprim,TotalnOrbitals,AA,I
 TYPE(Lsmatrix)        :: ContractionMatrix
 TYPE(Lsmatrix)        :: Exponents
 logical             :: segmentedFormat
-IF(IPOLST.GT.0)call lsquit('polarization functions not implemented')
+IF(IPOLST.GT.0)call lsquit('polarization functions not implemented',lupri)
 SEARCHING=.TRUE.
 ELEMENT=0
 
