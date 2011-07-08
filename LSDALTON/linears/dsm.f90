@@ -5,7 +5,10 @@
 module LINSCA_DSM
    use av_utilities
    use dsm_x_term
-   use matrix_util
+   use precision 
+   use matrix_util, only: util_Snorm 
+   use matrix_module 
+   use matrix_operations 
    private
    public :: dsm_get_avg_density
    !logical, parameter :: former = .false.
@@ -32,7 +35,7 @@ CONTAINS
 !> \param D The averaged density matrix
 !> \param restart True is DSM should be restarted, e.g. after removal of one or more vectors
    SUBROUTINE dsm_get_avg_density(av, queue, S, H1, F, D,restart)
-      use fock_evaluator
+!      use fock_evaluator
       IMPLICIT NONE
       type(avItem), intent(inout) :: av
       TYPE(util_HistoryStore)  :: queue
@@ -1896,7 +1899,7 @@ CONTAINS
 !> \brief Find the minimum of Escf for alpha*coef
    subroutine use_first_direction(av,msize,minstart,his_start,queue,S,H1,Delta,coef)
       use scf_stats, only: stat_current_iteration, stat_tab
-      use fock_evaluator
+!      use fock_evaluator
       implicit none
       type(avItem), intent(inout) :: av
       !type(diagItem),intent(in) :: diag

@@ -640,7 +640,7 @@ subroutine get_fock(config,fifoqueue,queue,iteration,D,H1,F,Etotal,LSint,newlupr
    use configuration
    use av_utilities
    use dal_interface
-   use fock_evaluator
+   use fock_evaluator,only: fck_get_fock_LSINT
    use ks_settings
    use TYPEDEF
 
@@ -724,7 +724,7 @@ subroutine scf_afterplay(config,H1,S,D,E,gradnrm,F)
    use configuration
    use direct_dens_util_unres
    !use debug_dchange_module
-   USE Fock_evaluator
+   USE Fock_evaluator, only: fck_unscale_virt
    use scf_stats
    implicit none
    !> Contains all info about configuration/settings for SCF calculation
@@ -784,7 +784,7 @@ end subroutine scf_afterplay
    subroutine update_trustradius(arh, ls, SCF_it, E, ndens)
    use arhDensity
    use decompMod
-   use fock_evaluator
+!   use fock_evaluator
    use TYPEDEF
    implicit none
       !> Contains setting for ARH solver
