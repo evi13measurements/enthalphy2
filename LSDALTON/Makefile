@@ -23,21 +23,21 @@ OBJPRG = linears/lsdalton_wrapper.o
 #
 lsdalton.x: $(MODULES)
 	@echo "---------------> Linking sequential lsdalton.x ..."
-	$(F90) $(FFLAGS) \
+	$(F77) $(FFLAGS) \
 	-o $(INSTALLDIR)/lsdalton.x $(OBJPRG) $(DALTON_LIBS) $(LIBS)
 #
 #       Linux version of the program
 #
 linux.x: $(MODULES)
 	@echo "---------------> Linking sequential lsdalton.x ..."
-	$(F90) $(FFLAGS) \
+	$(F77) $(FFLAGS) \
 	-o $(INSTALLDIR)/lsdalton.x $(OBJPRG) $(DALTON_LIBS) $(LIBS)
 #
 #     Linux MPI parallel build (first create sequential build dalton.x, then dalpar.x)
 #
 #linuxparallel.x: $(MODULES)
 #	@echo "---------------> Linking parallel dalpar.x ..."
-#	$(F90) $(FFLAGS) \
+#	$(F77) $(FFLAGS) \
 #	-o $(INSTALLDIR)/lsdalpar.x $(OBJPRG) $(OBJSMEM) \
 #	$(OBJSLAVE) $(OBJSAMFI) $(DALTON_LIBS) $(LIBS) \
 #	$(MPI_LIB_PATH) $(MPI_LIB) 
@@ -46,7 +46,7 @@ linux.x: $(MODULES)
 ##
 #parallel.x: dalton.x
 #	@echo "---------------> Linking parallel dalpar.x ..."
-#	$(F90) $(FFLAGS) \
+#	$(F77) $(FFLAGS) \
 #	-o $(INSTALLDIR)/lsdalpar.x $(OBJPRG) $(OBJSLAVE) $(OBJSAMFI) \
 #	$(DALTON_LIBS) $(LIBS) $(MPI_LIB_PATH) $(MPI_LIB)
 ##
@@ -55,12 +55,12 @@ linux.x: $(MODULES)
 ##       First build master, then slave
 ##
 #dalpvm.x: $(MODULES)
-#	$(F90) $(FFLAGS) \
+#	$(F77) $(FFLAGS) \
 #	-o $(INSTALLDIR)/lsdalpvm.x $(OBJPRG) $(OBJSMEM) \
 #	$(OBJSLAVE) $(OBJSAMFI) $(LIBS) \
 #	$(DALTON_LIBS) $(PVM_LIB_PATH) \
 #	$(PVM_LIBS) $(PVM_INC_PATH)
-#	$(F90) $(FFLAGS) -o $(INSTALLDIR)/lsdal_node.x $(OBJNODE) $(OBJSLAVE) \
+#	$(F77) $(FFLAGS) -o $(INSTALLDIR)/lsdal_node.x $(OBJNODE) $(OBJSLAVE) \
 #	$(OBJSAMFI) $(LIBS) $(DALTON_LIBS) $(PVM_LIB_PATH) \
 #	$(PVM_LIBS)  $(PVM_INC_PATH)
 ##
@@ -68,18 +68,18 @@ linux.x: $(MODULES)
 ##	OBJSEIS
 ##
 #cray.x: $(MODULES)
-#	$(F90) $(FFLAGS) -o $(INSTALLDIR)/lsdalton.x $(OBJPRG) \
+#	$(F77) $(FFLAGS) -o $(INSTALLDIR)/lsdalton.x $(OBJPRG) \
 #	$(OBJSLAVE) $(OBJSAMFI) $(LIBS) $(DALTON_LIBS)
 ##
 ##	This is a proper build for the Cray-T3D
 ##
 #t3d.x: $(MODULES)
-#	$(F90) $(FFLAGS) $(MPI_LIB_PATH) $(MPI_LIB) \
+#	$(F77) $(FFLAGS) $(MPI_LIB_PATH) $(MPI_LIB) \
 #	-o $(INSTALLDIR)/lsdalpar.x $(OBJPRG) $(OBJSLAVE) \
 #	$(LIBS) $(OBJSAMFI) $(DALTON_LIBS)
 #
 #t90.x: $(MODULES)
-#	$(F90) $(FFLAGS) $(MPI_LIB_PATH) $(MPI_LIB) \
+#	$(F77) $(FFLAGS) $(MPI_LIB_PATH) $(MPI_LIB) \
 #	-o $(INSTALLDIR)/lsdalpar.x $(OBJPRG) $(OBJSLAVE) \
 #	$(LIBS) $(OBJSAMFI) $(DALTON_LIBS)
 #

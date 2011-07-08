@@ -18,7 +18,7 @@ libpdpack.a: $(F_OBJS) $(C_OBJS) $(PDPACK_EXTRAS)
 # eispack.o has to be compiled without optimization under Linux/pgf77
 
 eispack.o: eispack.F
-	$(F90) $(SAFEFFLAGS) -c $*.F
+	$(F77) $(SAFEFFLAGS) -c $*.F
 
 clean :
 	$(RM) -f *.o *~ *.lst *.i *.L i.*.f v.i.*.f *.a

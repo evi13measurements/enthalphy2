@@ -160,12 +160,15 @@ dirlist="$DIRLIST /lib /usr/local/lib /usr/lib64 /usr/lib /usr/local/lib/ATLAS"
 
 case $WHICH in
     rs6000)   liblist='libessl.a libblas.a'
+	      complist='xlf f77 f90'
               compf90list='xlf90 f90'
               ccmplist='xlc cc';;
     linux)    liblist='libacml.a libmkl_p3.a libatlas.a libblas.a'
+              complist='ifort ifc pgf77 gfortran'
               compf90list='ifort ifc pgf90 gfortran'
               ccmplist='icc ecc pgcc gcc';;
     darwin)   liblist='libatlas.a libblas.a'
+              complist='gfortran'
               compf90list='gfortran'
               ccmplist='gcc';;
 esac
@@ -276,6 +279,43 @@ mesp='dummy'
 #
 # Parallel information finished setting
 #
+# No need to determine if F90 compiler should be used. It has to. 
+# 
+usef90="true" 
+  
+# 
+# Test for the existence of F77 compiler 
+# 
+
+$ECHO "\n   Checking for Fortran 77 compiler ..." 
+$ECHO   "   from this list: $complist \n\n" 
+ 
+for comp in $complist; do 
+    set dummy $comp; ac_word=$2 
+    IFS="${IFS=   }"; ac_save_ifs="$IFS"; IFS="${IFS}:" 
+    for ac_dir in $PATH; do 
+        test -z "$ac_dir" && ac_dir=. 
+       if [ -f $ac_dir/$ac_word ]; then 
+            get_yes_or_no "   $comp Compiler $ac_dir/$ac_word found, use this compiler?" y 
+            if [ $answer = 'y' ]; then           
+                ac_cv_prog_F77=$ac_word 
+                break 
+            fi 
+        fi   
+    done 
+    IFS="$ac_save_ifs" 
+    test -z "$ac_cv_prog_F77" && ac_cv_prog_F77="" 
+    F77="$ac_cv_prog_F77" 
+    if test -n "$F77"; then 
+        $ECHO "\n   Compiler $F77 found and accepted.\n" 
+        break 
+    fi 
+done 
+if test -z "$F77"; then 
+    $ECHO "\n   No compiler found on this computer\n" 
+    $ECHO "   Cannot proceed without a Fortran compiler in path\n" 
+    exit 
+fi 
 #
 # Test for the existence of F90 compiler
 #
@@ -864,6 +904,7 @@ FMMDIR      = mm
 #
 #
 CPPFLAGS      = $cpp
+F77            = $F77
 F90            = $F90
 FLNK           = $F90
 CC             = $CC
@@ -934,7 +975,7 @@ $tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(F90OPTFLAGS) -c \$*.f90
 .F.o:
 $tab\$(CPP) \$(INCLUDES) \$(CPPFLAGS) \$*.F
 $tab mv \$*.i \$*.f
-$tab\$(F90) \$(FFLAGS) -c \$*.f
+$tab\$(F77) \$(FFLAGS) -c \$*.f
 $tab\$(RM) \$*.f
 
 .c.o:
@@ -950,7 +991,7 @@ EOF
 $tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(F90OPTFLAGS) -c \$*.f90
 
 .F.o:
-$tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(FFLAGS) -c \$*.F
+$tab\$(F77) \$(INCLUDES) \$(CPPFLAGS) \$(FFLAGS) -c \$*.F
 
 .c.o:
 $tab\$(CC) \$(CFLAGS) -c \$*.c
@@ -970,7 +1011,7 @@ $tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(F90OPTFLAGS) -c \$*.F90
 $tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(F90OPTFLAGS) -c \$*.f90
 
 .F.o:
-$tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(FFLAGS) -c \$*.F
+$tab\$(F77) \$(INCLUDES) \$(CPPFLAGS) \$(FFLAGS) -c \$*.F
 
 .c.o:
 $tab\$(CC) \$(INCLUDES) \$(CPPFLAGS) \$(CFLAGS) -c \$*.c
@@ -988,7 +1029,7 @@ touch pdpack/Makefile.depend
 if [ $F90 = 'ifc' -o $F90 = 'efc' ]; then
 cat <<EOF>>abacus/Makefile
 her2el2.o: her2el2.F
-$tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(SAFEFFLAGS) -c \$*.F 
+$tab\$(F77) \$(INCLUDES) \$(CPPFLAGS) \$(SAFEFFLAGS) -c \$*.F 
 
 hersym.o: hersym.F
 $tab\$(F90) \$(INCLUDES) \$(CPPFLAGS) \$(SAFEFFLAGS) -c \$*.F 
