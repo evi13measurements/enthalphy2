@@ -62,7 +62,7 @@ Integer :: NRedint
 ! Quit statement for failed print level
 If ((optinfo%RedInt .OR. optinfo%DelInt) .AND. optinfo%IPrint .GE. 15) then
    Call LSQuit('The print level in **OPTIMI is too high for optimization &
-    redundant internals. Try to reduce it', lupri)
+   & redundant internals. Try to reduce it', lupri)
 Endif
 !
 ! First, grabbing number of atoms
