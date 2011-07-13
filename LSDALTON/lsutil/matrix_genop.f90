@@ -322,14 +322,14 @@ contains
             call blk_axtpy(1d0, 1, X, trps, eqls, 1, Y)
          if (tx .and. X%complex) &
             call blk_axtpy(1d0, 2, X, trps, eqls, 2, Y)
-         if (dimag(a) /= 0) &
+         if (useZ) &  !means dimag(a)/=0
             call blk_axtpy(1d0, 2, Y, norm, eqls, 1, Z) !Z = Y'
                                                         !Y'= -a * X'T (or a * Y')
          call blk_axtpy(dreal(a)*merge(-1,1,tx), 2, Y, norm, eqls, 2, Y)
          call blk_axtpy(dimag(a), 1, Y, norm, plus, 2, Y) !Y'+= a'* X^T (or a'* Y)
          call blk_axtpy(dreal(a), 1, Y, norm, eqls, 1, Y) !Y += a * X^T (or a * Y)
-                                                          !Y += a'* X'T (or-a'* Y)
-         call blk_axtpy(dimag(a)*merge(1,-1,tx), 1, Z, norm, plus, 1, Y)
+         if (useZ) &  !means dimag(a)/=0                   Y += a'* X'T (or-a'* Y)
+            call blk_axtpy(dimag(a)*merge(1,-1,tx), 1, Z, norm, plus, 1, Y)
       else
          call blk_axtpy( dreal(a), 2, X, norm, py  , 2, Y) !Y'+= a * X'
          call blk_axtpy( dimag(a), 1, X, norm, plus, 2, Y) !Y'+= a'* X
