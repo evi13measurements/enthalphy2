@@ -760,7 +760,7 @@ do
 
 done
 
-# make sure INSTALL_DIR exists, also if ../bin
+# make sure INSTALL_DIR exists, also if default value
 if [ ! -d "$INSTALL_DIR" ]; then
    mkdir "$INSTALL_DIR"
 fi
@@ -1205,43 +1205,6 @@ else
 fi
 rm configure_conftest.c configure_conftest > /dev/null 2>&1
 
-# added by Bin Gao, other plugins may be used in DALTON
-# 1) Gen1Int
-$ECHO "\nGen1Int is a tool package for computing many different one-electron integrals."
-$ECHO "Please see http://sourceforge.net/projects/gen1int for more details and"
-$ECHO "the instruction of installation. Before enabling this feature, make sure you have"
-$ECHO "successfully compiled the library of Gen1Int (libgen1int.a)."
-$ECHO "\n--> DALTON release Dalton2011 could calculate more types of ECPs than in Dalton 2.0"
-$ECHO   "--> please check Chapter 'The basis sets supplied with DALTON' in the manual for details."
-$ECHO "\n--> Activating Gen1Int makes it possible to calculate geometric derivatives"
-$ECHO   "--> of ECPs (geometry optimization with ECPs is not implemented yet);"
-$ECHO   "--> we will release patch later for geometric optimization, magnetic"
-$ECHO   "--> derivatives using London atomic orbitals and other properties."
-get_yes_or_no "\nDo you want to activate Gen1Int package in DALTON?" n
-if [ "$answer" = "y" ]; then
-  $ECHO "\n-->Trying to find Gen1Int (libgen1int.a) ..."
-  lib_genint=`locate libgen1int.a`
-  # ask user to manually provide the path of libgen1int.a
-  if test ${#lib_genint} -eq 0; then
-    $ECHO "\n-->Gen1int not found on the system. Please specify path of libgen1int.a, or enter to skip."
-    read lib_genint
-  fi
-  # checks if there is Gen1Int on the system
-  if test ${#lib_genint} -gt 0; then
-    $ECHO "\n-->Found Gen1Int $lib_genint"
-    # everything is OK to install Gen1Int
-    $ECHO "\n-->Modifying Makefile.config ..."
-    $ECHO   "-->(1) Adding -DBUILD_GEN1INT to CPPFLAGS"
-    $ECHO   "-->(2) Adding $lib_genint to LIBS"
-    cpp="-DBUILD_GEN1INT $cpp"
-    LIB="$LIB $lib_genint"
-  else
-    $ECHO "\n-->Gen1Int libary was not found and Gen1Int code will not be activated!"
-    $ECHO "\n-->You can still activate Gen1Int manually by modifying Makefile.config as follows:"
-    $ECHO   "-- -->(1) Adding -DBUILD_GEN1INT to CPPFLAGS"
-    $ECHO   "-- -->(2) Appending libgen1int.a to LIBS"
-  fi
-fi
 
 cat <<EOF > Makefile.config
 ARCH        = $WHICH
