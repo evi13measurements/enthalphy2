@@ -204,7 +204,7 @@ C
      &               '*',115)
 
          WRITE (LUPRI,'(T5,A)') 'This is output from DALTON '//
-     &      'Release Dalton2011 (Rev. 0, June 2011)'
+     &      'Release Dalton2011 (Rev. 0, July 2011)'
 
          WRITE (LUPRI,'(3X,A)') SEPARATOR(1:76)
          WRITE (LUPRI,'(T5,A)')
