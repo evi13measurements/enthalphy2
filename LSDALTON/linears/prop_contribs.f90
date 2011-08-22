@@ -515,9 +515,10 @@ contains
       !-------------------------------------
       real(8), allocatable :: RR(:) !scratch
       real(8)      :: R(6) !scratch
-      integer      :: i, j, k, l, ii, jj, kk, ll, pd, pd1, na
+      integer      :: i, j, k, l, m, n, ii, jj, kk, ll, pd, pd1, na
       integer      :: lupri,luerr,nbast
       type(matrix) :: A(6) !scratch matrices
+      logical      :: ok
       lupri = mol%lupri
       luerr = mol%luerr
       nbast = D(1)%nrow
@@ -560,7 +561,44 @@ contains
             !ajt Fixme
             if (.not.all((/(iszero(D(i)), i=2+de(1)+de(2)+de(3),pd1)/))) &
                call lsquit('prop_twoave: nd = 3 not fully implemented',mol%lupri)
-         else if (nd > 3) then
+         else if (nd==4) then
+            !ajt FIXME dft-cubic contributions should go here
+            ! verify that the contribution is zero (HF), otherwise quit
+            j = 0
+            n = 1
+            m = de(1)*de(2)*de(3)*de(4)
+            k = (de(1)+1)*(de(2)+1)*(de(3)+1)*(de(4)+1) - m
+            ok = (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                  all((/(iszero(D(i)), i=k+1,k+m)/)))
+            j=j+n; n=de(1); m=de(2)*de(3)*de(4); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            j=j+n; n=de(2); m=de(1)*de(3)*de(4); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            j=j+n; n=de(3); m=de(1)*de(2)*de(4); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            j=j+n; n=de(4); m=de(1)*de(2)*de(3); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            j=j+n; n=de(1)*de(2); m=de(3)*de(4); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            j=j+n; n=de(1)*de(3); m=de(2)*de(4); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            j=j+n; n=de(2)*de(3); m=de(1)*de(4); k=k-m
+            ok = (ok .and. (all((/(iszero(D(i)), i=j+1,j+n)/)) .or. &
+                            all((/(iszero(D(i)), i=k+1,k+m)/))))
+            if (ok .and. .not.mol%setting%do_dft) then
+               E(:de(1)*de(2)*de(3)*de(4)) = 0
+            else if (mol%setting%do_dft) then
+               call lsquit('prop_twoave: XC-contribution to cubic (nd=4) not implemented',mol%lupri)
+            else
+               call lsquit('prop_twoave: nd = 4 not fully implemented',mol%lupri)
+            end if
+         else if (nd > 4) then
             call lsquit('prop_twoave: nd > 3 not implemented',mol%lupri)
          end if
       else if (np==1 .and. p(1)=='GEO') then

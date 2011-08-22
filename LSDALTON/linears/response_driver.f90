@@ -3354,18 +3354,17 @@ Contains
             !        + E^{3,0} Dad Db Dc  + E^{4,0} Da Db Dc Dd      (only DFT)     !
             !************************************************************************
             ! DFT stuff is not working right now and therefore it is commented out.
-!!$        call prop_twoave(molcfg, (/NOOP/), (/D, Da,Db, Dc, Dd,&
-!!$             & Dab,Dac,Dad, &
-!!$             & ( 0.d0*D, i=1,nB*nC ), &
-!!$             & ( 0.d0*D, i=1,nB*nD ), &
-!!$             & ( 0.d0*D, i=1,nC*nD ), &
-!!$             & ( 0.d0*D, i=1,nA*nB*nC ), &
-!!$             & ( 0.d0*D, i=1,nA*nB*nD ), &
-!!$             & ( 0.d0*D, i=1,nA*nC*nD ), &
-!!$             & ( 0.d0*D, i=1,nB*nC*nD ), &
-!!$             & ( 0.d0*D, i=1,nA*nB*nC*nD ) /), &
-!!$             & shape(cubic_RspFunc), cubic_RspFunc, &
-!!$             & perm = (/1,2,3,4/) )
+         call prop_twoave(molcfg, (/NOOP/), (/D,Da,Db,Dc,Dd,Dab,Dac, &
+              & ( 0.d0*D, i=1,nB*nC ), Dad, &
+              & ( 0.d0*D, i=1,nB*nD ), &
+              & ( 0.d0*D, i=1,nC*nD ), &
+              & ( 0.d0*D, i=1,nA*nB*nC ), &
+              & ( 0.d0*D, i=1,nA*nB*nD ), &
+              & ( 0.d0*D, i=1,nA*nC*nD ), &
+              & ( 0.d0*D, i=1,nB*nC*nD ), &
+              & ( 0.d0*D, i=1,nA*nB*nC*nD ) /), &
+              & shape(cubic_RspFunc), cubic_RspFunc, &
+              & perm = (/1,2,3,4/) )
 
 
 
