@@ -11,6 +11,8 @@ Common
 DALTON
 ------
 
+- Fixed a bug in the polarizable embedding library that skipped multipoles if
+  the largest non-absolute component was smaller than 1.0d-8.
 
 LSDALTON
 --------
