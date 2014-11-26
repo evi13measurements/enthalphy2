@@ -112,7 +112,7 @@ START REFOUT
        A. H. Steindal, K. O. Sylvester-Hvid, P. R. Taylor,
        A. M. Teale, E. I. Tellgren, D. P. Tew, A. J. Thorvaldsen,
        L. Thoegersen, O. Vahtras, M. A. Watson, D. J. D. Wilson,
-       M. Ziolkowski and H. Aagren,
+       M. Ziolkowski and H. Agren,
        "The Dalton quantum chemistry program system",
        WIREs Comput. Mol. Sci. 2013. (doi: 10.1002/wcms.1172)
     
