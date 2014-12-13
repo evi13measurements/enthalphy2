@@ -17,6 +17,8 @@ DALTON
 LSDALTON
 --------
 
+- Rename Alloc to Allocations to bypass OMP error with Intel Phi compiler.
+
 
 ===========================
 DO NOT EDIT BELOW THIS LINE
