@@ -13,6 +13,8 @@ DALTON
 
 - Fixed a bug in the polarizable embedding library that skipped multipoles if
   the largest non-absolute component was smaller than 1.0d-8.
+- Added a possibility to export the AO-density matrices (HF and/or CASSCF) to file AO-densities. This requires to compile
+  the code with -DAO_DENSITIES_ON_FILE.
 
 LSDALTON
 --------
