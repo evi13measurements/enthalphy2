@@ -1726,6 +1726,8 @@ C
       LOGICAL LYESGP
       CHARACTER*8 ALAB, BLAB
       DOUBLE PRECISION OMEGA_B, OMEGA_C
+      REAL*8 XTPCDB1,XTPCDB2,XTPCDB3
+      REAL*8 XTPCDQTENSOR(3,3)
 C
       IPRRSP = IPRSMO
       LYESGP = .FALSE.
@@ -2192,13 +2194,11 @@ C                        WRITE(LUPRI,'(/A,3ES18.7)')
      &                               .EQ.'DIPVEL') THEN
                                   IF(ASMLB(MSYMA,IAOP)(2:8).EQ.
      &                                 'ANGMOM') THEN
-                                   WRITE(LUPRI,*) 'MAGNETIC',IA,IB,IC
                                    RESSOMMAG(IA,IB,IC,MSYMC)=SMOM
                                   ELSE IF (ASMLB(MSYMA,IAOP)(2:7).EQ.
      &                                 'DIPVEL') THEN
                                     RESSOMEL(IA,IB,IC,MSYMC)=SMOM
                                     RESSOMEL(IB,IA,IC,MSYMC)=SMOM
-                                    WRITE(LUPRI,*) 'ELECTRIC',IA,IB
                                   ELSE IF (ASMLB(MSYMA,IAOP)(3:8).EQ.
      &                                 'ROTSTR') THEN
                                     IF (ASMLB(MSYMA,IAOP)(1:2).EQ.'XX') 
@@ -2220,7 +2220,6 @@ C                        WRITE(LUPRI,'(/A,3ES18.7)')
      &                                 .EQ.'YZ') THEN
                                        IA = 6
                                     END IF
-                                    WRITE(LUPRI,*) 'QUADRUPOLE',IA,IB
                                     RESSOMQUAD(IA,IB,IC,MSYMC)=SMOM
                                   END IF
                                  END IF
@@ -2782,6 +2781,89 @@ C
      &'----------------------'
       END IF
 C
+      IF(TWOPHO.AND.LTPCD) THEN
+         WRITE(LUPRI,'(/,3(/A56))') 
+     &        '+-------------------------------------------+',
+     &        '|   Two-photon circular dichroism summary   |',
+     &        '+-------------------------------------------+'
+
+
+         WRITE(LUPRI,'(/,6(/A56))')
+     &        ' Two-photon circular dichroism cross sections',
+     &        ' in Goeppert-Mayer (GM) units for the        ',
+     &        ' differential absorption of two circularly   ',
+     &        ' left and two circularly right polarized     ',
+     &        ' photons                                     ',
+     &        ' See JCP 125 2006 064113 for details.        '
+
+
+
+          WRITE(LUPRI,'(/,5X,50A)')
+     &      '--------------------------------------------------'
+          WRITE(LUPRI,'(3A,8A,6A,13A,23A,3A)'),
+     &       '   ','  State ',' Sym. ',' Energy [eV] ',
+     &       '   Sigma TPCD [GM]   ','   '
+          WRITE(LUPRI,'(5X,50A)')
+     &      '--------------------------------------------------'
+         DO ISYMC=1,NSYM
+          DO IC = 1,NSMCNV(ISYMC)
+           XTPCDB1 = 0.0
+           XTPCDB2 = 0.0
+           XTPCDB3 = 0.0
+           XTPCDQTENSOR = 0.0
+           XTPCDQTENSOR(1,1)= RESSOMQUAD(4,3,IC,ISYMC)-
+     &                        RESSOMQUAD(5,2,IC,ISYMC)
+           XTPCDQTENSOR(1,2)= RESSOMQUAD(5,1,IC,ISYMC)-
+     &                        RESSOMQUAD(1,3,IC,ISYMC)
+           XTPCDQTENSOR(1,3)= RESSOMQUAD(1,2,IC,ISYMC)-
+     &                        RESSOMQUAD(4,1,IC,ISYMC)
+           XTPCDQTENSOR(2,1)= RESSOMQUAD(2,3,IC,ISYMC)-
+     &                        RESSOMQUAD(6,2,IC,ISYMC)
+           XTPCDQTENSOR(2,2)= RESSOMQUAD(6,1,IC,ISYMC)-
+     &                        RESSOMQUAD(4,3,IC,ISYMC)
+           XTPCDQTENSOR(2,3)= RESSOMQUAD(4,2,IC,ISYMC)-
+     &                        RESSOMQUAD(2,1,IC,ISYMC)
+           XTPCDQTENSOR(3,1)= RESSOMQUAD(6,3,IC,ISYMC)-
+     &                        RESSOMQUAD(3,2,IC,ISYMC)
+           XTPCDQTENSOR(3,2)= RESSOMQUAD(3,1,IC,ISYMC)-
+     &                        RESSOMQUAD(5,3,IC,ISYMC)
+           XTPCDQTENSOR(3,3)= RESSOMQUAD(5,2,IC,ISYMC)-
+     &                        RESSOMQUAD(6,1,IC,ISYMC)
+           ! CONSTRUCT THE PROPER Q TENSOR HERE!
+           DO I = 1, 3
+             DO J = 1, 3
+               XTPCDB1 = XTPCDB1 - 0.5 *
+     &                RESSOMMAG(I,J,IC,ISYMC)*RESSOMEL(I,J,IC,ISYMC)
+               XTPCDB2 = XTPCDB2 + 
+     &                XTPCDQTENSOR(I,J)*RESSOMEL(I,J,IC,ISYMC)
+               XTPCDB3 = XTPCDB3 - 0.5 *
+     &                RESSOMMAG(I,I,IC,ISYMC)*RESSOMEL(J,J,IC,ISYMC)
+             END DO
+           END DO
+!          WRITE(LUPRI,*)'XTPCDB1,XTPCDB2,XTPCDB3=',
+!    &             XTPCDB1,XTPCDB2,XTPCDB3
+!          WRITE(LUPRI,*)'Rot. str.:',6.0*XTPCDB1+XTPCDB2-2.0*XTPCDB3
+!          WRITE(LUPRI,*)'Cross section:',
+!    &        ( 6.0*XTPCDB1+XTPCDB2-2.0*XTPCDB3)*
+!    &        (RESFRE(IC,ISYMC)/2.0)**2*
+!    &         4.8755d-5*86.61659815571096187721
+!           WRITE(LUPRI,'(2X,A,2I4)')'IC,ISYMC:',IC,ISYMC
+               WRITE(LUPRI,'(A2,2I6,F11.2,A16,E11.3)')' ',ISYMC,IC,
+     &              RESFRE(IC,ISYMC)*XTEV,'       D(2L/2R) ',
+     &              ( 6.0*XTPCDB1+XTPCDB2-2.0*XTPCDB3)*
+     &        (RESFRE(IC,ISYMC)/2.0)**2*
+     &         4.8755d-5*86.61659815571096187721
+
+!           WRITE(LUPRI,'(/3A,2I4)')' | ',IC,ISYMC!,
+!     &         RESFRE(IC,ISYMC)*XTEV
+           ! WRITE THE DATA FOR THE DIFFERENT STATES HERE
+          END DO
+         END DO
+         WRITE(LUPRI,'(5X,50A)')
+     &      '--------------------------------------------------'
+      END IF
+
+
       IF (TWOPHO) THEN
          DEALLOCATE (RESSOM, RESFRE)
          IF (LTPCD) THEN
