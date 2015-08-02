@@ -477,17 +477,20 @@ C
 #include "inflr.h"
 #include "inftmo.h"
 C
-      IF (IPRRSP.GT.100) THEN
+!     IF (IPRRSP.GT.100) THEN
          WRITE(LUPRI,'(3(/A),4I3,/A,4A10,/A,4F12.8)')
      *         '     Variables in READVE ',
      *         '     =================== ',
      *         'ISYMA,ISYMB,ISYMC,ISYMD: ',ISYMA,ISYMB,ISYMC,ISYMD,
      *         'ALAB,BLAB,CLAB,DLAB    : ',ALAB,BLAB,CLAB,DLAB,
      *         'FREQA,FREQB,FREQC,FREQD: ',FREQA,FREQB,FREQC,FREQD
-      END IF
+!     END IF
 C
 C     Read in Na
 C
+!DaF
+      write(lupri,*)'calling rearsp now!'
+!DaF
       CALL REARSP(LURSP,KZYVA,VECA,ALAB,BLANK,FREQA,D0,ISYMA,0,
      &            THCLR,FOUND,CONV,ANTSYM)
       IF (.NOT. (FOUND .AND. CONV)) THEN

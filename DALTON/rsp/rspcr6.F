@@ -429,6 +429,10 @@ C
 C
 C     set variables
 C
+!DaF
+      writE(lupri,*)'Beginning of BCDCHK, TOMOM:',TOMOM,
+     &    'CRCAL:',CRCAL,'TPAMP:',TPAMP
+!DaF
       ONFIL = .FALSE.
       ISYMBC = MULD2H(ISYMB,ISYMC)
       ISYMBD = MULD2H(ISYMB,ISYMD)
@@ -458,6 +462,10 @@ C
          FREQB = -BTMFR(IBFR)
          FREQC = -CTMFR(ICFR)
          FREQD = EXCIT2(ISYMD,IDFR)
+!DaF
+      write(lupri,*)'freqs in BCDCHK:',freqb+freqc+freqd,freqb,freqc,
+     &   freqd
+!DaF
          FREQA = FREQB + FREQC + FREQD
 C
          ALAB = ATMLB(ISYMA,IAOP)

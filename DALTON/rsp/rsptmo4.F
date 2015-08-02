@@ -61,6 +61,8 @@ C
 #include "rspprp.h"
 #include "indcr.h"
       REAL*8, ALLOCATABLE  ::  RESTOM(:,:,:,:,:), RESFRE(:,:)
+      REAL*8, ALLOCATABLE  ::  RESELE(:,:,:,:,:), RESMAG(:,:,:,:,:)
+      REAL*8, ALLOCATABLE  ::  RESQUA(:,:,:,:,:)
 #include "infcr.h"
 #include "inftmo.h"
 #include "codata.h"
@@ -86,6 +88,15 @@ C
          CALL DZERO(RESTOM,3*3*3*MXEXCR*8)
          CALL DZERO(RESFRE,MXEXCR*8)
       END IF
+      IF (THREEPCD) THEN
+         ALLOCATE ( RESELE(3,3,3,MXEXCR,8), RESFRE(MXEXCR,8) )
+         ALLOCATE ( RESMAG(3,3,3,MXEXCR,8), RESQUA(6,3,3,MXEXCR,8))
+         CALL DZERO(RESELE,3*3*3*MXEXCR*8)
+         CALL DZERO(RESMAG,3*3*3*MXEXCR*8)
+         CALL DZERO(RESQUA,6*3*3*MXEXCR*8)
+         CALL DZERO(RESFRE,MXEXCR*8)
+      END IF
+
 C
       DO 200 ISYMD = 1,NSYM
       DO 300 ISYMC = 1,NSYM
@@ -103,11 +114,30 @@ C
 C
       DO 700 IBOP = 1,NBTMOP(ISYMB)
       DO 750 IBFR = 1,NBTMFR
+!DaF
+      write(lupri,*)'no of freq:',NTMCNV(ISYMD),NCTMFR,NBTMFR
+      write(lupri,*)'no of op:',natmop(isyma),nbtmop(isymb),
+     &                          nctmop(isymc)
+!DaF
 C
 C     If three photon absorption or harmonic generation calculation 
 C     only certain frequencies are considered.
 C
-      IF ( THREEPHOTON .AND.
+!DaF
+      write(lupri,*)'excit,btmfr,ctmfr:',excit2(isymd,id),btmfr(ibfr),
+     &    ctmfr(icfr),3*btmfr(ibfr),3*ctmfr(icfr)
+      write(lupri,*)'expr. 1:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.
+     &      ZEROTHR)
+      write(lupri,*)'expr. 2:',(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
+     &      ZEROTHR)
+      write(lupri,*)'altogether:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR))
+     &      .GT.ZEROTHR).OR.(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
+     &      ZEROTHR)
+      write(lupri,*)'threephoton,threepcd,ctmohg=',threephoton,threepcd,
+     &               ctmohg
+      write(lupri,*)'id,ibfr,icfr=',id,ibfr,icfr
+!DaF
+      IF ( (THREEPHOTON.OR.THREEPCD) .AND.
      &     ((ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.ZEROTHR) .OR.
      &      (ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.ZEROTHR)) ) GOTO 750
 C
@@ -115,6 +145,9 @@ C
          IF (IBFR.NE.ICFR) GO TO 750
       END IF
 C
+!DaF
+      write(lupri,*)'Starting final loop!'
+!DaF
       DO 800 IAOP = 1,NATMOP(ISYMA)
 C
 C     Initialize variables.

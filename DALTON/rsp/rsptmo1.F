@@ -41,7 +41,7 @@ C
 #include "inftap.h"
 C
       LOGICAL NEWDEF
-      PARAMETER ( NTABLE = 20)
+      PARAMETER ( NTABLE = 21)
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
       CHARACTER*8 LABEL
 C
@@ -49,7 +49,8 @@ C
      *            '.APROP ', '.ROOTS ', '.MAXITP', '.THCPP ', 
      *            '.MAX IT', '.THCLR ', '.MAXITO', '.PRINT ', 
      *            '.NOHG  ', '.DIPLEN', '.DIPLNX', '.DIPLNY', 
-     *            '.DIPLNZ', '.SINGLE', '.FREQUE', '.THREE-'/
+     *            '.DIPLNZ', '.SINGLE', '.FREQUE', '.THREE-',
+     *            '.3PCD  '/
 C
 C READ IN  INPUT
 C
@@ -71,7 +72,7 @@ C
                DO I=1, NTABLE
                   IF (TABLE(I) .EQ. WORD) THEN
                      GO TO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,
-     &                      15,16,17,18,19,20), I
+     &                      15,16,17,18,19,20,21), I
                   END IF
                END DO
                IF (WORD .EQ. '.OPTION') THEN
@@ -213,6 +214,39 @@ C
                   BTMOP( INDPRP(LABEL)) = .TRUE.
                   CTMOP( INDPRP(LABEL)) = .TRUE.
                GO TO 100
+ 21            CONTINUE
+                  THREEPCD = .TRUE.
+                  LABEL='XDIPVEL'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  BTMOP( INDPRP(LABEL)) = .TRUE.
+                  CTMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='YDIPVEL'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  BTMOP( INDPRP(LABEL)) = .TRUE.
+                  CTMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='ZDIPVEL'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  BTMOP( INDPRP(LABEL)) = .TRUE.
+                  CTMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='XANGMOM'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='YANGMOM'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='ZANGMOM'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='XXROTSTR'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='YYROTSTR'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='ZZROTSTR'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='XYROTSTR'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='XZROTSTR'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  LABEL='YZROTSTR'      
+                  ATMOP( INDPRP(LABEL)) = .TRUE.
+                  GO TO 100
             ELSE IF (PROMPT .EQ. '*') THEN
                GO TO 300
             ELSE
@@ -251,7 +285,7 @@ C If three-photon calculation then we assume that the frequencies of the
 C photons match the excitation. At this point we set the frequencies
 C to dummy values, later they become one third of the excitation energies.
 C
-      IF (THREEPHOTON) THEN
+      IF (THREEPHOTON.OR.THREEPCD) THEN
          NBTMFR = ISUM(NSYM,NTMCNV,1)
          NCTMFR = NBTMFR
          IF (NBTMFR .EQ. 0) THEN
