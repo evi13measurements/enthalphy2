@@ -69,8 +69,14 @@ C
             IF (PROMPT .EQ. '!' .OR. PROMPT .EQ. '#') GO TO 100
             IF (PROMPT .EQ. '.') THEN
                ICHANG = ICHANG + 1
+!DaF
+               write(*,*)'WORD=',WORD
+!DaF
                DO I=1, NTABLE
                   IF (TABLE(I) .EQ. WORD) THEN
+!DaF
+                  WRITE(*,*)'I=',I
+!DaF
                      GO TO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,
      &                      15,16,17,18,19,20,21), I
                   END IF
@@ -216,6 +222,9 @@ C
                GO TO 100
  21            CONTINUE
                   THREEPCD = .TRUE.
+!DaF
+                  write(*,*)'Setting THREEPCD to true'
+!DaF
                   LABEL='XDIPVEL'      
                   ATMOP( INDPRP(LABEL)) = .TRUE.
                   BTMOP( INDPRP(LABEL)) = .TRUE.

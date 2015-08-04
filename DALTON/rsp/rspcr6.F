@@ -580,7 +580,13 @@ C
      *' B operator, symmetry, frequency: ',LAB(I,2),ISYM(I,2),-FRQ(I,2),
      *' C operator, symmetry, frequency: ',LAB(I,3),ISYM(I,3),-FRQ(I,3),
      *' Symmetry, excitation energy:     ','  ',ISYM(I,4),FRQ(I,4)
-                      CALL DIPLAB(LAB(I,1),I1)
+                      IF((LAB(I,1)(2:7).EQ.'DIPLEN').OR.
+     &                   (LAB(I,1)(2:7).EQ.'DIPVEL').OR.
+     &                   (LAB(I,1)(2:7).EQ.'ANGMOM')) THEN
+                            CALL DIPLAB(LAB(I,1),I1)
+                      ELSE IF(LAB(I,1)(3:8).EQ.'ROTSTR') THEN
+                            CALL QUADLAB(LAB(I,1),I1)
+                      END IF
                       CALL DIPLAB(LAB(I,2),I2)
                       CALL DIPLAB(LAB(I,3),I3)
                       IEQTO(1)=I1
@@ -604,7 +610,13 @@ C
      *' Symmetry, excitation energy:     ','  ',ISYM(I,3),-FRQ(I,3),
      *' Symmetry, excitation energy:     ','  ',ISYM(I,4),FRQ(I,4)
 C    This will set up IEQTO used for output analysis
-                      CALL DIPLAB(LAB(I,1),I1)
+                      IF((LAB(I,1)(2:7).EQ.'DIPLEN').OR.
+     &                   (LAB(I,1)(2:7).EQ.'DIPVEL').OR.
+     &                   (LAB(I,1)(2:7).EQ.'ANGMOM')) THEN
+                            CALL DIPLAB(LAB(I,1),I1)
+                      ELSE IF(LAB(I,1)(3:8).EQ.'ROTSTR') THEN
+                            CALL QUADLAB(LAB(I,1),I1)
+                      END IF
                       CALL DIPLAB(LAB(I,2),I2)
                       CALL DIPLAB(LAB(I,3),I3)
                       IEQTO(1)=I1
@@ -829,6 +841,26 @@ C
 C
       RETURN
       END
+
+      SUBROUTINE QUADLAB(LAB,I)
+C
+#include "implicit.h"
+C
+      CHARACTER*8 LAB
+C
+C Map quadrupole operators to integer number
+C X => 1, Y => 2, and Z => 3
+C
+      IF (LAB(1:2).EQ.'XX') I=1
+      IF (LAB(1:2).EQ.'YY') I=2
+      IF (LAB(1:2).EQ.'ZZ') I=3
+      IF (LAB(1:2).EQ.'XY') I=4
+      IF (LAB(1:2).EQ.'XZ') I=5
+      IF (LAB(1:2).EQ.'YZ') I=6
+C
+      RETURN
+      END
+
 
       SUBROUTINE DFT4DRV(VECB, VECC, VECD,
      &                   FI,ZYMB,ZYMC,ZYMD,

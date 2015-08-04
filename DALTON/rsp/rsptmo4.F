@@ -88,6 +88,9 @@ C
          CALL DZERO(RESTOM,3*3*3*MXEXCR*8)
          CALL DZERO(RESFRE,MXEXCR*8)
       END IF
+!DaF
+      write(*,*)'THREEPCD=',THREEPCD
+!DaF
       IF (THREEPCD) THEN
          ALLOCATE ( RESELE(3,3,3,MXEXCR,8), RESFRE(MXEXCR,8) )
          ALLOCATE ( RESMAG(3,3,3,MXEXCR,8), RESQUA(6,3,3,MXEXCR,8))
@@ -171,6 +174,30 @@ C
         RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
         RESTOM(IA,IB,IC,ID,ISYMD)=
      &  RESTOM(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
+      END IF
+      IF (THREEPCD .AND. (.NOT. DOMOM)) THEN
+        IF ((ALAB(2:7).EQ.'DIPVEL').OR.(ALAB(2:7).EQ.'ANGMOM')) THEN
+          CALL DIPLAB(ALAB,IA)
+          CALL DIPLAB(BLAB,IB)
+          CALL DIPLAB(CLAB,IC)
+          RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
+          IF(ALAB(2:7).EQ.'DIPVEL') THEN
+             RESELE(IA,IB,IC,ID,ISYMD)=
+     &       RESELE(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
+          ELSE IF(ALAB(2:7).EQ.'ANGMOM') THEN
+             RESMAG(IA,IB,IC,ID,ISYMD)=
+     &       RESMAG(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
+          END IF
+        END IF
+        IF (ALAB(3:7).EQ.'ROTSTR') THEN
+          CALL QUADLAB(ALAB,IA)
+          CALL DIPLAB(BLAB,IB)
+          CALL DIPLAB(CLAB,IC)
+          RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
+          RESQUA(IA,IB,IC,ID,ISYMD)=
+     &    RESQUA(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
+        END IF
+
       END IF
       IF (.NOT.DOMOM) GOTO 800
 C
@@ -388,6 +415,27 @@ C
         RESTOM(IA,IB,IC,ID,ISYMD)=TMOM
         RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
       END IF
+      IF (THREEPCD) THEN
+        IF ((ALAB(2:7).EQ.'DIPVEL').OR.(ALAB(2:7).EQ.'ANGMOM')) THEN
+          CALL DIPLAB(ALAB,IA)
+          CALL DIPLAB(BLAB,IB)
+          CALL DIPLAB(CLAB,IC)
+          RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
+          IF(ALAB(2:7).EQ.'DIPVEL') THEN
+             RESELE(IA,IB,IC,ID,ISYMD)=TMOM
+          ELSE IF(ALAB(2:7).EQ.'ANGMOM') THEN
+             RESMAG(IA,IB,IC,ID,ISYMD)=TMOM
+          END IF
+        END IF
+        IF (ALAB(3:7).EQ.'ROTSTR') THEN
+          CALL QUADLAB(ALAB,IA)
+          CALL DIPLAB(BLAB,IB)
+          CALL DIPLAB(CLAB,IC)
+          RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
+          RESQUA(IA,IB,IC,ID,ISYMD)=TMOM
+        END IF
+       
+      END IF
 C
  800  CONTINUE
  750  CONTINUE
@@ -405,8 +453,14 @@ C
 C
 C
       IF (THREEPHOTON) THEN
-         CALL PRINT_THREEPHOTON(RESTOM,RESFRE)   
+         CALL PRINT_THREEPHOTON(RESTOM,RESFRE,'DIPLEN')   
          DEALLOCATE (RESTOM, RESFRE)
+      END IF
+      IF (THREEPCD) THEN
+         CALL PRINT_THREEPHOTON(RESELE,RESFRE,'DIPVEL')
+         CALL PRINT_THREEPHOTON(RESMAG,RESFRE,'ANGMOM')
+         CALL PRINT_THREEPHOTON(RESQUA,RESFRE,'ROTSTR')
+         DEALLOCATE(RESELE,RESMAG,RESQUA,RESFRE)
       END IF
 C
 C    End of subroutine CRTMO
@@ -414,7 +468,7 @@ C
       CALL QEXIT('CRTMO')
       RETURN
       END
-      SUBROUTINE PRINT_THREEPHOTON(RESTOM,RESFRE)
+      SUBROUTINE PRINT_THREEPHOTON(RESTOM,RESFRE,TYPE)
 C
 #include "implicit.h"
 #include "priunit.h"
@@ -427,11 +481,18 @@ C
 C
       PARAMETER ( D0 = 0.0D0, ZERO = 1.0D-10 )
       DIMENSION RESTOM(3,3,3,MXEXCR,8), RESFRE(MXEXCR,8)
-      CHARACTER*8 ALAB,BLAB,CLAB,DLAB
+      CHARACTER*8 ALAB,BLAB,CLAB,DLAB,TYPE
       CHARACTER*1 ITINDX,JTINDX
-C
+      CHARACTER*2 ITINDX2
+      CHARACTER*5 PRINTSTRING
+      INTEGER     ILENGTHA
+
       CALL TITLER('FINAL RESULTS FROM THREE-PHOTON CALCULATION',
      &       '*',112)
+
+      ILENGTHA=3
+
+      IF(TYPE(1:6).EQ.'DIPLEN') THEN
       WRITE(LUPRI,'(A64,4(/A64))')
      & ' The three-photon absorption strength for an average molecular',
      & ' orientation is computed according to formulas given by       ',
@@ -448,6 +509,61 @@ C
       WRITE(LUPRI,'(2A)')
      & ' ----------------------------------------------------',
      & '--------------'
+      PRINTSTRING='  T_{'
+      ELSE IF(TYPE(1:6).EQ.'DIPVEL') THEN
+            WRITE(LUPRI,'(A64,4(/A64))')
+     & ' The three-photon transition moment tensor in velocity gauge, ',
+     & ' necessary for the calculation of three-photon circular       ',
+     & ' dichroism (experimental prelimibary code so far)             ',
+     & '                                                              ',
+     & ' Daniel H. Friese, 4. 8. 2015                                 '
+      WRITE(LUPRI,'(/,3(/A52))')
+     &        '+----------------------------------+',
+     &        '| Three-photon transition tensor P |',
+     &        '+----------------------------------+'
+      WRITE(LUPRI,'(2A)')
+     & ' ----------------------------------------------------',
+     & '--------------'
+      PRINTSTRING='  P_{'
+      ELSE IF(TYPE(1:6).EQ.'ANGMOM') THEN
+            WRITE(LUPRI,'(A64,4(/A64))')
+     & ' The three-photon transition moment tensor in velocity gauge, ',
+     & ' constructed from the magnetic dipole moment operator and     ',
+     & ' twice the electric dipole operator in velocity gauge.        ',
+     & ' Necessary for the calculation of three-photon circular       ',
+     & ' dichroism (experimental prelimibary code so far)             ',
+     & '                                                              ',
+     & ' Daniel H. Friese, 4. 8. 2015                                 '
+      WRITE(LUPRI,'(/,3(/A52))')
+     &        '+----------------------------------+',
+     &        '| Three-photon transition tensor M |',
+     &        '+----------------------------------+'
+      WRITE(LUPRI,'(2A)')
+     & ' ----------------------------------------------------',
+     & '--------------------'
+      PRINTSTRING='  M_{'
+      ELSE IF(TYPE(2:7).EQ.'ROTSTR') THEN
+            WRITE(LUPRI,'(A64,4(/A64))')
+     & ' The three-photon transition moment tensor in velocity gauge, ',
+     & ' constructed from the electric quadrupole moment operator and ',
+     & ' twice the electric dipole operator in velocity gauge.        ',
+     & ' Necessary for the calculation of three-photon circular       ',
+     & ' dichroism (experimental prelimibary code so far)             ',
+     & '                                                              ',
+     & ' Daniel H. Friese, 4. 8. 2015                                 '
+      WRITE(LUPRI,'(/,3(/A52))')
+     &        '+----------------------------------+',
+     &        '| Three-photon transition tensor Q |',
+     &        '+----------------------------------+'
+      WRITE(LUPRI,'(2A)')
+     & ' ----------------------------------------------------',
+     & '--------------------'
+      PRINTSTRING='  Q_{'
+      ILENGTHA=6
+      END IF
+
+
+
 C
       DO ISYMD=1,NSYM
       DO ID=1,NTMCNV(ISYMD)
@@ -457,21 +573,34 @@ C
         WRITE(LUPRI,'(A12,I2,A9,I2,A11,F8.3,A3)') '   Symmetry ',ISYMD,
      &  '   State ',ID,'   Energy: ',RESFRE(ID,ISYMD)*XTEV,' eV'
         WRITE(LUPRI,'(A1)')
-        DO I=1,3
+        DO I=1,ILENGTHA
         DO J=1,3
+        IF(ILENGTHA.EQ.3) THEN
             CALL LABDIP(ITINDX,I)
             CALL LABDIP(JTINDX,J)
-          WRITE(LUPRI,'(3(A5,2A1,A3,F12.2))')
-     &   '  T_{',ITINDX,JTINDX,'x}=',RESTOM(I,J,1,ID,ISYMD),
-     &   '  T_{',ITINDX,JTINDX,'y}=',RESTOM(I,J,2,ID,ISYMD),
-     &   '  T_{',ITINDX,JTINDX,'z}=',RESTOM(I,J,3,ID,ISYMD)
+          WRITE(LUPRI,'(3(A5,2A1,A3,F12.5))')
+     &   PRINTSTRING,ITINDX,JTINDX,'x}=',RESTOM(I,J,1,ID,ISYMD),
+     &   PRINTSTRING,ITINDX,JTINDX,'y}=',RESTOM(I,J,2,ID,ISYMD),
+     &   PRINTSTRING,ITINDX,JTINDX,'z}=',RESTOM(I,J,3,ID,ISYMD)
+        ELSE IF(ILENGTHA.EQ.6) THEN
+            CALL LABQUA(ITINDX2,I)
+            CALL LABDIP(JTINDX,J)
+          WRITE(LUPRI,'(3(A5,A2,A1,A3,F12.5))')
+     &   PRINTSTRING,ITINDX2,JTINDX,'x}=',RESTOM(I,J,1,ID,ISYMD),
+     &   PRINTSTRING,ITINDX2,JTINDX,'y}=',RESTOM(I,J,2,ID,ISYMD),
+     &   PRINTSTRING,ITINDX2,JTINDX,'z}=',RESTOM(I,J,3,ID,ISYMD)
+        ELSE
+         CALL QUIT('Weird value of ilengtha in print_threephoton')
+        END IF
         END DO
         END DO
       WRITE(LUPRI,'(2A)')
      & ' ----------------------------------------------------',
-     & '--------------'
+     & '--------------------'
       END DO
       END DO
+
+      IF(TYPE(1:6).EQ.'DIPLEN') THEN
       WRITE(LUPRI,'(/,6(/A60))')
      &        ' Transition probabilities (a.u.)         ',
      &        '--------------------------------------------------',
@@ -518,6 +647,7 @@ C
       WRITE(LUPRI,'(A62,A)')
      &'-----------------------------------------------------------',
      &'-----------'
+      END IF
       RETURN
       END
       SUBROUTINE LABDIP(LAB,I)
@@ -535,3 +665,23 @@ C
 C
       RETURN
       END
+
+      SUBROUTINE LABQUA(LAB,I)
+C
+#include "implicit.h"
+C
+      CHARACTER*1 LAB
+C
+C Map integer numbers to dipole operators
+C 1 => x, 2 => y, and 3 => z
+C
+      IF (I.EQ.1) LAB(1:1)='xx'
+      IF (I.EQ.2) LAB(1:1)='yy'
+      IF (I.EQ.3) LAB(1:1)='zz'
+      IF (I.EQ.4) LAB(1:1)='xy'
+      IF (I.EQ.5) LAB(1:1)='xz'   
+      IF (I.EQ.6) LAB(1:1)='yz'
+C
+      RETURN
+      END
+
