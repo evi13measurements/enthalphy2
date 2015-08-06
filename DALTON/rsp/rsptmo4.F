@@ -127,18 +127,18 @@ C     If three photon absorption or harmonic generation calculation
 C     only certain frequencies are considered.
 C
 !DaF
-      write(lupri,*)'excit,btmfr,ctmfr:',excit2(isymd,id),btmfr(ibfr),
-     &    ctmfr(icfr),3*btmfr(ibfr),3*ctmfr(icfr)
-      write(lupri,*)'expr. 1:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.
-     &      ZEROTHR)
-      write(lupri,*)'expr. 2:',(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
-     &      ZEROTHR)
-      write(lupri,*)'altogether:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR))
-     &      .GT.ZEROTHR).OR.(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
-     &      ZEROTHR)
-      write(lupri,*)'threephoton,threepcd,ctmohg=',threephoton,threepcd,
-     &               ctmohg
-      write(lupri,*)'id,ibfr,icfr=',id,ibfr,icfr
+!     write(lupri,*)'excit,btmfr,ctmfr:',excit2(isymd,id),btmfr(ibfr),
+!    &    ctmfr(icfr),3*btmfr(ibfr),3*ctmfr(icfr)
+!     write(lupri,*)'expr. 1:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.
+!    &      ZEROTHR)
+!     write(lupri,*)'expr. 2:',(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
+!    &      ZEROTHR)
+!     write(lupri,*)'altogether:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR))
+!    &      .GT.ZEROTHR).OR.(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
+!    &      ZEROTHR)
+!     write(lupri,*)'threephoton,threepcd,ctmohg=',threephoton,threepcd,
+!    &               ctmohg
+!     write(lupri,*)'id,ibfr,icfr=',id,ibfr,icfr
 !DaF
       IF ( (THREEPHOTON.OR.THREEPCD) .AND.
      &     ((ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.ZEROTHR) .OR.
@@ -148,9 +148,6 @@ C
          IF (IBFR.NE.ICFR) GO TO 750
       END IF
 C
-!DaF
-      write(lupri,*)'Starting final loop!'
-!DaF
       DO 800 IAOP = 1,NATMOP(ISYMA)
 C
 C     Initialize variables.
@@ -189,13 +186,19 @@ C
      &       RESMAG(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
           END IF
         END IF
-        IF (ALAB(3:7).EQ.'ROTSTR') THEN
+        IF (ALAB(3:8).EQ.'ROTSTR') THEN
           CALL QUADLAB(ALAB,IA)
           CALL DIPLAB(BLAB,IB)
           CALL DIPLAB(CLAB,IC)
           RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
           RESQUA(IA,IB,IC,ID,ISYMD)=
      &    RESQUA(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
+!DaF
+!         write(lupri,*)' write indices:',ia,ib,ic
+!         write(lupri,*)' take indices:',IEQTO(1),IEQTO(2),IEQTO(3),
+!    &           IEQTO(4),
+!    &           IEQTO(5)
+!DaF
         END IF
 
       END IF
@@ -427,10 +430,13 @@ C
              RESMAG(IA,IB,IC,ID,ISYMD)=TMOM
           END IF
         END IF
-        IF (ALAB(3:7).EQ.'ROTSTR') THEN
+        IF (ALAB(3:8).EQ.'ROTSTR') THEN
           CALL QUADLAB(ALAB,IA)
           CALL DIPLAB(BLAB,IB)
           CALL DIPLAB(CLAB,IC)
+!DaF
+!          write(LUPRI,*)'Labels:',ALAB,BLAB,CLAB,'indices:',ia,ib,ic
+!DaF
           RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
           RESQUA(IA,IB,IC,ID,ISYMD)=TMOM
         END IF
@@ -453,13 +459,21 @@ C
 C
 C
       IF (THREEPHOTON) THEN
-         CALL PRINT_THREEPHOTON(RESTOM,RESFRE,'DIPLEN')   
+         CALL PRINT_THREEPHOTON(RESTOM,RESFRE,'DIPLEN',3)   
          DEALLOCATE (RESTOM, RESFRE)
       END IF
       IF (THREEPCD) THEN
-         CALL PRINT_THREEPHOTON(RESELE,RESFRE,'DIPVEL')
-         CALL PRINT_THREEPHOTON(RESMAG,RESFRE,'ANGMOM')
-         CALL PRINT_THREEPHOTON(RESQUA,RESFRE,'ROTSTR')
+         CALL PRINT_THREEPHOTON(RESELE,RESFRE,'DIPVEL',6)
+         CALL PRINT_THREEPHOTON(RESMAG,RESFRE,'ANGMOM',6)
+         CALL PRINT_THREEPHOTON(RESQUA,RESFRE,'ROTSTR',6)
+         CALL CALC_3PCD(RESELE,RESMAG,RESQUA,NTMCNV,NSYM,MXEXCR,LUPRI) 
+!DaF
+!     write(lupri,*)'resqua=',resqua(:,:,:,1,1)
+!     write(lupri,*)'resqua spec. 112:',resqua(1,1,2,1,1)
+!     write(lupri,*)'resqua spec. 121:',resqua(1,2,1,1,1)
+!     write(lupri,*)'resqua spec. 623:',resqua(6,2,3,1,1)
+!     write(lupri,*)'resqua spec. 632:',resqua(6,3,2,1,1)
+!DaF
          DEALLOCATE(RESELE,RESMAG,RESQUA,RESFRE)
       END IF
 C
@@ -468,7 +482,7 @@ C
       CALL QEXIT('CRTMO')
       RETURN
       END
-      SUBROUTINE PRINT_THREEPHOTON(RESTOM,RESFRE,TYPE)
+      SUBROUTINE PRINT_THREEPHOTON(RESTOM,RESFRE,TYPE,NASIZE)
 C
 #include "implicit.h"
 #include "priunit.h"
@@ -479,8 +493,9 @@ C
 #include "inftmo.h"
 #include "codata.h"
 C
+      INTEGER NASIZE
       PARAMETER ( D0 = 0.0D0, ZERO = 1.0D-10 )
-      DIMENSION RESTOM(3,3,3,MXEXCR,8), RESFRE(MXEXCR,8)
+      DIMENSION RESTOM(NASIZE,3,3,MXEXCR,8), RESFRE(MXEXCR,8)
       CHARACTER*8 ALAB,BLAB,CLAB,DLAB,TYPE
       CHARACTER*1 ITINDX,JTINDX
       CHARACTER*2 ITINDX2
@@ -542,7 +557,7 @@ C
      & ' ----------------------------------------------------',
      & '--------------------'
       PRINTSTRING='  M_{'
-      ELSE IF(TYPE(2:7).EQ.'ROTSTR') THEN
+      ELSE IF(TYPE(1:6).EQ.'ROTSTR') THEN
             WRITE(LUPRI,'(A64,4(/A64))')
      & ' The three-photon transition moment tensor in velocity gauge, ',
      & ' constructed from the electric quadrupole moment operator and ',
@@ -563,6 +578,14 @@ C
       END IF
 
 
+!DaF
+!     if(type(1:6).eq.'ROTSTR') then
+!     write(lupri,*)'resqua spec. 112:',restom(1,1,2,1,1)
+!     write(lupri,*)'resqua spec. 121:',restom(1,2,1,1,1)
+!     write(lupri,*)'resqua spec. 623:',restom(6,2,3,1,1)
+!     write(lupri,*)'resqua spec. 632:',restom(6,3,2,1,1)
+!     end if
+!DaF
 
 C
       DO ISYMD=1,NSYM
@@ -585,6 +608,12 @@ C
         ELSE IF(ILENGTHA.EQ.6) THEN
             CALL LABQUA(ITINDX2,I)
             CALL LABDIP(JTINDX,J)
+!DaF
+!      WRITE(LUPRI,*)'ITINDX2,JTINDX=',ITINDX2,JTINDX
+!      WRITE(LUPRI,*)'I,J,ID,ISYM=',I,J,ID,ISYMD
+!      write(lupri,*)'elements:',RESTOM(I,J,1,ID,ISYMD),
+!    &     RESTOM(I,J,2,ID,ISYMD),RESTOM(I,J,3,ID,ISYMD)
+!DaF
           WRITE(LUPRI,'(3(A5,A2,A1,A3,F12.5))')
      &   PRINTSTRING,ITINDX2,JTINDX,'x}=',RESTOM(I,J,1,ID,ISYMD),
      &   PRINTSTRING,ITINDX2,JTINDX,'y}=',RESTOM(I,J,2,ID,ISYMD),
@@ -670,18 +699,183 @@ C
 C
 #include "implicit.h"
 C
-      CHARACTER*1 LAB
+      CHARACTER*2 LAB
 C
 C Map integer numbers to dipole operators
 C 1 => x, 2 => y, and 3 => z
 C
-      IF (I.EQ.1) LAB(1:1)='xx'
-      IF (I.EQ.2) LAB(1:1)='yy'
-      IF (I.EQ.3) LAB(1:1)='zz'
-      IF (I.EQ.4) LAB(1:1)='xy'
-      IF (I.EQ.5) LAB(1:1)='xz'   
-      IF (I.EQ.6) LAB(1:1)='yz'
+      IF (I.EQ.1) LAB(1:2)='xx'
+      IF (I.EQ.2) LAB(1:2)='yy'
+      IF (I.EQ.3) LAB(1:2)='zz'
+      IF (I.EQ.4) LAB(1:2)='xy'
+      IF (I.EQ.5) LAB(1:2)='xz'   
+      IF (I.EQ.6) LAB(1:2)='yz'
 C
       RETURN
       END
 
+      SUBROUTINE CALC_3PCD(RESELE,RESMAG,RESQUA,NSTATE,NSYM,MXEXCR,
+     &                     LUPRI)
+C
+      implicit none
+C
+      INTEGER NSYM,MXEXCR,LUPRI
+      INTEGER NSTATE(NSYM)
+      INTEGER I,J,K,L,M, ISYM, ISTATE
+      REAL*8  MOM3PCD,MPABC,MPAAB1,MPAAB2,MPAAA,QPABC,QPAAB
+      REAL*8  RESELE(3,3,3,MXEXCR,NSYM),
+     &        RESMAG(3,3,3,MXEXCR,NSYM),
+     &        RESQUA(6,3,3,MXEXCR,NSYM)
+      REAL*8,ALLOCATABLE :: TPLUSTENSOR(:,:,:)
+C
+          WRITE(LUPRI,'(/,X,54A)')
+     &'+----------------------------------------------------+'
+          WRITE(LUPRI,'(X,54A)')
+     &'|                Contributions to 3PCD               |'
+          WRITE(LUPRI,'(X,54A)')
+     &'+----------------------------------------------------+'
+
+      DO ISYM=1, NSYM
+        DO ISTATE=1, NSTATE(ISYM)
+          ! MAGNETIC TERMS
+          MPABC =0.0D0
+          MPAAB1=0.0D0
+          MPAAB2=0.0D0
+          MPAAA =0.0D0
+          QPABC =0.0D0
+          QPAAB =0.0D0
+          ALLOCATE(TPLUSTENSOR(3,3,3))
+          CALL CONTRACT_QUADRUTENS_RANK_3(RESQUA(1,1,1,ISTATE,ISYM),
+     &            TPLUSTENSOR,LUPRI)
+!DaF
+          write(lupri,*)'tplustensor=',tplustensor
+!DaF
+          DO I=1, 3
+            DO J=1, 3
+              ! B4: Magnetic, diagnoal elements
+              MPAAA=MPAAA+RESMAG(I,I,I,ISTATE,ISYM)*
+     &              RESELE(J,J,J,ISTATE,ISYM)
+              DO K=1, 3
+                 ! B1: Magnetic, all indices different
+                 MPABC  = MPABC+RESMAG(I,J,K,ISTATE,ISYM)* 
+     &                    RESELE(I,J,K,ISTATE,ISYM)
+                 ! B2: Magnetic, two dipole indices paired
+                 MPAAB1 = MPAAB1+RESMAG(J,I,I,ISTATE,ISYM)*
+     &                    RESELE(J,K,K,ISTATE,ISYM)
+                 ! B3: Magnetic, magnetic and dipole index paired
+                 MPAAB2 = MPAAB2+RESMAG(I,I,J,ISTATE,ISYM)*
+     &                    RESELE(J,K,K,ISTATE,ISYM)
+                 ! B5: Quadrupole, all indices different
+                 QPABC  = QPABC+TPLUSTENSOR(I,J,K)*
+     &                    RESELE(I,J,K,ISTATE,ISYM)
+                 ! B6: Quadrupole, quad. and dipole index paired
+                 QPAAB  = QPAAB+TPLUSTENSOR(I,J,I)*
+     &                    RESELE(J,K,K,ISTATE,ISYM)
+              END DO
+            END DO
+          END DO
+          DEALLOCATE(TPLUSTENSOR)
+          ! PRINT
+!          WRITE(LUPRI,*)'MPABC',MPABC,'MPAAB1:',MPAAB1,'MPAAB2:',
+!     &        MPAAB2,'MPAAA:',MPAAA
+          WRITE(LUPRI,'(X,2(A9,I4),A31)')
+     &'| Irrep: ',ISYM,'  State: ',ISTATE,'                |'
+          WRITE(LUPRI,'(X,A57)')
+     &'| Magnetic terms:                                        |'
+!          WRITE(LUPRI,'(A7,F11.7)')'| B1: ',MPABC
+           WRITE(LUPRI,'(X,3(A6,F11.7),A2)')
+     &'| B1: ',MPABC,'  B2: ',MPAAB1,'  B3: ',MPAAB2,' |'
+           WRITE(LUPRI,'(X,A6,F11.7,A36)')
+     &'| B4: ',MPAAA,'                                  |'
+           WRITE(LUPRI,'(X,A53)')
+     &'| Quadrupole terms:                                 |'
+           WRITE(LUPRI,'(X,2(A6,F11.7),A19)')
+     &'| B5: ',QPABC,' B6: ',QPAAB,'                  |'
+           WRITE(LUPRI,'(X,A53)')
+     &'+---------------------------------------------------+'
+        END DO
+      END DO
+
+      RETURN
+      END SUBROUTINE CALC_3PCD
+
+      SUBROUTINE CONTRACT_QUADRUTENS_RANK_3(ORIGINALTENSOR,SEEKEDTENSOR,
+     &      LUPRI)
+
+      implicit none
+
+      INTEGER LUPRI
+      INTEGER IDX1,IDX2,IDX3 ! Indices of the seeked tensor
+      INTEGER IPLUS(3),IMINUS(3),QUADINDEXPLUS,QUADINDEXMINUS
+      CHARACTER*2 QUADLABELPLUS,QUADLABELMINUS
+      CHARACTER*1 LABMINUS1,LABMINUS2,LABPLUS1,LABPLUS2
+      REAL*8 ORIGINALTENSOR(6,3,3), SEEKEDTENSOR(3,3,3)
+
+      DO IDX1 = 1, 3
+        DO IDX2 = 1, 3
+          DO IDX3 = 1,3
+            IF(IDX2.EQ.1) THEN
+              IPLUS(1)=1
+              IPLUS(2)=2
+              IPLUS(3)=3
+              IMINUS(1)=1
+              IMINUS(2)=3
+              IMINUS(3)=2
+            ELSE IF(IDX2.EQ.2) THEN
+              IPLUS(1)=2
+              IPLUS(2)=3
+              IPLUS(3)=1
+              IMINUS(1)=2
+              IMINUS(2)=1
+              IMINUS(3)=3
+            ELSE IF(IDX2.EQ.3) THEN
+              IPLUS(1)=3
+              IPLUS(2)=1
+              IPLUS(3)=2
+              IMINUS(1)=3
+              IMINUS(2)=2
+              IMINUS(3)=1    
+            END IF
+            CALL LABDIP(LABMINUS1,IDX1)
+            CALL LABDIP(LABMINUS2,IMINUS(2))    
+            CALL LABDIP(LABPLUS1,IDX1)
+            CALL LABDIP(LABPLUS2,IPLUS(2))
+            IF(IDX1.GT.IMINUS(2)) THEN
+               QUADLABELMINUS(1:1)=LABMINUS2
+               QUADLABELMINUS(2:2)=LABMINUS1
+            ELSE
+               QUADLABELMINUS(1:1)=LABMINUS1
+               QUADLABELMINUS(2:2)=LABMINUS2
+            END IF       
+            IF(IDX1.GT.IPLUS(2)) THEN
+               QUADLABELPLUS(1:1)=LABPLUS2
+               QUADLABELPLUS(2:2)=LABPLUS1
+            ELSE
+               QUADLABELPLUS(1:1)=LABPLUS1
+               QUADLABELPLUS(2:2)=LABPLUS2
+            END IF  
+            CALL QUADLABLOWER(QUADLABELPLUS,QUADINDEXPLUS)
+            CALL QUADLABLOWER(QUADLABELMINUS,QUADINDEXMINUS)
+!DaF
+      write(lupri,*)'IDX1,IDX2,IDX3:',IDX1,IDX2,IDX3
+      write(lupri,*)'IPLUS,IMINUS:',IPLUS,IMINUS
+      write(lupri,*)'QUADLABELPLUS=',QUADLABELPLUS
+      write(lupri,*)'QUADLABELMINUS=',QUADLABELMINUS
+      write(lupri,*)'LABMINUS=',LABMINUS1,LABMINUS2
+      write(lupri,*)'LABPLUS=',LABPLUS1,LABPLUS2
+      write(lupri,*)'quadindexplus,iplus(3),idx3=',
+     &     quadindexplus,iplus(3),idx3
+      write(lupri,*)'quadindexminus,iminus(3),idx3)=',
+     &     quadindexminus,iminus(3),idx3
+        write(lupri,*)'result=',
+     &      ORIGINALTENSOR(QUADINDEXPLUS,IPLUS(3),IDX3) -
+     &      ORIGINALTENSOR(QUADINDEXMINUS,IMINUS(3),IDX3)
+!DaF
+            SEEKEDTENSOR(IDX1,IDX2,IDX3) = 
+     &      ORIGINALTENSOR(QUADINDEXPLUS,IPLUS(3),IDX3) -
+     &      ORIGINALTENSOR(QUADINDEXMINUS,IMINUS(3),IDX3)
+          END DO
+        END DO
+      END DO
+ 
+      END SUBROUTINE

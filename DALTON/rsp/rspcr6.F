@@ -429,10 +429,6 @@ C
 C
 C     set variables
 C
-!DaF
-      writE(lupri,*)'Beginning of BCDCHK, TOMOM:',TOMOM,
-     &    'CRCAL:',CRCAL,'TPAMP:',TPAMP
-!DaF
       ONFIL = .FALSE.
       ISYMBC = MULD2H(ISYMB,ISYMC)
       ISYMBD = MULD2H(ISYMB,ISYMD)
@@ -462,10 +458,6 @@ C
          FREQB = -BTMFR(IBFR)
          FREQC = -CTMFR(ICFR)
          FREQD = EXCIT2(ISYMD,IDFR)
-!DaF
-      write(lupri,*)'freqs in BCDCHK:',freqb+freqc+freqd,freqb,freqc,
-     &   freqd
-!DaF
          FREQA = FREQB + FREQC + FREQD
 C
          ALAB = ATMLB(ISYMA,IAOP)
@@ -846,10 +838,9 @@ C
 C
 #include "implicit.h"
 C
-      CHARACTER*8 LAB
+      CHARACTER*2 LAB
 C
 C Map quadrupole operators to integer number
-C X => 1, Y => 2, and Z => 3
 C
       IF (LAB(1:2).EQ.'XX') I=1
       IF (LAB(1:2).EQ.'YY') I=2
@@ -860,6 +851,25 @@ C
 C
       RETURN
       END
+
+      SUBROUTINE QUADLABLOWER(LAB,I)
+C
+#include "implicit.h"
+C
+      CHARACTER*2 LAB
+C
+C Map quadrupole operators to integer number
+C
+      IF (LAB(1:2).EQ.'xx') I=1
+      IF (LAB(1:2).EQ.'yy') I=2
+      IF (LAB(1:2).EQ.'zz') I=3
+      IF (LAB(1:2).EQ.'xy') I=4
+      IF (LAB(1:2).EQ.'xz') I=5
+      IF (LAB(1:2).EQ.'yz') I=6
+C
+      RETURN
+      END
+
 
 
       SUBROUTINE DFT4DRV(VECB, VECC, VECD,
