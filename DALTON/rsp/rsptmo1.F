@@ -41,7 +41,7 @@ C
 #include "inftap.h"
 C
       LOGICAL NEWDEF
-      PARAMETER ( NTABLE = 21)
+      PARAMETER ( NTABLE = 22)
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
       CHARACTER*8 LABEL
 C
@@ -215,6 +215,9 @@ C
                   CTMOP( INDPRP(LABEL)) = .TRUE.
                GO TO 100
  21            CONTINUE
+                  IF(THREEPCD) CALL QUIT('3PCD CAN ONLY
+     &              BE CALCED EITHER IN LENGTH OR IN 
+     &              VELOCITY GAUGE!')
                   THREEPCD = .TRUE.
                   LABEL='XDIPVEL'      
                   ATMOP( INDPRP(LABEL)) = .TRUE.
@@ -248,7 +251,13 @@ C
                   ATMOP( INDPRP(LABEL)) = .TRUE.
                   GO TO 100
  22            CONTINUE
+                  IF(THREEPCD) CALL QUIT('3PCD CAN ONLY
+     &              BE CALCED EITHER IN LENGTH OR IN 
+     &              VELOCITY GAUGE!')
                   THREEPCD = .TRUE.
+                  ! Also activate 3pa in this case
+                  ! as we get everything we need for it.
+                  THREEPHOTON = .TRUE.
                   LABEL='XDIPLEN'
                   ATMOP( INDPRP(LABEL)) = .TRUE.
                   BTMOP( INDPRP(LABEL)) = .TRUE.
@@ -280,7 +289,6 @@ C
                   LABEL='YZSECMOM'
                   ATMOP( INDPRP(LABEL)) = .TRUE.
                   GO TO 100
-
             ELSE IF (PROMPT .EQ. '*') THEN
                GO TO 300
             ELSE

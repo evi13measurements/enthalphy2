@@ -576,7 +576,8 @@ C
      &                   (LAB(I,1)(2:7).EQ.'DIPVEL').OR.
      &                   (LAB(I,1)(2:7).EQ.'ANGMOM')) THEN
                             CALL DIPLAB(LAB(I,1),I1)
-                      ELSE IF(LAB(I,1)(3:8).EQ.'ROTSTR') THEN
+                      ELSE IF((LAB(I,1)(3:8).EQ.'ROTSTR').OR.
+     &                        (LAB(I,1)(3:8).EQ.'SECMOM')) THEN
                             CALL QUADLAB(LAB(I,1),I1)
                       END IF
                       CALL DIPLAB(LAB(I,2),I2)
@@ -606,7 +607,8 @@ C    This will set up IEQTO used for output analysis
      &                   (LAB(I,1)(2:7).EQ.'DIPVEL').OR.
      &                   (LAB(I,1)(2:7).EQ.'ANGMOM')) THEN
                             CALL DIPLAB(LAB(I,1),I1)
-                      ELSE IF(LAB(I,1)(3:8).EQ.'ROTSTR') THEN
+                      ELSE IF((LAB(I,1)(3:8).EQ.'ROTSTR').OR.
+     &                        (LAB(I,1)(3:8).EQ.'SECMOM')) THEN
                             CALL QUADLAB(LAB(I,1),I1)
                       END IF
                       CALL DIPLAB(LAB(I,2),I2)
