@@ -410,7 +410,7 @@ C
 #include "inftmo.h"
 #include "inftpa.h"
 C
-      PARAMETER (THD = 1.0D-8, MXCALC = 200)
+      PARAMETER (THD = 1.0D-8, MXCALC = 1000)
 C
       LOGICAL DOCAL,DIPLEN,ONFIL
 C

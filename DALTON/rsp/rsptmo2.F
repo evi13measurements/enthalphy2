@@ -48,12 +48,6 @@ C
       DO 300 ICSYM = 1,NSYM
       DO 400 IBSYM = 1,NSYM
          IASYM = MULD2H(IDSYM,MULD2H(ICSYM,IBSYM))
-!DaF
-         write(lupri,*)'1st if:' 
-         write(lupri,*)'threepcd:',threepcd
-         write(lupri,*)'ntmcnv,nctmop,nbtmop,natmop:',
-     &   ntmcnv(idsym),nctmop(icsym),nbtmop(ibsym),natmop(iasym)  
-!DaF
          IF ( (NTMCNV(IDSYM).GT.0) .AND. (NCTMOP(ICSYM).GT.0) .AND.
      &       (NBTMOP(IBSYM).GT.0) .AND. (NATMOP(IASYM).GT.0) ) THEN
 C
@@ -62,9 +56,6 @@ C     linear response functions and excitation vectors for certain
 C     frequencies
 C 
             IF (THREEPHOTON.OR.THREEPCD) THEN
-!DaF
-             write(lupri,*)'hallo?'
-!DaF
                DO IDFR = 1,NTMCNV(IDSYM)
                   BTMFR(IDFR+IDOFF) = EXCIT2(IDSYM,IDFR)/3
                   CTMFR(IDFR+IDOFF) = EXCIT2(IDSYM,IDFR)/3
@@ -81,10 +72,6 @@ C
                   END DO
                   DO IAOP = 1,NATMOP(IASYM)
                      INUM = INCRLR(ATMLB(IASYM,IAOP),ATMFR,IASYM)
-!DaF
-                  write(lupri,*)'freq:',atmfr,btmfr(idfr+idoff),
-     &                         ctmfr(idfr+idoff)
-!DaF
                   END DO
                END DO
             ELSE

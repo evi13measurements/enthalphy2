@@ -88,9 +88,6 @@ C
          CALL DZERO(RESTOM,3*3*3*MXEXCR*8)
          CALL DZERO(RESFRE,MXEXCR*8)
       END IF
-!DaF
-      write(*,*)'THREEPCD=',THREEPCD
-!DaF
       IF (THREEPCD) THEN
          IF(.NOT.ALLOCATED(RESFRE)) ALLOCATE(RESFRE(MXEXCR,8))
          ALLOCATE ( RESELE(3,3,3,MXEXCR,8))
@@ -118,29 +115,10 @@ C
 C
       DO 700 IBOP = 1,NBTMOP(ISYMB)
       DO 750 IBFR = 1,NBTMFR
-!DaF
-      write(lupri,*)'no of freq:',NTMCNV(ISYMD),NCTMFR,NBTMFR
-      write(lupri,*)'no of op:',natmop(isyma),nbtmop(isymb),
-     &                          nctmop(isymc)
-!DaF
 C
 C     If three photon absorption or harmonic generation calculation 
 C     only certain frequencies are considered.
 C
-!DaF
-!     write(lupri,*)'excit,btmfr,ctmfr:',excit2(isymd,id),btmfr(ibfr),
-!    &    ctmfr(icfr),3*btmfr(ibfr),3*ctmfr(icfr)
-!     write(lupri,*)'expr. 1:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.
-!    &      ZEROTHR)
-!     write(lupri,*)'expr. 2:',(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
-!    &      ZEROTHR)
-!     write(lupri,*)'altogether:',(ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR))
-!    &      .GT.ZEROTHR).OR.(ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.
-!    &      ZEROTHR)
-!     write(lupri,*)'threephoton,threepcd,ctmohg=',threephoton,threepcd,
-!    &               ctmohg
-!     write(lupri,*)'id,ibfr,icfr=',id,ibfr,icfr
-!DaF
       IF ( (THREEPHOTON.OR.THREEPCD) .AND.
      &     ((ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.ZEROTHR) .OR.
      &      (ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.ZEROTHR)) ) GOTO 750
@@ -194,12 +172,6 @@ C
           RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
           RESQUA(IA,IB,IC,ID,ISYMD)=
      &    RESQUA(IEQTO(1),IEQTO(2),IEQTO(3),IEQTO(4),IEQTO(5))
-!DaF
-!         write(lupri,*)' write indices:',ia,ib,ic
-!         write(lupri,*)' take indices:',IEQTO(1),IEQTO(2),IEQTO(3),
-!    &           IEQTO(4),
-!    &           IEQTO(5)
-!DaF
         END IF
 
       END IF
@@ -435,9 +407,6 @@ C
           CALL QUADLAB(ALAB,IA)
           CALL DIPLAB(BLAB,IB)
           CALL DIPLAB(CLAB,IC)
-!DaF
-!          write(LUPRI,*)'Labels:',ALAB,BLAB,CLAB,'indices:',ia,ib,ic
-!DaF
           RESFRE(ID,ISYMD)=EXCIT2(ISYMD,ID)
           RESQUA(IA,IB,IC,ID,ISYMD)=TMOM
         END IF
@@ -483,13 +452,6 @@ C
 
          CALL CALC_3PCD(RESELE,RESMAG,RESQUA,NTMCNV,NSYM,MXEXCR,LUPRI)
         END IF
-!DaF
-!     write(lupri,*)'resqua=',resqua(:,:,:,1,1)
-!     write(lupri,*)'resqua spec. 112:',resqua(1,1,2,1,1)
-!     write(lupri,*)'resqua spec. 121:',resqua(1,2,1,1,1)
-!     write(lupri,*)'resqua spec. 623:',resqua(6,2,3,1,1)
-!     write(lupri,*)'resqua spec. 632:',resqua(6,3,2,1,1)
-!DaF
          DEALLOCATE(RESELE,RESMAG,RESQUA,RESFRE)
       END IF
 C
@@ -891,21 +853,6 @@ C
             END IF  
             CALL QUADLABLOWER(QUADLABELPLUS,QUADINDEXPLUS)
             CALL QUADLABLOWER(QUADLABELMINUS,QUADINDEXMINUS)
-!DaF
-!     write(lupri,*)'IDX1,IDX2,IDX3:',IDX1,IDX2,IDX3
-!     write(lupri,*)'IPLUS,IMINUS:',IPLUS,IMINUS
-!     write(lupri,*)'QUADLABELPLUS=',QUADLABELPLUS
-!     write(lupri,*)'QUADLABELMINUS=',QUADLABELMINUS
-!     write(lupri,*)'LABMINUS=',LABMINUS1,LABMINUS2
-!     write(lupri,*)'LABPLUS=',LABPLUS1,LABPLUS2
-!     write(lupri,*)'quadindexplus,iplus(3),idx3=',
-!    &     quadindexplus,iplus(3),idx3
-!     write(lupri,*)'quadindexminus,iminus(3),idx3)=',
-!    &     quadindexminus,iminus(3),idx3
-!       write(lupri,*)'result=',
-!    &      ORIGINALTENSOR(QUADINDEXPLUS,IPLUS(3),IDX3) -
-!    &      ORIGINALTENSOR(QUADINDEXMINUS,IMINUS(3),IDX3)
-!DaF
             SEEKEDTENSOR(IDX1,IDX2,IDX3) = 
      &      ORIGINALTENSOR(QUADINDEXPLUS,IPLUS(3),IDX3) -
      &      ORIGINALTENSOR(QUADINDEXMINUS,IMINUS(3),IDX3)
