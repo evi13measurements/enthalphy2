@@ -383,15 +383,15 @@ C
 #include "maxaqn.h"
 #include "mxcent.h"
 #include "maxorb.h"
+! asymb.h: asymb(:) with atomic symbols
+#include "asymb.h"
+! nuclei.h: nucind, izatom(),...
 #include "nuclei.h"
 #include "symmet.h"
 #include "codata.h"
 
-      integer :: iatom
-      integer :: icent
-      integer :: isymop
-      integer :: mulcnt
-      integer :: i
+      integer :: iatom, icent, isymop, mulcnt
+      integer :: i, iz
 
       write (io_unit, '(i0/)') nucdep
       iatom = 0
@@ -400,7 +400,8 @@ C
          do isymop = 0, maxopr
             if (iand(isymop,mulcnt) .eq. 0) then
                iatom = iatom + 1
-               write (io_unit,'(a,f17.10,2f24.10)') namdep(iatom)(1:4),
+               iz = IZATOM(icent)
+               write (io_unit,'(a2,f19.10,2f24.10)') asymb(iz),
      &        (pt(iand(isymax(i,1),isymop))*coord(i,icent)*xtang,i=1,3)
             end if
          end do
