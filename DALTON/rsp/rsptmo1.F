@@ -41,7 +41,7 @@ C
 #include "inftap.h"
 C
       LOGICAL NEWDEF
-      PARAMETER ( NTABLE = 22)
+      PARAMETER ( NTABLE = 23)
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
       CHARACTER*8 LABEL
 C
@@ -50,7 +50,7 @@ C
      *            '.MAX IT', '.THCLR ', '.MAXITO', '.PRINT ', 
      *            '.NOHG  ', '.DIPLEN', '.DIPLNX', '.DIPLNY', 
      *            '.DIPLNZ', '.SINGLE', '.FREQUE', '.THREE-',
-     *            '.3PCD  ', '.3PCDLE'/
+     *            '.3PCD  ', '.3PCDLE', '.EVALST'/
 C
 C READ IN  INPUT
 C
@@ -72,7 +72,7 @@ C
                DO I=1, NTABLE
                   IF (TABLE(I) .EQ. WORD) THEN
                      GO TO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,
-     &                      15,16,17,18,19,20,21,22), I
+     &                      15,16,17,18,19,20,21,22,23), I
                   END IF
                END DO
                IF (WORD .EQ. '.OPTION') THEN
@@ -125,6 +125,13 @@ C
                GO TO 100
  6             CONTINUE
                READ (LUCMD,*) (NTMCNV(MULD2H(J,LSYMRF)),J=1,NSYM)
+               DO I = 1, NSYM
+                 DO J = 1, NTMCNV(I) 
+                   NSTTMIDX(J,I)=J
+                 END DO
+               END DO
+               NTMCNV2   = NTMCNV
+               NSTTMIDX2 = NSTTMIDX
                GO TO 100
  7             CONTINUE
                   READ (LUCMD,*) MAXITP
@@ -289,6 +296,22 @@ C
                   LABEL='YZSECMOM'
                   ATMOP( INDPRP(LABEL)) = .TRUE.
                   GO TO 100
+ 23               CONTINUE
+                  NTMCNV2 = 0
+                  READ (LUCMD,*) (NTMCNV2(MULD2H(J,LSYMRF)),J=1,NSYM)
+                  DO J=1, NSYM
+                   IF (NTMCNV2(J).GT.NTMCNV(J)) THEN
+                      CALL QUIT('MORE STATES EVALUATED THAN CALCED!')
+                   END IF
+                  END DO
+c                  NTMCNV=NTMCNV2
+                  NSTTMIDX2=0
+                  DO I = 1, NSYM
+                    DO J = 1, NTMCNV2(I)
+                      READ(LUCMD,*) NSTTMIDX2(J,I)
+                    END DO
+                  END DO
+               GO TO 100
             ELSE IF (PROMPT .EQ. '*') THEN
                GO TO 300
             ELSE

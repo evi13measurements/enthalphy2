@@ -97,7 +97,6 @@ C
          CALL DZERO(RESQUA,6*3*3*MXEXCR*8)
          CALL DZERO(RESFRE,MXEXCR*8)
       END IF
-
 C
       DO 200 ISYMD = 1,NSYM
       DO 300 ISYMC = 1,NSYM
@@ -108,7 +107,9 @@ C
       IF ( (NTMCNV(ISYMD).GT.0) .AND. (NCTMOP(ISYMC).GT.0) .AND.
      *     (NBTMOP(ISYMB).GT.0) .AND. (NATMOP(ISYMA).GT.0) ) THEN
 C
-      DO 500 ID   = 1,NTMCNV(ISYMD)
+
+      DO 500 IDST = 1,NTMCNV(ISYMD)
+         ID = NSTTMIDX2(IDST,ISYMD)
 C
       DO 600 ICOP = 1,NCTMOP(ISYMC)
       DO 650 ICFR = 1,NCTMFR
@@ -119,10 +120,24 @@ C
 C     If three photon absorption or harmonic generation calculation 
 C     only certain frequencies are considered.
 C
+!DaF
+      write(lupri,*)'BTMFR,CTMFR:',BTMFR(IBFR),CTMFR(ICFR)
+      write(lupri,*)'ibfr,icfr=',ibfr,icfr
+      write(lupri,*)'id,isymd,excitation energy:',id,isymd,
+     &      excit2(isymd,id)
+!DaF
       IF ( (THREEPHOTON.OR.THREEPCD) .AND.
      &     ((ABS(EXCIT2(ISYMD,ID)-3*BTMFR(IBFR)).GT.ZEROTHR) .OR.
      &      (ABS(EXCIT2(ISYMD,ID)-3*CTMFR(ICFR)).GT.ZEROTHR)) ) GOTO 750
 C
+!DaF
+      write(lupri,*)'ntmcnv=',ntmcnv
+      write(lupri,*)'nctmfr=',nctmfr
+      write(lupri,*)'nbtmfr=',nbtmfr
+      write(lupri,*)'nctmop=',nctmop
+      write(lupri,*)'nbtmop=',nbtmop
+!DaF
+
       IF (CTMOHG) THEN
          IF (IBFR.NE.ICFR) GO TO 750
       END IF
@@ -442,7 +457,8 @@ C
          CALL TITLER('CALCULATING 3PCD IN VELOCITY GAUGE',
      &       '*',112)
 
-         CALL CALC_3PCD(RESELE,RESMAG,RESQUA,NTMCNV,NSYM,MXEXCR,LUPRI)
+         CALL CALC_3PCD(RESELE,RESMAG,RESQUA,NTMCNV,NSYM,MXEXCR,
+     &                  NSTTMIDX,LUPRI)
         ELSE IF(THREEPHOTON) THEN
          CALL PRINT_THREEPHOTON(RESMAG,RESFRE,'ANGMOM',3)
          CALL PRINT_THREEPHOTON(RESQUA,RESFRE,'SECMOM',6)
@@ -450,7 +466,8 @@ C
          CALL TITLER('CALCULATING 3PCD IN LENGTH GAUGE',
      &       '*',112)
 
-         CALL CALC_3PCD(RESELE,RESMAG,RESQUA,NTMCNV,NSYM,MXEXCR,LUPRI)
+         CALL CALC_3PCD(RESELE,RESMAG,RESQUA,NTMCNV,NSYM,MXEXCR,
+     &       NSTTMIDX,LUPRI)
         END IF
          DEALLOCATE(RESELE,RESMAG,RESQUA,RESFRE)
       END IF
@@ -577,7 +594,8 @@ C
 
 C
       DO ISYMD=1,NSYM
-      DO ID=1,NTMCNV(ISYMD)
+      DO IDXD=1,NTMCNV(ISYMD)
+        ID = NSTTMIDX(IDXD,ISYMD)
 C
         DF=D0
         DG=D0
@@ -697,13 +715,14 @@ C
       END
 
       SUBROUTINE CALC_3PCD(RESELE,RESMAG,RESQUA,NSTATE,NSYM,MXEXCR,
-     &                     LUPRI)
+     &                     NSTTMIDX,LUPRI)
 C
       implicit none
 C
       INTEGER NSYM,MXEXCR,LUPRI
       INTEGER NSTATE(NSYM)
-      INTEGER I,J,K,L,M, ISYM, ISTATE
+      INTEGER I,J,K,L,M, ISYM, ISTATE,IDXSTATE
+      INTEGER NSTTMIDX(30,8)
       REAL*8  MOM3PCD,MPABC,MPAAB1,MPAAB2,MPAAA,QPABC,QPAAB
       REAL*8  RESELE(3,3,3,MXEXCR,NSYM),
      &        RESMAG(3,3,3,MXEXCR,NSYM),
@@ -738,7 +757,8 @@ C
      &'+----------------------------------------------------------+'
 
       DO ISYM=1, NSYM
-        DO ISTATE=1, NSTATE(ISYM)
+        DO IDXSTATE=1, NSTATE(ISYM)
+          ISTATE = NSTTMIDX(IDXSTATE,ISYM)
           ! MAGNETIC TERMS
           MPABC =0.0D0
           MPAAB1=0.0D0

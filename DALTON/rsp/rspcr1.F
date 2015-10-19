@@ -533,6 +533,9 @@ C
 C  If dc-Kerr we need the combinations w,0 for b,c and b,d
 C  and 0,0 for c,d.
 C
+!DaF
+        write(lupri,*)'crkerr'
+!DaF
                      IF (CRKERR) THEN
                         INUM =
      *                     INCR2(BCRLB(IBSYM,IBOP),CCRLB(ICSYM,ICOP),
@@ -547,6 +550,9 @@ C
 C
 C  If dc-SHG we need the combinations w,w for b,c; w,0 for b,d and c,d.
 C
+!DaF
+        write(lupri,*)'crshg'
+!DaF
                      IF (CRSHG) THEN
                         INUM =
      *                     INCR2(BCRLB(IBSYM,IBOP),CCRLB(ICSYM,ICOP),
@@ -561,6 +567,9 @@ C
 C
 C  If IDRI we need the combinations w,w for b,c; w,-w for b,d and c,d.
 C
+!DaF
+       write(lupri,*)'cridri'
+!DaF
                      IF (CRIDRI) THEN
                         INUM =
      *                     INCR2(BCRLB(IBSYM,IBOP),CCRLB(ICSYM,ICOP),
@@ -575,6 +584,9 @@ C
 C
 C  If THG we need the combinations w,w for all operators
 C
+!DaF
+       write(lupri,*)'crthg'
+!DaF
                      IF (CRTHG) THEN
                         INUM =
      *                     INCR2(BCRLB(IBSYM,IBOP),CCRLB(ICSYM,ICOP),
@@ -1121,7 +1133,15 @@ C VARIABLE EXCIT2
 C
       IF (TOMOM) THEN
          NLRLBL = 0
+!DaF
+      write(lupri,*)'before tm1ind'
+!DaF
+         NTMCNV = NTMCNV2
+         NSTTMIDX = NSTTMIDX2
          CALL TM1IND
+!DaF
+      write(lupri,*)'after tm1ind'
+!DaF
       ELSE IF (TPAMP) THEN
          NLRLBL = 0
          CALL TP1IND

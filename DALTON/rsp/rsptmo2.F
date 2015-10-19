@@ -56,18 +56,21 @@ C     linear response functions and excitation vectors for certain
 C     frequencies
 C 
             IF (THREEPHOTON.OR.THREEPCD) THEN
-               DO IDFR = 1,NTMCNV(IDSYM)
-                  BTMFR(IDFR+IDOFF) = EXCIT2(IDSYM,IDFR)/3
-                  CTMFR(IDFR+IDOFF) = EXCIT2(IDSYM,IDFR)/3
+
+c               DO IDFR = 1,NTMCNV(IDSYM)
+               DO IDXFR = 1,NTMCNV(IDSYM)
+                  IDFR = NSTTMIDX(IDXFR,IDSYM)
+                  BTMFR(IDXFR+IDOFF) = EXCIT2(IDSYM,IDFR)/3
+                  CTMFR(IDXFR+IDOFF) = EXCIT2(IDSYM,IDFR)/3
                   ATMFR = EXCIT2(IDSYM,IDFR) - 
-     &                 CTMFR(IDFR+IDOFF) - BTMFR(IDFR+IDOFF)
+     &                 CTMFR(IDXFR+IDOFF) - BTMFR(IDXFR+IDOFF)
                   INUM = INCRLR('EXCITLAB',EXCIT2(IDSYM,IDFR),IDSYM)
                   DO ICOP = 1,NCTMOP(ICSYM)
-                     INUM = INCRLR(CTMLB(ICSYM,ICOP),-CTMFR(IDFR+IDOFF),
+                    INUM = INCRLR(CTMLB(ICSYM,ICOP),-CTMFR(IDXFR+IDOFF),
      &                    ICSYM)
                   END DO
                   DO IBOP = 1,NBTMOP(IBSYM)
-                     INUM = INCRLR(BTMLB(IBSYM,IBOP),-BTMFR(IDFR+IDOFF),
+                    INUM = INCRLR(BTMLB(IBSYM,IBOP),-BTMFR(IDXFR+IDOFF),
      &                    IBSYM)
                   END DO
                   DO IAOP = 1,NATMOP(IASYM)
@@ -132,6 +135,7 @@ C
 C
       PARAMETER ( ZEROTHR = 1.0D-10 )
 C
+#include "priunit.h"
 #include "rspprp.h"
 #include "infcr.h"
 #include "inforb.h"
@@ -159,7 +163,10 @@ C
                DO 320 IDFR = 1,NTMCNV(IDSYM)
                DO 220 ICFR = 1,NCTMFR
                DO 120 IBFR = 1,NBTMFR
-                  DTMFR = EXCIT2(IDSYM,IDFR)
+                  IDXBFR = NSTTMIDX(IBFR,IBSYM)
+                  IDXCFR = NSTTMIDX(ICFR,ICSYM)
+                  IDXDFR = NSTTMIDX(IDFR,IDSYM)
+                  DTMFR = EXCIT2(IDSYM,IDXDFR)
 C
 C     If three photon absorption calculation only certain frequencies
 C     are considered.
@@ -178,7 +185,7 @@ C
                   END IF
 C
                   INUM = INCR2(BTMLB(IBSYM,IBOP),CTMLB(ICSYM,ICOP),
-     *                          -BTMFR(IBFR),-CTMFR(ICFR),IBSYM,ICSYM)
+     *                        -BTMFR(IBFR),-CTMFR(ICFR),IBSYM,ICSYM)
                   INUM = INCR2(BTMLB(IBSYM,IBOP),DTMLB,
      *                          -BTMFR(IBFR),DTMFR,IBSYM,IDSYM)
                   INUM = INCR2(CTMLB(ICSYM,ICOP),DTMLB,
