@@ -2045,7 +2045,7 @@ C
 C
 C -- local variables and constants
 C
-      PARAMETER (NTBMOD = 27)
+      PARAMETER (NTBMOD = 28)
       CHARACTER WORD*7, PROMPT*1, TABMOD(NTBMOD)*7
       LOGICAL   ALLOPT, PTABMO, lucita_input_provided
 C needed for lucita: nsym, norb
@@ -2061,7 +2061,7 @@ C
      *            '*UPDATE','*SOLVEN','*PRINT ','*AUXILI','*HF INP',
      *            '*MP2 IN','*HAMILT','*CC INP','*DFT IN','*NEVPT2',
      *            '*AUXILL','*LUCITA','*STEX  ','*CUBE  ','*CHOACT',
-     *            '*APSG I','*END OF'/
+     *            '*APSG I','*MLCC  ','*END OF'/
 C
 C
 C  ***************************************************
@@ -2081,7 +2081,8 @@ C
             IF (TABMOD(I) .EQ. WORD) THEN
                GO TO (1100,1200,1300,1400,1500,1600,1700,1800,1900,
      *                2500,2100,2200,2300,2400,2500,2600,2700,2800,
-     *                2900,3000,2400,3200,3300,3400,3500,3600,8000), I
+     *                2900,3000,2400,3200,3300,3400,3500,3600,3700,
+     *                8000), I
             END IF
  920     CONTINUE
          IF (WORD(1:2) .EQ. '**') GO TO 8000
@@ -2177,6 +2178,11 @@ C March 9, 2012
 !      *APSG INPUT
 !3600  CALL APSG_INPUT(WORD,INPERR,ALLOPT)
  3600  CALL QUIT('*APSG INPUT not available in this version.')
+       GO TO 910
+!3700  CALL APSG_INPUT(WORD,INPERR,ALLOPT)
+ 3700  CONTINUE
+         DOMLCC = .TRUE.
+         CALL MLCC_INTERFACE_INPUT(LUCMD,WORD,LUPRI)
        GO TO 910
 C  Here if "*END OF"
  8000  CONTINUE

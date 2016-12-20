@@ -13,7 +13,7 @@
      &        WRINDX, WLKREJ, WALKIN, RNRESP, USRIPR, SEGBAS,           &
      &        DOCCSD, OPTNEW, NEWSYM, NEWBAS, NEWPRP, RELCAL,           &
      &        TOTSYM, NMWALK, DKTRAN, GEOALL, WESTA,  SEGAUX,           &
-     &        ERFEXP, DOSRIN, SRINTS, CHI1ST, DKHINT,                   &
+     &        ERFEXP, DOSRIN, SRINTS, CHI1ST, DKHINT, DOMLCC,           &
      &        EMBEDDING, QM3, QMMM,   QMNPMM, QFIT,   USE_LSLIB,        &
      &        USE_OPENRSP
       REAL*8  GRADML, PANAS,  CHIVAL, THR_REDFAC
@@ -31,7 +31,7 @@
      &        WRINDX, WLKREJ, WALKIN, RNRESP, USRIPR, SEGBAS,           &
      &        DOCCSD, OPTNEW, NEWSYM, NEWBAS, NEWPRP, RELCAL,           &
      &        TOTSYM, NMWALK, DKTRAN, GEOALL, WESTA,  SEGAUX,           &
-     &        ERFEXP, DOSRIN, SRINTS, CHI1ST, DKHINT,                   &
+     &        ERFEXP, DOSRIN, SRINTS, CHI1ST, DKHINT, DOMLCC,           &
      &        EMBEDDING, QM3, QMMM,   QMNPMM, QFIT,   USE_LSLIB,        &
      &        USE_OPENRSP,                                              &
      &   GNRINFlast !  Very important:

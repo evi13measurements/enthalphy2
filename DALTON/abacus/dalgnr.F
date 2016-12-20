@@ -1143,6 +1143,8 @@ Cact
 Cact
          IF (DOCCSD) CALL EXECC (WORK(0),LMWORK,WRKDLM)
 C
+         IF (DOMLCC) CALL EXEMLC(WORK(0),LMWORK,WRKDLM)
+C
 C     If this is a solvent run, update information for abacus
 C     Add cavity center if solvent model (921014-kvm/hjaaj)
 C     =====================================================
@@ -1396,6 +1398,7 @@ C
       RNABAC = .FALSE.
       RNRESP = .FALSE.
       DOCCSD = .FALSE.
+      DOMLCC = .FALSE.
       WESTA  = .FALSE.
       QMNPMM = .FALSE.
 
@@ -2271,6 +2274,37 @@ ctst  CLOSE(24)
 C
       CALL FLSHFO(LUPRI)
       CALL QEXIT('EXEACT')
+      RETURN
+      END
+C
+C /* Deck exeact */
+C
+      SUBROUTINE EXEMLC(WORK, LMWORK, WRKDLM)
+#include "implicit.h"
+#include "dummy.h"
+      DIMENSION WORK(0:LMWORK)
+#include "priunit.h"
+#include "gnrinf.h"
+#include "mxcent.h"
+#include "maxorb.h"
+casm
+C
+C
+C     Select orbitals and basis fucntions for hybrid CC models.
+C
+      CALL QENTER('EXEMLC')
+C
+      CALL TITLER('Calling MLCC module',' ',200)
+      CALL BNDCHK(WORK(0), LMWORK+2, WRKDLM, 'ini MLCC')
+C
+      CALL MLCC_INTERFACE_DRV(WORK(1),LMWORK,LUPRI)
+      CALL BNDCHK(WORK(0), LMWORK+2, WRKDLM, 'MLCC')
+C
+ctst  CLOSE(24)
+      CALL TITLER('End of MLCC module',' ',200)
+C
+      CALL FLSHFO(LUPRI)
+      CALL QEXIT('EXEMLC')
       RETURN
       END
 C --- end of dalgnr.F ---

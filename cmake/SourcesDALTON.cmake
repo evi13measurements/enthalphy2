@@ -514,6 +514,10 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc/mlccsdpt_drv.F90
     DALTON/mlcc/mlccsdpt_integrals.F90
     DALTON/mlcc/mlccsdpt_e_calc.F90
+    DALTON/mlcc_interface/mlcc_interface.F90
+    DALTON/mlcc_mod/mlcc_data.F90
+    DALTON/mlcc_mod/mlcc_types.F90
+    DALTON/mlcc_mod/mlcc_drv.F90
     DALTON/pdpack/arhpack.F
     DALTON/pdpack/eispack.F
     DALTON/pdpack/jacobi.F
