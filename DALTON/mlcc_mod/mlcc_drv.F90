@@ -138,6 +138,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    use mlcc_types
    use mlcc_mod_work
+   use mlcc_data
 !
 !  mlcc3 driver
 !  Author Rolf H. Myhre
@@ -149,6 +150,8 @@ subroutine mlcc_drv(work,lwork,lupri)
    integer, intent(in)                    :: lwork !free space in work
 !
    real(dp), intent(in), dimension(lwork) :: work !work static array
+!
+   ml_lupri = lupri
 !
    write(lupri,*)
    write(lupri,*) 'In mlcc_drv'

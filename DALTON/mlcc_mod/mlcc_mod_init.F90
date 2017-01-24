@@ -54,6 +54,7 @@ contains
       n_t1am         = n_vir*n_occ
       n_t2am         = n_t1am*n_t1am
       n_t2am_pack    = n_t1am*(n_t1am+1)/2
+      write(ml_lupri,*) n_t1am,n_t2am,n_t2am_pack
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
