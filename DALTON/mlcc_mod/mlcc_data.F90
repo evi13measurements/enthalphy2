@@ -53,8 +53,8 @@ module mlcc_data
    real(dp), dimension(:), pointer  :: c2am              => null()
 !
 !  hf orbital coefficients and fock diagonal elements
-   real(dp), dimension(:), pointer  :: orb_coefficients  => null()
-   real(dp), dimension(:), pointer  :: fock_diagonal     => null()
+   real(dp), dimension(:,:), pointer  :: orb_coefficients  => null()
+   real(dp), dimension(:,:), pointer  :: fock_diagonal     => null()
 !   
 !  the mo fock matrix, standard and t1- and c1-transformed
    real(dp), dimension(:), pointer  :: mo_fock_mat       => null()
