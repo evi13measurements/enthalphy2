@@ -48,7 +48,7 @@ subroutine allocator(elm,M,N)
 !  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
 !  January 2017
 !
-!  Purpose: dynamic allocation and update of memory info
+!  Purpose: allocation and update of memory info
 !
    implicit none
 !  
@@ -91,7 +91,7 @@ subroutine deallocator(elm,M,N)
    integer, intent(in)                   :: M, N
    integer                               :: size
 !
-size = M*N
+   size = M*N
 !
    deallocate(elm,stat = error)  
    if (stat .ne. 0) then
