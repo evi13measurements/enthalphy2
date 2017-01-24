@@ -44,6 +44,12 @@ end subroutine work_init
 !
 subroutine allocator(elm,M,N)
 !
+!
+!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
+!  January 2017
+!
+!  Purpose: dynamic allocation and update of memory info
+!
    implicit none
 !  
    real*8, pointer                        :: elm(:,:)
@@ -70,12 +76,22 @@ subroutine allocator(elm,M,N)
 end subroutine allocator
 !
 !
-subroutine deallocator(elm)
+subroutine deallocator(elm,M,N)
+!
+!
+!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
+!  January 2017
+!
+!  Purpose: dallocation and update of memory info
 !
    implicit none
 !
    real*8, pointer                       :: elm(:,:)
    integer                               :: stat, error
+   integer, intent(in)                   :: M, N
+   integer                               :: size
+!
+size = M*N
 !
    deallocate(elm,stat = error)  
    if (stat .ne. 0) then
@@ -83,6 +99,8 @@ subroutine deallocator(elm)
       stop
    endif
 ! 
+   work_remains = work_remains+size
+   work_used = work_used-size
 end subroutine deallocator
 !
 !
