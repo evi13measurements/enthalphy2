@@ -8,7 +8,7 @@ module mlcc_mod_init
    use mlcc_data
 !
 contains
-   subroutine hf_reader(lupri)
+   subroutine hf_reader()
 !
 !  Hartree-Fock reader routine
 !  Authors Henrik Koch, Rolf H. Myhre, Sarai Folkestad, Eirik Kjønstad
@@ -18,7 +18,6 @@ contains
 !
       implicit none
 !
-      integer, intent(in)                    :: lupri !general output unit
 !
       integer  :: lusifc = -1 
       integer  :: idummy = 0
@@ -39,7 +38,7 @@ contains
 !     file should be in Cholesky orbital format. If Cholesky orbitals has been generated,
 !     SIRIFC will contain the data in the Cholesky basis
 !
-      call mollab('TRCCINT ',lusifc,lupri)
+      call mollab('TRCCINT ',lusifc,ml_lupri)
 !      
       read(lusifc) n_symmetries, n_orbitals, n_basis, n_lambda, n_occ, &
       &            n_orbitals_sym, n_basis_sym, nuclear_potential, scf_energy

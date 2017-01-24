@@ -139,6 +139,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    use mlcc_types
    use mlcc_mod_work
    use mlcc_data
+   use mlcc_mod_init
 !
 !  mlcc3 driver
 !  Author Rolf H. Myhre
@@ -157,7 +158,8 @@ subroutine mlcc_drv(work,lwork,lupri)
    write(lupri,*) 'In mlcc_drv'
    write(lupri,*)
 !
-   call work_init(100,lupri)
+   call work_init(mem,lupri)
+   call hf_reader()
 end subroutine mlcc_drv
 !
 end module mlcc_drive

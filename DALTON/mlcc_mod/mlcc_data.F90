@@ -89,6 +89,7 @@ module mlcc_data
    character(len=12)                :: jlkc_resp_name = 'jlkc_mo_resp'
 !
    integer                          :: ml_lupri !general output unit
+   integer                          :: mem = 20000
 !
 end module mlcc_data
 
