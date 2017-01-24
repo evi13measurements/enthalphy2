@@ -7,7 +7,7 @@ module mlcc_mod_work
 !
 !  Purpose: define pointers needed for memory management
 !
-!  use other modules?
+   use mlcc_types
 !   
    implicit none
 !
@@ -52,10 +52,10 @@ subroutine allocator(elm,M,N)
 !
    implicit none
 !  
-   real*8, pointer                        :: elm(:,:)
-   integer, intent(in)                    :: M,N
-   integer                                :: size
-   integer                                :: stat, error
+   real(dp), dimension(:,:), pointer        :: elm
+   integer, intent(in)                      :: M,N
+   integer                                  :: size
+   integer                                  :: stat, error
 !
    size = M*N
 !
@@ -86,10 +86,10 @@ subroutine deallocator(elm,M,N)
 !
    implicit none
 !
-   real*8, pointer                       :: elm(:,:)
-   integer                               :: stat, error
-   integer, intent(in)                   :: M, N
-   integer                               :: size
+   real(dp), dimension(:,:), pointer       :: elm
+   integer                                 :: stat, error
+   integer, intent(in)                     :: M, N
+   integer                                 :: size
 !
    size = M*N
 !
