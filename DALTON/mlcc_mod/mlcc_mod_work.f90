@@ -1,9 +1,9 @@
 module mlcc_mod_work
 !
 !
-!  mlcc work definitions
-!  Authors Henrik Koch and Rolf H. Myhre
-!  January 2015
+!  mlcc mod work definitions
+!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
+!  January 2017
 !
 !  Purpose: define pointers needed for memory management
 !
@@ -18,11 +18,21 @@ module mlcc_mod_work
 !
 contains
 !
-subroutine work_init(mem)
+subroutine work_init(mem,lupri)
+!
+!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
+!  January 2017
+!
+!  Purpose: set up memory management
 !
    implicit none
 !
-   integer, intent(in)                    :: mem 
+   integer, intent(in)                    :: mem
+   integer, intent(in)                    :: lupri
+!
+   write(lupri,*)
+   write(lupri,*) 'In work_int'
+   write(lupri,*)
 !
    work_length = mem
    work_remains = mem
@@ -33,18 +43,19 @@ end subroutine work_init
 !
 !
 subroutine allocator(elm,M,N)
+!
    implicit none
+!  
    real*8, pointer                        :: elm(:,:)
    integer, intent(in)                    :: M,N
    integer                                :: size
-   integer                                :: stat
-   integer                                :: error
+   integer                                :: stat, error
 !
    size = M*N
 !
-   allocate(elm(M,N),stat=error)
+   allocate(elm(M,N),stat = error)
 !
-   if (stat.ne.0) then
+   if (stat .ne. 0) then
       print*,"error: couldn't allocate memory for array, size=",size
       stop
    endif
@@ -57,4 +68,22 @@ subroutine allocator(elm,M,N)
       stop
    endif
 end subroutine allocator
+!
+!
+subroutine deallocator(elm)
+!
+   implicit none
+!
+   real*8, pointer                       :: elm(:,:)
+   integer                               :: stat, error
+!
+   deallocate(elm,stat = error)  
+   if (stat .ne. 0) then
+      print*,"error: couldn't deallocate array"
+      stop
+   endif
+! 
+end subroutine deallocator
+!
+!
 end module mlcc_mod_work
