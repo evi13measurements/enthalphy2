@@ -1,4 +1,6 @@
 module mlcc_utilities
+
+use mlcc_data
 contains
 integer function index_t2(nai,nbj)
 !   
@@ -10,7 +12,7 @@ integer function index_t2(nai,nbj)
 !
 end function index_t2
 !
-integer function index_t1(i,a, n_virt)
+integer function index_t1(i,a)
 !   
    implicit none
 !
