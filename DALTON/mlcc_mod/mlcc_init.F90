@@ -4,7 +4,7 @@ module mlcc_init
 !  Authors Henrik Koch, Rolf H. Myhre, Sarai Folkestad, Eirik Kjønstad
 !  January 2017
 !
-   use mlcc_work
+   use mlcc_workspace
    use mlcc_data
 !
 contains

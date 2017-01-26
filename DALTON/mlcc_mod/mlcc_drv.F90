@@ -137,7 +137,7 @@ end subroutine mlcc_input
 subroutine mlcc_drv(work,lwork,lupri)
 !
    use mlcc_types
-   use mlcc_work
+   use mlcc_workspace
    use mlcc_data
    use mlcc_init
 !

@@ -104,4 +104,4 @@ subroutine deallocator(elm,M,N)
 end subroutine deallocator
 !
 !
-end module mlcc_work
+end module mlcc_workspace
