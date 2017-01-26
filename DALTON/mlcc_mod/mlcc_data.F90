@@ -45,8 +45,8 @@ module mlcc_data
    real(dp), dimension(:), pointer  :: omega2            => null()
 !   
 !  t1 and t2 amplitudes, t2 packed
-   real(dp), dimension(:), pointer  :: t1am              => null()
-   real(dp), dimension(:), pointer  :: t2am              => null()
+   real(dp), dimension(:,:), pointer  :: t1am              => null()
+   real(dp), dimension(:,:), pointer  :: t2am              => null()
 !
 !  t1 and t2 amplitudes, t2 packed
    real(dp), dimension(:), pointer  :: c1am              => null()

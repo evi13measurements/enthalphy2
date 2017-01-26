@@ -120,3 +120,24 @@ subroutine mlcc_interface_drv(work,lwork,lupri)
    call mlcc_drv(work,lwork,lupri)
 !
 end subroutine mlcc_interface_drv
+!
+subroutine mlcc_iajb(vec)
+!
+!  MLCC IAJB reader 
+!  Authors Sarai Folkestad, Eirik Kjønstad, January 2017
+!
+!  Purpose: read in iajb integrals from Dalton
+!
+   use mlcc_data
+!
+   implicit none
+!
+   real(dp), dimension(n_t2am_pack,1) :: vec
+   integer :: luiajb
+!
+   call dzero(n_t2am_pack,vec)
+!
+   rewind(luiajb)
+   call readi(luiajb,n_t2am_pack,vec)
+!
+end subroutine mlcc_iajb

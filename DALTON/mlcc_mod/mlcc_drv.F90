@@ -140,6 +140,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    use mlcc_workspace
    use mlcc_data
    use mlcc_init
+   use mlcc_utilities
 !
 !  mlcc3 driver
 !  Author Rolf H. Myhre
@@ -152,6 +153,8 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    real(dp), intent(in), dimension(lwork) :: work !work static array
 !
+   integer :: i,j,a,b,nai,nbj,naibj
+!
    ml_lupri = lupri
 !
    write(lupri,*)
@@ -160,6 +163,31 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    call work_init(mem,lupri)
    call hf_reader()
+!
+!  Allocate amplitudes 
+!
+   call allocator(t1am,n_t1am,1)
+   call allocator(t2am,n_t2am_pack,1)
+!
+!  Read in IAJB integrals
+!
+   call mlcc_iajb(t2am)
+!
+!  Print T2 
+!
+   do i = 1,n_occ
+      do a = 1,n_vir
+         do j = 1,n_occ
+            do b = 1,n_vir
+               nai = n_vir*(i-1)+a 
+               nbj = n_vir*(j-1)+b 
+               naibj = index_t2(nai,nbj)
+               write(ml_lupri,*) naibj,t2am(naibj,1)
+            enddo
+         enddo
+      enddo
+   enddo
+!
 end subroutine mlcc_drv
 !
 end module mlcc_drive

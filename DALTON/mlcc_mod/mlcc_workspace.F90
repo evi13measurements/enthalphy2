@@ -52,18 +52,14 @@ subroutine allocator(elm,M,N)
 !
    implicit none
 !  
-   real(dp), dimension(:,:), pointer        :: elm
    integer, intent(in)                      :: M,N
+   real(dp), dimension(:,:), pointer        :: elm
    integer                                  :: size
    integer                                  :: stat, error
 !
    size = M*N
 !
-   if (N=1) then
-      allocate(elm(M), stat = error)
-   else
-      allocate(elm(M,N),stat = error)
-   endif
+   allocate(elm(M,N),stat = error)
 !
    if (stat .ne. 0) then
       print*,"error: couldn't allocate memory for array, size=",size
