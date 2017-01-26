@@ -59,7 +59,11 @@ subroutine allocator(elm,M,N)
 !
    size = M*N
 !
-   allocate(elm(M,N),stat = error)
+   if (N=1) then
+      allocate(elm(M), stat = error)
+   else
+      allocate(elm(M,N),stat = error)
+   endif
 !
    if (stat .ne. 0) then
       print*,"error: couldn't allocate memory for array, size=",size
