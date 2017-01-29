@@ -8,6 +8,7 @@ module mlcc_workspace
 !  Purpose: define pointers needed for memory management
 !
    use mlcc_types
+   use mlcc_data
 !   
    implicit none
 !
@@ -18,7 +19,7 @@ module mlcc_workspace
 !
 contains
 !
-subroutine work_init(mem,lupri)
+subroutine work_init(mem)
 !
 !  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
 !  January 2017
@@ -28,11 +29,10 @@ subroutine work_init(mem,lupri)
    implicit none
 !
    integer, intent(in)                    :: mem
-   integer, intent(in)                    :: lupri
 !
-   write(lupri,*)
-   write(lupri,*) 'In work_int'
-   write(lupri,*)
+   write(ml_lupri,*)
+   write(ml_lupri,*) 'In work_int'
+   write(ml_lupri,*)
 !
    work_length = mem
    work_remains = mem

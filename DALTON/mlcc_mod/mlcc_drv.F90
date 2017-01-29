@@ -155,21 +155,19 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    integer :: i,j,a,b,nai,nbj,naibj
 !
-   ml_lupri = lupri
+   ml_lupri = lupri 
 !
-   write(lupri,*)
-   write(lupri,*) 'In mlcc_drv'
-   write(lupri,*)
+   write(ml_lupri,*)
+   write(ml_lupri,*) 'In mlcc_drv'
+   write(ml_lupri,*)
 !
-   call work_init(mem,lupri)
+   call work_init(mem)
    call hf_reader()
 !
 !  Allocate amplitudes
 !
    call allocator(t1am,n_t1am,1)
    call allocator(t2am,n_t2am_pack,1)
-   call dzero(n_t2am_pack,t2am)
-   call dzero(n_t1am_pack,t1am)
 !
 !  Read in IAJB integrals
 !
@@ -181,8 +179,8 @@ subroutine mlcc_drv(work,lwork,lupri)
       do a = 1,n_vir
          do j = 1,n_occ
             do b = 1,n_vir
-               nai = index_t1(i,a,n_virt) 
-               nbj = index_t1(j,b,n_virt) 
+               nai = index_t1(i,a) 
+               nbj = index_t1(j,b) 
                naibj = index_t2(nai,nbj)
                write(ml_lupri,*) naibj,t2am(naibj,1)
             enddo
