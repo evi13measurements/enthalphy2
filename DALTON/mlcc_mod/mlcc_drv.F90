@@ -168,8 +168,8 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    call allocator(t1am,n_t1am,1)
    call allocator(t2am,n_t2am_pack,1)
-   call dzero(n_t2am_pack,t2am)
-   call dzero(n_t1am_pack,t1am)
+   ! call dzero(n_t2am_pack,t2am)
+   ! call dzero(n_t1am,t1am)
 !
 !  Read in IAJB integrals
 !
@@ -181,10 +181,10 @@ subroutine mlcc_drv(work,lwork,lupri)
       do a = 1,n_vir
          do j = 1,n_occ
             do b = 1,n_vir
-               nai = index_t1(i,a,n_virt) 
-               nbj = index_t1(j,b,n_virt) 
+               nai = index_t1(i,a) 
+               nbj = index_t1(j,b) 
                naibj = index_t2(nai,nbj)
-               write(ml_lupri,*) naibj,t2am(naibj,1)
+               write(ml_lupri,*) a,b,i,j,naibj,t2am(naibj,1)
             enddo
          enddo
       enddo

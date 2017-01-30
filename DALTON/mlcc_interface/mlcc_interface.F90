@@ -123,21 +123,18 @@ end subroutine mlcc_interface_drv
 !
 subroutine mlcc_iajb(vec)
 !
-!  MLCC IAJB reader 
+!  MLCC iajb MO integral calculator
 !  Authors Sarai Folkestad, Eirik Kjønstad, January 2017
 !
-!  Purpose: read in iajb integrals from Dalton
+!  Purpose: read in atomic orbitals and calculate iajb MO integrals
 !
    use mlcc_data
+   use mlcc_types
 !
    implicit none
 !
    real(dp), dimension(n_t2am_pack,1) :: vec
-   integer :: luiajb
 !
-   call dzero(n_t2am_pack,vec)
-!
-   rewind(luiajb)
-   call readi(luiajb,n_t2am_pack,vec)
+   vec = zero
 !
 end subroutine mlcc_iajb

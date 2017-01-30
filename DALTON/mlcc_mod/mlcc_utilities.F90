@@ -18,7 +18,7 @@ integer function index_t1(i,a)
 !
    integer, intent(in)     :: i, a
 !
-   index_t1 = n_virt*(i-1) + a
+   index_t1 = n_vir*(i-1) + a
 !
 end function index_t1
 !
