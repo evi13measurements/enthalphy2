@@ -140,6 +140,12 @@ subroutine mlcc_iajb(vec)
 end subroutine mlcc_iajb
 subroutine mlcc_get_cholesky()
 !
+!  MLCC Cholesky vector reader, and transformator
+!  Authors:  Eirik Kjønstad and Sarai Folkestad, January 2017
+!
+!  Purpose: Read Cholesky vectors in AO basis, transform to MO basis and write to files CHOLESKY_IJ,
+!           CHOLESKY_IA, CHOLESKY_AI and CHOLESKY_AB according to PQ-type.
+!
    use mlcc_data
    use mlcc_workspace
 !
@@ -192,7 +198,7 @@ subroutine mlcc_get_cholesky()
    
 end subroutine mlcc_get_cholesky
 
-subroutine get_n_cho_diag(n_cho_diag,n_orbitals)
+subroutine get_n_cho_diag(n_cho_diag,n_orbitals) ! Ikke nødvendig dersom den kan leses fra CHOLESKY.SCR
 
    implicit none
 !
