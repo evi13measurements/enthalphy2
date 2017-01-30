@@ -138,3 +138,78 @@ subroutine mlcc_iajb(vec)
    vec = zero
 !
 end subroutine mlcc_iajb
+
+subroutine mlcc_get_cholesky()
+!
+   use mlcc_data
+   use mlcc_workspace
+!
+   implicit none
+!
+   integer       :: ludiag,idum,i,lucho,lucho_ij,lusec,dummy1,dummy2,dummy3,dummy4,dummy5,dummy6
+   integer       :: n_cho_diag,n_cho
+   real(dp), dimension(:,:), pointer      :: cho_diag
+   real(dp), dimension(:,:), pointer      :: cho_ao
+!
+   call get_n_cho_diag(n_cho_diag,n_orbitals)
+!
+!  Allocation for diagonal elements
+   call allocator(cho_diag,n_cho_diag,1)
+   cho_diag=zero
+!
+!  Read diagonal
+!
+   ludiag = -1
+!
+   call gpopen(ludiag,'CHODIAG','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+   rewind(ludiag)
+   read(ludiag) (cho_diag(i,1),i=1,n_cho_diag)
+   call gpclose(ludiag,'KEEP')
+!
+   do i = 1,n_cho_diag
+      write(ml_lupri,*)i, cho_diag(i,1) 
+   enddo
+!  
+! Skip reduction. Need n_reduced for reading? 
+!
+! Read number of cholesky vectors
+!  lusec = -1
+!  call gpopen(lusec,'CHOLESKY.SEC','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+!  read(lusec) dummy1,dummy2,dummy3,dummy4,n_cho,dummy5,dummy6
+!  call gpclose(lusec,'KEEP')
+!
+!  write(ml_lupri,*)
+!  write(ml_lupri,*)n_cho THIS PRINTS OUT 55! SO IT IS = n_cho_diag NOT J. dummy5 looks like reduced dim (=54)
+!  write(ml_lupri,*)
+! Read Cholesky AO
+!
+   lucho = -2
+   call gpopen(lucho,'CHOLES_1_0','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+   call gpclose(lucho,'KEEP')
+! ij file io
+   lucho_ij = -3
+   call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+   call gpclose(lucho_ij,'KEEP')
+   
+end subroutine mlcc_get_cholesky
+
+subroutine get_n_cho_diag(n_cho_diag,n_orbitals)
+
+   implicit none
+!
+   integer, intent(in)    ::  n_orbitals
+   integer                ::  n_cho_diag
+   integer                ::  i,j,counter
+!
+   counter=0
+   do i=1,n_orbitals
+      do j=1,n_orbitals
+         if (i .ge. j) then
+            counter = counter+1
+         endif
+      enddo
+   enddo
+!
+   n_cho_diag=counter  
+!
+end subroutine get_n_cho_diag

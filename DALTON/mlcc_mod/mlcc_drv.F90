@@ -168,7 +168,8 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    call allocator(t1am,n_t1am,1)
    call allocator(t2am,n_t2am_pack,1)
-!
+   t1am=zero
+   t2am=zero
 !  Read in IAJB integrals
 !
    call mlcc_iajb(t2am)
@@ -188,6 +189,7 @@ subroutine mlcc_drv(work,lwork,lupri)
       enddo
    enddo
 !
+   call mlcc_get_cholesky()
 end subroutine mlcc_drv
 !
 end module mlcc_drive
