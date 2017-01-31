@@ -3759,6 +3759,10 @@ C
           LENTOT = NREDUC(ISYMAB) * NREAD
           LENGTH = NNBST(ISYMAB) * NREAD
 C
+C Prints for mlcc tests
+          write(lupri,*)'Sarai'
+          write(lupri,*)LENTOT, NREDUC(ISYM), LENGTH, NREAD
+C
           KREAD = 1
           KEND  = KREAD + LENTOT
           LWRK  = LWORK - KEND + 1
