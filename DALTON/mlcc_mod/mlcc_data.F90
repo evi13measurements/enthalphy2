@@ -17,7 +17,6 @@ module mlcc_data
 !   
 !  energy or response vector
    logical                          :: resp_option = .false.
-   logical                          :: mlcc_active = .false.
 !   
 !  integer variables
    integer                          :: n_orbitals, n_basis, n_lambda, n_occ, n_vir
@@ -27,8 +26,6 @@ module mlcc_data
 !
 !  info read from file  
    real(dp)                         :: nuclear_potential,scf_energy
-!   
-   integer                          :: print_mlcc = 1
 !   
 !  basic variable
    logical                          :: mlcc3_active
@@ -93,4 +90,15 @@ module mlcc_data
 !
 end module mlcc_data
 
+module mlcc_input_data
+!
+!  purpose: store input variables from interface
+!
+   use mlcc_types
+!   
+   logical  :: mlcc_active = .false.
+   integer  :: print_mlcc = 1
+!   
+!
+end module mlcc_input_data
 

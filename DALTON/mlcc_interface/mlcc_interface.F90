@@ -11,7 +11,7 @@ subroutine mlcc_interface_input(lunit,word,lupri)
 !  Rolf H. Myhre 
 !  December 2016
 !
-   use mlcc_drive, only: mlcc_input
+   use mlcc_input_data
 !
 !
    implicit none
@@ -20,9 +20,7 @@ subroutine mlcc_interface_input(lunit,word,lupri)
    integer, intent(in)              :: lupri !general output unit
 !
    character(len=7), intent(inout)  :: word
-!
-   character(len=254)               :: buffer
-   character(len=254)               :: in_string
+   character(len=24)                :: buffer
 !
    integer                          :: r_off, length, last, actual
    integer                          :: i_count,i, r_len
@@ -30,10 +28,6 @@ subroutine mlcc_interface_input(lunit,word,lupri)
    r_off=1
 !
    if (word(1:7) .eq. '*MLCC  ') then
-!
-      in_string(1:7) = word
-      i_count = i_count + 1
-      r_off = r_off+7
 !
       do
 !
@@ -51,41 +45,25 @@ subroutine mlcc_interface_input(lunit,word,lupri)
             exit
          end if
 !
+!        
+         select case (trim(buffer))
+!        
+            case('.MLACTIVE')
+!        
+               mlcc_active=.true.
+!        
+            case('.PRINT')
+!        
+               read (lunit,*) print_mlcc
+!        
+            case default
+               write(lupri,*) 'Keyword ', trim(buffer), ' not recognized in mlcc_input'
+               stop
+!        
+         end select
 !
-         r_len = len(trim(buffer))
-!
-         write(in_string(r_off:),'(a)') trim(buffer)
-         r_off = r_off + r_len + 1
-         i_count = i_count + 1
-!
-      end do
-!
-!     Fortran adds whitespace to integers.
-!     Strip off excess whitespaces and count number of records
-!
-      i_count = 1
-      actual = 1
-      last = 1
-      length = len(trim(in_string))
-!
-      do while (actual .lt. length)
-!
-         if (in_string(last:last+1) .eq. "  ") then
-            in_string(last+1:) = in_string(last+2:)
-            actual = actual+1
-         else if (in_string(last:last) .eq. " ") then
-            i_count = i_count + 1
-            last=last+1
-            actual=actual+1
-         else
-            last=last+1
-            actual=actual+1
-         end if
 !
       end do
-!
-      write(lupri,*) 'Input string: ', trim(in_string)
-      call flush(lupri)
 !
    else 
       write(lupri,*) 'mlcc_input called without *MLCC'
@@ -93,11 +71,15 @@ subroutine mlcc_interface_input(lunit,word,lupri)
       call quit('mlcc_input, something is wrong')
    end if
 !
-   call mlcc_input(in_string,i_count,lupri)
+   if(print_mlcc .ge. 3) then
 !
-   write(lupri,*)
-   write(lupri,*) 'left mlcc_input'
-   write(lupri,*)
+      write(lupri,*)
+      write(lupri,*) 'Output from mlcc3_input'
+      write(lupri,*) 'print_mlcc', print_mlcc
+      write(lupri,*) 'mlcc_active', mlcc_active
+      write(lupri,*)
+!
+   end if
 !
 end subroutine mlcc_interface_input
 !
@@ -205,14 +187,19 @@ subroutine mlcc_get_cholesky()
 end subroutine mlcc_get_cholesky
 
 subroutine hf_reader
+
    use mlcc_data
    use mlcc_workspace
+
 !
 !  Hartree-Fock reader routine
 !  Authors Henrik Koch, Rolf H. Myhre, Sarai Folkestad, Eirik Kjønstad
 !  January 2017
 !
 !  Purpose: read in data from LUSIFC file
+!
+      use mlcc_data
+      use mlcc_workspace
 !
       implicit none
 !
@@ -268,5 +255,9 @@ subroutine hf_reader
 !
       call gpclose(lusifc,'KEEP')
 !
+<<<<<<< HEAD
    end subroutine hf_reader
 
+=======
+end subroutine hf_reader
+>>>>>>> 0db4cc926359f01aad2f67e2b42e4d41f75133d4
