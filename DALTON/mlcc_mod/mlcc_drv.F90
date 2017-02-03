@@ -53,18 +53,18 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Print T2 
 !
-   do i = 1,n_occ
-      do a = 1,n_vir
-         do j = 1,n_occ
-            do b = 1,n_vir
-               nai = index_t1(i,a) 
-               nbj = index_t1(j,b) 
-               naibj = index_t2(nai,nbj)
-               write(ml_lupri,*) a,b,i,j,naibj,t2am(naibj,1)
-            enddo
-         enddo
-      enddo
-   enddo
+!   do i = 1,n_occ
+!      do a = 1,n_vir
+!         do j = 1,n_occ
+!            do b = 1,n_vir
+!               nai = index_t1(i,a) 
+!               nbj = index_t1(j,b) 
+!               naibj = index_t2(nai,nbj)
+!               write(ml_lupri,*) a,b,i,j,naibj,t2am(naibj,1)
+!            enddo
+!         enddo
+!      enddo
+!   enddo
 !
    call mlcc_get_cholesky()
 end subroutine mlcc_drv
