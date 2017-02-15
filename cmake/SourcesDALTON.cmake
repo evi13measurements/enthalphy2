@@ -427,6 +427,7 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/choles/cc_rmrsp.F
     DALTON/choles/cc_wrrspd.F
     DALTON/choles/nocc_util.F
+    DALTON/choles/mlcc_write_cholesky.F
     DALTON/densfit/denfit_noddy.F
     DALTON/densfit/df_dirac.F
     DALTON/dft/dft_aos.F

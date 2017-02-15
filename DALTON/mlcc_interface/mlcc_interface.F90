@@ -120,6 +120,7 @@ subroutine mlcc_iajb(vec)
    vec = zero
 !
 end subroutine mlcc_iajb
+!
 subroutine mlcc_get_cholesky()
 !
 !  MLCC Cholesky vector reader, and transformator
@@ -130,22 +131,23 @@ subroutine mlcc_get_cholesky()
 !
    use mlcc_data
    use mlcc_workspace
+   use mlcc_utilities
 !
    implicit none
 !
-   integer       :: ludiag,idum,i,lucho,lucho_ij,lusec,dummy,j
+   integer       :: ludiag,idum,i,lucho,lucho_ij,lusec,dummy,j,lumlch
    integer       :: n_twoel_diag,n_J
    real(dp), dimension(:,:), pointer      :: cho_diag
    real(dp), dimension(:,:), pointer      :: cho_ao
    integer       :: lencho
-   real(dp), dimension(:,:), pointer      :: cholesky
+   real(dp), dimension(:,:), pointer      :: cholesky_ao,cholesky_mo,X
 !
 ! Read number (n_J) and length (n_twoel_diag) of Cholesky vectors
 !
   lusec = -1
   call gpopen(lusec,'CHOLESKY.RST','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
   rewind(lusec)
-  read(lusec) dummy,dummy,dummy,dummy,n_twoel_diag,n_J,dummy
+  read(lusec) dummy,dummy,dummy,dummy,n_twoel_diag,n_J
   call gpclose(lusec,'KEEP')
 !
 !  Allocation for diagonal elements - Needed for reduction.
@@ -163,37 +165,53 @@ subroutine mlcc_get_cholesky()
    call gpclose(ludiag,'KEEP')
 !
 !  
-! Skip reduction.
+! Skip reduction
 !
 !
-! Allocate cholesky array
+! Batching loop over J should start here 
+!========================================
 !
-   call allocator(cholesky,n_twoel_diag,n_J)
-   cholesky=zero
+! Allocation
+! cholesky AO array, intermediate X and cholesky MO array
+   call allocator(cholesky_ao,n_twoel_diag,n_J)
+!   call allocator(X,n_twoel_diag,n_J)
+!   call allocator(cholesky_mo,n_twoel_diag,n_J)
+
+   cholesky_ao=zero
+   X=zero
+   cholesky_mo=zero
 !
-! Read Cholesky AO
+! Read Cholesky AO:
 !
-!   lucho = -1
-!   call gpopen(lucho,'FILENAME','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)! Read new file 
-!   rewind(lucho)
-!   read(lucho) ((cholesky(i,j),i=1,n_twoel_diag),j=1,n_J)
-!   call gpclose(lucho,'KEEP')
+   lumlch = -1
+   call gpopen(lumlch,'MLCC_CHOLESKY','OLD','SEQUENTIAL','UNFORMATTED',idum,.false.)
 !
-! Transform Cholesky vectors from AO to MO
+   rewind(lumlch)
+   do j=1,n_J
 !
+      read(lumlch) (cholesky_ao(i,j),i=1,n_twoel_diag)
+!
+   enddo
+!
+   call gpclose(lumlch,'KEEP')
+!
+!
+! Square up
+   write(*,*)packed_size()
+! Transform
 !
 ! ij file io REPEAT FOR ia, ai, ab
 !
-   lucho_ij = -3
-   call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
-   rewind(lucho_ij)
-   call gpclose(lucho_ij,'KEEP')
+!  lucho_ij = -3
+!  call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+!  rewind(lucho_ij)
+!  call gpclose(lucho_ij,'KEEP')
 !
-!  deallocation
+!  Deallocation
 !
-   call deallocator(cho_diag)
-   call deallocator(cholesky)
-!
+   call deallocator(cho_diag,n_twoel_diag,1)
+   call deallocator(cholesky_ao,n_twoel_diag,n_J)
+!================================
 end subroutine mlcc_get_cholesky
 
 subroutine hf_reader

@@ -55,6 +55,7 @@ casm
 #include "chotim.h"
 #include "ccdeco2.h"
 #include "choio.h"
+#include "mlcc_mod.h"
 C
       CHARACTER*10 NAME
       CHARACTER*7  ROOT
@@ -386,6 +387,11 @@ C
 c        CALL AROUND('Cholesky elements to discard')
 c        WRITE(LUPRI,*) 'Number of Elements:',
 c    *                  XDISC,XNDISC,(XDISC/XNDISC)*100.0D0
+C     MLCC
+         if (MLCCCH) then
+            call mlcc_rewr_chol(INDRED,WORK,LWORK)
+         endif
+C     
          CALL CHO_END(DIAG,NTOINT,XSEL0,YSEL0)
 
          deallocate(indexa)
@@ -672,6 +678,7 @@ C
             TIMX  = SECOND() - TIMX
             TIMRD = TIMRD + TIMX
 C
+
 C           Prepare factor array.
 C           ---------------------
 C
@@ -3669,9 +3676,8 @@ C
       CHARACTER*10 NAME
       INTEGER MDIM,LONG1
 C
-C
 C     Initial stuff
-C
+C 
       ILAST  = IFIRST + NREAD - 1
       IF (ILAST .GT. NUMCHO(ISYMAB)) THEN
           ILAST = NUMCHO(ISYMAB)
@@ -3803,7 +3809,7 @@ C
                II = INDRED(LREDU*(ISYMAB-1)+I)
                IOFF1 = KOFF1 + I  - 1
                IOFF2 = KOFF2 + II - 1
-               CHOVEC(IOFF2) = WORK(IOFF1)
+               CHOVEC(IOFF2) = WORK(IOFF1)    
             END DO
             KOFF1 = KOFF1 + LENG1
             KOFF2 = KOFF2 + LENG2
@@ -3863,7 +3869,6 @@ C
          KOFF2 = KOFF2 + LENG2
 C
       END DO
-C
       RETURN
       END
 C

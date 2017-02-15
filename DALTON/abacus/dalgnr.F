@@ -1321,8 +1321,9 @@ C
 Cholesky
 #include "ccdeco.h"
 #include "center.h"
+#include "mlcc_mod.h"
 C
-      PARAMETER (NDIR = 14, NTABLE = 35, D0 = 0.D0)
+      PARAMETER (NDIR = 14, NTABLE = 36, D0 = 0.D0)
 #if defined (VAR_VECTOR)
       PARAMETER (IVECDF = 128)
 #else
@@ -1352,7 +1353,7 @@ C
      &            '.VECLEN', '.RUNERI', '.NEWTRA',
      &            '.RUN AL', '.NMDDRV', '.PARNMD', ! 30
      &            '.THRRED', '.DOUGLA', '.PEQM  ',
-     &            '.QFIT  ', '.LSLIB '/
+     &            '.QFIT  ', '.LSLIB ', '.MLCCCH'/
 C
       CALL QENTER('DALTON_GNRLINP')
 C
@@ -1558,7 +1559,7 @@ C
                GO TO (101,102,103,104,105,106,107,108,109,110,
      &                111,112,113,114,115,116,117,118,119,120,
      &                121,122,123,124,125,126,127,128,129,129,
-     &                131,132,133,134,135), I
+     &                131,132,133,134,135,136), I
             END IF
    99    CONTINUE
             IF (WORD .EQ. '.OPTION') THEN
@@ -1714,6 +1715,9 @@ C
             WRITE(LUPRI,*) 'ERROR for .LSLIB : LSLIB not enabled.'
             CALL QUIT('ERROR for .LSLIB : LSLIB not enabled.')
 #endif
+         GOTO 100
+ 136     CONTINUE ! .MLCCCH 
+         MLCCCH=.TRUE.
          GOTO 100
       ELSE IF (PROMPT .EQ. '*') THEN
          GO TO 999
