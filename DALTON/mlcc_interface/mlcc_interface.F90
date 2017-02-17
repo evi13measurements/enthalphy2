@@ -135,85 +135,111 @@ subroutine mlcc_get_cholesky()
 !
    implicit none
 !
-   integer       :: ludiag,idum,i,lucho,lucho_ij,lusec,dummy,j,lumlch
-   integer       :: n_twoel_diag,n_J
+   integer       :: ludiag,lucho,lucho_ij,lucho_ia,lucho_ai,lucho_ab,lumlch
+   integer       :: i,j,k,idum
+   integer       :: n_twoel_diag,n_J,n_reduced
+   integer, dimension(:,:), pointer       :: index_reduced
    real(dp), dimension(:,:), pointer      :: cho_diag
    real(dp), dimension(:,:), pointer      :: cho_ao
    integer       :: lencho
-   real(dp), dimension(:,:), pointer      :: cholesky_ao,cholesky_mo,X
+   real(dp), dimension(:,:), pointer      :: cholesky_ao,cholesky_ao_sq
+   real(dp), dimension(:,:), pointer      :: cholesky_mo_sq,cholesky_mo,X
 !
-! Read number (n_J) and length (n_twoel_diag) of Cholesky vectors
+   n_twoel_diag = packed_size(n_basis)
 !
-  lusec = -1
-  call gpopen(lusec,'CHOLESKY.RST','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
-  rewind(lusec)
-  read(lusec) dummy,dummy,dummy,dummy,n_twoel_diag,n_J
-  call gpclose(lusec,'KEEP')
-!
-!  Allocation for diagonal elements - Needed for reduction.
-!
-   call allocator(cho_diag,n_twoel_diag,1)
-   cho_diag=zero
-!
-!  Read diagonal
-!
-   ludiag = -1
-!
-   call gpopen(ludiag,'CHODIAG','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
-   rewind(ludiag)
-   read(ludiag) (cho_diag(i,1),i=1,n_twoel_diag)
-   call gpclose(ludiag,'KEEP')
-!
+! Open MLCC_CHOLESKY - See mlcc_write_cholesky.F
 !  
-! Skip reduction
+   lumlch = -1
+   call gpopen(lumlch,'MLCC_CHOLESKY','OLD','SEQUENTIAL','UNFORMATTED',idum,.false.)
+   rewind(lumlch)
 !
+! Read number (n_J) and length (n_reduced) of Cholesky vectors
 !
-! Batching loop over J should start here 
+   read(lumlch)n_reduced,n_J
+!
+! Read reduced index array
+!
+   call allocator_int(index_reduced,n_reduced,1)
+   index_reduced=0
+!
+   read(lumlch)(index_reduced(i,1),i=1,n_reduced)
+!
 !========================================
 !
+! Preparation of files for cholesky in MO basis:
+!
+! ij-type:
+  lucho_ij = -1
+  call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+  rewind(lucho_ij)
+! ia-type:
+  lucho_ia = -1
+  call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+  rewind(lucho_ia)
+! ab-type:
+  lucho_ab = -1
+  call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
+  rewind(lucho_ab)
+!
 ! Allocation
-! cholesky AO array, intermediate X and cholesky MO array
-   call allocator(cholesky_ao,n_twoel_diag,n_J)
-!   call allocator(X,n_twoel_diag,n_J)
-!   call allocator(cholesky_mo,n_twoel_diag,n_J)
-
-   cholesky_ao=zero
-   X=zero
-   cholesky_mo=zero
+! Cholesky AO array, intermediate X and cholesky MO array
+!
+   call allocator(cholesky_ao,n_twoel_diag,1)
+   call allocator(cholesky_ao_sq,n_basis,n_basis)
+   call allocator(X,n_basis,n_orbitals)
+   call allocator(cholesky_mo_sq,n_orbitals,n_orbitals)
+   call allocator(cholesky_mo,packed_size(n_orbitals),1)
+!
+   do j=1,n_J
+      cholesky_ao = zero
+      cholesky_ao_sq = zero
+      cholesky_mo_sq = zero
+      X = zero
 !
 ! Read Cholesky AO:
 !
-   lumlch = -1
-   call gpopen(lumlch,'MLCC_CHOLESKY','OLD','SEQUENTIAL','UNFORMATTED',idum,.false.)
+      read(lumlch) (cholesky_ao(i,1),i=1,n_twoel_diag)
 !
-   rewind(lumlch)
-   do j=1,n_J
+! Square up of cholesky_ao:
 !
-      read(lumlch) (cholesky_ao(i,j),i=1,n_twoel_diag)
+      call squareup(cholesky_ao,cholesky_ao_sq,n_basis)
+!
+! Transform to MO OBS! n_active!
+!  
+      call dgemm('N','N',n_basis,n_orbitals,n_basis,1,cholesky_ao_sq,n_basis,orb_coefficients,n_basis,0,X,n_basis)
+      call dgemm('T','N',n_orbitals,n_orbitals,n_basis,1,orb_coefficients,n_orbitals,X,n_basis,0,cholesky_mo_sq,n_orbitals)
+!
+! Packing 
+!
+      call packin(cholesky_mo,cholesky_mo_sq,n_orbitals)
+!
+!  Save to file
+!
+      write(lucho_ij)((cholesky_mo(index_t2(i,k),1),i=1,n_occ),k=i,n_occ)
+      write(lucho_ia)((cholesky_mo(index_t2(i,k),1),i=1,n_occ),k=n_occ,n_orbitals)
+      write(lucho_ab)((cholesky_mo(index_t2(i,k),1),i=n_occ,n_orbitals),k=i,n_orbitals)
 !
    enddo
 !
+!  Close all files
+!
    call gpclose(lumlch,'KEEP')
-!
-!
-! Square up
-   write(*,*)packed_size()
-! Transform
-!
-! ij file io REPEAT FOR ia, ai, ab
-!
-!  lucho_ij = -3
-!  call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
-!  rewind(lucho_ij)
-!  call gpclose(lucho_ij,'KEEP')
+   call gpclose(lucho_ij,'KEEP')
+   call gpclose(lucho_ia,'KEEP')
+   call gpclose(lucho_ab,'KEEP')
 !
 !  Deallocation
 !
-   call deallocator(cho_diag,n_twoel_diag,1)
-   call deallocator(cholesky_ao,n_twoel_diag,n_J)
+   call deallocator(cholesky_ao,n_twoel_diag,1)
+   call deallocator(cholesky_ao,n_basis,n_basis)
+   call deallocator_int(index_reduced,n_reduced,1)
+   call deallocator(cholesky_mo_sq,n_orbitals,n_orbitals)
+   call deallocator(cholesky_mo,packed_size(n_orbitals),1)
+   call deallocator(X,n_basis,n_orbitals)
+!
 !================================
 end subroutine mlcc_get_cholesky
-
+!
 subroutine hf_reader
 
    use mlcc_data
@@ -272,14 +298,14 @@ subroutine hf_reader
       call allocator(fock_diagonal,n_orbitals,1)
       fock_diagonal = zero
 !      
-      call allocator(orb_coefficients,n_orbitals,n_orbitals)
+      call allocator(orb_coefficients,n_lambda,1)
       orb_coefficients = zero
 
 !
 !     Read in Fock diagonal and coefficients
 !
       read(lusifc) (fock_diagonal(i,1),i=1,n_orbitals)
-      read(lusifc) ((orb_coefficients(i,j),i=1,n_orbitals),j=1,n_orbitals) 
+      read(lusifc) (orb_coefficients(i,1),i=1,n_lambda) 
 !
 !     Done with file
 !

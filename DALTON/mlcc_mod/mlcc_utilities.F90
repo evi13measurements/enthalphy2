@@ -11,7 +11,7 @@ integer function index_t2(nai,nbj)
 !
    integer, intent(in)     :: nai, nbj
 !
-   index_t2 = max(nai,nbj)*(max(nai,nbj)-3)/2+nai+nbj
+   index_t2 = (max(nai,nbj)*(max(nai,nbj)-3)/2)+nai+nbj
 !
 end function index_t2
 !
@@ -29,16 +29,21 @@ integer function index_t1(i,a)
 !
 end function index_t1
 !
-integer function packed_size()
+integer function packed_size(N)
 ! Purpose: Returns size of packed vectors alpha >= beta
 !
     use mlcc_data
 !   
     implicit none
+    integer         ::   N
 !
-    packed_size = n_orbitals*(n_orbitals+1)/2
+    packed_size = N*(N+1)/2
+!
 end function packed_size
-subroutine squareup(packed,unpacked)
+!
+!
+!
+subroutine squareup(packed,unpacked,N)
 !
 ! Purpose: Squareup of packed vectors.
 ! 
@@ -48,8 +53,40 @@ subroutine squareup(packed,unpacked)
     implicit none
 !
 !
-    real(dp),intent(in)     ::    packed
-    real(dp)                ::    unpacked
-
+    real(dp),dimension(:,:),intent(in)     ::    packed
+    real(dp),dimension(:,:)                ::    unpacked
+    integer                                ::    i,j,N
+!
+    do i = 1,N
+        do j = i+1,N
+            unpacked(i,j)=packed(index_t2(i,j),1)
+            unpacked(j,i)=unpacked(i,j)
+        enddo
+        unpacked(i,i)=packed(index_t2(i,i),1)
+    enddo
+!
+end subroutine
+!
+!
+subroutine packin(packed,unpacked,N)
+!
+! Purpose: Pack down of full square vectors.
+! 
+    use mlcc_data
+    use mlcc_types
+!
+    implicit none
+!
+!
+    real(dp),dimension(:,:)              ::    packed
+    real(dp),dimension(:,:),intent(in)   ::    unpacked
+    integer                              ::    i,j,N
+!
+    do i = 1,N
+        do j = i,N
+          packed(index_t2(i,j),1)=unpacked(i,j)
+        enddo
+    enddo
+!
 end subroutine
 end module mlcc_utilities

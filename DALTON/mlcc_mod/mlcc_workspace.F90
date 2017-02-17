@@ -104,4 +104,65 @@ subroutine deallocator(elm,M,N)
 end subroutine deallocator
 !
 !
+subroutine allocator_int(elm,M,N)
+!
+!
+!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
+!  January 2017
+!
+!  Purpose: allocation and update of memory info
+!
+   implicit none
+!  
+   integer, intent(in)                      :: M,N
+   integer, dimension(:,:), pointer         :: elm
+   integer                                  :: size
+   integer                                  :: stat, error
+!
+   size = M*N
+!
+   allocate(elm(M,N),stat = error)
+!
+   if (stat .ne. 0) then
+      print*,"error: couldn't allocate memory for array, size=",size
+      stop
+   endif
+!    
+!
+   work_remains = work_remains-size
+   work_used = work_used+size
+   if (work_remains .lt. 0) then
+      print*,"error: User specified memory too small"
+      stop
+   endif
+end subroutine allocator_int
+!
+!
+subroutine deallocator_int(elm,M,N)
+!
+!
+!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
+!  January 2017
+!
+!  Purpose: dallocation and update of memory info
+!
+   implicit none
+!
+   integer, dimension(:,:), pointer        :: elm
+   integer                                 :: stat, error
+   integer, intent(in)                     :: M, N
+   integer                                 :: size
+!
+   size = M*N
+!
+   deallocate(elm,stat = error)  
+   if (stat .ne. 0) then
+      print*,"error: couldn't deallocate array"
+      stop
+   endif
+! 
+   work_remains = work_remains+size
+   work_used = work_used-size
+end subroutine deallocator_int
+!
 end module mlcc_workspace
