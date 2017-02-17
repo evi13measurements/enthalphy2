@@ -204,16 +204,16 @@ subroutine mlcc_get_cholesky()
 !
       call squareup(cholesky_ao,cholesky_ao_sq,n_basis)
 !
-! Transform to MO OBS! n_active!
+! Transform to MO
 !  
       call dgemm('N','N',n_basis,n_orbitals,n_basis,1,cholesky_ao_sq,n_basis,orb_coefficients,n_basis,0,X,n_basis)
       call dgemm('T','N',n_orbitals,n_orbitals,n_basis,1,orb_coefficients,n_orbitals,X,n_basis,0,cholesky_mo_sq,n_orbitals)
 !
-! Packing 
+! Packing MO Cholesky
 !
       call packin(cholesky_mo,cholesky_mo_sq,n_orbitals)
 !
-!  Save to file
+!  Save MO cholesky to file
 !
       write(lucho_ij)((cholesky_mo(index_t2(i,k),1),i=1,n_occ),k=i,n_occ)
       write(lucho_ia)((cholesky_mo(index_t2(i,k),1),i=1,n_occ),k=n_occ,n_orbitals)
