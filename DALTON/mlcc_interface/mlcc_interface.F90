@@ -12,6 +12,7 @@ subroutine mlcc_interface_input(lunit,word,lupri)
 !  December 2016
 !
    use mlcc_input_data
+   use mlcc_workspace
 !
 !
    implicit none
@@ -135,9 +136,9 @@ subroutine mlcc_get_cholesky()
 !
    implicit none
 !
-   integer       :: ludiag,lucho,lucho_ij,lucho_ia,lucho_ai,lucho_ab,lumlch
+   integer       :: ludiag,lucho,lucho_ij,lucho_ia,lucho_ab,lumlch
    integer       :: i,j,k,idum
-   integer       :: n_twoel_diag,n_J,n_reduced
+   integer       :: n_twoel_diag
    integer, dimension(:,:), pointer       :: index_reduced
    real(dp), dimension(:,:), pointer      :: cho_diag
    real(dp), dimension(:,:), pointer      :: cho_ao
@@ -150,29 +151,28 @@ subroutine mlcc_get_cholesky()
 ! Open MLCC_CHOLESKY - See mlcc_write_cholesky.F
 !  
    lumlch = -1
-   call gpopen(lumlch,'MLCC_CHOLESKY','OLD','SEQUENTIAL','UNFORMATTED',idum,.false.)
+   call gpopen(lumlch,'MLCC_CHOLESKY','OLD','SEQUENTIAL','FORMATTED',idum,.false.)
    rewind(lumlch)
 !
 ! Read number (n_J) and length (n_reduced) of Cholesky vectors
 !
-   read(lumlch)n_reduced,n_J
+   read(lumlch,*)n_reduced,n_J
 !
 ! Read reduced index array
 !
    call allocator_int(index_reduced,n_reduced,1)
    index_reduced=0
 !
-   read(lumlch)(index_reduced(i,1),i=1,n_reduced)
+   read(lumlch,*)(index_reduced(i,1),i=1,n_reduced)
 !
 !========================================
 !
 ! Preparation of files for cholesky in MO basis:
-!
 ! ij-type:
   lucho_ij = -1
   call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
   rewind(lucho_ij)
-! ia-type:
+! ai-type:
   lucho_ia = -1
   call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
   rewind(lucho_ia)
@@ -181,6 +181,8 @@ subroutine mlcc_get_cholesky()
   call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
   rewind(lucho_ab)
 !
+!
+!
 ! Allocation
 ! Cholesky AO array, intermediate X and cholesky MO array
 !
@@ -188,38 +190,32 @@ subroutine mlcc_get_cholesky()
    call allocator(cholesky_ao_sq,n_basis,n_basis)
    call allocator(X,n_basis,n_orbitals)
    call allocator(cholesky_mo_sq,n_orbitals,n_orbitals)
-   call allocator(cholesky_mo,packed_size(n_orbitals),1)
 !
+   cholesky_ao = zero
+   cholesky_ao_sq = zero
+   cholesky_mo_sq = zero
+   X = zero
    do j=1,n_J
-      cholesky_ao = zero
-      cholesky_ao_sq = zero
-      cholesky_mo_sq = zero
-      X = zero
 !
 ! Read Cholesky AO:
 !
-      read(lumlch) (cholesky_ao(i,1),i=1,n_twoel_diag)
-!
+      read(lumlch,*) (cholesky_ao(i,1),i=1,n_twoel_diag)
 ! Square up of cholesky_ao:
 !
       call squareup(cholesky_ao,cholesky_ao_sq,n_basis)
 !
 ! Transform to MO
 !  
-      call dgemm('N','N',n_basis,n_orbitals,n_basis,1,cholesky_ao_sq,n_basis,orb_coefficients,n_basis,0,X,n_basis)
-      call dgemm('T','N',n_orbitals,n_orbitals,n_basis,1,orb_coefficients,n_orbitals,X,n_basis,0,cholesky_mo_sq,n_orbitals)
+      call dgemm('N','N',n_basis,n_orbitals,n_basis,one,cholesky_ao_sq,n_basis,orb_coefficients,n_basis,zero,X,n_basis)
+      call dgemm('T','N',n_orbitals,n_orbitals,n_basis,one,orb_coefficients,n_basis,X,n_basis,zero,cholesky_mo_sq,n_orbitals)
 !
-! Packing MO Cholesky
+! Packing MO Cholesky and save to file
 !
-      call packin(cholesky_mo,cholesky_mo_sq,n_orbitals)
+      write(lucho_ij)((cholesky_mo_sq(i,k),k=1,i),i=1,n_occ)
+      write(lucho_ia)((cholesky_mo_sq(i,k),k=n_occ+1,n_orbitals),i=1,n_occ)
+      write(lucho_ab)((cholesky_mo_sq(i,k),k=n_occ+1,i),i=n_occ+1,n_orbitals)
 !
-!  Save MO cholesky to file
-!
-      write(lucho_ij)((cholesky_mo(index_t2(i,k),1),i=1,n_occ),k=i,n_occ)
-      write(lucho_ia)((cholesky_mo(index_t2(i,k),1),i=1,n_occ),k=n_occ,n_orbitals)
-      write(lucho_ab)((cholesky_mo(index_t2(i,k),1),i=n_occ,n_orbitals),k=i,n_orbitals)
-!
-   enddo
+  enddo
 !
 !  Close all files
 !
@@ -234,7 +230,6 @@ subroutine mlcc_get_cholesky()
    call deallocator(cholesky_ao,n_basis,n_basis)
    call deallocator_int(index_reduced,n_reduced,1)
    call deallocator(cholesky_mo_sq,n_orbitals,n_orbitals)
-   call deallocator(cholesky_mo,packed_size(n_orbitals),1)
    call deallocator(X,n_basis,n_orbitals)
 !
 !================================

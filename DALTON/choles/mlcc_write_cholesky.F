@@ -35,22 +35,22 @@ C
       lumlch = -2
 C
       call gpopen(lumlch,'MLCC_CHOLESKY','UNKNOWN','SEQUENTIAL',
-     &        'UNFORMATTED',idummy,.false.)
+     &        'FORMATTED',idummy,.false.)
       rewind(lumlch)
 C
 C     
 C     Write nreduc(1),numcho(1) to file
-      write(lumlch)nreduc(1),numcho(1) 
+      write(lumlch,*)nreduc(1),numcho(1) 
 C
 C     Write reduced index array
-      write(lumlch)(indred(i),i=1,nreduc(1))
+      write(lumlch,*)(indred(i),i=1,nreduc(1))
 C  
       do j=1,numcho(1)
 C
 C     Read and write cholesky
 C
         call cc_getcho(work(chovec),1,1,j,indred,work(koff1),nreduc(1))
-        write(lumlch)(work(chovec + I - 1),I=1,nnbst(1))
+        write(lumlch,*)(work(chovec + I - 1),I=1,nnbst(1))
 C
       enddo
       call gpclose(lumlch,'KEEP')

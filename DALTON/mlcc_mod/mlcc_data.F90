@@ -19,7 +19,7 @@ module mlcc_data
    logical                          :: resp_option = .false.
 !   
 !  integer variables
-   integer                          :: n_orbitals, n_basis, n_lambda, n_occ, n_vir
+   integer                          :: n_orbitals, n_basis, n_lambda, n_occ, n_vir,n_J,n_reduced
    integer                          :: n_t1am, n_t2am, n_t2am_pack
    integer                          :: n_v_2, n_v_3, n_basis_2, n_basis_2_pack, n_bas_orb
    integer                          :: n_ao_ints

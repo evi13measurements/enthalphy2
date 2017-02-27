@@ -13,6 +13,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    use mlcc_init
    use mlcc_utilities
    use mlcc_input_data
+   use mlcc_t2_init
 !
 !  mlcc3 driver
 !  Author Rolf H. Myhre
@@ -43,9 +44,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Allocate amplitudes
 !
-   call allocator(t1am,n_t1am,1)
    call allocator(t2am,n_t2am_pack,1)
-   t1am=zero
    t2am=zero
 !  Read in IAJB integrals
 !
@@ -53,6 +52,8 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !
    call mlcc_get_cholesky()
+   call t2_init(t2am)
+   call deallocator(t2am,n_t2am_pack,1)
 end subroutine mlcc_drv
 !
 end module mlcc_drive
