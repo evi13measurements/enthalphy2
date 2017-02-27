@@ -11,6 +11,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    use mlcc_workspace
    use mlcc_data
    use mlcc_init
+   use mlcc_omega
    use mlcc_utilities
    use mlcc_input_data
    use mlcc_t2_init
@@ -39,21 +40,44 @@ subroutine mlcc_drv(work,lwork,lupri)
    write(ml_lupri,*) 'print_mlcc:  ', print_mlcc 
    write(ml_lupri,*)
 !
+!  Initialize memory variables
+!
    call work_init(mem)
-   call hf_reader()
 !
-!  Allocate amplitudes
+!  Read in Fock diagonal and MO coefficients from Dalton's 
+!  Hartree-Fock routine
 !
+   call hf_reader
+!
+!  Allocate amplitudes and the omega vector 
+!
+   call allocator(omega1,n_t1am,1)
+   call allocator(omega2,n_t2am_pack,1)
+!
+   call allocator(t1am,n_t1am,1)
    call allocator(t2am,n_t2am_pack,1)
-   t2am=zero
-!  Read in IAJB integrals
 !
-   call mlcc_iajb(t2am)
+   omega1 = zero
+   omega2 = zero
 !
+   t1am = zero
+   t2am = zero
 !
-   call mlcc_get_cholesky()
+!  Read in Cholesky vectors in AO basis, transform them to MO basis,
+!  and save the MO Cholesky vectors to file (IJ,AB,IA,AI)
+!
+   call mlcc_get_cholesky
+!
+!  Set initial guess for the doubles amplitudes 
+!
    call t2_init(t2am)
+!
+!  Calculate the omega vector 
+!
+   call mlcc_omega_calc
+!
    call deallocator(t2am,n_t2am_pack,1)
+!
 end subroutine mlcc_drv
 !
 end module mlcc_drive

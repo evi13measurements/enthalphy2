@@ -38,8 +38,8 @@ module mlcc_data
 !  various pointers
 !
 !  packed omega vectors from ccsd
-   real(dp), dimension(:), pointer  :: omega1            => null()
-   real(dp), dimension(:), pointer  :: omega2            => null()
+   real(dp), dimension(:,:), pointer  :: omega1            => null()
+   real(dp), dimension(:,:), pointer  :: omega2            => null()
 !   
 !  t1 and t2 amplitudes, t2 packed
    real(dp), dimension(:,:), pointer  :: t1am              => null()
