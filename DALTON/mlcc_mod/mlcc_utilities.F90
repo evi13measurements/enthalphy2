@@ -45,7 +45,7 @@ end function packed_size
 !
 subroutine squareup(packed,unpacked,N)
 !
-! Purpose: Squareup of packed vectors.
+! Purpose: Squareup to full dimension (NxN) of packed vectors.
 ! 
     use mlcc_data
     use mlcc_types
@@ -70,8 +70,9 @@ end subroutine
 !
 subroutine packin(packed,unpacked,N)
 !
-! Purpose: Pack down of full square vectors.
+! Purpose: Pack down of full square matrix of dimension (NxN).
 ! 
+
     use mlcc_data
     use mlcc_types
 !
