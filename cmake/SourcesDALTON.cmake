@@ -523,6 +523,7 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_mod/mlcc_init.F90
     DALTON/mlcc_mod/mlcc_utilities.F90
     DALTON/mlcc_mod/mlcc_t2_init.F90
+    DALTON/mlcc_mod/mlcc_omega.F90
     DALTON/pdpack/arhpack.F
     DALTON/pdpack/eispack.F
     DALTON/pdpack/jacobi.F
