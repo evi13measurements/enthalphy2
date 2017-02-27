@@ -20,18 +20,23 @@ module mlcc_t2_init
       integer                          :: i,j,a,b,ai,bj,aibj
    !
    !
+   !
       n_aibj = n_vir*n_occ
+   !
+   ! Allocations
    !
       call allocator(cholesky_ia,n_aibj,n_J)
       call allocator(g_iajb,n_aibj,n_aibj)
       cholesky_ia=zero
       g_iajb=zero
    !
-   !  IO: read from CHOLESKY_IA
+   !  IO: read cholesky vectors from CHOLESKY_IA
    !
       lucho_ia=-1
       call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
       rewind(lucho_ia)
+   !
+   !
    !
       do j=1,n_J
          read(lucho_ia)(cholesky_ia(i,j),i=1,n_aibj)
@@ -39,11 +44,11 @@ module mlcc_t2_init
    !
       call gpclose(lucho_ia,'KEEP')
    !
-   !
-   !  g_iajb=L^J_ia L^J_jb
+   !  Two electron integrals g_iajb = L^J_ia L^J_jb
    !
       call dgemm('N','T',n_aibj,n_aibj,n_J,one,cholesky_ia,n_aibj,cholesky_ia,n_aibj,zero,g_iajb,n_aibj) 
    !
+   ! t2 amplitude guess
    !
       call packin(t2,g_iajb,n_aibj)
    !
@@ -62,16 +67,25 @@ module mlcc_t2_init
          enddo
       enddo
    enddo
+   !
+   ! MP2 energy. OBS! Only works if orbitals are canonical
+   !
    call mp2_energy(t2,g_iajb)
    !
-      call deallocator(cholesky_ia,n_aibj,n_J)
-      call deallocator(g_iajb,n_aibj,n_aibj)
+   ! Deallocations
+   !
+   call deallocator(cholesky_ia,n_aibj,n_J)
+   call deallocator(g_iajb,n_aibj,n_aibj)
    !   
    end subroutine t2_init
    !
    subroutine mp2_energy(t2,g_iajb)
-   !  Only works if orbitals are canonical!!!
+   !
+   !  Purpose: Calculate MP2 energy.  Only works if orbitals are canonical!
    !  E^(2)=sum_iajb t^(1)_aibj*L_iajb
+   !
+   !  Author: Sarai Folkestad
+   !
       use mlcc_data
       use mlcc_utilities
       use mlcc_workspace
@@ -83,8 +97,13 @@ module mlcc_t2_init
       real(dp)                               :: E
    !
       n_occvirr=n_occ*n_vir
+   !
+   ! Allocation
+   !
       call allocator(L_iajb,n_occvirr,n_occvirr)
       L_iajb=zero
+   !
+   ! Calculate correction to energy
    !
       E=zero
       do i=1,n_occ
@@ -102,9 +121,14 @@ module mlcc_t2_init
          enddo
       enddo
    !
-   write(*,*)'MP2 energy correction', E
-   write(*,*)'MP2 energy',E+scf_energy
-   
+   ! Printouts
+   !
+   write(ml_lupri,*)'MLCC MP2 ENERGY - Only correct for canonical orbitals'
+   write(ml_lupri,*)'MP2 energy correction', E
+   write(ml_lupri,*)'MP2 energy',E+scf_energy
+   !
+   ! Deallocation
+   !
       call deallocator(L_iajb,n_occ*n_vir,n_occ*n_vir)
    !
    end subroutine mp2_energy
