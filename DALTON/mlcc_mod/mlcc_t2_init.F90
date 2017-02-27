@@ -53,9 +53,11 @@ module mlcc_t2_init
             do j=1,n_occ
                ai=index_t1(i,a)
                bj=index_t1(j,b)
-               aibj=index_t2(ai,bj)
-               t2(aibj,1)=t2(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
-                  -fock_diagonal(i,1)-fock_diagonal(j,1))
+               if (ai .le. bj) then
+                  aibj=index_t2(ai,bj)
+                  t2(aibj,1)=-t2(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
+                     -fock_diagonal(i,1)-fock_diagonal(j,1))
+               endif
             enddo
          enddo
       enddo
@@ -93,7 +95,7 @@ module mlcc_t2_init
                   naj=index_t1(j,a)
                   nbi=index_t1(i,b)
                   nbj=index_t1(j,b)
-                  L_iajb(nai,nbj)=2*g_iajb(nai,nbj)-g_iajb(naj,nbi)
+                  L_iajb(nai,nbj)=two*g_iajb(nai,nbj)-g_iajb(naj,nbi)
                   E=E+L_iajb(nai,nbj)*t2(index_t2(nai,nbj),1)
                enddo
             enddo
