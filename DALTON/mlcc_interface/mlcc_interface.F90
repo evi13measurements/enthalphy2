@@ -300,7 +300,6 @@ subroutine hf_reader
 !     Read in Fock diagonal and coefficients
 !
       read(lusifc) (fock_diagonal(i,1),i=1,n_orbitals)
-      write(*,*) (fock_diagonal(i,1),i=1,n_orbitals)
       read(lusifc) (orb_coefficients(i,1),i=1,n_lambda) 
 !
 !     Done with file

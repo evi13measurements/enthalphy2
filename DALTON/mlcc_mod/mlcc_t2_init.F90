@@ -16,17 +16,17 @@ module mlcc_t2_init
    !
       real(dp),dimension(:,:)          :: t2
       real(dp),dimension(:,:),pointer  :: cholesky_ia,g_iajb
-      integer                          :: lucho_ia,idum,n_aibj
+      integer                          :: lucho_ia,idum,n_ov
       integer                          :: i,j,a,b,ai,bj,aibj
    !
    !
    !
-      n_aibj = n_vir*n_occ
+      n_ov = n_vir*n_occ 
    !
    ! Allocations
    !
-      call allocator(cholesky_ia,n_aibj,n_J)
-      call allocator(g_iajb,n_aibj,n_aibj)
+      call allocator(cholesky_ia,n_ov,n_J)
+      call allocator(g_iajb,n_ov,n_ov)
       cholesky_ia=zero
       g_iajb=zero
    !
@@ -39,18 +39,18 @@ module mlcc_t2_init
    !
    !
       do j=1,n_J
-         read(lucho_ia)(cholesky_ia(i,j),i=1,n_aibj)
+         read(lucho_ia)(cholesky_ia(i,j),i=1,n_ov)
       enddo
    !
       call gpclose(lucho_ia,'KEEP')
    !
    !  Two electron integrals g_iajb = L^J_ia L^J_jb
    !
-      call dgemm('N','T',n_aibj,n_aibj,n_J,one,cholesky_ia,n_aibj,cholesky_ia,n_aibj,zero,g_iajb,n_aibj) 
+      call dgemm('N','T',n_ov,n_ov,n_J,one,cholesky_ia,n_ov,cholesky_ia,n_ov,zero,g_iajb,n_ov) 
    !
    ! t2 amplitude guess
    !
-      call packin(t2,g_iajb,n_aibj)
+      call packin(t2,g_iajb,n_ov)
    !
    do a=1,n_vir
       do b=1,n_vir
@@ -74,8 +74,8 @@ module mlcc_t2_init
    !
    ! Deallocations
    !
-   call deallocator(cholesky_ia,n_aibj,n_J)
-   call deallocator(g_iajb,n_aibj,n_aibj)
+   call deallocator(cholesky_ia,n_ov,n_J)
+   call deallocator(g_iajb,n_ov,n_ov)
    !   
    end subroutine t2_init
    !
@@ -93,14 +93,14 @@ module mlcc_t2_init
       implicit none
       real(dp),dimension(:,:)                :: t2,g_iajb
       real(dp),dimension(:,:), pointer       :: L_iajb
-      integer                                :: i,j,a,b,nai,naj,nbi,nbj,naibj,najbi,n_occvirr
+      integer                                :: i,j,a,b,nai,naj,nbi,nbj,naibj,najbi,n_ov
       real(dp)                               :: E
    !
-      n_occvirr=n_occ*n_vir
+      n_ov=n_occ*n_vir
    !
    ! Allocation
    !
-      call allocator(L_iajb,n_occvirr,n_occvirr)
+      call allocator(L_iajb,n_ov,n_ov)
       L_iajb=zero
    !
    ! Calculate correction to energy
@@ -129,7 +129,7 @@ module mlcc_t2_init
    !
    ! Deallocation
    !
-      call deallocator(L_iajb,n_occ*n_vir,n_occ*n_vir)
+      call deallocator(L_iajb,n_ov,n_ov)
    !
    end subroutine mp2_energy
 end module mlcc_t2_init
