@@ -90,4 +90,33 @@ subroutine packin(packed,unpacked,N)
     enddo
 !
 end subroutine
+!
+integer function three_i(p,q,r,dim_p,dim_q)
+!
+!   Three index integer function
+!
+!   Calculates the compound index (pqr)
+!
+    implicit none
+!
+    integer :: p,q,r,dim_p,dim_q
+!
+    three_i = dim_p*(dim_q*(r-1)+q-1)+p
+!
+end function three_i
+!
+integer function two_i(p,q,dim_p)
+!
+!   Two index integer function
+!
+!   Calculates the compound 
+!
+    implicit none
+!
+    integer :: p,q,dim_p
+!
+    two_i = dim_p*(q-1)+p
+!
+end function two_i
+!
 end module mlcc_utilities
