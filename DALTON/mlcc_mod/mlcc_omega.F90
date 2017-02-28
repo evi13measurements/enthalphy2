@@ -60,11 +60,15 @@ contains
 !
       implicit none
 !
-      integer lucho_ij,lucho_ia,idummy,J,i 
+      integer :: n_elements ! Number of elements in Cholesky vector being read 
 !
-      real(dp), dimension(:,:), pointer :: L_ki_J
-      real(dp), dimension(:,:), pointer :: L_lc_J
-      real(dp), dimension(:,:), pointer :: g_ki_lc
+      integer :: lucho_ij,lucho_ia,idummy,j,i 
+!
+      real(dp), dimension(:,:), pointer :: L_ki_J => null()
+      real(dp), dimension(:,:), pointer :: L_lc_J => null()
+      real(dp), dimension(:,:), pointer :: g_ki_lc => null()
+!
+      write(ml_lupri,*) 'In mlcc_omega_b1'
 !
 !     I. Calculation of g_ki,lc = sum_J L_ki^J * L_lc^J 
 !
@@ -72,6 +76,9 @@ contains
 !
       call allocator(L_ki_J,n_occ*n_occ,n_J)
       call allocator(L_lc_J,n_occ*n_vir,n_J)
+!
+      L_ki_J = zero
+      L_lc_J = zero
 !
 !     Allocate integrals g_ki_lc
 !
@@ -83,27 +90,31 @@ contains
       call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ij)
 !
-      do J=1,n_J
-         read(lucho_ij) (L_ki_J(i,j),i=1,n_occ*n_occ)
+      n_elements = n_occ*(n_occ+1)/2
+      write(ml_lupri,*) 'Reading L_ij'
+      do j=1,n_J
+         read(lucho_ij)(L_ki_J(i,j),i=1,n_elements)
       enddo
 !
       call gpclose(lucho_ij,'KEEP')
 !
 !     Read L_lc,J
 !
+      write(ml_lupri,*) 'Reading L_ia'
       lucho_ia = -1
       call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ia)
 !
+      n_elements = n_occ*n_vir
       do J=1,n_J
-         read(lucho_ia) (L_lc_J(i,j),i=1,n_occ*n_vir)
+         read(lucho_ia) (L_lc_J(i,j),i=1,n_elements)
       enddo
 !
       call gpclose(lucho_ia,'KEEP')
 !
 !     Calculate ... TODO
 ! 
-
+      write(ml_lupri,*) 'Done reading Cholesky'
 !
    end subroutine mlcc_omega_b1
 !
