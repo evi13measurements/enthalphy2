@@ -37,7 +37,7 @@ contains
    subroutine mlcc_omega_a1
 !
 !     MLCC Omega A1 term ( sum_ckd g_adkc * u_ki^cd )
-!     Written by Eirik F. Kjønstad, February 2017
+!     Written by Eirik F. Kjønstad and Sarai Folkestad, February 2017
 !
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
@@ -51,7 +51,7 @@ contains
    subroutine mlcc_omega_b1
 !
 !     MLCC Omega B1 term ( - sum_ckl u_kl^ac * g_kilc )
-!     Written by Eirik F. Kjønstad, February 2017
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, February 2017
 !
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
@@ -66,7 +66,7 @@ contains
 !
       integer :: lucho_ij,lucho_ia,idummy,j,i
 !
-      integer :: c,k,l,ind_ckl,ind_ki,ind_cl
+      integer :: c,k,l,ckl,ki,cl
 !
       real(dp), dimension(:,:), pointer :: L_ki_J_packed => null() ! (ki) index is packed
       real(dp), dimension(:,:), pointer :: L_lc_J => null()
@@ -75,7 +75,7 @@ contains
 !
       write(ml_lupri,*) 'In mlcc_omega_b1'
 !
-!     I. Calculation of g_ki,lc = sum_J L_ki^J * L_lc^J 
+!     I. Calculation and reordering of g_ki,lc = sum_J L_ki^J * L_lc^J 
 !
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
@@ -91,39 +91,33 @@ contains
       call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ij)
 !
-      n_ki = n_occ*(n_occ+1)/2
-      write(ml_lupri,*) 'Reading L_ij'
-      do j=1,n_J
-         read(lucho_ij)(L_ki_J_packed(i,j),i=1,n_ki)
+      do j = 1,n_J
+         read(lucho_ij) (L_ki_J_packed(i,j), i=1,n_oo_packed)
       enddo
 !
       call gpclose(lucho_ij,'KEEP')
 !
 !     Read L_lc,J
 !
-      write(ml_lupri,*) 'Reading L_ia'
       lucho_ia = -1
       call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ia)
 !
-      n_lc = n_occ*n_vir
-      do J=1,n_J
-         read(lucho_ia) (L_lc_J(i,j),i=1,n_lc)
+      do j=1,n_J
+         read(lucho_ia) (L_lc_J(i,j), i=1,n_ov)
       enddo
 !
       call gpclose(lucho_ia,'KEEP')
 !
-      write(ml_lupri,*) 'Done reading Cholesky'
-!
 !     Allocate integrals g_ki_lc
 !
-      call allocator(g_ki_lc,n_occ*(n_occ+1)/2,n_occ*n_vir) ! (ki) index is packed 
+      call allocator(g_ki_lc,n_oo_packed,n_ov) ! (ki) index is packed 
 !
       g_ki_lc = zero
 !
 !     Calculate g_ki_lc = sum_J L_ki,J * L_lc,J^T 
 ! 
-      call dgemm('N','T',n_ki,n_lc,n_J,one,L_ki_J_packed,n_ki,L_lc_J,n_lc,zero,g_ki_lc,n_ki) 
+      call dgemm('N','T',n_oo_packed,n_ov,n_J,one,L_ki_J_packed,n_oo_packed,L_lc_J,n_ov,zero,g_ki_lc,n_oo_packed) 
 !
 !     Deallocate the Cholesky vectors 
 !
@@ -132,26 +126,24 @@ contains
 !
 !     Allocate reordered integrals g_ckl,i 
 !
-      n_ckl = n_vir*n_occ*n_occ
-      n_i = n_occ
-      call allocator(g_ckl_i,n_ckl,n_i)
+      call allocator(g_ckl_i,n_oov,n_occ)
 !
-!     Calculate reordered integrals
+!     Save reordered integrals g_ckl,i
 !
       do c = 1,n_vir
          do k = 1,n_occ
             do l = 1,n_occ
                do i = 1,n_occ
 !
-!                 Get necessary indices
+!                 Calculate necessary indices
 !
-                  ind_ckl = three_i(c,k,l,n_vir,n_occ) 
-                  ind_ki  = index_t2(k,i)                ! Packed 
-                  ind_cl  = two_i(c,l,n_vir)             ! Not packed
+                  ckl = index_three(c,k,l,n_vir,n_occ) 
+                  ki  = index_packed(k,i)                    ! Packed 
+                  cl  = index_two(c,l,n_vir)             ! Not packed
 !
 !                 Set value of g_ckl_i
 !
-                  g_ckl_i(ind_ckl,i) = g_ki_lc(ind_ki,ind_cl)
+                  g_ckl_i(ckl,i) = g_ki_lc(ki,cl)
 !
                enddo
             enddo
@@ -160,6 +152,8 @@ contains
 !
 !     Deallocate unordered integrals g_ki_lc
 !
+      call deallocator(g_ki_lc,n_oo_packed,n_ov)
+!
    end subroutine mlcc_omega_b1
 !
    subroutine mlcc_omega_c1
@@ -167,9 +161,7 @@ contains
 !  Purpose: Calculate C1 term of Omega
 !  (Omega_ai^C1=sum_ck F_kc u^ac_ik)
 !
-!  Author: Sarai Dery Folkestad
-!
-!  Date: 28. February 2017
+!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, 28. Feb 2017
 !
    use mlcc_data
    use mlcc_utilities
@@ -192,13 +184,13 @@ contains
       do a=1,n_vir
          do k=1,n_occ
             do c=1,n_vir
-               nck=index_t1(k,c)
-               nai=index_t1(i,a)
+               nck=index_two(c,k,n_vir)
+               nai=index_two(a,i,n_vir)
                if (nck .le. nai) then
-                  nci=index_t1(k,c)
-                  nak=index_t1(k,a)
-                  nckai=index_t2(nck,nai)
-                  nciak=index_t2(nci,nak)
+                  nci=index_two(c,i,n_vir)
+                  nak=index_two(a,k,n_vir)
+                  nckai=index_packed(nck,nai)
+                  nciak=index_packed(nci,nak)
                   u_ck_ai(nck,nai)=two*t2am(nckai,1)-t2am(nciak,1)
                endif
             enddo

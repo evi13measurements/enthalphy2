@@ -101,6 +101,7 @@ subroutine deallocator(elm,M,N)
 ! 
    work_remains = work_remains+size
    work_used = work_used-size
+!
 end subroutine deallocator
 !
 !

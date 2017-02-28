@@ -1,6 +1,6 @@
 module mlcc_t2_init
-   contains
-   subroutine t2_init()
+contains
+   subroutine t2_init
    !
    ! Purpose: Calculate initial guess for t2 amplitudes
    !
@@ -54,12 +54,12 @@ module mlcc_t2_init
       do b=1,n_vir
          do i=1,n_occ
             do j=1,n_occ
-               ai=index_t1(i,a)
-               bj=index_t1(j,b)
+               ai = index_two(a,i,n_vir)
+               bj = index_two(b,j,n_vir)
                if (ai .le. bj) then
-                  aibj=index_t2(ai,bj)
-                  t2am(aibj,1)=-t2am(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
-                     -fock_diagonal(i,1)-fock_diagonal(j,1))
+                  aibj = index_packed(ai,bj)
+                  t2am(aibj,1) = -t2am(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
+                                                            -fock_diagonal(i,1)-fock_diagonal(j,1))
                endif
             enddo
          enddo
@@ -91,7 +91,7 @@ module mlcc_t2_init
       implicit none
       real(dp),dimension(:,:)                :: t2,g_iajb
       real(dp),dimension(:,:), pointer       :: L_iajb
-      integer                                :: i,j,a,b,nai,naj,nbi,nbj,naibj,najbi
+      integer                                :: i,j,a,b,ai,aj,bi,bj,aibj,ajbi
       real(dp)                               :: E
    !
    !
@@ -107,12 +107,12 @@ module mlcc_t2_init
          do j=1,n_occ
             do a=1,n_vir
                do b=1,n_vir
-                  nai=index_t1(i,a)
-                  naj=index_t1(j,a)
-                  nbi=index_t1(i,b)
-                  nbj=index_t1(j,b)
-                  L_iajb(nai,nbj)=two*g_iajb(nai,nbj)-g_iajb(naj,nbi)
-                  E=E+L_iajb(nai,nbj)*t2(index_t2(nai,nbj),1)
+                  ai=index_two(a,i,n_vir)
+                  aj=index_two(a,j,n_vir)
+                  bi=index_two(b,i,n_vir)
+                  bj=index_two(b,j,n_vir)
+                  L_iajb(ai,bj)=two*g_iajb(ai,bj)-g_iajb(aj,bi)
+                  E=E+L_iajb(ai,bj)*t2(index_packed(ai,bj),1)
                enddo
             enddo
          enddo

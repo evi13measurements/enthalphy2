@@ -1,122 +1,109 @@
 module mlcc_utilities
-
-use mlcc_data
+!
+!   MLCC Utilities 
+!   Written by Sarai D. Folkstad and Eirik F. Kjønstad, 28 Feb 2017
+!
+    use mlcc_data
+!
 contains
-integer function index_t2(nai,nbj)
+   integer function index_packed(i,j)
 !
-! Purpose: Calculates t2 indices.
-!
-!   
-   implicit none
-!
-   integer, intent(in)     :: nai, nbj
-!
-   index_t2 = (max(nai,nbj)*(max(nai,nbj)-3)/2)+nai+nbj
-!
-end function index_t2
-!
-!
-integer function index_t1(i,a)
-!
-! Purpose: Calculates t1 indices.
-!
-!   
-   implicit none
-!
-   integer, intent(in)     :: i, a
-!
-   index_t1 = n_vir*(i-1) + a
-!
-end function index_t1
-!
-integer function packed_size(N)
-! Purpose: Returns size of packed vectors alpha >= beta
-!
-    use mlcc_data
-!   
-    implicit none
-    integer         ::   N
-!
-    packed_size = N*(N+1)/2
-!
-end function packed_size
-!
-!
-!
-subroutine squareup(packed,unpacked,N)
-!
-! Purpose: Squareup to full dimension (NxN) of packed vectors.
+!     Purpose: Returns packed index (ij) for symmetric arrays
 ! 
-    use mlcc_data
-    use mlcc_types
+      implicit none
 !
-    implicit none
+      integer, intent(in) :: i,j
 !
+      index_packed = (max(i,j)*(max(i,j)-3)/2) + i + j
 !
-    real(dp),dimension(:,:),intent(in)     ::    packed
-    real(dp),dimension(:,:)                ::    unpacked
-    integer                                ::    i,j,N
+   end function index_packed
 !
-    do i = 1,N
-        do j = i+1,N
-            unpacked(i,j)=packed(index_t2(i,j),1)
-            unpacked(j,i)=unpacked(i,j)
-        enddo
-        unpacked(i,i)=packed(index_t2(i,i),1)
-    enddo
+   integer function packed_size(N)
 !
-end subroutine
+!     Purpose: Returns size of packed vectors alpha >= beta
 !
+      use mlcc_data
+!   
+      implicit none
 !
-subroutine packin(packed,unpacked,N)
+      integer :: N
 !
-! Purpose: Pack down of full square matrix of dimension (NxN).
+      packed_size = N*(N+1)/2
+!
+   end function packed_size
+!
+   subroutine squareup(packed,unpacked,N)
+!
+!     Purpose: Squares up to full dimension (N x N) of packed vectors.
 ! 
-
-    use mlcc_data
-    use mlcc_types
+      use mlcc_data
+      use mlcc_types
 !
-    implicit none
+      implicit none
 !
+      real(dp),dimension(:,:),intent(in)     ::    packed
+      real(dp),dimension(:,:)                ::    unpacked
+      integer                                ::    i,j,N
 !
-    real(dp),dimension(:,:)              ::    packed
-    real(dp),dimension(:,:),intent(in)   ::    unpacked
-    integer                              ::    i,j,N
+      do i=1,N
+         do j=1,N
+            unpacked(i,j) = packed(index_packed(i,j),1)
+         enddo
+      enddo
 !
-    do i = 1,N
-        do j = i,N
-          packed(index_t2(i,j),1)=unpacked(i,j)
-        enddo
-    enddo
+      ! do i = 1,N
+      !    do j = i+1,N
+      !       unpacked(i,j)=packed(index_packed(i,j),1) ! Eirik: I am rewriting this.
+      !       unpacked(j,i)=unpacked(i,j)
+      !    enddo
+      !    unpacked(i,i)=packed(index_packed(i,i),1)
+      ! enddo
 !
-end subroutine
+   end subroutine
 !
-integer function three_i(p,q,r,dim_p,dim_q)
+   subroutine packin(packed,unpacked,N)
 !
-!   Three index integer function
+!     Purpose: Pack down full square matrix of dimension (N x N).
+! 
+      use mlcc_data
+      use mlcc_types
 !
-!   Calculates the compound index (pqr)
+      implicit none
 !
-    implicit none
+      real(dp),dimension(:,:)              ::    packed
+      real(dp),dimension(:,:),intent(in)   ::    unpacked
+      integer                              ::    i,j,N
 !
-    integer :: p,q,r,dim_p,dim_q
+      do i = 1,N
+         do j = i,N
+            packed(index_packed(i,j),1)=unpacked(i,j)
+         enddo
+      enddo
 !
-    three_i = dim_p*(dim_q*(r-1)+q-1)+p
+   end subroutine
 !
-end function three_i
+   integer function index_three(p,q,r,dim_p,dim_q)
 !
-integer function two_i(p,q,dim_p)
+!     Purpose: Returns the compound index (pqr)
 !
-!   Two index integer function
+      implicit none
 !
-!   Calculates the compound 
+      integer :: p,q,r,dim_p,dim_q
 !
-    implicit none
+      index_three = dim_p*(dim_q*(r-1)+q-1)+p
 !
-    integer :: p,q,dim_p
+   end function index_three
 !
-    two_i = dim_p*(q-1)+p
+   integer function index_two(p,q,dim_p)
 !
-end function two_i
+!     Purpose: Returns the compound index (pq)
+!
+      implicit none
+!
+      integer :: p,q,dim_p
+!
+      index_two = dim_p*(q-1)+p
+!
+   end function index_two
 !
 end module mlcc_utilities
