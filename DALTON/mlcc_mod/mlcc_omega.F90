@@ -163,6 +163,64 @@ contains
    end subroutine mlcc_omega_b1
 !
    subroutine mlcc_omega_c1
+!
+!  Purpose: Calculate C1 term of Omega
+!  (Omega_ai^C1=sum_ck F_kc u^ac_ik)
+!
+!  Author: Sarai Dery Folkestad
+!
+!  Date: 28. February 2017
+!
+   use mlcc_data
+   use mlcc_utilities
+   use mlcc_workspace
+   implicit none
+!
+   real(dp),dimension(:,:),pointer  :: F_kc
+   real(dp),dimension(:,:),pointer  :: u_ck_ai
+   integer                          :: i,k,c,a
+   integer                          :: nck,nai,nak,nci,nckai,nciak
+!
+!
+!  Allocation
+!
+   call allocator(u_ck_ai,n_ov,n_ov)   ! 2*t_ck_ai-t_ci_ak
+!
+! Set up u_ck_ai
+!
+   do i=1,n_occ
+      do a=1,n_vir
+         do k=1,n_occ
+            do c=1,n_vir
+               nck=index_t1(k,c)
+               nai=index_t1(i,a)
+               if (nck .le. nai) then
+                  nci=index_t1(k,c)
+                  nak=index_t1(k,a)
+                  nckai=index_t2(nck,nai)
+                  nciak=index_t2(nci,nak)
+                  u_ck_ai(nck,nai)=two*t2am(nckai,1)-t2am(nciak,1)
+               endif
+            enddo
+         enddo
+      enddo
+   enddo
+!
+! Allocation 
+!
+   call allocator(F_kc,n_ov,1) ! T1-transformed fock matrix
+!
+!  IO - Read fock matrix
+!
+!
+!  T1 transformation
+!
+!
+!  Deallocation
+!
+   call deallocator(F_kc,n_ov,1)
+   call deallocator(u_ck_ai,n_ov,n_ov)
+
    end subroutine mlcc_omega_c1
 !
    subroutine mlcc_omega_d1

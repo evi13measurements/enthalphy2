@@ -22,7 +22,7 @@ module mlcc_data
    integer                          :: n_orbitals, n_basis, n_lambda, n_occ, n_vir,n_J,n_reduced
    integer                          :: n_t1am, n_t2am, n_t2am_pack
    integer                          :: n_v_2, n_v_3, n_basis_2, n_basis_2_pack, n_bas_orb
-   integer                          :: n_ao_ints
+   integer                          :: n_ao_ints, n_ov, n_vv, n_oo, n_oo_packed
 !
 !  info read from file  
    real(dp)                         :: nuclear_potential,scf_energy
@@ -54,7 +54,7 @@ module mlcc_data
    real(dp), dimension(:,:), pointer  :: fock_diagonal     => null()
 !   
 !  the mo fock matrix, standard and t1- and c1-transformed
-   real(dp), dimension(:), pointer  :: mo_fock_mat       => null()
+   real(dp), dimension(:,:), pointer  :: mo_fock_mat       => null()
    real(dp), dimension(:), pointer  :: mo_fock_mat_t1    => null()
    real(dp), dimension(:), pointer  :: mo_fock_mat_c1    => null()
 !   

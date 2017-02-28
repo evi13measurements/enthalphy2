@@ -56,3 +56,28 @@ C
       call gpclose(lumlch,'KEEP')
 C  
       end subroutine mlcc_rewr_chol
+C
+C
+      subroutine mlcc_rewr_one_el_int(work,lwork)
+#include "implicit.h"
+#include "maxorb.h"
+#include "aovec.h"
+#include "priunit.h"
+#include "maxash.h"
+#include "iratdef.h"
+#include "ccdeco.h"
+#include "ccsdsym.h"
+#include "choio.h"
+C
+C
+      dimension work(*)
+C
+C
+      lumloe=-1
+      call rdonel('ONEHAMIL',.TRUE.,work,nnbst(1))
+      call gpopen(lumloe,'MLCC_ONEEL','UNKNOWN','SEQUENTIAL',
+     &        'FORMATTED',idummy,.false.)
+      rewind(lumloe)
+      write(lumloe,*)(work(i),i=1,n2bst(1))
+      call gpclose(lumloe,'KEEP')
+      end subroutine mlcc_rewr_one_el_int
