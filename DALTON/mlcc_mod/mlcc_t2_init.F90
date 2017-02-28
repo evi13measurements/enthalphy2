@@ -1,6 +1,6 @@
 module mlcc_t2_init
    contains
-   subroutine t2_init(t2)
+   subroutine t2_init()
    !
    ! Purpose: Calculate initial guess for t2 amplitudes
    !
@@ -14,14 +14,12 @@ module mlcc_t2_init
    !
       implicit none
    !
-      real(dp),dimension(:,:)          :: t2
       real(dp),dimension(:,:),pointer  :: cholesky_ia,g_iajb
-      integer                          :: lucho_ia,idum,n_ov
+      integer                          :: lucho_ia,idum
       integer                          :: i,j,a,b,ai,bj,aibj
    !
    !
    !
-      n_ov = n_vir*n_occ 
    !
    ! Allocations
    !
@@ -50,7 +48,7 @@ module mlcc_t2_init
    !
    ! t2 amplitude guess
    !
-      call packin(t2,g_iajb,n_ov)
+      call packin(t2am,g_iajb,n_ov)
    !
    do a=1,n_vir
       do b=1,n_vir
@@ -60,7 +58,7 @@ module mlcc_t2_init
                bj=index_t1(j,b)
                if (ai .le. bj) then
                   aibj=index_t2(ai,bj)
-                  t2(aibj,1)=-t2(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
+                  t2am(aibj,1)=-t2am(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
                      -fock_diagonal(i,1)-fock_diagonal(j,1))
                endif
             enddo
@@ -70,7 +68,7 @@ module mlcc_t2_init
    !
    ! MP2 energy. OBS! Only works if orbitals are canonical
    !
-   call mp2_energy(t2,g_iajb)
+   call mp2_energy(t2am,g_iajb)
    !
    ! Deallocations
    !
@@ -93,10 +91,9 @@ module mlcc_t2_init
       implicit none
       real(dp),dimension(:,:)                :: t2,g_iajb
       real(dp),dimension(:,:), pointer       :: L_iajb
-      integer                                :: i,j,a,b,nai,naj,nbi,nbj,naibj,najbi,n_ov
+      integer                                :: i,j,a,b,nai,naj,nbi,nbj,naibj,najbi
       real(dp)                               :: E
    !
-      n_ov=n_occ*n_vir
    !
    ! Allocation
    !

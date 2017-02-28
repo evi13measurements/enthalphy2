@@ -134,11 +134,9 @@ contains
 !
    real(dp),dimension(:,:),pointer  :: F_kc
    real(dp),dimension(:,:),pointer  :: u_ck_ai
-   integer                          :: n_ov
    integer                          :: i,k,c,a
    integer                          :: nck,nai,nak,nci,nckai,nciak
 !
-   n_ov=n_occ*n_vir
 !
 !  Allocation
 !

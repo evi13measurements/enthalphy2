@@ -258,14 +258,12 @@ subroutine hf_reader
       integer  :: n_symmetries, n_basis_sym, n_orbitals_sym
       integer  :: i,j
 !      
-!
 !     
 !     Open Sirius Fock file
 !     ---------------------
 !
       call gpopen(lusifc,'SIRIFC','OLD',' ','UNFORMATTED',idummy,'.FALSE.')
       rewind(lusifc)
-!
 !
 !     Read in various stuff from Sirius Fock file. Things depending on symmetry is mostly
 !     discarded at the end of the subroutine as we do not use symmetry. Information in 
@@ -287,6 +285,10 @@ subroutine hf_reader
       n_t1am         = n_vir*n_occ
       n_t2am         = n_t1am*n_t1am
       n_t2am_pack    = n_t1am*(n_t1am+1)/2
+      n_ov           = n_occ*n_vir
+      n_oo           = n_occ*n_occ
+      n_vv           = n_vir*n_vir
+      n_oo_packed    = n_occ*(n_occ+1)/2
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
@@ -295,7 +297,6 @@ subroutine hf_reader
 !      
       call allocator(orb_coefficients,n_lambda,1)
       orb_coefficients = zero
-
 !
 !     Read in Fock diagonal and coefficients
 !

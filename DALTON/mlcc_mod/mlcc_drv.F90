@@ -70,13 +70,15 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Set initial guess for the doubles amplitudes 
 !
-   call t2_init(t2am)
+  call t2_init
 !
 !  Calculate the omega vector 
 !
    call mlcc_omega_calc
 !
    call deallocator(t2am,n_t2am_pack,1)
+   call deallocator(fock_diagonal,n_orbitals,1)
+   call deallocator(orb_coefficients,n_lambda,1)
 !
 end subroutine mlcc_drv
 !

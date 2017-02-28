@@ -390,6 +390,7 @@ c    *                  XDISC,XNDISC,(XDISC/XNDISC)*100.0D0
 C     MLCC
          if (MLCCCH) then
             call mlcc_rewr_chol(INDRED,WORK,LWORK)
+            call mlcc_rewr_one_el_int(work,lwork)
          endif
 C     
          CALL CHO_END(DIAG,NTOINT,XSEL0,YSEL0)
