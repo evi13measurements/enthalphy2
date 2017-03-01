@@ -51,10 +51,10 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Allocate amplitudes and the omega vector 
 !
-   call allocator(omega1,n_t1am,1)
+   call allocator(omega1,n_vir,n_occ) ! Omega_a,i
    call allocator(omega2,n_t2am_pack,1)
 !
-   call allocator(t1am,n_t1am,1)
+   call allocator(t1am,n_vir,n_occ)
    call allocator(t2am,n_t2am_pack,1)
 !
    omega1 = zero

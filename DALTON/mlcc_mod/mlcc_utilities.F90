@@ -106,4 +106,70 @@ contains
 !
    end function index_two
 !
+   subroutine read_cholesky_ia(L_ia_J)
+!
+!     Purpose: Read Cholesky vectors L_ia^J from file and place them 
+!              in the incoming vector  
+!
+      implicit none
+!
+      double precision L_ia_J(n_ov,n_J)
+!
+      integer :: lucho_ia 
+      integer :: i,j,idummy
+!
+      lucho_ia = -1
+      call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
+      rewind(lucho_ia)
+!
+      do j=1,n_J
+         read(lucho_ia) (L_ia_J(i,j), i=1,n_ov)
+      enddo
+!
+      call gpclose(lucho_ia,'KEEP')      
+!
+   end subroutine read_cholesky_ia
+!
+   subroutine read_cholesky_ij(L_ij_J)
+!
+!     Purpose: Read Cholesky vectors L_ij^J from file and place them 
+!              in the incoming vector  
+!
+      implicit none
+!
+      double precision L_ij_J(n_oo_packed,n_J)
+!
+      integer :: lucho_ij
+      integer :: i,j,idummy
+!
+      lucho_ij = -1
+      call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
+      rewind(lucho_ij)
+!
+      do j = 1,n_J
+         read(lucho_ij) (L_ij_J(i,j), i=1,n_oo_packed)
+      enddo
+!
+      call gpclose(lucho_ij,'KEEP')    
+!      
+   end subroutine read_cholesky_ij
+!
+   subroutine vec_print(vec,dim_1,dim_2)
+!
+!     Purpose: prints a vector with a compound index (p q) of dimension (dim_1 x dim_2)
+!        (for debugging, remove or replace later on)
+!
+      implicit none
+!
+      integer p,q,pq
+      integer dim_1,dim_2
+      double precision vec(dim_1,dim_2)
+!
+      do q = 1,dim_2
+         do p = 1,dim_1
+            write(ml_lupri,*) p,q,vec(p,q)
+         enddo
+      enddo
+!
+   end subroutine vec_print
 end module mlcc_utilities

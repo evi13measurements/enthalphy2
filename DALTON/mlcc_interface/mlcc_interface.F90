@@ -122,7 +122,7 @@ subroutine mlcc_iajb(vec)
 !
 end subroutine mlcc_iajb
 !
-subroutine mlcc_get_cholesky()
+subroutine mlcc_get_cholesky
 !
 !  MLCC Cholesky vector reader, and transformator
 !  Authors:  Eirik Kjønstad and Sarai Folkestad, January 2017
@@ -282,15 +282,16 @@ subroutine hf_reader
 !     Calculate number of virtuals and amplitudes
 !
       n_vir          = n_orbitals - n_occ
-      n_t1am         = n_vir*n_occ
-      n_t2am         = n_t1am*n_t1am
-      n_t2am_pack    = n_t1am*(n_t1am+1)/2
+      n_t1am         = n_vir*n_occ    !! Eirik: I suggest we remove these amplitude specific numbers
+      n_t2am         = n_t1am*n_t1am   !!  ---> n_t2am = n_oovv
+      n_t2am_pack    = n_t1am*(n_t1am+1)/2 !! ---> n_t2am_packed = n_ov_ov_packed 
       n_ov           = n_occ*n_vir
       n_oo           = n_occ*n_occ
       n_vv           = n_vir*n_vir
       n_oo_packed    = n_occ*(n_occ+1)/2
       n_oov          = n_vir*n_occ*n_occ
       n_basis_2_pack = n_basis*(n_basis+1)/2
+      n_ooo          = n_occ*n_occ*n_occ
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
