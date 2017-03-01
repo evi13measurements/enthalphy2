@@ -1,4 +1,4 @@
 ! Purpose:
 ! common variables for mlcc in cholesky program.    
-      LOGICAL MLCCCH
+      LOGICAL MLCCCH, MLCCSI
       COMMON /MLCCMOD/ MLCCCH

@@ -14,7 +14,7 @@ contains
    !
       implicit none
    !
-      real(dp),dimension(:,:),pointer  :: cholesky_ia,g_iajb
+      real(dp),dimension(:,:),pointer  :: cholesky_ia,g_iajb   => null()
       integer                          :: lucho_ia,idum
       integer                          :: i,j,a,b,ai,bj,aibj
    !
@@ -90,7 +90,7 @@ contains
    !
       implicit none
       real(dp),dimension(:,:)                :: t2,g_iajb
-      real(dp),dimension(:,:), pointer       :: L_iajb
+      real(dp),dimension(:,:), pointer       :: L_iajb   => null()
       integer                                :: i,j,a,b,ai,aj,bi,bj,aibj,ajbi
       real(dp)                               :: E
    !

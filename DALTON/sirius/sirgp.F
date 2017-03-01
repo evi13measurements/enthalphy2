@@ -1969,6 +1969,7 @@ C
 #include "infinp.h"
 #include "inforb.h"
 #include "infpri.h"
+#include "mlcc_mod.h"
 C
       LOGICAL ANTSYM
 C
@@ -1976,6 +1977,9 @@ C
       IF (P6FLAG(18)) WRITE (LUPRI,'(/A)')
      &   ' ----- One-electron Hamiltonian matrix from SIRH1 :'
       CALL RDONEL('ONEHAMIL',.TRUE.,H1AO,NNBAST)
+      if (mlccch) then
+        call mlcc_wr_aoint(H1AO,NNBAST)
+      endif
 C
 C     Add field-dependent terms
 C

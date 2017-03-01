@@ -139,12 +139,12 @@ subroutine mlcc_get_cholesky()
    integer       :: ludiag,lucho,lucho_ij,lucho_ia,lucho_ab,lumlch
    integer       :: i,j,k,idum
    integer       :: n_twoel_diag
-   integer, dimension(:,:), pointer       :: index_reduced
-   real(dp), dimension(:,:), pointer      :: cho_diag
-   real(dp), dimension(:,:), pointer      :: cho_ao
+   integer, dimension(:,:), pointer       :: index_reduced  => null()
+   real(dp), dimension(:,:), pointer      :: cho_diag       => null()  
+   real(dp), dimension(:,:), pointer      :: cho_ao         => null()
    integer       :: lencho
-   real(dp), dimension(:,:), pointer      :: cholesky_ao,cholesky_ao_sq
-   real(dp), dimension(:,:), pointer      :: cholesky_mo_sq,cholesky_mo,X
+   real(dp), dimension(:,:), pointer      :: cholesky_ao,cholesky_ao_sq    => null()   
+   real(dp), dimension(:,:), pointer      :: cholesky_mo_sq,cholesky_mo,X  => null()
 !
    n_twoel_diag = packed_size(n_basis)
 !
@@ -290,6 +290,7 @@ subroutine hf_reader
       n_vv           = n_vir*n_vir
       n_oo_packed    = n_occ*(n_occ+1)/2
       n_oov          = n_vir*n_occ*n_occ
+      n_basis_2_pack = n_basis*(n_basis+1)/2
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
@@ -310,4 +311,39 @@ subroutine hf_reader
 !
 
    end subroutine hf_reader
+!
+!
+   subroutine mlcc_fock()
+!
+      use mlcc_data
+      use mlcc_workspace
+!
+      implicit none
+      real(dp), dimension(:,:), pointer      :: fock_ao  => null()
+      real(dp), dimension(:,:), pointer      :: ao_int  => null()
+      integer                                :: luaoin = -1
+      integer                                :: idummy,i
+!
+!  Allocate for one-electron ao integrals
+!
+      call allocator(ao_int,n_basis_2_pack,1)
+!
+!  Read one-electron ao integrals
+!
+      call gpopen(luoain,'MLCC_AOINT','UNKNOWN','SEQUENTIAL','FORMATTED',idummy,.false.)
+      rewind(luaoin)
+!
+      read(luaoin,*)(ao_int(i),i=1,n_basis_2_pack)
+!
+      call gpclose(luaoin,'KEEP')
+!
+!  Allocate ao fock matrix
+!
+      call allocator(fock_ao,n_basis,n_basis)
+!
+!   Add one-electron contributionsto fock matrix
+!
+      call deallocator(fock_ao,n_basis,n_basis)
+      call deallocator(ao_int,n_basis_2_pack,1)      
+   end subroutine mlcc_fock
 
