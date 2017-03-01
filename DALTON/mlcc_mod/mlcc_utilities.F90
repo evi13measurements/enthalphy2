@@ -106,6 +106,43 @@ contains
 !
    end function index_two
 !
+!
+   subroutine n_one_batch(required,available,max_batch_length,n_batch,batch_dimension)
+!  Purpose: Calculate number of batches
+!
+!  required          =  required memory (words)
+!  available         =  available memory (words)
+!  max_batch_length  =  length of batch 
+!  n_batch           =  number of batches
+!  batch_dimension   =  original size of dimension that we batch over
+!
+!  Batching structure will be:
+!  With rest:     (n_batch-1)*(max_batch_length) + rest = required
+!  Without rest:  (n_batch)*(max_batch_length) = required
+!
+      implicit none
+!
+!     
+      integer, intent(in)           :: required, available, batch_dimension
+      integer                       :: max_batch_length,n_batch
+!
+!  Max batch size
+!
+      max_batch_length = available/(required/batch_dimension)
+!
+!  Number of full batches
+!
+      n_batch=required/max_batch_length
+!
+!     Test for rest
+!
+      if (n_batch*max_batch_length .lt. required) then
+         n_batch = n_batch+1
+      endif
+!
+!
+   end subroutine n_one_batch
+!
    subroutine read_cholesky_ia(L_ia_J)
 !
 !     Purpose: Read Cholesky vectors L_ia^J from file and place them 

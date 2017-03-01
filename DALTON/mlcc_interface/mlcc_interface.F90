@@ -318,12 +318,17 @@ subroutine hf_reader
 !
       use mlcc_data
       use mlcc_workspace
+      use mlcc_utilities
 !
       implicit none
       real(dp), dimension(:,:), pointer      :: fock_ao  => null()
       real(dp), dimension(:,:), pointer      :: ao_int  => null()
+      real(dp), dimension(:,:), pointer      :: X => null()
       integer                                :: luaoin = -1
       integer                                :: idummy,i
+!
+!!! ONE-ELECTRON CONTRIBUTION !!!
+!
 !
 !  Allocate for one-electron ao integrals
 !
@@ -331,20 +336,36 @@ subroutine hf_reader
 !
 !  Read one-electron ao integrals
 !
-      call gpopen(luoain,'MLCC_AOINT','UNKNOWN','SEQUENTIAL','FORMATTED',idummy,.false.)
+      call gpopen(luaoin,'MLCC_AOINT','UNKNOWN','SEQUENTIAL','FORMATTED',idummy,.false.)
       rewind(luaoin)
 !
-      read(luaoin,*)(ao_int(i),i=1,n_basis_2_pack)
+      read(luaoin,*)(ao_int(i,1),i=1,n_basis_2_pack)
 !
       call gpclose(luaoin,'KEEP')
 !
-!  Allocate ao fock matrix
+!  Allocate ao fock matrix, add one-electron contributions
 !
       call allocator(fock_ao,n_basis,n_basis)
 !
-!   Add one-electron contributionsto fock matrix
+      call squareup(ao_int,fock_ao,n_basis)
 !
+      call deallocator(ao_int,n_basis_2_pack,1) 
+!
+!     Transform to one-electron part to mo and add to mo_fock_mat 
+!
+      call allocator(X,n_basis,n_orbitals)
+!
+      call dgemm('N','N',n_basis,n_orbitals,n_basis,one,fock_ao,n_basis,orb_coefficients,n_basis,zero,X,n_basis)
+      call dgemm('T','N',n_orbitals,n_orbitals,n_basis,one,orb_coefficients,n_basis,X,n_basis,zero,mo_fock_mat,n_orbitals)
+!
+      call deallocator(X,n_basis,n_orbitals)
       call deallocator(fock_ao,n_basis,n_basis)
-      call deallocator(ao_int,n_basis_2_pack,1)      
+!
+!
+!!! TWO-ELECTRON CONTRIBUTION !!!
+!
+!  Allocation for cholesky vectors L_ij_J, L_ab_J, L_ai_J
+!  
+!    
    end subroutine mlcc_fock
 

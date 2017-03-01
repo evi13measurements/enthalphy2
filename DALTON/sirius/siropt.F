@@ -2759,6 +2759,7 @@ C
       CALL WRITT (LUSIFC,NC4,CREF)   ! rec no. 4
       CALL WRITT (LUSIFC,MMASHX,DV)  ! rec no. 5
 C Write Fock matrix.
+C
       CALL WRITT (LUSIFC,M2ORBT,WRK(KFOCK)) ! rec no. 6
       CALL WRITT (LUSIFC,M2ASHY,PV)  ! rec no. 7
       CALL WRITT (LUSIFC,MMORBT,FC)  ! rec no. 8

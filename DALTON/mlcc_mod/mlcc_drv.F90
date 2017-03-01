@@ -48,6 +48,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !  Hartree-Fock routine
 !
    call hf_reader
+   call allocator(mo_fock_mat,n_orbitals,n_orbitals)
 !
 !  Allocate amplitudes and the omega vector 
 !
@@ -79,6 +80,8 @@ subroutine mlcc_drv(work,lwork,lupri)
    call deallocator(t2am,n_t2am_pack,1)
    call deallocator(fock_diagonal,n_orbitals,1)
    call deallocator(orb_coefficients,n_lambda,1)
+   call deallocator(mo_fock_mat,n_orbitals,n_orbitals)
+!
 !
 end subroutine mlcc_drv
 !

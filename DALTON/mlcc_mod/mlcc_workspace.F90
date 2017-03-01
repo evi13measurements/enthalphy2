@@ -67,8 +67,8 @@ subroutine allocator(elm,M,N)
    endif
 !    
 !
-   work_remains = work_remains-size
-   work_used = work_used+size
+   work_remains = work_remains-4*size
+   work_used = work_used+4*size
    if (work_remains .lt. 0) then
       print*,"error: User specified memory too small"
       stop
@@ -99,8 +99,8 @@ subroutine deallocator(elm,M,N)
       stop
    endif
 ! 
-   work_remains = work_remains+size
-   work_used = work_used-size
+   work_remains = work_remains+4*size
+   work_used = work_used-4*size
 !
 end subroutine deallocator
 !
@@ -130,8 +130,8 @@ subroutine allocator_int(elm,M,N)
    endif
 !    
 !
-   work_remains = work_remains-size
-   work_used = work_used+size
+   work_remains = work_remains-2*size
+   work_used = work_used+2*size
    if (work_remains .lt. 0) then
       print*,"error: User specified memory too small"
       stop
@@ -162,8 +162,8 @@ subroutine deallocator_int(elm,M,N)
       stop
    endif
 ! 
-   work_remains = work_remains+size
-   work_used = work_used-size
+   work_remains = work_remains+2*size
+   work_used = work_used-2*size
 end subroutine deallocator_int
 !
 subroutine vec_allocator(elm,N)

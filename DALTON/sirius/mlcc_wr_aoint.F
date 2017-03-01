@@ -1,4 +1,4 @@
-      subroutine mlcc_wr_ao(h1ao,nnbst)
+      subroutine mlcc_wr_aoint(h1ao,nnbst)
 C     Purpose: Save AO integrals for MLCC code
 C     Save to MLCC_AOINT
 C
@@ -17,4 +17,4 @@ C
 C
       call gpclose(luoain,'KEEP')
 C
-      end subroutine mlcc_wr_ao
+      end subroutine mlcc_wr_aoint
