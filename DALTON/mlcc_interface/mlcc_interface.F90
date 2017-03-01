@@ -282,9 +282,9 @@ subroutine hf_reader
 !     Calculate number of virtuals and amplitudes
 !
       n_vir          = n_orbitals - n_occ
-      n_t1am         = n_vir*n_occ
-      n_t2am         = n_t1am*n_t1am
-      n_t2am_pack    = n_t1am*(n_t1am+1)/2
+      n_t1am         = n_vir*n_occ    !! Eirik: I suggest we remove these amplitude specific numbers
+      n_t2am         = n_t1am*n_t1am   !!  ---> n_t2am = n_oovv
+      n_t2am_pack    = n_t1am*(n_t1am+1)/2 !! ---> n_t2am_packed = n_ov_ov_packed 
       n_ov           = n_occ*n_vir
       n_oo           = n_occ*n_occ
       n_vv           = n_vir*n_vir

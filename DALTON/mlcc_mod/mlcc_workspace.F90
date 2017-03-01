@@ -168,7 +168,7 @@ end subroutine deallocator_int
 !
 subroutine vec_allocator(elm,N)
 !
-!
+!  (Eirik: These vector allocators will not be necessary... To remove...)
 !  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
 !  January 2017
 !

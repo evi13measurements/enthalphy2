@@ -7,6 +7,8 @@ module mlcc_omega
 !  The routine mlcc_omega_calc directs the calculation and can be called from outside the module.
 !
    use mlcc_data
+   use mlcc_workspace
+   use mlcc_utilities
 !
 contains 
    subroutine mlcc_omega_calc
@@ -45,7 +47,26 @@ contains
 !
       implicit none
 !
-      write(ml_lupri,*) 'In mlcc_omega_a1'
+      integer :: lucho_ia,lucho_ab
+!
+      integer :: i,j,idummy
+!
+      real(dp), dimension(:,:), pointer :: L_kc_J  => null()
+      real(dp), dimension(:,:), pointer :: L_ad_J  => null()   ! Here, a is being batched over
+      real(dp), dimension(:,:), pointer :: g_ad_kc => null()   ! Here, a is being batched over
+      real(dp), dimension(:,:), pointer :: g_a_ckd => null()   ! Here, a is being batched over 
+!
+!     Allocate Cholesky vector L_kc_J
+!
+      call allocator(L_kc_J,n_ov,n_J)
+!
+!     Set L_kc_J to zero
+!
+      L_kc_J = zero
+!
+!     Read Cholesky vector L_kc_J
+!
+      call read_cholesky_ia(L_kc_J)
 !
    end subroutine mlcc_omega_a1
 !
@@ -57,14 +78,11 @@ contains
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
 !
-      use mlcc_workspace
-      use mlcc_utilities
-!
       implicit none
 !
       integer :: lucho_ij,lucho_ia,idummy,j,i
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
       integer :: a,c,k,l,ckl,ki,cl,ak,akcl,al,alck,ck,ai
 !
@@ -89,27 +107,11 @@ contains
 !
 !     Read L_ki,J
 !
-      lucho_ij = -1
-      call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
-      rewind(lucho_ij)
-!
-      do j = 1,n_J
-         read(lucho_ij) (L_ki_J_packed(i,j), i=1,n_oo_packed)
-      enddo
-!
-      call gpclose(lucho_ij,'KEEP')
+      call read_cholesky_ij(L_ki_J_packed)
 !
 !     Read L_lc,J
 !
-      lucho_ia = -1
-      call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
-      rewind(lucho_ia)
-!
-      do j=1,n_J
-         read(lucho_ia) (L_lc_J(i,j), i=1,n_ov)
-      enddo
-!
-      call gpclose(lucho_ia,'KEEP')
+      call read_cholesky_ia(L_lc_J)
 !
 !     Allocate integrals g_ki_lc
 !
@@ -198,23 +200,7 @@ contains
 !
 !     Calculate the B1 term (b1_a_i = - sum_ckl u_a_ckl * g_ckl_i)
 !
-      call dgemm('N','N',n_vir,n_occ,n_oov,-one,u_a_ckl,n_vir,g_ckl_i,n_oov,zero,b1_a_i,n_vir) 
-!
-!     Add the B1 term to the omega vector 
-!
-      do i = 1,n_occ
-         do a = 1,n_vir
-!
-!           Calculate the compound index (ai)
-!
-            ai = index_two(a,i,n_vir)
-!
-!           Add the B1 contribution to the omega vector 
-!
-            omega1(ai) = omega1(ai) + b1_a_i(a,i)
-!
-         enddo
-      enddo
+      call dgemm('N','N',n_vir,n_occ,n_oov,-one,u_a_ckl,n_vir,g_ckl_i,n_oov,zero,omega1,n_vir) 
 !
 !     Print the omega vector 
 !
