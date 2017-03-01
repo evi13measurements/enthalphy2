@@ -122,7 +122,7 @@ subroutine mlcc_iajb(vec)
 !
 end subroutine mlcc_iajb
 !
-subroutine mlcc_get_cholesky()
+subroutine mlcc_get_cholesky
 !
 !  MLCC Cholesky vector reader, and transformator
 !  Authors:  Eirik Kjønstad and Sarai Folkestad, January 2017
@@ -290,6 +290,7 @@ subroutine hf_reader
       n_vv           = n_vir*n_vir
       n_oo_packed    = n_occ*(n_occ+1)/2
       n_oov          = n_vir*n_occ*n_occ
+      n_ooo          = n_occ*n_occ*n_occ
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !

@@ -1,9 +1,10 @@
 module mlcc_omega
 !
 ! 	MLCC Omega 
-! 	Written by Eirik F. Kjønstad and Sarai Folkestad, February 2017
+! 	Written by Eirik F. Kjønstad and Sarai Folkestad, 28 Feb 2017
 !
-! 	Routines for the calculation of the < mu | exp(-T) H exp(T) | R >, the omega vector
+! 	Routines for the calculation of the omega vector < mu | exp(-T) H exp(T) | R >
+!  The routine mlcc_omega_calc directs the calculation and can be called from outside the module.
 !
    use mlcc_data
 !
@@ -11,7 +12,7 @@ contains
    subroutine mlcc_omega_calc
 !
 !     MLCC Omega calculation
-!     Written by Eirik F. Kjønstad and Sarai Folkestad, February 2017
+!     Written by Eirik F. Kjønstad and Sarai Folkestad, 28 Feb 2017
 !
 !     Controls the calculation of the omega vector
 !
@@ -37,7 +38,7 @@ contains
    subroutine mlcc_omega_a1
 !
 !     MLCC Omega A1 term ( sum_ckd g_adkc * u_ki^cd )
-!     Written by Eirik F. Kjønstad and Sarai Folkestad, February 2017
+!     Written by Eirik F. Kjønstad and Sarai Folkestad, 28 Feb 2017
 !
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
@@ -51,7 +52,7 @@ contains
    subroutine mlcc_omega_b1
 !
 !     MLCC Omega B1 term ( - sum_ckl u_kl^ac * g_kilc )
-!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, February 2017
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, 28 Feb 2017
 !
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
@@ -61,17 +62,18 @@ contains
 !
       implicit none
 !
-      integer :: n_ki, n_lc ! Number of elements in the two Cholesky vectors (for a particular J)
-      integer :: n_ckl, n_i ! Number of rows and columns in g_ckl_i (see below)
-!
       integer :: lucho_ij,lucho_ia,idummy,j,i
 !
-      integer :: c,k,l,ckl,ki,cl
+      logical :: debug = .false.
+!
+      integer :: a,c,k,l,ckl,ki,cl,ak,akcl,al,alck,ck,ai
 !
       real(dp), dimension(:,:), pointer :: L_ki_J_packed => null() ! (ki) index is packed
-      real(dp), dimension(:,:), pointer :: L_lc_J => null()
-      real(dp), dimension(:,:), pointer :: g_ki_lc => null()
-      real(dp), dimension(:,:), pointer :: g_ckl_i => null() ! Reordered two-electron integrals
+      real(dp), dimension(:,:), pointer :: L_lc_J        => null()
+      real(dp), dimension(:,:), pointer :: g_ki_lc       => null()
+      real(dp), dimension(:,:), pointer :: g_ckl_i       => null() ! Reordered two-electron integrals
+      real(dp), dimension(:,:), pointer :: u_a_ckl       => null() ! Reordered u_kl^ac = 2 t_kl^ac - t_lk^ac
+      real(dp), dimension(:,:), pointer :: b1_a_i        => null() 
 !
       write(ml_lupri,*) 'In mlcc_omega_b1'
 !
@@ -121,8 +123,8 @@ contains
 !
 !     Deallocate the Cholesky vectors 
 !
-      call deallocator(L_ki_J_packed,n_ki,n_J)
-      call deallocator(L_lc_J,n_lc,n_J)
+      call deallocator(L_ki_J_packed,n_oo,n_J)
+      call deallocator(L_lc_J,n_ov,n_J)
 !
 !     Allocate reordered integrals g_ckl,i 
 !
@@ -153,6 +155,70 @@ contains
 !     Deallocate unordered integrals g_ki_lc
 !
       call deallocator(g_ki_lc,n_oo_packed,n_ov)
+!
+!     Allocate redordered u amplitudes u_a,ckl 
+!
+      call allocator(u_a_ckl,n_vir,n_oov)
+!
+!     Set u_a,ckl to zero
+!
+      u_a_ckl = zero
+!
+!     Save reordered u_a,ckl 
+!
+      do c = 1,n_vir
+         do k = 1,n_occ
+            do l = 1,n_occ
+               do a = 1,n_vir
+!
+!                 Calculate necessary indices
+!
+                  ckl  = index_three(c,k,l,n_vir,n_occ) 
+!
+                  ak   = index_two(a,k,n_vir)
+                  cl   = index_two(c,l,n_vir)
+                  akcl = index_packed(ak,cl)
+!
+                  al   = index_two(a,l,n_vir)
+                  ck   = index_two(c,k,n_vir)
+                  alck = index_packed(al,ck)
+!
+!                 Set value of u_a_ckl
+!
+                  u_a_ckl(a,ckl) = two*t2am(akcl,1) - t2am(alck,1)
+!                  
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Allocate the B1 term
+!
+      call allocator(b1_a_i,n_vir,n_occ)
+!
+!     Calculate the B1 term (b1_a_i = - sum_ckl u_a_ckl * g_ckl_i)
+!
+      call dgemm('N','N',n_vir,n_occ,n_oov,-one,u_a_ckl,n_vir,g_ckl_i,n_oov,zero,b1_a_i,n_vir) 
+!
+!     Add the B1 term to the omega vector 
+!
+      do i = 1,n_occ
+         do a = 1,n_vir
+!
+!           Calculate the compound index (ai)
+!
+            ai = index_two(a,i,n_vir)
+!
+!           Add the B1 contribution to the omega vector 
+!
+            omega1(ai) = omega1(ai) + b1_a_i(a,i)
+!
+         enddo
+      enddo
+!
+!     Print the omega vector 
+!
+      if (debug) call vec_print(omega1,n_vir,n_occ)
 !
    end subroutine mlcc_omega_b1
 !

@@ -106,4 +106,23 @@ contains
 !
    end function index_two
 !
+   subroutine vec_print(vec,dim_1,dim_2)
+!
+!     Purpose: prints a vector with a compound index (p q) of dimension (dim_1 x dim_2)
+!        (for debugging, remove or replace later on)
+!
+      implicit none
+!
+      integer p,q,pq
+      integer dim_1,dim_2
+      double precision vec(dim_1*dim_2)
+!
+      do q = 1,dim_2
+         do p = 1,dim_1
+            pq = index_two(p,q,dim_1)
+            write(ml_lupri,*) p,q,pq,vec(pq)
+         enddo
+      enddo
+!
+   end subroutine vec_print
 end module mlcc_utilities
