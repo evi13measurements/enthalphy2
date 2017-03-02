@@ -87,6 +87,7 @@ module mlcc_data
 !
    integer                          :: ml_lupri !general output unit
    integer                          :: mem = 1000000
+!   integer                          :: mem = 150000
 !
 end module mlcc_data
 

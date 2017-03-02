@@ -51,6 +51,10 @@ contains
 !
       integer :: i,j,idummy
 !
+      integer required,available,max_batch_length,batch_dimension,n_batch
+!
+      integer a_begin,a_end
+!
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_ad_J  => null()   ! Here, a is being batched over
       real(dp), dimension(:,:), pointer :: g_ad_kc => null()   ! Here, a is being batched over
@@ -67,6 +71,29 @@ contains
 !     Read Cholesky vector L_kc_J
 !
       call read_cholesky_ia(L_kc_J)
+!
+!     Calculate the batching parameters over a = 1,2,...,n_vir,
+!     for which we need to have enough room to store L_ad_J and g_ad_kc
+!
+      required = n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir
+      available = get_available()
+      batch_dimension = n_vir ! Batch over the virtual index a
+!
+      max_batch_length = 0 ! Initilization of unset variables 
+      n_batch = 0
+!
+      call n_one_batch(required,available,max_batch_length,n_batch,batch_dimension)           
+!
+!     Loop over the number of a batches 
+!
+      do a_batch=1,n_batch
+!
+!        For each batch, loop over the a indices in the given batch 
+!
+         a_begin = 1 + (a_batch-1)*max_batch_length
+         a_end   = min(max_batch_length+(a_batch-1)*max_batch_length,n_vir)
+!
+      enddo
 !
    end subroutine mlcc_omega_a1
 !

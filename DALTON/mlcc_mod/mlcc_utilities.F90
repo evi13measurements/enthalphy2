@@ -145,6 +145,23 @@ contains
          n_batch = n_batch+1
       endif
 !
+   subroutine one_batch_limits(begin,end,batch_number,max_batch_length,batch_dimension)
+!
+!     Purpose: Find batch limits (begin and end) 
+!
+!        batch_number: the current batch (1,2,...,n_batch)
+!        max_batch_length: the length of each batch (except the last, which may be a rest, see n_one_batch routine)
+!        batch_dimension: the dimensionality of the batching variable (e.g., n_vir for a virtual index)
+!
+      implicit none 
+!
+      integer :: begin,end
+      integer, intent(in) :: batch_number,max_batch_length,batch_dimension
+!
+      begin = 1 + (batch_number-1)*max_batch_length
+      end   = min(max_batch_length+(batch_number-1)*max_batch_length,batch_dimension)
+!
+   end subroutine one_batch_limits
 !
    end subroutine n_one_batch
 !
