@@ -145,9 +145,11 @@ contains
          n_batch = n_batch+1
       endif
 !
-   subroutine one_batch_limits(begin,end,batch_number,max_batch_length,batch_dimension)
+   end subroutine n_one_batch
 !
-!     Purpose: Find batch limits (begin and end) 
+   subroutine one_batch_limits(first,last,batch_number,max_batch_length,batch_dimension)
+!
+!     Purpose: Find batch limits (first and last) 
 !
 !        batch_number: the current batch (1,2,...,n_batch)
 !        max_batch_length: the length of each batch (except the last, which may be a rest, see n_one_batch routine)
@@ -155,15 +157,13 @@ contains
 !
       implicit none 
 !
-      integer :: begin,end
+      integer :: first,last
       integer, intent(in) :: batch_number,max_batch_length,batch_dimension
 !
-      begin = 1 + (batch_number-1)*max_batch_length
-      end   = min(max_batch_length+(batch_number-1)*max_batch_length,batch_dimension)
+      first = 1 + (batch_number-1)*max_batch_length
+      last  = min(max_batch_length+(batch_number-1)*max_batch_length,batch_dimension)
 !
    end subroutine one_batch_limits
-!
-   end subroutine n_one_batch
 !
    subroutine read_cholesky_ia(L_ia_J)
 !

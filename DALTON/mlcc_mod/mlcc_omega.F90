@@ -53,7 +53,7 @@ contains
 !
       integer required,available,max_batch_length,batch_dimension,n_batch
 !
-      integer a_begin,a_end
+      integer a_begin,a_end,a_batch
 !
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_ad_J  => null()   ! Here, a is being batched over
@@ -88,10 +88,17 @@ contains
 !
       do a_batch=1,n_batch
 !
-!        For each batch, loop over the a indices in the given batch 
+!        For each batch, get the limits for the a index 
 !
-         a_begin = 1 + (a_batch-1)*max_batch_length
-         a_end   = min(max_batch_length+(a_batch-1)*max_batch_length,n_vir)
+         call one_batch_limits(a_begin,a_end,a_batch,max_batch_length,batch_dimension)
+!
+!        Loop over the limits of the current batch
+!
+         do a=a_begin,a_end
+!
+!           Read in Cholesky vector L_ad_J
+!
+         enddo
 !
       enddo
 !
@@ -109,7 +116,7 @@ contains
 !
       integer :: lucho_ij,lucho_ia,idummy,j,i
 !
-      logical :: debug = .true.
+      logical :: debug = .false.
 !
       integer :: a,c,k,l,ckl,ki,cl,ak,akcl,al,alck,ck,ai
 !
