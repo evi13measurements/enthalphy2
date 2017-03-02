@@ -195,6 +195,29 @@ contains
       call gpclose(lucho_ij,'KEEP')    
 !      
    end subroutine read_cholesky_ij
+   subroutine read_cholesky_ab(L_ab_J)
+!
+!  Purpose: Read Cholesky vectors L_ab^J from file and place them 
+!           in the incoming vector  
+!
+   implicit none
+!
+   double precision L_ab_J(n_vv,n_J)
+!
+   integer :: lucho_ab
+   integer :: a,j,idummy
+!
+   lucho_ab = -1
+   call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
+   rewind(lucho_ab)
+!
+   do j = 1,n_J
+      read(lucho_ab) (L_ab_J(a,j), a=1,n_vv)
+   enddo
+!
+   call gpclose(lucho_ab,'KEEP')    
+!   
+   end subroutine read_cholesky_ab
 !
    subroutine vec_print(vec,dim_1,dim_2)
 !

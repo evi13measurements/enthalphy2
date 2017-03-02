@@ -213,7 +213,7 @@ subroutine mlcc_get_cholesky
 !
       write(lucho_ij)((cholesky_mo_sq(i,k),k=1,i),i=1,n_occ)
       write(lucho_ia)((cholesky_mo_sq(i,k),k=n_occ+1,n_orbitals),i=1,n_occ)
-      write(lucho_ab)((cholesky_mo_sq(i,k),k=n_occ+1,i),i=n_occ+1,n_orbitals)
+      write(lucho_ab)((cholesky_mo_sq(i,k),k=n_occ+1,n_orbitals),i=n_occ+1,n_orbitals)
 !
   enddo
 !
@@ -434,7 +434,12 @@ enddo
    call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
    batch_start=1
    batch_end=0
+   batch_length
    do a_batch=1,n_batch
+!
+!   Get batch limits 
+!
+   batch_length=batch_end-batch_start+1
 
    enddo
    call deallocator(g_ab_ij,n_vv_packed,n_oo_packed)
