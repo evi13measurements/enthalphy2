@@ -335,9 +335,10 @@ subroutine hf_reader
       real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
       real(dp), dimension(:,:), pointer      :: g_ab_ij => null()
       real(dp), dimension(:,:), pointer      :: L_ij_J_pack => null()
-      real(dp), dimension(:,:), pointer      :: L_ab_J_pack => null()
+      real(dp), dimension(:,:), pointer      :: L_ab_J => null()
       integer                                :: available, required,max_batch_length,n_batch,batch_start
-      integer                                :: batch_end,batch_length,a_batch   
+      integer                                :: batch_end,batch_length
+      integer                                :: a_batch = 0
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
 !
@@ -384,7 +385,7 @@ subroutine hf_reader
    call allocator(L_ij_J_pack,n_oo_packed,n_J)
    call allocator(g_ij_kl,n_oo_packed,n_oo_packed)
 !
-!  Reading cholesky vectors
+!  Read cholesky vectors
 !
    call read_cholesky_ij(L_ij_J_pack)
 !
@@ -411,40 +412,49 @@ enddo
 !
 !  Deallocate g_ij_kl
 ! 
-   call deallocator(g_ij_kl,n_oo_packed,n_oo_packed)
+      call deallocator(g_ij_kl,n_oo_packed,n_oo_packed)
 !
-!!  occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
+!!  Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
 !
-   do i=1,n_occ
-      do a=1,n_vir
-        mo_fock_mat(a,i)=zero
-        mo_fock_mat(i,a)=zero
+      do i=1,n_occ
+         do a=1,n_vir
+           mo_fock_mat(a,i)=zero
+           mo_fock_mat(i,a)=zero
+         enddo
       enddo
-   enddo
 !
-!!  vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
+!!  Vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
-   call allocator(g_ab_ij,n_vv_packed,n_oo_packed)
+      call allocator(g_ab_ij,n_vv_packed,n_oo_packed)
 !
 !  Batch over a
 !
-   available = get_available()
-   required = n_vir*n_vir*n_J
+      available = get_available()
+      required = n_vir*n_vir*n_J
 !
-   call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
-   batch_start=1
-   batch_end=0
-   batch_length
-   do a_batch=1,n_batch
+      call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
+      batch_start=1
+      batch_end=0
+      batch_length
+      do a_batch = 1,n_batch
 !
-!   Get batch limits 
+!  Get batch limits  and  length of batch
 !
-   batch_length=batch_end-batch_start+1
-
-   enddo
-   call deallocator(g_ab_ij,n_vv_packed,n_oo_packed)
-   call deallocator(L_ij_J_pack,n_oo_packed,n_J) 
+         call one_batch_limits(batch_start,batch_end,n_batch,max_batch_length,n_vir)
+         batch_length=batch_end-batch_start+1
 !
+!  Allocation of L_ab_J
 !
+         call allocator(L_ab_J,batch_length,n_J)
+!
+!  Read Cholesky vectors
+!
+         call read_cholesky_ab(L_ab_J)
+!
+!  Deallocation of L_ab_J
+!
+         call deallocator(L_ab_J,batch_length,n_J)
+!
+      enddo
    end subroutine mlcc_fock
 

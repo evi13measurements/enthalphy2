@@ -147,7 +147,8 @@ contains
 !
    end subroutine n_one_batch
 !
-   subroutine one_batch_limits(first,last,batch_number,max_batch_length,batch_dimension)
+!
+   subroutine one_batch_limits(begin,end,batch_number,max_batch_length,batch_dimension)
 !
 !     Purpose: Find batch limits (first and last) 
 !
@@ -212,25 +213,26 @@ contains
       call gpclose(lucho_ij,'KEEP')    
 !      
    end subroutine read_cholesky_ij
-   subroutine read_cholesky_ab(L_ab_J)
+   subroutine read_cholesky_ab(L_ab_J,a_start,a_end)
 !
 !  Purpose: Read Cholesky vectors L_ab^J from file and place them 
 !           in the incoming vector  
 !
    implicit none
 !
-   double precision L_ab_J(n_vv,n_J)
-!
    integer :: lucho_ab
-   integer :: a,j,idummy
+   integer :: a,b,j,idummy
+   integer :: a_start,a_end
+   integer :: read_start,read_end
+   real(dp),dimension(:,:) :: L_ab_J
 !
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
    rewind(lucho_ab)
 !
-   do j = 1,n_J
-      read(lucho_ab) (L_ab_J(a,j), a=1,n_vv)
-   enddo
+      do j = 1,n_J
+        read(lucho_ab) ((L_ab_J(index_two(a,b,n_vir),j),b=1,n_vir),a=a_start,a_end)
+      enddo
 !
    call gpclose(lucho_ab,'KEEP')    
 !   
