@@ -337,7 +337,8 @@ subroutine hf_reader
       real(dp), dimension(:,:), pointer      :: L_ij_J_pack => null()
       real(dp), dimension(:,:), pointer      :: L_ab_J_pack => null()
       integer                                :: available, required,max_batch_length,n_batch,batch_start
-      integer                                :: batch_end,batch_length,a_batch   
+      integer                                :: batch_end,batch_length
+      integer                                :: a_batch = 0
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
 !
@@ -435,7 +436,7 @@ enddo
    batch_start=1
    batch_end=0
    batch_length
-   do a_batch=1,n_batch
+   do a_batch = 1,n_batch
 !
 !   Get batch limits 
 !

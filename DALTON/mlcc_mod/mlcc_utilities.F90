@@ -145,6 +145,7 @@ contains
          n_batch = n_batch+1
       endif
 !
+   end subroutine n_one_batch
    subroutine one_batch_limits(begin,end,batch_number,max_batch_length,batch_dimension)
 !
 !     Purpose: Find batch limits (begin and end) 
@@ -163,7 +164,6 @@ contains
 !
    end subroutine one_batch_limits
 !
-   end subroutine n_one_batch
 !
    subroutine read_cholesky_ia(L_ia_J)
 !
