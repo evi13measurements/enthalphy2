@@ -30,9 +30,9 @@ subroutine work_init(mem)
 !
    integer, intent(in)                    :: mem
 !
-   write(ml_lupri,*)
-   write(ml_lupri,*) 'In work_int'
-   write(ml_lupri,*)
+   write(luprint,*)
+   write(luprint,*) 'In work_int'
+   write(luprint,*)
 !
    work_length = mem
    work_remains = mem

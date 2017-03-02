@@ -120,9 +120,9 @@ contains
    !
    ! Printouts
    !
-   write(ml_lupri,*)'MLCC MP2 ENERGY - Only correct for canonical orbitals'
-   write(ml_lupri,*)'MP2 energy correction', E
-   write(ml_lupri,*)'MP2 energy',E+scf_energy
+   write(luprint,*)'MLCC MP2 ENERGY - Only correct for canonical orbitals'
+   write(luprint,*)'MP2 energy correction', E
+   write(luprint,*)'MP2 energy',E+scf_energy
    !
    ! Deallocation
    !

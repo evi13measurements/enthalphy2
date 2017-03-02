@@ -270,7 +270,7 @@ subroutine hf_reader
 !     file should be in Cholesky orbital format. If Cholesky orbitals has been generated,
 !     SIRIFC will contain the data in the Cholesky basis
 !
-      call mollab('TRCCINT ',lusifc,ml_lupri)
+      call mollab('TRCCINT ',lusifc,luprint)
 !      
       read(lusifc) n_symmetries, n_orbitals, n_basis, n_lambda, n_occ, &
       &            n_orbitals_sym, n_basis_sym, nuclear_potential, scf_energy
@@ -395,7 +395,7 @@ subroutine hf_reader
 !  Add two-electron contributions to occupied-occupied block
 !
 do j=1,n_occ
-write(ml_lupri,*)(g_ij_kl(index_packed(i,j),index_packed(i,j)),i=1,n_occ)
+write(luprint,*)(g_ij_kl(index_packed(i,j),index_packed(i,j)),i=1,n_occ)
 enddo
    do i=1,n_occ
       do j=1,n_occ

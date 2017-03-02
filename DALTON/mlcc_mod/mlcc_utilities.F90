@@ -249,7 +249,7 @@ contains
 !
       do q = 1,dim_2
          do p = 1,dim_1
-            write(ml_lupri,*) p,q,vec(p,q)
+            write(luprint,*) p,q,vec(p,q)
          enddo
       enddo
 !

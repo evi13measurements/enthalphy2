@@ -45,49 +45,15 @@ module mlcc_data
    real(dp), dimension(:,:), pointer  :: t1am              => null()
    real(dp), dimension(:,:), pointer  :: t2am              => null()
 !
-!  t1 and t2 amplitudes, t2 packed
-   real(dp), dimension(:), pointer  :: c1am              => null()
-   real(dp), dimension(:), pointer  :: c2am              => null()
-!
 !  hf orbital coefficients and fock diagonal elements
    real(dp), dimension(:,:), pointer  :: orb_coefficients  => null()
    real(dp), dimension(:,:), pointer  :: fock_diagonal     => null()
 !   
 !  the mo fock matrix, standard and t1- and c1-transformed
    real(dp), dimension(:,:), pointer  :: mo_fock_mat       => null()
-   real(dp), dimension(:), pointer  :: mo_fock_mat_t1    => null()
-   real(dp), dimension(:), pointer  :: mo_fock_mat_c1    => null()
-!   
-!  lambda matrices
-   real(dp), dimension(:), pointer  :: lambda_hole       => null()
-   real(dp), dimension(:), pointer  :: lambda_part       => null()
-!   
-   real(dp), dimension(:), pointer  :: lambda_hole_resp  => null()
-   real(dp), dimension(:), pointer  :: lambda_part_resp  => null()
-!   
-!  ao density matrices, standard and t1- and c1-transformed
-   real(dp), dimension(:), pointer  :: ao_density        => null()
-   real(dp), dimension(:), pointer  :: ao_density_t1     => null()
-   real(dp), dimension(:), pointer  :: ao_density_c1     => null()
-!   
-!  file names
 !
-!  mo integrals
-   character(len=12)                :: bdck_file_name = "bdck_mo_ints"
-   character(len=12)                :: dbkc_file_name = 'dbkc_mo_ints'
-   character(len=12)                :: ljck_file_name = 'ljck_mo_ints'
-   character(len=12)                :: jlkc_file_name = 'jlkc_mo_ints'
-   character(len=12)                :: jbkc_file_name = 'jbkc_mo_ints'
-!
-!  response mo integrals
-   character(len=12)                :: bdck_resp_name = "bdck_mo_resp"
-   character(len=12)                :: dbkc_resp_name = 'dbkc_mo_resp'
-   character(len=12)                :: ljck_resp_name = 'ljck_mo_resp'
-   character(len=12)                :: jlkc_resp_name = 'jlkc_mo_resp'
-!
-   integer                          :: ml_lupri !general output unit
+   integer                          :: luprint !general output unit
    integer                          :: mem = 1000000
-!   integer                          :: mem = 150000
 !
 end module mlcc_data
 

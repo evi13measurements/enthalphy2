@@ -29,16 +29,16 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    integer :: i,j,a,b,nai,nbj,naibj
 !
-   ml_lupri = lupri 
+   luprint = lupri 
 !
-   write(ml_lupri,*)
-   write(ml_lupri,*) 'In mlcc_drv'
-   write(ml_lupri,*)
+   write(luprint,*)
+   write(luprint,*) 'In mlcc_drv'
+   write(luprint,*)
 !
-   write(ml_lupri,*)
-   write(ml_lupri,*) 'mlcc_active: ', mlcc_active
-   write(ml_lupri,*) 'print_mlcc:  ', print_mlcc 
-   write(ml_lupri,*)
+   write(luprint,*)
+   write(luprint,*) 'mlcc_active: ', mlcc_active
+   write(luprint,*) 'print_mlcc:  ', print_mlcc 
+   write(luprint,*)
 !
 !  Initialize memory variables
 !

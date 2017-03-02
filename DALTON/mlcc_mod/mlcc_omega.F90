@@ -49,11 +49,11 @@ contains
 !
       integer :: lucho_ia,lucho_ab
 !
-      integer :: i,j,idummy
+      integer :: i,j,a,idummy
 !
-      integer required,available,max_batch_length,batch_dimension,n_batch
+      integer :: required,available,max_batch_length,batch_dimension,n_batch
 !
-      integer a_begin,a_end,a_batch
+      integer :: a_begin,a_end,a_batch,batch_length
 !
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_ad_J  => null()   ! Here, a is being batched over
@@ -75,8 +75,8 @@ contains
 !     Calculate the batching parameters over a = 1,2,...,n_vir,
 !     for which we need to have enough room to store L_ad_J and g_ad_kc
 !
-      required = n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir
-      available = get_available()
+      required        = n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir
+      available       = get_available()
       batch_dimension = n_vir ! Batch over the virtual index a
 !
       max_batch_length = 0 ! Initilization of unset variables 
@@ -96,7 +96,18 @@ contains
 !
          do a=a_begin,a_end
 !
-!           Read in Cholesky vector L_ad_J
+!           Allocate the Cholesky vector L_ad_J
+!
+            batch_length = a_end - a_begin + 1 
+            call allocator(L_ad_J,batch_length*n_vir,n_J)
+!
+!           Read in Cholesky vector L_ad_J (!! batch information!?)
+!
+            call read_cholesky_ab(L_ad_J)
+!
+!           Calculate g_ad_kc 
+!
+
 !
          enddo
 !
@@ -127,7 +138,7 @@ contains
       real(dp), dimension(:,:), pointer :: u_a_ckl       => null() ! Reordered u_kl^ac = 2 t_kl^ac - t_lk^ac
       real(dp), dimension(:,:), pointer :: b1_a_i        => null() 
 !
-      write(ml_lupri,*) 'In mlcc_omega_b1'
+      write(luprint,*) 'In mlcc_omega_b1'
 !
 !     I. Calculation and reordering of g_ki,lc = sum_J L_ki^J * L_lc^J 
 !
