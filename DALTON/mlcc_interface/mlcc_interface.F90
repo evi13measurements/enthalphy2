@@ -315,7 +315,12 @@ subroutine hf_reader
 !
 !
    subroutine mlcc_fock()
+!  Purpose: Construct Fock matrix in MO basis
 !
+!  One-electron part obtained by reading one-electron integrals from MLCC_AOINT.
+!  MLCC_AOINT is written to file from the mlcc_wr_aoint routine in sirius/mlcc_wr_aoint.F
+!
+!  Two-electron contributions calculated using Cholesky vectors
       use mlcc_data
       use mlcc_workspace
       use mlcc_utilities
@@ -325,7 +330,10 @@ subroutine hf_reader
       real(dp), dimension(:,:), pointer      :: ao_int  => null()
       real(dp), dimension(:,:), pointer      :: X => null()
       integer                                :: luaoin = -1
-      integer                                :: idummy,i
+      integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b
+      real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
+      real(dp), dimension(:,:), pointer      :: L_ij_J_pack => null()
+      integer                                :: available, required
 !
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
@@ -346,26 +354,76 @@ subroutine hf_reader
 !  Allocate ao fock matrix, add one-electron contributions
 !
       call allocator(fock_ao,n_basis,n_basis)
+      call squareup(ao_int,fock_ao,n_basis)   
 !
-      call squareup(ao_int,fock_ao,n_basis)
-!
+!  Deallocation of ao integrals
+!   
       call deallocator(ao_int,n_basis_2_pack,1) 
 !
-!     Transform to one-electron part to mo and add to mo_fock_mat 
+!  Transform to one-electron part to mo and add to mo_fock_mat 
 !
       call allocator(X,n_basis,n_orbitals)
 !
       call dgemm('N','N',n_basis,n_orbitals,n_basis,one,fock_ao,n_basis,orb_coefficients,n_basis,zero,X,n_basis)
       call dgemm('T','N',n_orbitals,n_orbitals,n_basis,one,orb_coefficients,n_basis,X,n_basis,zero,mo_fock_mat,n_orbitals)
-!
+
       call deallocator(X,n_basis,n_orbitals)
       call deallocator(fock_ao,n_basis,n_basis)
 !
 !
 !!! TWO-ELECTRON CONTRIBUTION !!!
 !
-!  Allocation for cholesky vectors L_ij_J, L_ab_J, L_ai_J
+!!  occupied-occupied block: F_ij = h_ij + sum_k (2*g_ijkk - g_ikkj) !!
 !  
-!    
+!
+!  Allocation for L_ij_J_pack
+! 
+   call allocator(L_ij_J_pack,n_oo_packed,n_J)
+   call allocator(g_ij_kl,n_oo_packed,n_oo_packed)
+!
+!  Reading cholesky vectors
+!
+   call read_cholesky_ij(L_ij_J_pack)
+!
+!  g_ij_kl = sum_J(L_ij_J*L_J_kl)
+!
+   call dgemm('N','T',n_oo_packed,n_oo_packed,n_J,one,L_ij_J_pack,n_oo_packed,L_ij_J_pack,n_oo_packed,zero,g_ij_kl,n_oo_packed)
+!
+!  Add two-electron contributions to occupied-occupied block
+!
+do j=1,n_occ
+write(ml_lupri,*)(g_ij_kl(index_packed(i,j),index_packed(i,j)),i=1,n_occ)
+enddo
+   do i=1,n_occ
+      do j=1,n_occ
+         ij=index_packed(i,j)
+         do k = 1,n_occ
+            kk=index_packed(k,k)
+            ik=index_packed(i,k)
+            kj=index_packed(j,k)
+            mo_fock_mat(i,j)=mo_fock_mat(i,j)+2*g_ij_kl(ij,kk)-g_ij_kl(ik,kj)
+         enddo
+      enddo
+   enddo
+!
+!!  occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
+!
+   do i=1,n_occ
+      do a=1,n_vir
+        mo_fock_mat(a,i)=zero
+        mo_fock_mat(i,a)=zero
+      enddo
+   enddo
+!
+!!  vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
+!
+!
+!  Batch over J
+!
+   available = get_available()
+   required = n_vir*n_vir*n_J
+   call deallocator(L_ij_J_pack,n_oo_packed,n_J) 
+!
+!
    end subroutine mlcc_fock
 

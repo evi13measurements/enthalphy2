@@ -125,6 +125,11 @@ contains
 !     
       integer, intent(in)           :: required, available, batch_dimension
       integer                       :: max_batch_length,n_batch
+      if (required .lt. available) then
+         n_batch = 1
+         max_batch_length = batch_dimension
+         return
+      endif
 !
 !  Max batch size
 !
@@ -134,7 +139,7 @@ contains
 !
       n_batch=required/max_batch_length
 !
-!     Test for rest
+!  Test for rest
 !
       if (n_batch*max_batch_length .lt. required) then
          n_batch = n_batch+1

@@ -48,7 +48,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !  Hartree-Fock routine
 !
    call hf_reader
-   call allocator(mo_fock_mat,n_orbitals,n_orbitals)
+!
 !
 !  Allocate amplitudes and the omega vector 
 !
@@ -71,6 +71,8 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Set initial guess for the doubles amplitudes 
 !
+call allocator(mo_fock_mat,n_orbitals,n_orbitals)
+call mlcc_fock
   call t2_init
 !
 !  Calculate the omega vector 

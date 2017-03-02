@@ -228,4 +228,8 @@ subroutine vec_deallocator(elm,N)
 !
 end subroutine vec_deallocator
 !
+integer function get_available()
+   get_available=work_remains
+end function get_available
+
 end module mlcc_workspace
