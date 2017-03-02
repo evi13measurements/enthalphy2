@@ -292,6 +292,7 @@ subroutine hf_reader
       n_oov          = n_vir*n_occ*n_occ
       n_basis_2_pack = n_basis*(n_basis+1)/2
       n_ooo          = n_occ*n_occ*n_occ
+      n_vv_packed    = n_vir*(n_vir+1)/2
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
@@ -332,9 +333,11 @@ subroutine hf_reader
       integer                                :: luaoin = -1
       integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b
       real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
+      real(dp), dimension(:,:), pointer      :: g_ab_ij => null()
       real(dp), dimension(:,:), pointer      :: L_ij_J_pack => null()
-      integer                                :: available, required
-!
+      real(dp), dimension(:,:), pointer      :: L_ab_J_pack => null()
+      integer                                :: available, required,max_batch_length,n_batch,batch_start
+      integer                                :: batch_end,batch_length,a_batch   
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
 !
@@ -406,6 +409,10 @@ enddo
       enddo
    enddo
 !
+!  Deallocate g_ij_kl
+! 
+   call deallocator(g_ij_kl,n_oo_packed,n_oo_packed)
+!
 !!  occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
 !
    do i=1,n_occ
@@ -417,11 +424,20 @@ enddo
 !
 !!  vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
+   call allocator(g_ab_ij,n_vv_packed,n_oo_packed)
 !
-!  Batch over J
+!  Batch over a
 !
    available = get_available()
    required = n_vir*n_vir*n_J
+!
+   call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
+   batch_start=1
+   batch_end=0
+   do a_batch=1,n_batch
+
+   enddo
+   call deallocator(g_ab_ij,n_vv_packed,n_oo_packed)
    call deallocator(L_ij_J_pack,n_oo_packed,n_J) 
 !
 !
