@@ -137,7 +137,7 @@ contains
 !
 !  Number of full batches
 !
-      n_batch=required/max_batch_length
+      n_batch=batch_dimension/max_batch_length
 !
 !  Test for rest
 !
@@ -214,27 +214,48 @@ contains
 !      
    end subroutine read_cholesky_ij
 !
-   subroutine read_cholesky_ab(L_ab_J,a_start,a_end)
+   subroutine read_cholesky_ab(L_ab_J,a_start,a_end,ab_dim)
 !
 !  Purpose: Read Cholesky vectors L_ab^J from file and place them 
 !           in the incoming vector  
 !
    implicit none
 !
-   integer :: lucho_ab
-   integer :: a,b,j,idummy
+   integer :: lucho_ab,ab_dim
+   integer :: a,b,j,idummy,i
    integer :: a_start,a_end
    integer :: read_start,read_end
-   real(dp),dimension(:,:) :: L_ab_J
+   real(dp),dimension(ab_dim,n_J) :: L_ab_J
+   real(dp) :: dummy
 !
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
    rewind(lucho_ab)
 !
-      do j = 1,n_J
-        read(lucho_ab) ((L_ab_J(index_two(a,b,n_vir),j),b=1,n_vir),a=a_start,a_end) ! Eirik: Won't this just read the first elements and place them from a_start to a_end?
-      enddo
+   if (a_start .ne. 1) then
 !
+!     Calculate index of last element to throw away
+!
+      idummy=index_two(n_vir,a_start-1,n_vir)
+!
+!     Read from a_start
+!
+      do j = 1,n_J
+<<<<<<< HEAD
+        read(lucho_ab) ((L_ab_J(index_two(a,b,n_vir),j),b=1,n_vir),a=a_start,a_end) ! Eirik: Won't this just read the first elements and place them from a_start to a_end?
+=======
+        read(lucho_ab)(dummy,i=1,idummy),(L_ab_J(a,j),a=1,ab_dim)
+>>>>>>> 4f261b2cb1326dc2b4c67490171fd1badb818a75
+      enddo
+   else
+!
+!     Read from start
+!
+      do j = 1,n_J
+        read(lucho_ab)((L_ab_J(index_two(b,a,n_vir),j),b=1,n_vir),a=a_start,a_end)
+      enddo
+   endif
+   !
    call gpclose(lucho_ab,'KEEP')    
 !   
    end subroutine read_cholesky_ab

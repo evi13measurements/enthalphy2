@@ -103,7 +103,7 @@ contains
 !
 !           Read in Cholesky vector L_ad_J
 !
-            call read_cholesky_ab(L_ad_J,a_begin,a_end)
+            call read_cholesky_ab(L_ad_J,a_begin,a_end,batch_length*n_vir)
 !
 !           Calculate g_ad_kc 
 !
