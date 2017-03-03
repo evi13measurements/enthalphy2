@@ -217,16 +217,23 @@ contains
    subroutine read_cholesky_ab(L_ab_J,a_start,a_end,ab_dim)
 !
 !  Purpose: Read Cholesky vectors L_ab^J from file and place them 
-!           in the incoming vector  
+!           in the incoming vector. If b_start .ne. 1 and b_end .eq. n_vir
+!           we batch
+! 
+!           b_start - first element to be read
+!           b_end   - last element to be read
 !
+!           ab_dim  - dimension over batching variables 
    implicit none
 !
    integer :: lucho_ab,ab_dim
    integer :: a,b,j,idummy,i
    integer :: a_start,a_end
-   integer :: read_start,read_end
    real(dp),dimension(ab_dim,n_J) :: L_ab_J
    real(dp) :: dummy
+   integer  :: batch_length 
+!
+   batch_length = a_end-a_start+1
 !
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
@@ -241,14 +248,14 @@ contains
 !     Read from a_start
 !
       do j = 1,n_J
-        read(lucho_ab)(dummy,i=1,idummy),(L_ab_J(a,j),a=1,ab_dim)
+        read(lucho_ab)(dummy,i=1,idummy),((L_ab_J(index_two(a,b,batch_length),j),b=1,n_vir),a=1,batch_length)
       enddo
    else
 !
 !     Read from start
 !
       do j = 1,n_J
-        read(lucho_ab)((L_ab_J(index_two(b,a,n_vir),j),b=1,n_vir),a=a_start,a_end)
+        read(lucho_ab)((L_ab_J(index_two(a,b,batch_length),j),b=1,n_vir),a=1,batch_length)
       enddo
    endif
    !

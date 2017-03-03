@@ -407,7 +407,7 @@ enddo
             kk=index_packed(k,k)
             ik=index_packed(i,k)
             kj=index_packed(j,k)
-            mo_fock_mat(i,j)=mo_fock_mat(i,j)+2*g_ij_kl(ij,kk)-g_ij_kl(ik,kj)
+            mo_fock_mat(i,j)=mo_fock_mat(i,j)+two*g_ij_kl(ij,kk)-g_ij_kl(ik,kj)
          enddo
       enddo
    enddo
@@ -457,14 +457,10 @@ enddo
 !
 !        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
-         g_off = index_packed(batch_start,1)
+         g_off = index_two(1,batch_start,n_vir)
 !
-!         call dgemm('N','T',n_vir*batch_length,n_oo_packed,batch_length,one,L_ab_J,n_vir*batch_length,L_ij_J_pack,n_oo_packed &
-!           ,one,g_ab_ij(g_off,1),n_vv)
-         write(luprint,*)'g_ab,ij'
-         do a=n_vv-100,n_vv
-               write(luprint,*)(g_ab_ij(a,i),i=1,7)
-         enddo
+         call dgemm('N','T',n_vir*batch_length,n_oo_packed,batch_length,one,L_ab_J,n_vir*batch_length,L_ij_J_pack,n_oo_packed &
+           ,one,g_ab_ij(g_off,1),n_vv)
 !
 !        Deallocation of L_ab_J
 !
@@ -499,13 +495,14 @@ enddo
                ii=index_packed(i,i)
                ai=index_two(a,i,n_vir)
                ib=index_two(b,i,n_vir)
-               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+2*g_ab_ij(ab,ii)-g_ai_jb(ai,ib)
+               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+two*g_ab_ij(ab,ii)-g_ai_jb(ai,ib)
             enddo
          enddo 
       enddo
-!      do b=1,n_vir
-!         write(luprint,*)(mo_fock_mat(n_occ+a,n_occ+b),a=1,n_vir)
-!      enddo
+      write(luprint,*)'Fock'
+      do b=1,5
+         write(luprint,*)(mo_fock_mat(n_occ+a,n_occ+b),a=1,5)
+      enddo
       call deallocator(g_ab_ij,n_vv,n_oo_packed)
       call deallocator(g_ai_jb,n_ov,n_ov)
    end subroutine mlcc_fock
