@@ -16,7 +16,7 @@ contains
    !
       real(dp),dimension(:,:),pointer  :: cholesky_ia,g_iajb   => null()
       integer                          :: lucho_ia,idum
-      integer                          :: i,j,a,b,ai,bj,aibj
+      integer                          :: i,j,a,b,ai,bj,aibj,ia,jb
    !
    !
    !
@@ -30,25 +30,15 @@ contains
    !
    !  IO: read cholesky vectors from CHOLESKY_IA
    !
-      lucho_ia=-1
-      call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idum,.false.)
-      rewind(lucho_ia)
-   !
-   !
-   !
-      do j=1,n_J
-         read(lucho_ia)(cholesky_ia(i,j),i=1,n_ov)
-      enddo
-   !
-      call gpclose(lucho_ia,'KEEP')
-   !
+      call read_cholesky_ia(cholesky_ia)
    !  Two electron integrals g_iajb = L^J_ia L^J_jb
    !
-      call dgemm('N','T',n_ov,n_ov,n_J,one,cholesky_ia,n_ov,cholesky_ia,n_ov,zero,g_iajb,n_ov) 
+      call dgemm('N','T',n_ov,n_ov,n_J &
+         ,one,cholesky_ia,n_ov,cholesky_ia,n_ov & 
+         ,zero,g_iajb,n_ov) 
    !
    ! t2 amplitude guess
    !
-      call packin(t2am,g_iajb,n_ov)
    !
    do a=1,n_vir
       do b=1,n_vir
@@ -56,9 +46,11 @@ contains
             do j=1,n_occ
                ai = index_two(a,i,n_vir)
                bj = index_two(b,j,n_vir)
+               ia = index_two(i,a,n_occ)
+               jb = index_two(j,b,n_occ)
                if (ai .le. bj) then
                   aibj = index_packed(ai,bj)
-                  t2am(aibj,1) = -t2am(aibj,1)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
+                  t2am(aibj,1) = -g_iajb(ia,jb)/(fock_diagonal(n_occ+a,1)+fock_diagonal(n_occ+b,1) &
                                                             -fock_diagonal(i,1)-fock_diagonal(j,1))
                endif
             enddo

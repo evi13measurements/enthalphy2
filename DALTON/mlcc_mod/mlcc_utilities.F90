@@ -51,14 +51,6 @@ contains
          enddo
       enddo
 !
-      ! do i = 1,N
-      !    do j = i+1,N
-      !       unpacked(i,j)=packed(index_packed(i,j),1) ! Eirik: I am rewriting this.
-      !       unpacked(j,i)=unpacked(i,j)
-      !    enddo
-      !    unpacked(i,i)=packed(index_packed(i,i),1)
-      ! enddo
-!
    end subroutine
 !
    subroutine packin(packed,unpacked,N)
@@ -75,7 +67,7 @@ contains
       integer                              ::    i,j,N
 !
       do i = 1,N
-         do j = i,N
+         do j = 1,N
             packed(index_packed(i,j),1)=unpacked(i,j)
          enddo
       enddo

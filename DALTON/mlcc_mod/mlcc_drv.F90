@@ -53,10 +53,10 @@ subroutine mlcc_drv(work,lwork,lupri)
 !  Allocate amplitudes and the omega vector 
 !
    call allocator(omega1,n_vir,n_occ) ! Omega_a,i
-   call allocator(omega2,n_t2am_pack,1)
+   call allocator(omega2,n_ov_ov_packed,1)
 !
    call allocator(t1am,n_vir,n_occ)
-   call allocator(t2am,n_t2am_pack,1)
+   call allocator(t2am,n_ov_ov_packed,1)
 !
    omega1 = zero
    omega2 = zero
@@ -71,18 +71,20 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Set initial guess for the doubles amplitudes 
 !
-call allocator(mo_fock_mat,n_orbitals,n_orbitals)
-call mlcc_fock
-  call t2_init
+   call allocator(mo_fock_mat,n_orbitals,n_orbitals)
+!   call mlcc_fock
+   call t2_init
 !
 !  Calculate the omega vector 
 !
-   call mlcc_omega_calc
+!   call mlcc_omega_calc
 !
-   call deallocator(t2am,n_t2am_pack,1)
+   call deallocator(t2am,n_ov_ov_packed,1)
    call deallocator(fock_diagonal,n_orbitals,1)
    call deallocator(orb_coefficients,n_lambda,1)
    call deallocator(mo_fock_mat,n_orbitals,n_orbitals)
+   call deallocator(omega1,n_vir,n_occ) ! Omega_a,i
+   call deallocator(omega2,n_ov_ov_packed,1)
 !
 !
 end subroutine mlcc_drv

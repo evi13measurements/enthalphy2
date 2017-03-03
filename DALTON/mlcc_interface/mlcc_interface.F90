@@ -290,6 +290,7 @@ subroutine hf_reader
       n_basis_2_pack = n_basis*(n_basis+1)/2
       n_ooo          = n_occ*n_occ*n_occ
       n_vv_packed    = n_vir*(n_vir+1)/2
+      n_ov_ov_packed = n_ov*(n_ov+1)/2
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
@@ -381,8 +382,8 @@ subroutine hf_reader
 !
 !  Allocation for L_ij_J_pack
 ! 
-   call allocator(L_ij_J_pack,n_oo_packed,n_J)
-   call allocator(g_ij_kl,n_oo_packed,n_oo_packed)
+   call allocator(L_ij_J_pack,n_oo,n_J)
+   call allocator(g_ij_kl,n_oo,n_oo)
 !
 !  Read cholesky vectors
 !
@@ -411,7 +412,7 @@ enddo
 !
 !  Deallocate g_ij_kl
 ! 
-      call deallocator(g_ij_kl,n_oo_packed,n_oo_packed)
+      call deallocator(g_ij_kl,n_oo,n_oo)
 !
 !!  Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
 !
@@ -424,7 +425,7 @@ enddo
 !
 !!  Vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
-      call allocator(g_ab_ij,n_vv,n_oo_packed)
+      call allocator(g_ab_ij,n_vv,n_oo)
       g_ab_ij=zero
 !
 !  Batch over a
@@ -469,7 +470,7 @@ enddo
 !
 !     Deallocation of L_ij_J
 !
-      call deallocator(L_ij_J_pack,n_oo_packed,n_J)
+      call deallocator(L_ij_J_pack,n_oo,n_J)
 !
 !     Allocate for L_ia_J and g_ai_jb
 !
@@ -502,7 +503,7 @@ enddo
       do b=1,5
          write(luprint,*)(mo_fock_mat(n_occ+a,n_occ+b),a=1,5)
       enddo
-      call deallocator(g_ab_ij,n_vv,n_oo_packed)
+      call deallocator(g_ab_ij,n_vv,n_oo)
       call deallocator(g_ai_jb,n_ov,n_ov)
    end subroutine mlcc_fock
 
