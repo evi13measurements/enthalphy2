@@ -439,6 +439,7 @@ enddo
       batch_start=1
       batch_end=0
       batch_length=0
+!
       do a_batch = 1,n_batch
 
 !
@@ -457,10 +458,11 @@ enddo
 !
 !        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
-         g_off = index_two(1,batch_start,n_vir)
+         g_off = index_two(batch_start,1,batch_length)
 !
-         call dgemm('N','T',n_vir*batch_length,n_oo_packed,batch_length,one,L_ab_J,n_vir*batch_length,L_ij_J_pack,n_oo_packed &
-           ,one,g_ab_ij(g_off,1),n_vv)
+         call dgemm('N','T',n_vir*batch_length,n_oo_packed,batch_length &
+            ,one,L_ab_J,n_vir*batch_length,L_ij_J_pack,n_oo_packed &
+            ,one,g_ab_ij(g_off,1),n_vv)
 !
 !        Deallocation of L_ab_J
 !
