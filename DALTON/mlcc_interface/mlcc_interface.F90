@@ -137,7 +137,7 @@ subroutine mlcc_get_cholesky
    implicit none
 !
    integer       :: ludiag,lucho,lucho_ij,lucho_ia,lucho_ab,lumlch
-   integer       :: i,j,k,idum
+   integer       :: i,j,k,idum,a,b
    integer       :: n_twoel_diag
    integer, dimension(:,:), pointer       :: index_reduced  => null()
    real(dp), dimension(:,:), pointer      :: cho_diag       => null()  
@@ -213,7 +213,7 @@ subroutine mlcc_get_cholesky
 !
       write(lucho_ij)((cholesky_mo_sq(i,k),k=1,i),i=1,n_occ)
       write(lucho_ia)((cholesky_mo_sq(i,k),k=n_occ+1,n_orbitals),i=1,n_occ)
-      write(lucho_ab)((cholesky_mo_sq(i,k),k=n_occ+1,n_orbitals),i=n_occ+1,n_orbitals)
+      write(lucho_ab)((cholesky_mo_sq(a,b),b=n_occ+1,n_orbitals),a=n_occ+1,n_orbitals)
 !
   enddo
 !
@@ -282,7 +282,7 @@ subroutine hf_reader
 !     Calculate number of virtuals and amplitudes
 !
       n_vir          = n_orbitals - n_occ
-      n_t1am         = n_vir*n_occ    !! Eirik: I suggest we remove these amplitude specific numbers
+      n_t1am         = n_vir*n_occ    !! Eirik: I suggest we remove these amplitude specific numbers Sarai: Jepp
       n_t2am         = n_t1am*n_t1am   !!  ---> n_t2am = n_oovv
       n_t2am_pack    = n_t1am*(n_t1am+1)/2 !! ---> n_t2am_packed = n_ov_ov_packed 
       n_ov           = n_occ*n_vir
@@ -331,13 +331,15 @@ subroutine hf_reader
       real(dp), dimension(:,:), pointer      :: ao_int  => null()
       real(dp), dimension(:,:), pointer      :: X => null()
       integer                                :: luaoin = -1
-      integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b
+      integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b,ab,ai,ib
       real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
       real(dp), dimension(:,:), pointer      :: g_ab_ij => null()
+      real(dp), dimension(:,:), pointer      :: g_ai_jb => null()
       real(dp), dimension(:,:), pointer      :: L_ij_J_pack => null()
+      real(dp), dimension(:,:), pointer      :: L_ia_J => null()
       real(dp), dimension(:,:), pointer      :: L_ab_J => null()
       integer                                :: available, required,max_batch_length,n_batch,batch_start
-      integer                                :: batch_end,batch_length
+      integer                                :: batch_end,batch_length,g_off
       integer                                :: a_batch = 0
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
@@ -425,36 +427,86 @@ enddo
 !
 !!  Vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
-      call allocator(g_ab_ij,n_vv_packed,n_oo_packed)
+      call allocator(g_ab_ij,n_vv,n_oo_packed)
+      g_ab_ij=zero
 !
 !  Batch over a
 !
       available = get_available()
-      required = n_vir*n_vir*n_J
+      required = n_vir*n_vir*n_J*4
 !
       call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
       batch_start=1
       batch_end=0
-      batch_length
+      batch_length=0
       do a_batch = 1,n_batch
+
 !
-!  Get batch limits  and  length of batch
+!        Get batch limits  and  length of batch
 !
-         call one_batch_limits(batch_start,batch_end,n_batch,max_batch_length,n_vir)
+         call one_batch_limits(batch_start,batch_end,a_batch,max_batch_length,n_vir)
          batch_length=batch_end-batch_start+1
 !
-!  Allocation of L_ab_J
+!        Allocation of L_ab_J
 !
-         call allocator(L_ab_J,batch_length,n_J)
+         call allocator(L_ab_J,n_vir*batch_length,n_J)
 !
-!  Read Cholesky vectors
+!        Read Cholesky vectors
 !
-         call read_cholesky_ab(L_ab_J)
+         call read_cholesky_ab(L_ab_J,batch_start,batch_end,n_vir*batch_length)
 !
-!  Deallocation of L_ab_J
+!        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
-         call deallocator(L_ab_J,batch_length,n_J)
+         g_off = index_packed(batch_start,1)
 !
+!         call dgemm('N','T',n_vir*batch_length,n_oo_packed,batch_length,one,L_ab_J,n_vir*batch_length,L_ij_J_pack,n_oo_packed &
+!           ,one,g_ab_ij(g_off,1),n_vv)
+         write(luprint,*)'g_ab,ij'
+         do a=n_vv-100,n_vv
+               write(luprint,*)(g_ab_ij(a,i),i=1,7)
+         enddo
+!
+!        Deallocation of L_ab_J
+!
+         call deallocator(L_ab_J,batch_length*n_vir,n_J)
+!
+      enddo ! batching done
+!
+!     Deallocation of L_ij_J
+!
+      call deallocator(L_ij_J_pack,n_oo_packed,n_J)
+!
+!     Allocate for L_ia_J and g_ai_jb
+!
+      call allocator(L_ia_J,n_ov,n_J)
+      call allocator(g_ai_jb,n_ov,n_ov)
+!
+!     Reading Cholesky vector L_ia_J
+!
+      call read_cholesky_ia(L_ia_J)
+      call dgemm('N','T',n_ov,n_ov,n_J,one,L_ia_J,n_ov,L_ia_J,n_ov,zero,g_ai_jb,n_ov)
+!
+!     Deallocate L_ia_J
+!
+     call deallocator(L_ia_J,n_ov,n_J)
+!
+!     Calculation of two electron terms for virtual-virtual blocks
+!
+      do a = 1,n_vir
+         do b = 1,n_vir
+            ab=index_two(a,b,n_vir)
+            do i = 1,n_occ
+               ii=index_packed(i,i)
+               ai=index_two(a,i,n_vir)
+               ib=index_two(b,i,n_vir)
+               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+2*g_ab_ij(ab,ii)-g_ai_jb(ai,ib)
+            enddo
+         enddo 
       enddo
+!      do b=1,n_vir
+!         write(luprint,*)(mo_fock_mat(n_occ+a,n_occ+b),a=1,n_vir)
+!      enddo
+      call deallocator(g_ab_ij,n_vv,n_oo_packed)
+      call deallocator(g_ai_jb,n_ov,n_ov)
    end subroutine mlcc_fock
 
