@@ -148,7 +148,7 @@ contains
    end subroutine n_one_batch
 !
 !
-   subroutine one_batch_limits(begin,end,batch_number,max_batch_length,batch_dimension)
+   subroutine one_batch_limits(first,last,batch_number,max_batch_length,batch_dimension)
 !
 !     Purpose: Find batch limits (first and last) 
 !
@@ -213,6 +213,7 @@ contains
       call gpclose(lucho_ij,'KEEP')    
 !      
    end subroutine read_cholesky_ij
+!
    subroutine read_cholesky_ab(L_ab_J,a_start,a_end)
 !
 !  Purpose: Read Cholesky vectors L_ab^J from file and place them 
@@ -231,7 +232,7 @@ contains
    rewind(lucho_ab)
 !
       do j = 1,n_J
-        read(lucho_ab) ((L_ab_J(index_two(a,b,n_vir),j),b=1,n_vir),a=a_start,a_end)
+        read(lucho_ab) ((L_ab_J(index_two(a,b,n_vir),j),b=1,n_vir),a=a_start,a_end) ! Eirik: Won't this just read the first elements and place them from a_start to a_end?
       enddo
 !
    call gpclose(lucho_ab,'KEEP')    

@@ -101,13 +101,13 @@ contains
             batch_length = a_end - a_begin + 1 
             call allocator(L_ad_J,batch_length*n_vir,n_J)
 !
-!           Read in Cholesky vector L_ad_J (!! batch information!?)
+!           Read in Cholesky vector L_ad_J
 !
-            call read_cholesky_ab(L_ad_J)
+            call read_cholesky_ab(L_ad_J,a_begin,a_end)
 !
 !           Calculate g_ad_kc 
 !
-
+!!! TODO.
 !
          enddo
 !
