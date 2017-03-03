@@ -968,7 +968,10 @@ C
 C
 C     Local arrays:
 C
-      PARAMETER (MAXVEC = 120)
+CPFP
+C      PARAMETER (MAXVEC = 120)
+      PARAMETER (MAXVEC = 800)
+Cend-PFP
       DIMENSION JLDP(MAXVEC)
 C
       WRITE (LUPRI,*) 'I AM INSIDE RSPNOR: NBNEW ', NBNEW
@@ -1352,8 +1355,10 @@ C
 #include "wrkrsp.h"
 C
 C     Local arrays:
-C
-      PARAMETER (MAXVEC = 120)
+CPFP
+C      PARAMETER (MAXVEC = 120)
+      PARAMETER (MAXVEC = 800)
+Cend-PFP
       DIMENSION JLDP(MAXVEC)
 C
       WRITE (LUPRI,*) 'I AM INSIDE RSPORTmcd: NBNEW ', NBNEW

@@ -1446,19 +1446,26 @@ C *** FORMAT statements
 C
  2400 FORMAT(/' Molecular orbitals for symmetry species',I2,'  (',A,')'
      &       /' ------------------------------------------------')
- 2600 FORMAT(/'    Orbital ',7I9)
- 2620 FORMAT( '    Sup.sym.',7I9)
- 2800 FORMAT(I4,1X,A4,':',A4,7F9.4)
+CPFP
+ 2600 FORMAT(/'    Orbital ',7I12)
+ 2620 FORMAT( '    Sup.sym.',7I12)
+C 2800 FORMAT(I4,1X,A4,':',A4,7F9.4)
+ 2800 FORMAT(I4,1X,A4,':',A4,7F12.8)
+Cend-PFP
 C
 C *** Print molecular orbitals
-C
+CPFP
       IF (PROCC .AND. .NOT. CMOPRI) THEN
-         THRPRI = 1.0D-2
-         WRITE(IOUT,'(/A,F7.4,A)')
+C         THRPRI = 1.0D-2
+         THRPRI = 1.0D-8
+C         WRITE(IOUT,'(/A,F7.4,A)')
+         WRITE(IOUT,'(/A,F15.12,A)')
      &   ' (Only coefficients >',THRPRI,' are printed.)'
       ELSE
-         THRPRI = 1.0D-4
+C         THRPRI = 1.0D-4
+         THRPRI = 1.0D-8
       END IF
+Cend-PFP
 C
       ISTBAS = 0
       DO 400 ISYM = 1,NSYM

@@ -448,8 +448,6 @@ C
 #include "symmet.h"
 #include "inforb.h"
 C
-       
-C
       CALL QENTER('MAGDRV')
 C
       MAXTYP = 3*MXCOOR
@@ -770,7 +768,7 @@ C DIPLFN to the nuclear part of the dipole which is already present in dipmn
          IJK = 0
          DO 160 I = 1, 3
          DO 160 J = I, 3
-         DO 160 K = J, 3          
+         DO 160 K = J, 3
             IJK = IJK + 1
             THDMEL(IPTAX(I,1),IPTAX(J,1),IPTAX(K,1)) = -EXPVAL(IJK)
             THDMEL(IPTAX(I,1),IPTAX(K,1),IPTAX(J,1)) = -EXPVAL(IJK)
@@ -1172,18 +1170,19 @@ C  /* Deck spninp */
 #include "mxcent.h"
 #include "nuclei.h"
 #include "abainf.h"
-      PARAMETER (NTABLE = 16, D0 = 0.0D0)
+      PARAMETER (NTABLE = 20, D0 = 0.0D0)
       LOGICAL NEWDEF
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
       DIMENSION IPOINT(MXCENT)
 #include "dorps.h"
 #include "spnout.h"
-C
+#include "locinf.h"
+CPFP 03-12-2015 added .SOSOSC
       DATA TABLE /'.ABUNDA','.PRINT ','.SELECT','.NODSO ','.NOSD  ',
      &            '.NOFC  ','.NOPSO ','.SD+FC ','.SDXFC ','.ISOTOP',
      &            '.COUPLI','.SOS   ','.SOSOCC','.SINGST','.TRIPST',
-     &            '.SOSOCS'/
-C
+     &            '.SOSOCS','.SOSOSC','.XXXXXX','.XXXXXX','.XXXXXX'/
+Cen-PFP
       NEWDEF = (WORD .EQ. '*SPIN-S')
       ICHANG = 0
       IF (NEWDEF) THEN
@@ -1198,7 +1197,8 @@ C
                ICHANG = ICHANG + 1
                DO 200 I = 1, NTABLE
                   IF (TABLE(I) .EQ. WORD) THEN
-                     GOTO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16),I
+                    GOTO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,
+     &                   18,19,20),I
                   END IF
  200           CONTINUE
                IF (WORD .EQ. '.OPTION') THEN
@@ -1295,8 +1295,34 @@ CPFP: 27/03-2006: SOS for spin-spin coupling included
  16            CONTINUE
                   SOSSPN = .TRUE.
                   SOSOCS = .TRUE.
+C      NSTATI: Initial state, NASTAF: Final state, NITRST:step of the jump
                   READ (LUCMD,*) NSTATI,NSTATF,NITRST
                GOTO 100
+CPFP  03-12-2015 adding an automatic convergence.
+ 17            CONTINUE
+                  SOSSPN = .TRUE.
+                  SOSOSC = .TRUE.
+                  READ (LUCMD,*) NSTATI,NSTATF,NITRST
+C      NCSSCC: Number of SSCC (taken from the output, i.e. the 1st, 2nd, etc) to apply the convergence,
+C      THRSLO: Threshold of the convergence in \%,
+C      NCMTHD: Method of convergence to be used
+C              1: comparison between the last two values
+C              2: comparison between the last and the response value
+C              3: combination of 1 and 2 methods 
+C              4: comparison with the extrapolated value from a polynomial method
+C              5: comparison with the extrapolated value from a retional method
+C              6: comparison with the extrapolated value from a splines method
+C              7: comparison with the extrapolated value from a y = a + b*tanh (c*x) function
+C              8: another fitting of method 7. 
+                  READ (LUCMD,*) NCSSCC,NCTERM,NCMTHD,THRSLO
+               GOTO 100
+ 18            CONTINUE
+               GOTO 100
+ 19            CONTINUE
+               GOTO 100
+ 20            CONTINUE
+               GOTO 100
+Cend-PFP
 Cend-PFP
             ELSE IF (PROMPT .EQ. '*') THEN
                GOTO 300
@@ -1381,6 +1407,13 @@ CPFP: 27/03-2006: SOS for spin-spin coupling included
       NSTATI= 0
       NSTATF= 0
       NITRST= 0
+CPFP 03-12-2015 Including the automatic convergence
+      SOSOCC= .FALSE.
+C      SINGUL= .FALSE.
+      NCSSCC=0
+      THRSLO=1.0D0
+      NCMTHD=0
+Cend-PFP
 Cend-PFP
       RETURN
       END
@@ -2761,6 +2794,9 @@ C  /* Deck isospn */
 #include "symmet.h"
 #include "spnout.h"
 #include "abainf.h"
+CPFP
+#include "locinf.h"
+Cend-PFP
       LOGICAL TEST
       DIMENSION CHESS(3*NUCDEP,3*NUCDEP,6),
      &                AVEISO(NUCDEP*(NUCDEP + 1)/2,5),
@@ -2844,6 +2880,9 @@ C
          WRITE (LUPRI,'(A)')
      &         '             contributions have not been calculated !'
       END IF
+CPFP
+      IATIJC = 0
+Cend-PFP
       IATOM1 = 0
       NUCINS = NUCIND
       IF (SOLVNT) NUCINS = NUCINS - 1
@@ -2865,6 +2904,9 @@ C
                IF (.NOT.(NCSPNI(I1) .OR. NCSPNI(I2))) GOTO 87
                IF (DOPERT(I2,2)) THEN
                   IATIJ = IATOM1*(IATOM1 -1 )/2 + IATOM2
+CPFP
+                  IATIJC = IATIJC + 1
+Cend-PFP
                   NZ1 = IZATOM(I1)
                   NZ2 = IZATOM(I2)
                   CALL TITLER('Indirect spin-spin coupling between '//
@@ -2894,6 +2936,14 @@ C
                         PSO    = AVEISO(IATIJ,3)*FACTOR
                         SD     = AVEISO(IATIJ,4)*FACTOR
                         FC     = AVEISO(IATIJ,5)*FACTOR
+CPFP 17/12/2015 Needed in SOSDRV for estimating the Isotropic value
+                        SSCCNI(IATIJC,1) = DSO
+                        SSCCNI(IATIJC,2) = PSO
+                        SSCCNI(IATIJC,3) = SD
+                        SSCCNI(IATIJC,4) = FC
+                        SSCCNI(IATIJC,5) = AVETOT
+Cend-PFP
+C
 C MBH+JK
                         LANAM1 = NAMDEP(IATOM1)//'  '
                         LANAM2 = NAMDEP(IATOM2)//'  '
@@ -2978,6 +3028,9 @@ C  /* Deck fnlspn */
 #include "nuclei.h"
 #include "symmet.h"
 #include "spnout.h"
+CPFP
+#include "locinf.h"
+Cend-PFP
       LOGICAL TEST
       DIMENSION CHESS(3*NUCDEP,3*NUCDEP,6),
      &                AVEISO(NUCDEP*(NUCDEP + 1)/2,5),
@@ -3061,6 +3114,9 @@ C
          WRITE (LUPRI,'(A)')
      &         '             contributions have not been calculated !'
       END IF
+CPFP
+      IATIJC = 0
+Cend-PFP
       IATOM1 = 0
       NUCINS = NUCIND
       IF (SOLVNT) NUCINS = NUCINS - 1
@@ -3082,6 +3138,9 @@ C
                IF (.NOT.(NCSPNI(I1) .OR. NCSPNI(I2))) GOTO 87
                IF (DOPERT(I2,2)) THEN
                   IATIJ = IATOM1*(IATOM1 -1 )/2 + IATOM2
+CPFP
+                  IATIJC = IATIJC + 1
+Cend-PFP
                   NZ1 = IZATOM(I1)
                   NZ2 = IZATOM(I2)
                   CALL TITLER('Indirect spin-spin coupling between '//
@@ -3125,6 +3184,13 @@ C
                               PSO    = AVEISO(IATIJ,3)*FACTOR
                               SD     = AVEISO(IATIJ,4)*FACTOR
                               FC     = AVEISO(IATIJ,5)*FACTOR
+CPFP 17/12/2015 Needed in SOSDRV for estimating the Isotropic value
+                        SSCCNI(IATIJC,1) = DSO
+                        SSCCNI(IATIJC,2) = PSO
+                        SSCCNI(IATIJC,3) = SD
+                        SSCCNI(IATIJC,4) = FC
+                        SSCCNI(IATIJC,5) = AVETOT
+Cend-PFP
                            WRITE(LUPRI,'(9(/,2X,A,F12.4,A),/,/)')
      &                       'Isotropic coupling        :',AVETOT,' Hz',
      &                       'Anisotropic coupling      :',ANIS  ,' Hz',

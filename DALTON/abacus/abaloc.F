@@ -41,6 +41,9 @@ C
       FBSETV = .FALSE.
       FBSTVO = .FALSE.
       MULLOC = .FALSE.
+CPFP 17-01-2016 for Pipek
+      PIPEKL = .FALSE.
+Cend-PFP
       FBOCIN = .FALSE.
       FBOOCC = .FALSE.
       LABOCC = .FALSE.
@@ -58,7 +61,7 @@ C  /* Deck locinp */
 #include "maxash.h"
 #include "maxorb.h"
 C
-       PARAMETER (NTABLE = 10, D0 = 0.0D0, NLAB = 20)
+       PARAMETER (NTABLE = 10, D0 = 0.0D0, NLABO = 20, NLABV = 200)
        PARAMETER (IZERO = 0)
        INTEGER NAUXV, NAUXO
 C
@@ -72,7 +75,10 @@ CSPAS:31.05.11: MULLOC is not yet working correctly
 C      DATA TABLE /'.FOSBOY','.FBOVIR','.FBSETV','.FBSTVO','.MULLOC',
        DATA TABLE /'.FOSBOY','.FBOVIR','.FBSETV','.FBSTVO','.XXXXXX',
 CKeinSPASmehr
-     &             '.FBOCIN','.FBOOCC','.LABOCC','.LABVIR','.XXXXXX'/
+CPFP 17-01-2016 for Pipek
+C     &             '.FBOCIN','.FBOOCC','.LABOCC','.LABVIR','.XXXXXX'/
+     &             '.FBOCIN','.FBOOCC','.LABOCC','.LABVIR','.PIPEKL'/
+Cend-PFP
 C
        CALL QENTER('LOCINP')
 C
@@ -80,11 +86,13 @@ C
        ICHANG = 0
        NO2LOC = 0
        NV2LOC = 0
-       DO I = 1, NLAB
+       DO I = 1, NLABO
          TABOCL(I) = '-**--**-'
+         NTOC2L(I) = IZERO
+       END DO
+       DO I = 1, NLAB
          TABVIL(I) = '-**--**-'
          NTVI2L(I) = IZERO
-         NTOC2L(I) = IZERO
        END DO
 C
        IF (NEWDEF) THEN
@@ -114,9 +122,13 @@ C
                GOTO 100
  2             CONTINUE
 CPFP Jan/28/05
-                  IF (FOSOCC .OR. FBOCIN .OR. FBOOCC) THEN
+CPFP 14-Mar-2016 I think that FOSOCC has to desappear from the conditional
+C                and appear bellow as .TRUE. in all cases ...
+C                  IF (FOSOCC .OR. FBOCIN .OR. FBOOCC) THEN
+                  IF (FBOCIN .OR. FBOOCC) THEN
 C
-C                   FOSOCC = .TRUE.
+                    FOSOCC = .TRUE.
+Cend-PFP
                     FBOVIR = .TRUE.
 C
                     IF(NO2LOC .EQ. IZERO) THEN
@@ -136,8 +148,8 @@ C
 C
                   ELSE
 C
-                     WRITE (LUPRI,'(/,2X,A,A,/)') 
-     &              ' .LABOCC keyword needs specification of .FOSOCC,',
+                     WRITE (LUPRI,'(/,2X,A,A,/)')
+     &              ' .LABOCC keyword needs specification of .FOSBOY,',
      &              ' .FBOOCC, .MULLOC  or .FBOCIN '
 C
                   END IF
@@ -175,7 +187,7 @@ CPFP Jan/28/05
 C                     FOSOCC = .TRUE.
 Cend-PFP Jan/28/05
                       FBOVIR = .TRUE.
-                      FBSETV = .FALSE.                
+                      FBSETV = .FALSE.
 C
                       WRITE (LUPRI,'(/,A,I4,A,I4,/,A,I4,/)') 
      &                  ' Number of virtual orbitals chosen is',NVSET,
@@ -189,7 +201,7 @@ C
                   ELSE
 C
                      WRITE (LUPRI,'(/,2X,A,A,/)') 
-     &              ' .LABOCC keyword needs specification of .FOSOCC,',
+     &              ' .LABOCC keyword needs specification of .FOSBOY,',
      &              ' .FBOOCC, .MULLOC  or .FBOCIN '
 C
                   END IF
@@ -229,7 +241,7 @@ C
                          NVSET = NAUXV + 1
                        END IF
 C
-                       WRITE (LUPRI,'(/,2x,A,I4,A,I4,/,A,I4,/,A,/)') 
+                       WRITE (LUPRI,'(/,2x,A,I4,A,I4,/,A,I4,/,A,/)')
      &                  ' Number of virtual orbitals chosen is',NVSET,
      &                  'times', NV2LOC,
      &                  ', which is larger than the total',NVIRT,
@@ -239,7 +251,7 @@ C
 C
                   ELSE
 C
-                     WRITE (LUPRI,'(/,2X,A,A,/)') 
+                     WRITE (LUPRI,'(/,2X,A,A,/)')
      &              ' .LASTV keyword needs specification of .FOSOCC,',
      &              ' .FBOOCC, .MULLOC  or .FBOCIN '
 C
@@ -284,7 +296,7 @@ C
 C
                   ELSE
 C
-                     WRITE (LUPRI,'(/,2X,A,A,/,2X,A,/)') 
+                     WRITE (LUPRI,'(/,2X,A,A,/,2X,A,/)')
      &              ' .LABOCC keyword needs specification of .FOSOCC,',
      &              ' .FBOOCC, .MULLOC  or .FBOCIN ',
      &              ' and only allows 20 labels of 8 characters each'
@@ -311,6 +323,9 @@ C
 C
                GOTO 100
  10            CONTINUE
+CPFP 17-01-2016 for Pipek
+                 PIPEKL = .TRUE.
+Cend-PFP
                GOTO 100
             ELSE IF (PROMPT .EQ. '*') THEN
                GOTO 300
@@ -387,6 +402,7 @@ C
 C
        RETURN
        END
+C
 C***********************************************************************
 C  /* Deck getloc */
       SUBROUTINE GETLOC(IPRSOS,NLOCC,NLVIR,CLOCO,CLOCV,PRPMO,
@@ -394,11 +410,11 @@ C  /* Deck getloc */
 C
 C      Stephan P. A. Sauer 18/11-1998
 C
-C      This routine is 
+C      This routine is
 C
 #include "implicit.h"
 C
-C 
+C
 C IRAT used from include file iratdef.h
 C LUPRI used from include file priunit.h
 C MXCENT is needed in COMMON /
@@ -449,7 +465,7 @@ C     This is only for close shell
 C---------------------------------
 C
       DO INDEX = 1, NBAST
-         IF ( INDEX .LE. NOCCT ) THEN 
+         IF ( INDEX .LE. NOCCT ) THEN
             OCCUP(INDEX) = D2
          ELSE
             OCCUP(INDEX) = D0
@@ -468,7 +484,7 @@ C
       IF (IPRSOS .GT. 5) THEN
          WRITE(LUPRI,'(/A)')' CLOCO matrix before localization: '
          CALL OUTPUT(CLOCO,1,NOCCT,1,NLOCC,NOCCT,NLOCC,1,LUPRI)
-      END IF               
+      END IF
 C
       DO IVIR = 1, NVIRT
          DO JLVIR = 1, NLVIR
@@ -479,16 +495,16 @@ C
       IF (IPRSOS .GT. 5) THEN
          WRITE(LUPRI,'(/A)')' CLOCV matrix before localization: '
          CALL OUTPUT(CLOCV,1,NVIRT,1,NLVIR,NVIRT,NLVIR,1,LUPRI)
-      END IF              
+      END IF
 C
 C-----------------------------
 C     Allocation of work space
 C-----------------------------
-C 
+C
       KCMO   = 1
       KEND1  = KCMO   + NCMOT
       LWORK1 = LWORK  - KEND1
-C     
+C
       IF (LWORK1 .LT. 0) CALL STOPIT('GETLOC.1',' ',KEND1,LWORK)
 C
 C---------------------------------------------------
@@ -496,7 +512,7 @@ C     Open the file containing overlap matrix and...
 C---------------------------------------------------
 C
       call flshfo(lupri)
-C     
+C
 C-------------------------
 C     Read MO coefficients
 C-------------------------
@@ -510,12 +526,337 @@ C
       READ (LUSIFC)
       READ (LUSIFC)
       CALL READT (LUSIFC,NCMOT,WORK(KCMO))
-C     
+C
 C***********************************************************
 C     Generate transformation matrices to localized orbitals
 C***********************************************************
 C
       IF (ABALOC) THEN
+C
+C------------------------------------------------------------
+C       PIPEK-MAZEY LOCALIZATION METHOD (According to ec. 31)
+C------------------------------------------------------------
+C
+        IF(PIPEKL) THEN
+C
+#ifdef NOT_FINISHED_YET
+C
+C-----------------------------
+C     Allocation of work space
+C-----------------------------
+C
+         KATPOP = KEND1
+         KLOPOP = KATPOP + NCMOT
+         KEND2  = KLOPOP + NCMOT
+         LWORK2 = LWORK  - KEND2
+C
+         IF (LWORK2 .LT. 0) CALL STOPIT('GETLOC.2',' ',KEND2,LWORK)
+C
+
+C
+        NREDO = 0
+  110   CONTINUE
+        NREDO = NREDO + 1
+C
+C-----------------------------------------------
+C          CONSTRUCT INITIAL ATOMIC POPULATIONS
+C-----------------------------------------------
+C
+          CALL DZERO(WORK(KATPOP),NCMOT)
+          CALL DZERO(WORK(KLOPOP),NCMOT)
+C
+c        DO I=1,N2        ! N2 = NLOC*(NLOC+1)/2
+c          DO J=1,NAT
+c            RIJ(I,J)=ZERO
+c          END DO
+c        END DO
+C
+      IJ = 0
+      DO 280 I = 1,NLOC
+         DO 280 J = 1,I
+            IJ = IJ+1
+            DO 260 K = 1,NBASIS
+               KK = MAP(K)
+               DO 260 L = 1,NBASIS
+                  LL = MAP(L)
+                  KL = INDXZ(K,L)
+                  SUM = VECIN(K,I)*VECIN(L,J)*SAO(KL)/TWO
+                  RIJ(IJ,KK) = RIJ(IJ,KK) + SUM
+                  RIJ(IJ,LL) = RIJ(IJ,LL) + SUM
+  260       CONTINUE
+C       write(17,*)'SUM=',SUM,' I=',I
+  280 CONTINUE
+C
+C      write(17,*)'sub poploc - line 117'
+C      stop
+C
+C          SEED THE RANDOM FUNCTION, INITIALIZE
+C          THE LOCALIZATION TRANSFORMATION, ETC.
+C
+C      stop
+      ONEPTO = ONE
+C      stop
+C      write(17,*)'line 155'
+      IF (NREDO.EQ.1)  XX = LMORND(ONE,VECIN,L1,NAT,NBA)
+C      write(17,*)'XX=',XX,' line 157'
+C
+C
+C      stop
+C       write(17,*)'sub poploc - line 135'
+C        STOP
+C      CALL VCLR(CL,1,m*m)
+        DO I=1,NLOC
+          DO J=1,NLOC
+            CL(I,J)=ZERO
+          END DO
+        END DO
+      DO 340 I = 1,NLOC
+         CL(I,I) = ONE
+  340 CONTINUE
+C
+C
+      ITER = 0
+C
+C      write(17,*)'sub poploc - line 150'
+      SHIFT = DATAN(ONE)
+C      write(17,*)'SHIFT=',SHIFT,' line 152'
+C      stop
+C
+C          BEGIN LOCALIZATION CYCLES
+C
+C      stop
+  360 CONTINUE
+      DO I=1,NBA
+       QPIX(I)=ZERO
+       QPJX(I)=ZERO
+      END DO
+      QPI=ZERO
+      QPJ=ZERO
+      QPIJ=ZERO 
+      CHANGE = ZERO
+C
+       ITER = ITER+1
+C
+C      write(17,*)'ITER=',ITER, 'line 169'
+C
+      DO 380 I = 1,NLOC
+         IIR(I) = I
+  380 CONTINUE
+      NNN = NLOC
+      DO 400 I = 1,NLOC
+        XX = LMORND(CHANGE,VECIN,L1,NAT,NBA)
+C      write(17,*)'XX=',XX, 'ln 177'
+         III = INT(XX*NNN+ONE)
+C      write(17,*)'III=',III, 'ln 179' 
+         IORDZ(I) = IIR(III)
+C      write(17,*)'IORDZ(I)=',IORDZ(I),' I=',I, ' ln 181'
+         IIR(III) = IIR(NNN)
+C      write(17,*)'IIR(III)=',IIR(III),' III=',III,' ln 183'
+         NNN = NNN-1
+C      write(17,*)'NNN=',NNN,' ln 185'
+  400 CONTINUE
+C      write(17,*)'line 176'
+C
+C      STOP
+C
+C        FOR EACH PAIR OF ORBITALS A TWO DIMENSIONAL UNITARY
+C        TRANSFORMATION IS PERFORMED. THE TRANSFORMATION IS
+C
+C           PSI'(I) =  COS(T)*PSI(I) + SIN(T)*PSI(J)  AND
+C           PSI'(J) = -SIN(T)*PSI(I) + COS(T)*PSI(J).
+C
+C        LOCALIZATION REQUIRES THAT T BE SUCH AS TO MAXIMIZE
+C        THE SUM OF THE SQUARES OF THE ATOMIC POPULATIONS.
+C
+      DO 920 III = 1,NLOC
+      I = IORDZ(III)
+C      IF(NOROT(I,I).EQ.1) GO TO 920
+      II = INDXZ(I,I)
+      JM = 1
+      RM = ZERO
+      TM = ZERO
+      SM = ZERO
+      CM = ONE
+      DO 580 J = 1,NLOC
+      IF(I.EQ.J) GO TO 580
+C      IF(NOROT(I,J).EQ.1) GO TO 580
+      IJ = INDXZ(I,J)
+      JJ = INDXZ(J,J)
+      T = ZERO
+      TX = ZERO
+      DO 480 KK = 1,NATOMS
+         T = T + FOUR*RIJ(IJ,KK)**2 - RIJ(II,KK)**2 - RIJ(JJ,KK)**2
+     *         + TWO*RIJ(II,KK)*RIJ(JJ,KK)
+         TX = TX + RIJ(IJ,KK)*(RIJ(JJ,KK) - RIJ(II,KK))
+  480 CONTINUE
+      IF ((ABS(T) .LE. TENM10) .AND. (ABS(TX) .LE. TENM10)) GO TO 580
+C       write(17,*)'sub poploc - line 210'
+C       stop
+      TX = FOUR*TX
+      T = DATAN2(TX,T)/FOUR
+      SIGN = ONE
+      IF (T .GT. ZERO) SIGN = -ONE
+      T = T+SIGN*SHIFT
+      ITIM = 0
+  500 ITIM = ITIM+1
+      S = DSIN(T)
+      C = DCOS(T)
+      RIN = ZERO
+      DO 520 KK = 1,NATOMS
+         QPI = C*C*RIJ(II,KK)+S*S*RIJ(JJ,KK)+TWO*C*S*RIJ(IJ,KK)
+         QPJ = C*C*RIJ(JJ,KK)+S*S*RIJ(II,KK)-TWO*C*S*RIJ(IJ,KK)
+         RIN = RIN+QPI*QPI+QPJ*QPJ-RIJ(II,KK)**2-RIJ(JJ,KK)**2
+  520 CONTINUE
+      TTEST = ABS(T)-SHIFT
+      IF ((ABS(T) .LE. TENM8) .OR. (ABS(TTEST) .LE. TENM8)) GO TO 560
+      IF (RIN .GE. -TENM8) GO TO 560
+      IF (ITIM .LE. 1) GO TO 540
+C      IF (MASWRK) THEN
+C         WRITE (IW,9020) I,J
+C         WRITE (IW,9030) T,S,C,RIN
+C      END IF
+C
+C      write(17,*)'line 236'
+      RETURN
+C       write(17,*)'line 238'
+C
+  540 SIGN = ONE
+C      write(17,*)'line 241'
+      IF (T .GT. ZERO) SIGN = -ONE
+      T = T+SHIFT*SIGN
+      GO TO 500
+C
+  560 IF (RIN .LE. RM) GO TO 580
+C       write(17,*)'line 247'
+      RM = RIN
+      TM = T
+      SM = S
+      CM = C
+      JM = J
+  580 CONTINUE
+C
+      RIN = RM
+      T = TM
+      S = SM
+      C = CM
+      J = JM
+      IJ = INDXZ(I,J)
+      JJ = INDXZ(J,J)
+C      IF(NOROT(I,J).EQ.1) GO TO 920
+C
+C        ACCUMULATE THE 2X2 ROTATION
+C
+      CHANGE = CHANGE+T*T
+C      write(17,*)'line 263'
+      CALL DROT(NLOC,CL(1,I),1,CL(1,J),1,C,S)
+
+C       DO K=1,NLOC
+C       C1=C*CL(K,I) + S*CL(K,J)
+c       C2=C*CL(K,J)-S*CL(K,I)
+C       CL(K,I)=C1
+C       CL(K,J)=C2
+C       END DO
+C        UPDATE THE ATOMIC POPULTIONS
+C
+      DO 880 KK = 1,NATOMS
+         QPI = C*C*RIJ(II,KK)+S*S*RIJ(JJ,KK)+TWO*C*S*RIJ(IJ,KK)
+         QPJ = C*C*RIJ(JJ,KK)+S*S*RIJ(II,KK)-TWO*C*S*RIJ(IJ,KK)
+         QPIJ = (C*C-S*S)*RIJ(IJ,KK)+C*S*(RIJ(JJ,KK)-RIJ(II,KK))
+         DO 720 K = 1,NLOC
+            IF (I.EQ.K.OR.J.EQ.K) GO TO 720
+            IK = INDXZ(I,K)
+            JK = INDXZ(J,K)
+            QPIX(K) = C*RIJ(IK,KK)+S*RIJ(JK,KK)
+            QPJX(K) = C*RIJ(JK,KK)-S*RIJ(IK,KK)
+            RIJ(IK,KK) = QPIX(K)
+            RIJ(JK,KK) = QPJX(K)
+  720    CONTINUE
+         RIN = RIN+QPI+QPJ-RIJ(II,KK)-RIJ(JJ,KK)
+         RIJ(II,KK) = QPI
+         RIJ(JJ,KK) = QPJ
+         RIJ(IJ,KK) = QPIJ
+C        WRITE(17,*)'FINAL'
+C         WRITE(17,*)'RIJ(II,KK)=',RIJ(II,KK),' II=',II,'KK=',KK
+C         WRITE(17,*)'RIJ(JJ,KK)=',RIJ(JJ,KK),' JJ=',JJ
+C         WRITE(17,*)'RIJ(IJ,KK)=',RIJ(IJ,KK),' IJ=', IJ
+  880 CONTINUE
+  920 CONTINUE
+
+C
+C****************TEST FOR CONVERGENCE OF LOCALIZATION PROCEDURE*************
+C
+      CHANGE = DSQRT(TWO*CHANGE/(NLOC*(NLOC-1)))
+C      write(17,*)' CHANGE=', CHANGE
+C      IF(ITER.LT.MAXIT  .AND.  CHANGE.GT.TENM3*CVGLOC) GO TO 360
+C      IF(CHANGE.LE.CVGLOC) GO TO 1000
+C
+
+      IF(ITER.LE.MAXIT) THEN
+C         IF(CHANGE.GE.TENM10) GO TO 360
+         IF(CHANGE.GE.TENM3*CVGLOC) GO TO 360
+       END IF
+ 1000 CONTINUE
+       WRITE(*,9080) ITER
+
+       IF(ITER.GE.MAXIT.OR.CHANGE.GT.CVGLOC) THEN
+        WRITE(*,9070)
+       RETURN
+       END IF
+
+C
+C          FINISHED WITH LOCALIZATION CYCLES
+C
+
+C
+C        TRANSFORM TO FINAL ORBITALS, COPY VIRTUAL SPACE
+C
+C      write(17,*)'sub poploc-line 274'
+C      stop
+      CALL MRARBR(VECIN,NBASIS,NBASIS,NLOC,CL,NLOC,NLOC,VECOUT,NBASIS)
+C      CALL MRARBR(VECIN,m,m,m,CL,m,m,VECOUT,m)
+      NVIRT = NBASIS - NLOC
+      CALL DCOPY(NVIRT*NBASIS,VECIN(1,NLOC+1),1,VECOUT(1,NLOC+1),1)
+C      write(17,*)'sub poploc-line 279'
+C      stop
+C
+C LLEVO VECOUT(NBA,NBA) A LA FORMA CMO
+       K=0
+      DO J=1,NLOC
+       DO I=1,NBASIS
+        K=K+1
+         CMO(K)=VECOUT(I,J)
+       END DO
+      END DO
+C
+      K=NLOC*NBASIS
+      DO J=NLOC+1,NBASIS
+       DO I=1,NBASIS
+        K=K+1
+         CMO(K)=VECIN(I,J)
+       END DO
+      END DO
+
+C      K=N2
+C      DO I=NLOC+1,NBASIS
+C         DO J=NLOC+1,NBASIS
+C          K=K+1
+C           CMO(K)=VECIN(I,J)
+C         END DO 
+C      END DO
+C      write(60,*)'sub poploc' 
+C          PRINT/PUNCH FINAL LOCALIZED ORBITALS
+C      stop
+
+C
+      RETURN
+ 9070 FORMAT(1H0,'LOCALIZATION FAILS --- LOCALIZATION ABORTED')
+
+ 9080 FORMAT(10X,'LOCALIZATION CONVERGED IN',I4,' ITERATIONS')
+
+      END
+#endif
+        END IF
+
 C
 C---------------------------------------------------------
 C       MULLIKEN LOCALIZATION METHOD (According to ec. 31)
@@ -528,7 +869,7 @@ C
             MATCMO = 0
             DO  ISYM = 1,NSYM
                MATCMO = MATCMO + NBAS(ISYM)*NOCC(ISYM)
-            END DO   
+            END DO
 C
 C---------------------
 C           Allocation
@@ -612,9 +953,9 @@ C
 C---------------------------------------
 C           Print the localized orbitals
 C---------------------------------------
-C            
+C
             CALL DZERO(WORK(KLCMO),NORBT*NOCCT)
-C     
+C
             CALL DGEMM('N','N',NORBT,NLOCC,NOCCT,D1,WORK(KCMOC),NORBT,
      &                 CLOCO,NOCCT,D0,WORK(KLCMO),NORBT)
 C
@@ -627,7 +968,7 @@ CKeinSPASmehr
 C
 CPFP Nov/21/04
 C        IF ( FOSOCC .OR. FBOVIR .OR. FBSETV ) THEN
-         IF ( FOSOCC .OR. FBOOCC .OR. FBOCIN 
+         IF ( FOSOCC .OR. FBOOCC .OR. FBOCIN
      &               .OR. FBOVIR .OR. FBSETV ) THEN
 Cend-PFP
 C
@@ -638,7 +979,7 @@ C
 C------------------------------------
 C           Allocation of work space.
 C------------------------------------
-C     
+C
             KDLAB  = KEND1
             KIDSYM = KDLAB  + 3
             KIDADR = KIDSYM + (3+1)/IRAT
@@ -646,9 +987,9 @@ C
             KTMP   = KPRPAO + N2BASX
             KEND2  = KTMP   + NNBASX
             LWORK2 = LWORK  - KEND2
-C     
+C
             IF (LWORK2 .LT. 0) CALL STOPIT('GETLOC.2',' ',KEND2,LWORK)
-C     
+C
             NLBTOT = 0
             NCOMP  = 0
             NPATOM = 0
@@ -679,7 +1020,7 @@ C
             DO IPRLBL = 1, NLBTOT
                LABEL = LABAPP(IPRLBL)
                KSYM = LABSYM(IPRLBL)
-C     
+C
                IF (LABEL(1:1) .EQ. 'X') IDIP = 1
                IF (LABEL(1:1) .EQ. 'Y') IDIP = 2
                IF (LABEL(1:1) .EQ. 'Z') IDIP = 3
@@ -701,7 +1042,7 @@ C
      &                                   '" NOT FOUND ON LUPROP.'
                   CALL QUIT('PROPERTY NOT FOUND ON LUPROP.')
                END IF
-C     
+C
                IF (IPRSOS .GT. 10) THEN 
                   WRITE(LUPRI,'(/3A)') ' PROPERTY MATRIX ',LABEL,
      &                              ' IN AO BASIS AS READ FROM LUPROP '
@@ -722,18 +1063,18 @@ C
 C
                   JSYM = MULD2H(ISYM,KSYM)
 C
-                  IF ((ISYM .GE. JSYM) .AND. 
+                  IF ((ISYM .GE. JSYM) .AND.
      &              (NORB(ISYM) .GT. 0) .AND. (NORB(JSYM) .GT. 0)) THEN
-C     
-                     IF (LWORK2 .LT. NBAS(ISYM)) 
+C
+                     IF (LWORK2 .LT. NBAS(ISYM))
      &                   CALL STOPIT('GETLOC.2.1',' ',KEND2+LWORK2,
      &                               KEND2+NBAS(ISYM))
-C     
+C
                      CALL UTHV(WORK(KCMO+ICMO(ISYM)),WORK(KPRPAO),
      &                      WORK(KCMO+ICMO(JSYM)),ISYM,JSYM,NBAS(ISYM),
      &                         NBAS(JSYM),PRPMO(1,1,IDIP),WORK(KEND2))
 C
-                     IF (IPRSOS. GT. 5) THEN 
+                     IF (IPRSOS. GT. 5) THEN
                         WRITE(LUPR I,'(/,A,I5,A,I5)') ' ISYM= ',ISYM,
      &                                                ' JSYM= ',JSYM
                         WRITE(LUPRI,'(/4A)') 
@@ -757,11 +1098,11 @@ C
      &                                 NBAS(JSYM),NORB(JSYM),1,LUPRI)
                         END IF
                      END IF
-C     
+C
                   END IF
-C     
+C
                END DO
-C     
+C
                IF (KSYM .GT. 1) THEN
 CSPAS:27/3-06:TRANSA is changed to TRANSX
 C                 CALL TRANSA(PRPMO(1,1,IDIP),PRPMO(1,1,IDIP),NORBT,
@@ -776,24 +1117,24 @@ C
                   CALL OUTPUT(PRPMO(1,1,IDIP),1,NORBT,1,NORBT,
      &                        NORBT,NORBT,1,LUPRI)
                END IF
-      
+C
             END DO
 C
          CALL GPCLOSE(LUPROP,'KEEP')
 C
         END IF
-C    
+C
 C============================================================
 C     Generate transformation matrix to localized orbitals
 C============================================================
-C     
+C
 CPFP Nov/21/04
 C        IF ( FOSOCC ) THEN
          IF ( FOSOCC .OR. FBOCIN .OR. FBOOCC ) THEN
 Cend-PFP
-C     
+C
 C-----------------------------------
-C     Allocation of work space   
+C     Allocation of work space
 C-----------------------------------
 C
             KRM    = KEND1
@@ -803,41 +1144,41 @@ C
             KLCMO  = KDD   + NOCCT * NOCCT
             KEND3  = KLCMO + NORBT * NOCCT
             LWORK3 = LWORK - KEND3
-C     
+C
             IF (LWORK3 .LT. 0) CALL STOPIT('GETLOC.3',' ',KEND3,LWORK)
-C     
+C
 C------------------------------------------------------------
 C     Foster Boys localization of the occupied orbitals
 C------------------------------------------------------------
-C     
+C
             CALL FOSBOY(IPRSOS,PRPMO,NLOCC,CLOCO,THRLOC,
      &          WORK(KRM),WORK(KSS),WORK(KCC),WORK(KDD))
 
 C
 C---------------------------------------------
-C     Print localized molecular orbitals    
+C     Print localized molecular orbitals
 C---------------------------------------------
-C 
-         call flshfo(lupri)   
+C
+         call flshfo(lupri)
             CALL DZERO(WORK(KLCMO),NORBT*NOCCT)
 C
             CALL DGEMM('N','N',NORBT,NLOCC,NOCCT,D1,WORK(KCMO),NORBT,
      &          CLOCO,NOCCT,D0,WORK(KLCMO),NORBT)
-C     
+C
             CALL HEADER('Localized Occupied Molecular Orbitals',-1)
             CALL PLOCORB(WORK(KLCMO),.TRUE.,NLOCC,LUPRI)
 C
          call flshfo(lupri)
          END IF
-C    
+C
 C==================================================================
 C     Generate transformation matrix to localized virtuals orbitals
 C===================================================================
-C   
+C
          IF (FBOVIR .OR. FBSETV .OR. FBSTVO) THEN
-C     
+C
 C-----------------------------
-C     Allocation of work space 
+C     Allocation of work space
 C-----------------------------
 C
             KRM    = KEND1
@@ -845,28 +1186,28 @@ C
             KLCMV  = KTT   + NVIRT*NVIRT
             KEND4  = KLCMV + NORBT*NLVIR
             LWORK4 = LWORK - KEND4
-C     
+C
             IF (LWORK4 .LT. 0) CALL STOPIT('GETLOC.4',' ',KEND4,LWORK)
 C
 C------------------------------------------------------
 C     Intensity localization of the virtual orbitals
 C------------------------------------------------------
-C     
+C
             call flshfo(lupri)
 C
             CALL LOCALV(IPRSOS,PRPMO,NLOCC,CLOCO,NLVIR,CLOCV,
      &                  WORK(KRM),WORK(KTT),WORK(KEND4),LWORK4)
-C     
+C
 C---------------------------------------------
-C     Print localized molecular orbitals    
+C     Print localized molecular orbitals
 C---------------------------------------------
-C     
+C
             CALL DZERO(WORK(KLCMV),NORBT*NLVIR)
 C     
             IF (IPRSOS .GT. 5) THEN
                CALL OUTPUT(WORK(KCMO),1,NORBT,1,NORBT,
      &                     NORBT,NORBT,1,LUPRI)
-C     
+C
                CALL OUTPUT(WORK(KCMO+NORBT*NOCCT),1,NORBT,1,NVIRT,
      &                     NORBT,NVIRT,1,LUPRI)
             END IF
@@ -877,13 +1218,14 @@ C
 C
             CALL HEADER('Localized Virtual Molecular Orbitals',-1)
             CALL PLOCORB(WORK(KLCMV),.FALSE.,NLVIR,LUPRI)
-C     
+C
          END IF
 C
-#ifdef NOT_FINISHED_YET
+CPFP 03/12/2015 activated to print modenloc
+C#ifdef NOT_FINISHED_YET
 CSPAS:2.6.2011: this breaks the parallel code
          CALL NEWMOLDEN(IPRSOS,WORK(KLCMO),OCCUP)
-#endif
+C#endif
 C
       END IF
 C
@@ -893,18 +1235,18 @@ C
 C
       RETURN
       END
-
+C
 C**********************************************************************
 C     /* Deck fosboy */
       SUBROUTINE FOSBOY(IPRSOS,PRPMO,NLOCC,CLOCO,THRLOC,RM,SS,CC,DD)
-C     
+C
 C      Stephan P. A. Sauer 20/2-1999
 C      essentially stolen from the RPAC program
 C
 C      This routine does a FOSTER-BOYS LOCALIZATION
-C      implemented after the equations from 
+C      implemented after the equations from
 C      T.D.Bouman,B.Voigt,Aa.E.Hansen, JACS 101,550(1979)
-C      
+C
 C
 C     PRPMO  dipole length integrals in MO basis
 C     RM     work array for dipole length integrals over occupied MOs
@@ -955,7 +1297,7 @@ C----------------------------------------
 C
       PID4 = ATAN(D1)
       PID8 = PID4/D2
-      THR2 = THRLOC**2 
+      THR2 = THRLOC**2
 C
 CPFP Nov/21/04
       IF ( FOSOCC .OR. FBOCIN .OR. FBOOCC) THEN
@@ -970,7 +1312,7 @@ C
 C
          DO IOCCT = 1, NOCCT
             IORBT = ISX(IOCCT)
-C     
+C
             DO JOCCT = 1, NOCCT
                JORBT = ISX(JOCCT)
                RM(IOCCT,JOCCT,IDIP) = PRPMO(IORBT,JORBT,IDIP)
@@ -978,15 +1320,15 @@ C
          END DO
 C
          IF (IPRSOS .GE. 5) THEN
-            IF (IDIP .EQ. 1) 
+            IF (IDIP .EQ. 1)
      &         WRITE(LUPRI,'(/A)')' occupied RM matrix : X'
-            IF (IDIP .EQ. 2) 
+            IF (IDIP .EQ. 2)
      &         WRITE(LUPRI,'(/A)')' occupied RM matrix : Y'
-            IF (IDIP .EQ. 3) 
+            IF (IDIP .EQ. 3)
      &         WRITE(LUPRI,'(/A)')' occupied RM matrix : Z'
             CALL OUTPUT(RM(1,1,IDIP),1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,
      &                  LUPRI)
-         END IF     
+         END IF
 C
 CPFP  For FBOOCC only
 C
@@ -995,18 +1337,18 @@ C
            DO IO2L = 1, NO2LOC
              DO IOC = 1, NOCCT
                DO JOC = 1, NOCCT
-                 IF ((IOC.EQ.NTOC2L(IO2L)).OR.(JOC.EQ.NTOC2L(IO2L))) 
+                 IF ((IOC.EQ.NTOC2L(IO2L)).OR.(JOC.EQ.NTOC2L(IO2L)))
      &             RM(IOC,JOC,IDIP) = D0
                END DO
              END DO
            END DO
 C
           IF (IPRSOS .GE. 5) THEN
-            IF (IDIP .EQ. 1) 
+            IF (IDIP .EQ. 1)
      &         WRITE(LUPRI,'(/A)')' occupied RM.2 matrix : X'
-            IF (IDIP .EQ. 2) 
+            IF (IDIP .EQ. 2)
      &         WRITE(LUPRI,'(/A)')' occupied RM.2 matrix : Y'
-            IF (IDIP .EQ. 3) 
+            IF (IDIP .EQ. 3)
      &         WRITE(LUPRI,'(/A)')' occupied RM.2 matrix : Z'
             CALL OUTPUT(RM(1,1,IDIP),1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,
      &                  LUPRI)
@@ -1046,7 +1388,7 @@ C
       IF (IPRSOS .GE. 10) THEN
          WRITE(LUPRI,'(/A)')' DD matrix :'
          CALL OUTPUT(DD,1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,LUPRI)
-      END IF     
+      END IF
 C
 C--------------------------------------
 C     DR = INITIAL VALUE OF SUM OF R**2
@@ -1146,7 +1488,7 @@ C
 C
               END DO
            END DO
-C     
+C
       IF (.NOT. CONV) GO TO 400
 C
       IF (DMAX .GT. THRLOC)  GO TO 300
@@ -1158,7 +1500,7 @@ C
       END IF
 C
 C-----------------------------------------
-C     Copy the transformation matrix in SS 
+C     Copy the transformation matrix in SS
 C     to the right positions in CLOCO
 C-----------------------------------------
 C
@@ -1168,7 +1510,7 @@ C
         END DO
       END DO
 C
-CPFP For FBOCIN only 
+CPFP For FBOCIN only
 C
       IF ( FBOCIN ) THEN
         DO IO2L = 1, NO2LOC
@@ -1186,7 +1528,7 @@ C
       END IF
 C
 Cend-PFP
-C 
+C
       IF (IPRSOS .GT. 10) THEN
          WRITE(LUPRI,'(/A)')' SS matrix : '
          CALL OUTPUT(SS,1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,LUPRI)
@@ -1208,7 +1550,7 @@ C         END DO
 C      END DO
 C
       DSS = DS - DR
-      WRITE (LUPRI,'(//,A,/,A,/,A,G14.6,A,G14.6,/,A,I5,A,G9.2,//)') 
+      WRITE (LUPRI,'(//,A,/,A,/,A,G14.6,A,G14.6,/,A,I5,A,G9.2,//)')
      &      ' FOSTER-BOYS LOCALIZATION:',
      &      ' SUM OF (R-VECTOR)**2 FOR THE ORBITAL DISTRIBUTIONS',
      &      ' INCREASED BY',DSS,'  TO',DS,
@@ -1218,7 +1560,7 @@ C
 C
       RETURN
       END
-
+C
 C**********************************************************************
 C  /* Deck dab */
       SUBROUTINE DAB(I,J,RM,CC,DD)
@@ -1226,10 +1568,10 @@ C
 C      Stephan P. A. Sauer 20/2-1999
 C      essentially stolen from the RPAC program
 C
-C      This routine calculates the 
-C      NUMERATOR & DENOMINATOR OF EQ. 41 OF 
+C      This routine calculates the
+C      NUMERATOR & DENOMINATOR OF EQ. 41 OF
 C      T.D.Bouman,B.Voigt,Aa.E.Hansen, JACS 101,550(1979)
-C      
+C
 C
 C     RM     DIPOLE LENGTH INTEGRALS
 C     CC     CENTROIDS
@@ -1279,7 +1621,7 @@ C
 C      Stephan P. A. Sauer 20/2-1999
 C      essentially stolen from the RPAC program
 C
-C      This routine calculates the 
+C      This routine calculates the
 C      PERFORMS UNITARY TRANSFORMATIONS OF ORBITALS I, J
 C
 C      THETA  TRANSFORMATION ANGLE
@@ -1322,7 +1664,7 @@ C
          END DO
 C
       END DO
-C     
+C
       DO KK = NLOC, NOCCT
 C
          II = (KK-I) * (KK-J)
@@ -1409,8 +1751,8 @@ C
       CALL QEXIT('LOCAI')
 C
       RETURN
-      END             
-      
+      END
+
 C***********************************************************************
 C  /* Deck localv */
       SUBROUTINE LOCALV(IPRSOS,PRPMO,NLOCC,CLOCO,NLVIR,CLOCV,
@@ -1419,10 +1761,10 @@ C
 C      Stephan P. A. Sauer 23/2-1999
 C      essentially stolen from the RPAC program
 C
-C      This routine calculates the localized virtual orbitals. 
+C      This routine calculates the localized virtual orbitals.
 C      The following criterion is used:
 C                the dipole strenghs is maximized between the
-C                canonical virtual orbitals and the already 
+C                canonical virtual orbitals and the already
 C                localized valence occupied orbitals.
 C
 C      PRPMO  ARRAY CONTAINING DIPOLE LENGTH INTEGRALS
@@ -1491,7 +1833,7 @@ C
       DO IDIP = 1, 3
 C
          CALL DZERO(WORK(KRMW),NWOPPT)
-C         
+C
          DO IVAR = 1, NWOPPT
 C
             M = JWOP(1,IVAR)
@@ -1502,7 +1844,7 @@ C
          END DO
 C
         IF (IPRSOS .GE. 50) THEN
-            IF (IDIP .EQ. 1) 
+            IF (IDIP .EQ. 1)
      &         WRITE(LUPRI,'(/2A)')' LOCALV before localization :',
      &                             ' transition RM matrix : X'
             IF (IDIP .EQ. 2) 
@@ -1512,7 +1854,7 @@ C
      &         WRITE(LUPRI,'(/2A)')' LOCALV before localization :',
      &                             ' transition RM matrix : Z'
             CALL OUTPUT(WORK(KRMW),1,NWOPPT,1,1,NWOPPT,1,1,LUPRI)
-         END IF     
+         END IF
 C
 C------------------------------------------------------
 C     Form the matrices  IVAR localized, IDIP canonical
@@ -1537,8 +1879,8 @@ C
 C
       END DO
 C
-C----------------------------------------------------------          
-C     Form matrix  DA(M,M') = (M/R/LAM)*(LAM/R/M'), and 
+C----------------------------------------------------------
+C     Form matrix  DA(M,M') = (M/R/LAM)*(LAM/R/M'), and
 C     diagonalize for each occupied orbital. Choose largest
 C     eigenvalue and corresponding eigenvector.
 C----------------------------------------------------------
@@ -1804,7 +2146,7 @@ C---------------------------------
 C
       DO L = 1, NSMAT
          IOFF = KOVRLP - 1 + (L-1)*NSMAT
-         DO I = 1, NSMAT 
+         DO I = 1, NSMAT
             WORK(IOFF+I) = D0
             DO J = 1, NOMAT
                WORK(IOFF+I) = WORK(IOFF+I) + OMAT(J,I)*OMAT(J,L)
@@ -1840,7 +2182,7 @@ C
      &         ' WORK(KEIGVA) matrix : after it does a=1/sqrt(a)'
          WRITE(LUPRI, '(F12.8)') (WORK(KEIGVA-1+i),i=1,NSMAT)
 C
-         WRITE(LUPRI,'(/A)') 
+         WRITE(LUPRI,'(/A)')
      &        ' WORK(KEIGVE) matrix : before multiplication '
          CALL OUTPUT(WORK(KEIGVE),1,NSMAT,1,NSMAT,NSMAT,NSMAT,1,LUPRI)
       END IF
@@ -1933,8 +2275,10 @@ C     FORMAT statements for molecular orbitals
 C---------------------------------------------
 C
   100 FORMAT(/5X,I2,'  Localized ',A8,' Molecular Orbitals ')
-  200 FORMAT(/' Orbital  ',5X,7I9)
-  300 FORMAT(1X,I3,2X,A4,2X,A4,2X,7F9.4)
+CPFP
+  200 FORMAT(/' Orbital  ',5X,7I12)
+  300 FORMAT(1X,I3,2X,A4,2X,A4,2X,7F12.8)
+Cend-PFP
 C
 C-----------------------------
 C     Print molecular orbitals
@@ -1988,8 +2332,8 @@ C
 C      Stephan P. A. Sauer 18/12-1999
 C
 C
-C     The subroutine orthogonalizes one vector of length N 
-C     stored in the array CY(N) to NVEC vectors stored in 
+C     The subroutine orthogonalizes one vector of length N
+C     stored in the array CY(N) to NVEC vectors stored in
 C     CX(N,NVEC) sequentially
 C
 C     The vector in CX-array must be normalized.
@@ -2100,7 +2444,7 @@ C     Generation of  AIJ BIJ BMAX
 C--------------------------------
 C
       CALL GENERA_IJ(PAST,AIJ,BIJ)
-      call GENERA_BMAX(BIJ,AIJ,BMAX)  
+      call GENERA_BMAX(BIJ,AIJ,BMAX)
 C
   300 BMAX = BMAX/NOCCT
       IF (BMAX .LT. THRLOC) BMAX = THRLOC
@@ -2110,24 +2454,24 @@ C
          DO J = 1, I-1
             ARS = AIJ(I,J)
             BRS = BIJ(I,J)
-            IF (ABS(ARS) .GE. THR2) THEN 
-               THETA = DP25*ATAN(BRS/ARS)        
+            IF (ABS(ARS) .GE. THR2) THEN
+               THETA = DP25*ATAN(BRS/ARS)
                IF(ARS .LT. D0) THEN
-                  THETA = THETA + SIGN(PID4,BRS) 
-                  IF (BRS .EQ. D0) THETA = PID4    
+                  THETA = THETA + SIGN(PID4,BRS)
+                  IF (BRS .EQ. D0) THETA = PID4
                END IF
             ELSE
 C
 C-----------------------
-C     Now the case Ars=0 
+C     Now the case Ars=0
 C-----------------------
 C
                THETA = SIGN(PID8,BRS)
             END IF
 C
             DT = ABS(THETA)
-C            
-            IF (ABS(DT-PID4) .LE. THRLOC) THETA = SIGN(PID4,THETA) 
+C
+            IF (ABS(DT-PID4) .LE. THRLOC) THETA = SIGN(PID4,THETA)
             IF (ABS(DT-PID8) .LE. THRLOC) THETA = SIGN(PID8,THETA)
 C
             CALL LOC_ROT(I,J,THETA,NLOCC,SS,BIJ,AIJ,PAST)
@@ -2136,14 +2480,14 @@ C
       END DO
 C
       IF( .NOT. CONV )      GOTO 400
-C      
+C
       IF ( BMAX .GT. THRLOC ) GOTO 300
 C
 C---------------------------------------------------
 C     Convergence reached
 C     Copying the transformation matrix to the CLOCO
 C---------------------------------------------------
-C      
+C
       DO IOCCT = 1, NOCCT
          DO JOCCT = 1, NOCCT
             CLOCO(IOCCT,JOCCT) = SS(IOCCT,JOCCT)
@@ -2154,7 +2498,7 @@ C
 C
       RETURN
       END
-
+C
 C***********************************************************************
 C  /* Deck genera_ij */
       SUBROUTINE GENERA_IJ(PAST,AIJ,BIJ)
@@ -2163,9 +2507,9 @@ C----------------------------------------------------------------
 C     This subroutine generates sum over al the atoms calculating
 C     Aij Bij acording with formulas 29a 29b
 C----------------------------------------------------------------
-C      
+C
 #include "implicit.h"
-C     
+C
 C     LUPRI used from include file priunit.h
 C     MAXORB is needed in COMMON /INFIND/
 C     MAXASH is needed in COMMON /INFIND/
@@ -2181,7 +2525,7 @@ C     ISX(MAXORB) used from COMMON /INFIND/
 C
       PARAMETER (D0 = 0.0D+00, D1 = 1.0D+00, D2 = 2.0D+00)
       PARAMETER (DP25 = 0.25D+00)
-C       
+C
       DIMENSION   PAST(NOCCT,NOCCT,NUCDEP)
       DIMENSION   AIJ(NOCCT,NOCCT),BIJ(NOCCT,NOCCT)
 C
@@ -2193,7 +2537,7 @@ C
       DO I = 1, NOCCT
          DO J = 1, I
             DO IATOM = 1, NUCDEP
-C              
+C
                AIJ(I,J) = AIJ(I,J) + DP25*(PAST(I,I,IATOM) - 
      &             PAST(J,J,IATOM))**2 - PAST(I,J,IATOM)**2
                BIJ(I,J) = BIJ(I,J) + 
@@ -2206,7 +2550,7 @@ C
                BIJ(J,I) = -BIJ(I,J)
                AIJ(J,I) = -AIJ(I,J)
             END IF
-C            
+C
          END DO
       END DO
 C
@@ -2214,10 +2558,10 @@ C
 C
       RETURN
       END
-
+C
 C***********************************************************************
 C  /* Deck genera_bmax */
-      SUBROUTINE GENERA_BMAX(BIJ,AIJ,BMAX)   
+      SUBROUTINE GENERA_BMAX(BIJ,AIJ,BMAX)
 C
 C
 C     This subroutine calculates DMAX
@@ -2237,16 +2581,16 @@ C NSYM, NOCCT, NORBT, NRHF(8), NVIR(8) used from COMMON /INFORB/
 C ISX(MAXORB) used from COMMON /INFIND/
 #include "priunit.h"
 #include "inforb.h"
-#include "infind.h" 
+#include "infind.h"
 #include "nuclei.h"
-C   
+C
       DIMENSION   AIJ(NOCCT,NOCCT),BIJ(NOCCT,NOCCT)
 C
       CALL QENTER('GENERA_BMAX')
 C
       DO I = 1, NOCCT
          DO J = 1, I-1
-            BMAX = BMAX + SQRT(AIJ(I,J)*AIJ(I,J) + 
+            BMAX = BMAX + SQRT(AIJ(I,J)*AIJ(I,J) +
      &             BIJ(I,J)*BIJ(I,J)) - AIJ(I,J)
          END DO
       END DO
@@ -2261,7 +2605,7 @@ C  /* Deck genera_bmax */
       SUBROUTINE LOC_ROT(I,J,THETA,NLOC,SS,BIJ,AIJ,PAST)
 C
 C
-C     This subroutine does the actualization of the orbitals 
+C     This subroutine does the actualization of the orbitals
 C
 C
 #include "implicit.h"
@@ -2277,7 +2621,7 @@ C NSYM, NOCCT, NORBT, NRHF(8), NVIR(8) used from COMMON /INFORB/
 C ISX(MAXORB) used from COMMON /INFIND/
 #include "priunit.h"
 #include "inforb.h"
-#include "infind.h" 
+#include "infind.h"
 #include "nuclei.h"
 C
       PARAMETER (D0 = 0.0D+00, D1 = 1.0D+00, D2 = 2.0D+00)
@@ -2285,7 +2629,7 @@ C
 C
       DIMENSION   SS(NOCCT,NOCCT)
       DIMENSION   PAST(NOCCT,NOCCT,NUCDEP)
-      DIMENSION   AIJ(NOCCT,NOCCT),BIJ(NOCCT,NOCCT) 
+      DIMENSION   AIJ(NOCCT,NOCCT),BIJ(NOCCT,NOCCT)
 C
       CALL QENTER('LOC_ROT')
 C
@@ -2313,14 +2657,14 @@ C
             TJ = PAST(JJ,J,IA)
             PAST(JJ,I,IA) = CO*TI + SI*TJ
             PAST(JJ,J,IA) = CO*TJ - SI*TI
-         END DO   
+         END DO
 C
          DO JJ = 1, NOCCT
             TI = PAST(I,JJ,IA)
             TJ = PAST(J,JJ,IA)
             PAST(I,JJ,IA) = CO*TI + SI*TJ
             PAST(J,JJ,IA) = CO*TJ - SI*TI
-         END DO   
+         END DO
       END DO
 C
       CALL GENERA_IJ(PAST,AIJ,BIJ)
@@ -2331,13 +2675,14 @@ C
       END
 
 C***********************************************************************
-C  /* Deck newmolden */
-#ifdef NOT_FINISHED_YET
-        SUBROUTINE NEWMOLDEN(IPRSOS,CLMO,OCCUP)
+C  /* Deck newmolde */
+CPFP 02/12/2015 commented to see the localized orbital
+C#ifdef NOT_FINISHED_YET
+       SUBROUTINE NEWMOLDEN(IPRSOS,CLMO,OCCUP)
 C
 C
 C       This subroutine copies the molden.inp ( with nonlocalized mo's )
-C       to molden1.inp ( with localized orbitals )
+C       to moldenloc.inp ( with localized orbitals )
 C
 C
 #include "implicit.h"
@@ -2347,7 +2692,7 @@ C
 #include "maxorb.h"
 #include "molde.h"
        PARAMETER( N1 = 4, N2 = 7)
-       DIMENSION CLMO(*),OCCUP(*)       
+       DIMENSION CLMO(*),OCCUP(*)
 CPFP
 C      INTEGER*4 UNIT2, MATCH1, MATCH2, NRF1, NRF2, NOCCT, NBAST
        INTEGER   UNIT2, MATCH1, MATCH2, NRF1, NRF2
@@ -2369,15 +2714,15 @@ C
        word2(6)='s'
        word2(7)=']'
 C
-       call flshfo(lupri) 
+       call flshfo(lupri)
 C
        LU_MOLDENLOC = -1
        CALL GPOPEN(LU_MOLDENLOC,'moldenloc.inp','UNKNOWN',' ',
      &             'FORMATTED',IDUMMY,.FALSE.)
 C
-       call flshfo(lupri) 
+       call flshfo(lupri)
 C
-       REWIND(LUMOLDEN)     
+       REWIND(LUMOLDEN)
 C
  1     READ(LUMOLDEN,'(77A)',err=10,end=10)lee
 C
@@ -2419,7 +2764,7 @@ C
        WRITE(LUPRI,'(/,2X,A,/,2X,A,/,2X,A,/,2X,A,/)')
      &        '----------------------------------------------------',
      &        '---------- Molden (loc) input generated ------------',
-     &        '--- Use [-v] opt. when running dalton to see it ----',
+     &        '--- Use [-D] opt. when running dalton to see it ----',
      &        '----------------------------------------------------'
 C
        CALL GPCLOSE(LU_MOLDENLOC,'KEEP')
@@ -2428,12 +2773,12 @@ C
 C
        RETURN
        END
-#endif
+C#endif
 C***********************************************************************
 C  /* Deck equally */
        SUBROUTINE EQUALLY(lee,word1,n1,match1)
 C
-C      Compare to characters
+C      Compare two strings of characters
 C
        CHARACTER LEE,WORD1
        INTEGER*4 N1,MATCH1
@@ -2449,10 +2794,9 @@ C
 C
       CALL QEXIT('EQUALLY')
 C
-       RETURN 
-       END 
-
-
+       RETURN
+       END
+C
 C***********************************************************************
 C  /* Deck lmomos */
       SUBROUTINE LMOMOS(LU_MOLDENLOC,ITASK,ORVAL,OCCUP)
@@ -2479,7 +2823,7 @@ C
 #include "nuclei.h"
 #include "symmet.h"
 #include "molde.h"
-C    
+C
       LOGICAL WRTELEM,WRTZERO
       DIMENSION ORVAL(*), OCCUP(*)
 C
@@ -2492,7 +2836,7 @@ C
          IF (.NOT. DONEIV) THEN 
 C
           WRITE(LU_MOLDENLOC,'(/A)') '[MO]'
-C          
+C
             ISYMCLAS = 1
             ISYMORB = 0
             IADD = 0
@@ -2565,7 +2909,7 @@ C
 C
       CALL QEXIT('LMOMOS')
 C
-      RETURN 
+      RETURN
       END
 
 C***********************************************************************
@@ -2629,7 +2973,7 @@ C             MULCNT = ISTBNU(ICENT)
 C             NAME   = NAMEX(3*ICENT)(1:4)
 C             IF (MULT(MULCNT) .EQ. 1) THEN
 C                ICHARGE = NINT(CHARGE(ICENT))
-C                   
+C
 C                IF (WORD .EQ. 'ATOM')
 C     &               WRITE (LU_MOLDENLOC,'(A,1X,I5,1X,I5,3(1X,F20.10))')
 C     &               NAME,ICENT,ICHARGE,(CORD(K,ICENT),K=1,3)
@@ -2660,7 +3004,7 @@ C                      ICRY = ICRY + 3
 C                      ICRZ = ICRZ + 3
 C                   END IF
 C 200            CONTINUE
-C             END IF        
+C             END IF
 C 100      CONTINUE
 C
 C       END IF
@@ -2674,7 +3018,7 @@ C       END
           IF (WORD .EQ. 'XYZ ') WRITE(LU_MOLDENLOC,'(I5/)') NUCDEP 
           IF (WORD .EQ. 'ATOM') WRITE(LU_MOLDENLOC,'(A)') '[Atoms] AU' 
           IF (WORD .EQ. 'FREQ') WRITE(LU_MOLDENLOC,'(/A)')'[FR-COORD]' 
-       
+C
           IATOM = 0
           DO 100 ICENT = 1, NUCIND
              MULCNT = ISTBNU(ICENT)
@@ -2726,11 +3070,337 @@ C FIXME ?          hjaaj Oct 2003: should we remove point charges ??
                       END IF
                    END IF
  200            CONTINUE
-             END IF        
+             END IF
  100      CONTINUE
-
+C
        END IF
        DONEIU = .TRUE.
        CALL FLSHFO(LU_MOLDENLOC)
        RETURN
        END
+C
+C**********************************************************************
+C     /* Deck PIPMEZ */
+      SUBROUTINE PIPMEZ(IPRSOS,PRPMO,NLOCC,CLOCO,THRLOC,RM,SS,CC,DD)
+C
+C      Stephan P. A. Sauer 20/2-1999
+C      essentially stolen from the RPAC program
+C
+C      This routine does a FOSTER-BOYS LOCALIZATION
+C      implemented after the equations from
+C      T.D.Bouman,B.Voigt,Aa.E.Hansen, JACS 101,550(1979)
+C
+C
+C     PRPMO  dipole length integrals in MO basis
+C     RM     work array for dipole length integrals over occupied MOs
+C     CLOCO  rectangular transformation matrix to be constructed
+C            with the first index over all molecular orbitals
+C     SS     square transformation matrix to be constructed
+C     THRLOC Threshold for localization
+C     CC     WORK ARRAY, LATER CONTAINING CENTROIDS
+C     DD     WORK ARRAY
+C
+C     DR     INITIAL SUM OF (R**2)
+C     DS     FINAL SUM
+C     NR     ITERATION COUNTER
+C
+#include "implicit.h"
+C
+C LUPRI used from include file priunit.h
+C MAXORB is needed in COMMON /INFIND/
+C MAXASH is needed in COMMON /INFIND/
+#include "maxorb.h"
+#include "maxash.h"
+C
+C NSYM, NOCCT, NORBT, NRHF(8), NVIR(8) used from COMMON /INFORB/
+C ISX(MAXORB) used from COMMON /INFIND/
+#include "priunit.h"
+#include "inforb.h"
+#include "infind.h"
+CPFP
+#include "locinf.h"
+Cend-PFP
+      PARAMETER (D0 = 0.0D0, D1 = 1.0D0, D2 = 2.0D0)
+      PARAMETER (DP25 = 0.25D0, THRSLD = 1.0D-15)
+C
+      DIMENSION   PRPMO(NORBT,NORBT,3)
+      DIMENSION   RM(NOCCT,NOCCT,3)
+      DIMENSION   CLOCO(NOCCT,NLOCC)
+      DIMENSION   SS(NOCCT,NOCCT)
+      DIMENSION   CC(NOCCT,NOCCT)
+      DIMENSION   DD(NOCCT,NOCCT)
+C
+      LOGICAL     CONV
+C
+      CALL QENTER('FOSBOY')
+C
+C----------------------------------------
+C     initialize some numerical constants
+C----------------------------------------
+C
+      PID4 = ATAN(D1)
+      PID8 = PID4/D2
+      THR2 = THRLOC**2
+C
+CPFP Nov/21/04
+      IF ( FOSOCC .OR. FBOCIN .OR. FBOOCC) THEN
+C
+C------------------------------------------------------
+C     copy the dipole integrals over occupied MOs to RM
+C------------------------------------------------------
+C
+      CALL DZERO(RM,NOCCT*NOCCT*3)
+C
+      DO IDIP = 1, 3
+C
+         DO IOCCT = 1, NOCCT
+            IORBT = ISX(IOCCT)
+C
+            DO JOCCT = 1, NOCCT
+               JORBT = ISX(JOCCT)
+               RM(IOCCT,JOCCT,IDIP) = PRPMO(IORBT,JORBT,IDIP)
+            END DO
+         END DO
+C
+         IF (IPRSOS .GE. 5) THEN
+            IF (IDIP .EQ. 1)
+     &         WRITE(LUPRI,'(/A)')' occupied RM matrix : X'
+            IF (IDIP .EQ. 2)
+     &         WRITE(LUPRI,'(/A)')' occupied RM matrix : Y'
+            IF (IDIP .EQ. 3)
+     &         WRITE(LUPRI,'(/A)')' occupied RM matrix : Z'
+            CALL OUTPUT(RM(1,1,IDIP),1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,
+     &                  LUPRI)
+         END IF
+C
+CPFP  For FBOOCC only
+C
+         IF (FBOOCC) THEN
+C
+           DO IO2L = 1, NO2LOC
+             DO IOC = 1, NOCCT
+               DO JOC = 1, NOCCT
+                 IF ((IOC.EQ.NTOC2L(IO2L)).OR.(JOC.EQ.NTOC2L(IO2L)))
+     &             RM(IOC,JOC,IDIP) = D0
+               END DO
+             END DO
+           END DO
+C
+          IF (IPRSOS .GE. 5) THEN
+            IF (IDIP .EQ. 1)
+     &         WRITE(LUPRI,'(/A)')' occupied RM.2 matrix : X'
+            IF (IDIP .EQ. 2)
+     &         WRITE(LUPRI,'(/A)')' occupied RM.2 matrix : Y'
+            IF (IDIP .EQ. 3)
+     &         WRITE(LUPRI,'(/A)')' occupied RM.2 matrix : Z'
+            CALL OUTPUT(RM(1,1,IDIP),1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,
+     &                  LUPRI)
+          END IF
+C
+        END IF
+C
+Cend-PFP
+C
+      END DO
+C
+C=============================================
+C     initialize variables for first iteration
+C=============================================
+C
+      NR = 0
+C
+      DS   = D0
+      DMAX = D0
+C
+      CALL DZERO(SS,NOCCT*NOCCT)
+      CALL DZERO(DD,NOCCT*NOCCT)
+      CALL DZERO(CC,NOCCT*NOCCT)
+C
+      DO J = 1, NOCCT
+         DD(J,J) = RM(J,J,1)**2 + RM(J,J,2)**2 + RM(J,J,3)**2
+         DS = DS + DD(J,J)
+         IF (J .LT. NOCCT)  THEN
+            K = J + 1
+            DO I = K, NOCCT
+               CALL DAB (I,J,RM,CC,DD)
+               DMAX = DMAX + DD(I,J)
+            END DO
+         END IF
+      END DO
+C
+      IF (IPRSOS .GE. 10) THEN
+         WRITE(LUPRI,'(/A)')' DD matrix :'
+         CALL OUTPUT(DD,1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,LUPRI)
+      END IF
+C
+C--------------------------------------
+C     DR = INITIAL VALUE OF SUM OF R**2
+C--------------------------------------
+C
+      DR = DS
+C
+C---------------------------------
+C     INITIALIZE SS TO UNIT MATRIX
+C---------------------------------
+C
+      CALL DUNIT (SS,NOCCT)
+C
+C================================================
+C     SUCCESSIVE 2*2 TRANSFORMATIONS USING EQ. 41
+C================================================
+C
+      NLOC = 1
+      FLNO = NOCCT - NLOC + 1
+C
+  300 DMAX = DMAX / FLNO
+      IF (DMAX .LT. THRLOC)  DMAX = THRLOC
+C
+
+  400 CONV = .TRUE.
+C
+           DO I = NLOC + 1, NOCCT
+C
+              DO J = NLOC, I - 1
+C
+C--------------------
+C     J .LT. I Always
+C--------------------
+C
+                 IF (DD(I,J) .GT. DMAX) THEN
+C
+                    CONV = .FALSE.
+                    NR = NR + 1
+                    C1 = CC(J,I)
+                    C2 = CC(I,J)
+C
+                    IF (ABS(C1) .GE. THR2) THEN
+                       THETA = -DP25 * ATAN(C2/C1)
+C
+C---------------------------------------
+C     Find value of theta giving maximun
+C---------------------------------------
+C
+                       IF (C1 .LT. D0) THEN
+                          THETA = THETA - SIGN(PID4,C2)
+                          IF (C2 .EQ. D0) THETA = PID4
+                       END IF
+                    ELSE
+C
+C--------------------------
+C     Special case - C1 = 0
+C--------------------------
+C
+                       THETA = -SIGN(PID8,C2)
+                    END IF
+C
+                    DT = ABS(THETA)
+C
+C----------------------
+C     Conserve Symmetry
+C----------------------
+C
+                    IF (ABS(DT-PID4).LE.THRLOC) THETA = SIGN(PID4,THETA)
+                    IF (ABS(DT-PID8).LE.THRLOC) THETA = SIGN(PID8,THETA)
+C
+C-------------------
+C     2 X 2 Rotation
+C-------------------
+C
+                    CALL LOCROT(I,J,THETA,NLOC,RM,SS)
+C
+C---------------------------
+C     UPDATE DD(I,J) AND SUM
+C---------------------------
+C
+                    RIJ = DD(I,J)
+                    CALL DAB(I,J,RM,CC,DD)
+                    DS = DS +  RIJ - DD(I,J)
+C
+C-------------------------------------------
+C     UPDATE ROW AND COLUMN I,J IN CC AND DD
+C-------------------------------------------
+C
+                    DO K = NLOC, NOCCT
+                       IF (J .NE. K .AND. I .NE. K) THEN
+                          CALL DAB (MAX0(J,K),MIN0(J,K),RM,CC,DD)
+                          CALL DAB (MAX0(I,K),MIN0(I,K),RM,CC,DD)
+                       END IF
+                    END DO
+C
+                 END IF
+C
+              END DO
+           END DO
+C
+      IF (.NOT. CONV) GO TO 400
+C
+      IF (DMAX .GT. THRLOC)  GO TO 300
+C
+C========================
+C     CONVERGENCE REACHED
+C========================
+C
+      END IF
+C
+C-----------------------------------------
+C     Copy the transformation matrix in SS
+C     to the right positions in CLOCO
+C-----------------------------------------
+C
+      DO IOC = 1, NOCCT
+        DO JOC = 1, NLOCC
+          CLOCO(IOC,JOC) = SS(IOC,JOC)
+        END DO
+      END DO
+C
+CPFP For FBOCIN only
+C
+      IF ( FBOCIN ) THEN
+        DO IO2L = 1, NO2LOC
+C
+          DO IOC = 1, NOCCT
+            DO JOC = 1, NLOCC
+              IF ((IOC.EQ.NTOC2L(IO2L)).OR.(JOC.EQ.NTOC2L(IO2L))) THEN
+                 CLOCO(IOC,JOC) = D0
+                 IF (IOC.EQ.JOC) CLOCO(IOC,JOC) = D1
+              END IF
+            END DO
+          END DO
+C
+        END DO
+      END IF
+C
+Cend-PFP
+C
+      IF (IPRSOS .GT. 10) THEN
+         WRITE(LUPRI,'(/A)')' SS matrix : '
+         CALL OUTPUT(SS,1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,LUPRI)
+      END IF
+C
+      IF (IPRSOS .GT. 5) THEN
+         WRITE(LUPRI,'(/A)')' CLOCO matrix : '
+         CALL OUTPUT(CLOCO,1,NOCCT,1,NLOCC,NOCCT,NLOCC,1,LUPRI)
+      END IF
+C
+C-------------------------
+C     COPY CENTROIDS TO CC
+C-------------------------
+C
+C      DO J = 1, 3
+C         DO I = 1, NOCCT
+C            CC(I,J) = RM(I,I,J)
+C         END DO
+C      END DO
+C
+      DSS = DS - DR
+      WRITE (LUPRI,'(//,A,/,A,/,A,G14.6,A,G14.6,/,A,I5,A,G9.2,//)')
+     &      ' FOSTER-BOYS LOCALIZATION:',
+     &      ' SUM OF (R-VECTOR)**2 FOR THE ORBITAL DISTRIBUTIONS',
+     &      ' INCREASED BY',DSS,'  TO',DS,
+     &      ' NUMBER OF (2*2)-OPTIMIZATIONS:',NR,'  ACCURACY:',THRLOC
+C
+      CALL QEXIT('FOSBOY')
+C
+      RETURN
+      END
+C

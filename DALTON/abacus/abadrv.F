@@ -379,15 +379,18 @@ C
 C     ***************************************
 C     ***** Sum Over States Calculation *****
 C     ***************************************
+CPFP 17/12/2015  Moved down, almost to the end to compare due to the 
+C                isotropic values are needed within SOS.
+c       CALL GETTIM(TIMSTR,TIMDUM)
+c       IF (SOSSPN) THEN
+cC
+c           CALL SOSDRV(WORK(KLST1),LWRK1,PASSOS)
+cC
+c       END IF
+c       CALL  GETTIM(TIMSOS,TIMDUM)
+c       TIMSOS = TIMSOS - TIMSTR
+Cend-PFP
 C
-       CALL GETTIM(TIMSTR,TMDUM)
-       IF (SOSSPN) THEN
-
-           CALL SOSDRV(WORK(KLST1),LWRK1,PASSOS)
-
-       END IF
-       CALL  GETTIM(TIMSOS,TIMDUM)
-       TIMSOS = TIMSOS - TIMSTR
 C     ******************************************
 C     ***** Electronic excitation energies *****
 C     ******************************************
@@ -615,6 +618,21 @@ C
      &   CALL GEOANA(CORD,.TRUE.,.FALSE.,NBONDS,-1,WORK(KLAST),LWRK3)
       CALL FLSHFO(LUPRI)
 C
+C     ***************************************
+C     ***** Sum Over States Calculation *****
+C     ***************************************
+CPFP 17/12/2015  Moved down here to use the values of the isotropic
+C                response results as references within SOS.
+       CALL GETTIM(TIMSTR,TIMDUM)
+       IF (SOSSPN) THEN
+C
+           CALL SOSDRV(WORK(KLST1),LWRK1,PASSOS)
+C
+       END IF
+       CALL  GETTIM(TIMSOS,TIMDUM)
+       TIMSOS = TIMSOS - TIMSTR
+Cend-PFP
+C
 C     *************************
 C     ***** Geometry walk *****
 C     *************************
@@ -727,7 +745,7 @@ C use from COMMON /INFRSP/ :  SOPPA
 #include "infinp.h"
 #include "soppinf.h"
 #include "locinf.h"
-
+C
 C  jim-gesc 1.0: TABDIR(#17) ="*LROPTS" , TABLE(60)=".LRESC ". check INTRST for gaugeo
       DATA TABDIR /'*END OF', 'xxxxxxx', '*NUCREP',
      &             '*ONEINT', '*TWOEXP', '*GETSGY',
@@ -739,6 +757,7 @@ C  jim-gesc 1.0: TABDIR(#17) ="*LROPTS" , TABLE(60)=".LRESC ". check INTRST for 
      &             '*LINRES', '*EXPECT', '*SPIN-S',
      &             '*QRPROP', '*AAT   ', '*TRPRSP',
      &             '*ABALNR'/
+C
 Caug04-hjaaj: disabled currently inactive .NACME
 Csep08-spas: .NACME reactivated for Vib_g
 C                      1          2          3

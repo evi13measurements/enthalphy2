@@ -1709,6 +1709,10 @@ C
 #include "priunit.h"
 #include "infrsp.h"
 #include "wrkrsp.h"
+CPFP 17-01-2016
+#include "mxcent.h"
+#include "spnout.h"
+Cend-PFP
 C
       PARAMETER (ZEROT=1.0D-9)
       PARAMETER (COMPLX = 1.0D7 )
@@ -1729,6 +1733,9 @@ C
             ALFAI(I)=ALFAI(I)/BETA(I)
          ELSE
 C           singularities
+CPFP 17-01-2016 Needed for SOS-module
+            ISINGUL = ISINGUL + 1
+Cend-PFP
             WRITE(LUPRI,1010)KSYMOP,KZYRED,I,ALFAR(I),ALFAI(I),BETA(I)
  1010       FORMAT(/' *** WARNING Singularity in reduced',
      +          ' response equation of symmetry',I3,
@@ -1866,6 +1873,7 @@ C
             CALL DSWAP(KZYRED,EIVEC(1,I),1,EIVEC(1,JMIN),1)
          ENDIF
   110 CONTINUE
+C
       IF (INEG.NE.IPOS) THEN
          WRITE(LUPRI,'(/A/A,I5)')' **WARNING**'//
      &    ' number of eigenvalues with negative metric differ from'//
@@ -2764,6 +2772,10 @@ C
 #include "infind.h"
 #include "infpri.h"
 #include "absorp.h"
+CPFP
+C#include "mxcent.h"
+C#include "spnout.h"
+Cend-PFP
       DIMENSION IVENU(MAXNVE)
 C
       LOGICAL LINEQ
@@ -3129,6 +3141,8 @@ C
             NNZYRED = (KZYRED*(KZYRED+1))/2
             CALL DCOPY(NNZYRED,REDS,1,BCVEC,1)
             WRITE (lupri,*) 'S[2] reduced matrix'
+CPFP avoid writing the matrices within SOSOSC!
+c            IF (.NOT. SOSOSC) THEN
             CALL outpak(bcvec,kzyred,-1,lupri)
             CALL JACO(BCVEC,BCVEC(KK1),KZYRED,KZYRED,0,
      &          BCVEC(KK2),BCVEC(KK3))
@@ -3139,9 +3153,12 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of S[2] reduced matri'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
-
+c            END IF
+Cend-PFP
             CALL DCOPY(NNZYRED,REDE,1,BCVEC,1)
             WRITE (lupri,*) 'E[2] reduced matrix'
+CPFP avoid writing the matrices within SOSOSC!
+c            IF (.NOT. SOSOSC) THEN
             CALL outpak(bcvec,kzyred,-1,lupri)
             CALL JACO(BCVEC,BCVEC(KK1),KZYRED,KZYRED,0,
      &          BCVEC(KK2),BCVEC(KK3))
@@ -3152,7 +3169,8 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of E[2] reduced matrix'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
-
+c            END IF
+Cend-PFP
          END IF
          IF (IPRRSP .GE. 10) THEN
             IF (IPRRSP .GE. 25) THEN
@@ -3197,7 +3215,10 @@ C
       LOGICAL BINMEM
       DIMENSION XINDX(*),FCAC(*),H2AC(*)
 C
-      PARAMETER (MAXST=400)
+CPFP
+C      PARAMETER (MAXST=400)
+      PARAMETER (MAXST=900)
+Cend-PFP
       DIMENSION STVAL(MAXST),ISTART(MAXST),IEQUAL(MAXST)
 C
 #include "ibndxdef.h"
