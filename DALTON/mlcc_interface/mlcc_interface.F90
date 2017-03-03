@@ -329,16 +329,16 @@ subroutine hf_reader
       real(dp), dimension(:,:), pointer      :: ao_int  => null()
       real(dp), dimension(:,:), pointer      :: X => null()
       integer                                :: luaoin = -1
-      integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b,ab,ai,ib
+      integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b,ab,ai,ib,bi,ia
       real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
       real(dp), dimension(:,:), pointer      :: g_ab_ij => null()
-      real(dp), dimension(:,:), pointer      :: g_ai_jb => null()
-      real(dp), dimension(:,:), pointer      :: L_ij_J_pack => null()
+      real(dp), dimension(:,:), pointer      :: g_ia_jb => null()
+      real(dp), dimension(:,:), pointer      :: L_ij_J => null()
       real(dp), dimension(:,:), pointer      :: L_ia_J => null()
       real(dp), dimension(:,:), pointer      :: L_ab_J => null()
       integer                                :: available, required,max_batch_length,n_batch,batch_start
       integer                                :: batch_end,batch_length,g_off
-      integer                                :: a_batch = 0
+      integer                                :: b_batch = 0
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
 !
@@ -382,22 +382,19 @@ subroutine hf_reader
 !
 !  Allocation for L_ij_J_pack
 ! 
-   call allocator(L_ij_J_pack,n_oo,n_J)
+   call allocator(L_ij_J,n_oo,n_J)
    call allocator(g_ij_kl,n_oo,n_oo)
 !
 !  Read cholesky vectors
 !
-   call read_cholesky_ij(L_ij_J_pack)
+   call read_cholesky_ij(L_ij_J)
 !
 !  g_ij_kl = sum_J(L_ij_J*L_J_kl)
 !
-   call dgemm('N','T',n_oo_packed,n_oo_packed,n_J,one,L_ij_J_pack,n_oo_packed,L_ij_J_pack,n_oo_packed,zero,g_ij_kl,n_oo_packed)
+   call dgemm('N','T',n_oo,n_oo,n_J,one,L_ij_J,n_oo,L_ij_J,n_oo,zero,g_ij_kl,n_oo)
 !
 !  Add two-electron contributions to occupied-occupied block
 !
-do j=1,n_occ
-write(luprint,*)(g_ij_kl(index_packed(i,j),index_packed(i,j)),i=1,n_occ)
-enddo
    do i=1,n_occ
       do j=1,n_occ
          ij=index_two(i,j,n_occ)
@@ -409,12 +406,16 @@ enddo
          enddo
       enddo
    enddo
+   write(luprint,*)'Occ-Occ Fock'
+   do i=1,n_occ
+      write(luprint,*)(mo_fock_mat(i,j),j=1,n_occ)
+   enddo
 !
-!  Deallocate g_ij_kl
+!     Deallocate g_ij_kl
 ! 
       call deallocator(g_ij_kl,n_oo,n_oo)
 !
-!!  Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
+!!    Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
 !
       do i=1,n_occ
          do a=1,n_vir
@@ -423,27 +424,33 @@ enddo
          enddo
       enddo
 !
-!!  Vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
+!!    Vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
       call allocator(g_ab_ij,n_vv,n_oo)
       g_ab_ij=zero
 !
-!  Batch over a
+!     Batching over a
+!
+!
+!     Setup of variables needed for batching
 !
       available = get_available()
       required = n_vir*n_vir*n_J*4
 !
       call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
+!
       batch_start=1
       batch_end=0
       batch_length=0
 !
-      do a_batch = 1,n_batch
+!     Start batchig loop
+!
+      do b_batch = 1,n_batch
 
 !
 !        Get batch limits  and  length of batch
 !
-         call one_batch_limits(batch_start,batch_end,a_batch,max_batch_length,n_vir)
+         call one_batch_limits(batch_start,batch_end,b_batch,max_batch_length,n_vir)
          batch_length=batch_end-batch_start+1
 !
 !        Allocation of L_ab_J
@@ -456,10 +463,10 @@ enddo
 !
 !        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
-         g_off = index_two(batch_start,1,batch_length)
+         g_off = batch_start
 !
-         call dgemm('N','T',n_vir*batch_length,n_oo_packed,batch_length &
-            ,one,L_ab_J,n_vir*batch_length,L_ij_J_pack,n_oo_packed &
+         call dgemm('N','T',n_vir*batch_length,n_oo,n_J &
+            ,one,L_ab_J,n_vir*batch_length,L_ij_J,n_oo &
             ,one,g_ab_ij(g_off,1),n_vv)
 !
 !        Deallocation of L_ab_J
@@ -470,17 +477,17 @@ enddo
 !
 !     Deallocation of L_ij_J
 !
-      call deallocator(L_ij_J_pack,n_oo,n_J)
+      call deallocator(L_ij_J,n_oo,n_J)
 !
-!     Allocate for L_ia_J and g_ai_jb
+!     Allocate for L_ia_J and g_ia_jb
 !
       call allocator(L_ia_J,n_ov,n_J)
-      call allocator(g_ai_jb,n_ov,n_ov)
+      call allocator(g_ia_jb,n_ov,n_ov)
 !
 !     Reading Cholesky vector L_ia_J
 !
       call read_cholesky_ia(L_ia_J)
-      call dgemm('N','T',n_ov,n_ov,n_J,one,L_ia_J,n_ov,L_ia_J,n_ov,zero,g_ai_jb,n_ov)
+      call dgemm('N','T',n_ov,n_ov,n_J,one,L_ia_J,n_ov,L_ia_J,n_ov,zero,g_ia_jb,n_ov)
 !
 !     Deallocate L_ia_J
 !
@@ -494,16 +501,18 @@ enddo
             do i = 1,n_occ
                ii=index_two(i,i,n_occ)
                ai=index_two(a,i,n_vir)
-               ib=index_two(b,i,n_vir)
-               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+two*g_ab_ij(ab,ii)-g_ai_jb(ai,ib)
+               bi=index_two(b,i,n_vir)
+               ia=index_two(i,a,n_occ)
+               ib=index_two(i,b,n_occ)
+               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+two*g_ab_ij(ab,ii)-g_ia_jb(ia,ib)
             enddo
          enddo 
       enddo
-      write(luprint,*)'Fock'
+      write(luprint,*)'Vir-Vir Fock'
       do b=1,5
          write(luprint,*)(mo_fock_mat(n_occ+a,n_occ+b),a=1,5)
       enddo
-      call deallocator(g_ab_ij,n_vv,n_oo)
-      call deallocator(g_ai_jb,n_ov,n_ov)
+     call deallocator(g_ab_ij,n_vv,n_oo)
+      call deallocator(g_ia_jb,n_ov,n_ov)
    end subroutine mlcc_fock
 

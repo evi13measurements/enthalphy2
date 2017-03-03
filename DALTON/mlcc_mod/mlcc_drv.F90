@@ -72,7 +72,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !  Set initial guess for the doubles amplitudes 
 !
    call allocator(mo_fock_mat,n_orbitals,n_orbitals)
-!   call mlcc_fock
+   call mlcc_fock
    call t2_init
 !
 !  Calculate the omega vector 

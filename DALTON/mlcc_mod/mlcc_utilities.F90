@@ -51,6 +51,7 @@ contains
          enddo
       enddo
 !
+!
    end subroutine
 !
    subroutine packin(packed,unpacked,N)
@@ -240,14 +241,14 @@ contains
 !     Read from a_start
 !
       do j = 1,n_J
-        read(lucho_ab)(dummy,i=1,idummy),((L_ab_J(index_two(a,b,batch_length),j),b=1,n_vir),a=1,batch_length)
+        read(lucho_ab)(dummy,i=1,idummy),((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
       enddo
    else
 !
 !     Read from start
 !
       do j = 1,n_J
-        read(lucho_ab)((L_ab_J(index_two(a,b,batch_length),j),b=1,n_vir),a=1,batch_length)
+        read(lucho_ab)((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
       enddo
    endif
    !
