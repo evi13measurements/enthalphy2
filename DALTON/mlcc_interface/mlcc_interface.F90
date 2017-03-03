@@ -291,6 +291,7 @@ subroutine hf_reader
       n_ooo          = n_occ*n_occ*n_occ
       n_vv_packed    = n_vir*(n_vir+1)/2
       n_ov_ov_packed = n_ov*(n_ov+1)/2
+      n_ovv          = n_occ*n_vir*n_vir
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !

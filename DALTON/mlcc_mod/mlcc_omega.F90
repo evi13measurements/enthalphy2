@@ -55,10 +55,15 @@ contains
 !
       integer :: a_begin,a_end,a_batch,batch_length
 !
+      integer :: ad,ad_dim,c,ci,cidk,ck,ckd,ckdi,di,dk,k,kc,d
+!
+      logical :: debug = .true.
+!
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_ad_J  => null()   ! Here, a is being batched over
       real(dp), dimension(:,:), pointer :: g_ad_kc => null()   ! Here, a is being batched over
-      real(dp), dimension(:,:), pointer :: g_a_ckd => null()   ! Here, a is being batched over 
+      real(dp), dimension(:,:), pointer :: g_a_ckd => null()   ! Here, a is being batched over
+      real(dp), dimension(:,:), pointer :: u_ckd_i => null() 
 !
 !     Allocate Cholesky vector L_kc_J
 !
@@ -73,9 +78,10 @@ contains
       call read_cholesky_ia(L_kc_J)
 !
 !     Calculate the batching parameters over a = 1,2,...,n_vir,
-!     for which we need to have enough room to store L_ad_J and g_ad_kc
+!     for which we need to have enough room to store L_ad_J and g_ad_kc, and, later on in the same loop, 
+!     g_ad_kc and g_a_ckd simultaneously
 !
-      required        = n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir
+      required        = max(n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir,2*n_vir*n_vir*n_occ*n_vir)
       available       = get_available()
       batch_dimension = n_vir ! Batch over the virtual index a
 !
@@ -92,26 +98,113 @@ contains
 !
          call one_batch_limits(a_begin,a_end,a_batch,max_batch_length,batch_dimension)
 !
-!        Loop over the limits of the current batch
+!        Allocate the Cholesky vector L_ad_J
 !
-         do a=a_begin,a_end
+         batch_length = a_end - a_begin + 1 
+         call allocator(L_ad_J,batch_length*n_vir,n_J)
 !
-!           Allocate the Cholesky vector L_ad_J
+!        Read in Cholesky vector L_ad_J
 !
-            batch_length = a_end - a_begin + 1 
-            call allocator(L_ad_J,batch_length*n_vir,n_J)
+         ad_dim = batch_length*n_vir ! Dimension of ad for the batch over index a 
+         call read_cholesky_ab(L_ad_J,a_begin,a_end,ad_dim)
 !
-!           Read in Cholesky vector L_ad_J
+!        Allocate g_ad_kc and set to zero
 !
-            call read_cholesky_ab(L_ad_J,a_begin,a_end,batch_length*n_vir)
+         call allocator(g_ad_kc,ad_dim,n_ov)
+         g_ad_kc = zero 
 !
-!           Calculate g_ad_kc 
+!        Calculate g_ad_kc = sum_J L_ad,J L_J,kc^T 
+!     
+         call dgemm('N','T',ad_dim,n_ov,n_J,&
+                     one,L_ad_J,ad_dim,L_kc_J,n_ov,&
+                     zero,g_ad_kc,ad_dim) 
 !
-!!! TODO.
+!        Deallocate the Cholesky vector L_ad_J
 !
+         call deallocator(L_ad_J,ad_dim,n_J)
+!
+!        Allocate g_a_ckd and set to zer 
+!
+         call allocator(g_a_ckd,batch_length,n_ovv)
+         g_a_ckd = zero
+!
+!        Reorder the integrals to g_a_ckd
+!
+         do a=1,batch_length
+            do d=1,n_vir
+               do k=1,n_occ
+                  do c=1,n_vir
+!
+!                    Calculate the necessary indices
+!
+                     ad  = index_two(a,d,n_vir)
+                     kc  = index_two(k,c,n_occ)
+                     ckd = index_three(c,k,d,n_vir,n_occ) 
+!
+!                    Set the value of g_a_ckd
+!
+                     g_a_ckd(a,ckd) = g_ad_kc(ad,kc) ! Eirik: There appears to be a mistake in the pseudocode for this line
+!
+                  enddo
+               enddo
+            enddo
          enddo
 !
-      enddo
+!        Deallocate unordered integrals g_ad_kc
+!
+         call deallocator(g_ad_kc,ad_dim,n_ov)
+!
+!        Allocate u_ckd_i (= u_ki^cd in usual notation)
+!
+         call allocator(u_ckd_i,n_ovv,n_occ)
+!
+!        Calculate u_ckd_i
+!
+         do c=1,n_vir
+            do k=1,n_occ
+               do d=1,n_vir
+                  do i=1,n_occ
+!
+!                    Calculate the necessary indices 
+!
+                     ckd  = index_three(c,k,d,n_vir,n_occ)
+                     ck   = index_two(c,k,n_vir)
+                     di   = index_two(d,i,n_vir)
+                     ci   = index_two(c,i,n_vir)
+                     dk   = index_two(d,k,n_vir)
+                     ckdi = index_packed(ck,di)
+                     cidk = index_packed(ci,dk)
+!
+!                    Calculate u_ckd_i
+!
+                     u_ckd_i = two*t2am(ckdi,1)-t2am(cidk,1)
+!
+                  enddo
+               enddo
+            enddo
+         enddo
+!
+!        Calculate the A1 term (sum_ckd g_a,ckd * u_ckd,i) and add to the omega vector
+!
+         call dgemm('N','N',n_vir,n_occ,n_ovv,&
+                     one,g_a_ckd,n_vir,u_ckd_i,n_ovv,&
+                     one,omega1(a_begin,1),n_vir)
+      enddo ! End of batches of the index a 
+!
+!     Print the omega vector 
+!
+      if (debug) then  
+         write(luprint,*) 
+         write(luprint,*) 'Omega(a,i) after A1 term has been added:'
+         write(luprint,*)
+         call vec_print(omega1,n_vir,n_occ)
+      endif
+!
+!     Deallocate vectors 
+!
+      call deallocator(u_ckd_i,n_ovv,n_occ)
+      call deallocator(g_a_ckd,batch_length,n_ovv)
+      call deallocator(L_kc_J,n_ov,n_J)
 !
    end subroutine mlcc_omega_a1
 !
@@ -127,32 +220,30 @@ contains
 !
       integer :: lucho_ij,lucho_ia,idummy,j,i
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
       integer :: a,c,k,l,ckl,ki,cl,ak,akcl,al,alck,ck,ai
 !
-      real(dp), dimension(:,:), pointer :: L_ki_J_packed => null() ! (ki) index is packed
+      real(dp), dimension(:,:), pointer :: L_ki_J        => null() 
       real(dp), dimension(:,:), pointer :: L_lc_J        => null()
       real(dp), dimension(:,:), pointer :: g_ki_lc       => null()
       real(dp), dimension(:,:), pointer :: g_ckl_i       => null() ! Reordered two-electron integrals
       real(dp), dimension(:,:), pointer :: u_a_ckl       => null() ! Reordered u_kl^ac = 2 t_kl^ac - t_lk^ac
       real(dp), dimension(:,:), pointer :: b1_a_i        => null() 
 !
-      write(luprint,*) 'In mlcc_omega_b1'
-!
 !     I. Calculation and reordering of g_ki,lc = sum_J L_ki^J * L_lc^J 
 !
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
-      call allocator(L_ki_J_packed,n_occ*(n_occ+1)/2,n_J)
+      call allocator(L_ki_J,n_oo,n_J)
       call allocator(L_lc_J,n_occ*n_vir,n_J)
 !
-      L_ki_J_packed = zero
+      L_ki_J = zero
       L_lc_J = zero
 !
 !     Read L_ki,J
 !
-      call read_cholesky_ij(L_ki_J_packed)
+      call read_cholesky_ij(L_ki_J)
 !
 !     Read L_lc,J
 !
@@ -160,17 +251,17 @@ contains
 !
 !     Allocate integrals g_ki_lc
 !
-      call allocator(g_ki_lc,n_oo_packed,n_ov) ! (ki) index is packed 
+      call allocator(g_ki_lc,n_oo,n_ov)
 !
       g_ki_lc = zero
 !
 !     Calculate g_ki_lc = sum_J L_ki,J * L_lc,J^T 
 ! 
-      call dgemm('N','T',n_oo_packed,n_ov,n_J,one,L_ki_J_packed,n_oo_packed,L_lc_J,n_ov,zero,g_ki_lc,n_oo_packed) 
+      call dgemm('N','T',n_oo,n_ov,n_J,one,L_ki_J,n_oo,L_lc_J,n_ov,zero,g_ki_lc,n_oo) 
 !
 !     Deallocate the Cholesky vectors 
 !
-      call deallocator(L_ki_J_packed,n_oo,n_J)
+      call deallocator(L_ki_J,n_oo,n_J)
       call deallocator(L_lc_J,n_ov,n_J)
 !
 !     Allocate reordered integrals g_ckl,i 
@@ -187,8 +278,8 @@ contains
 !                 Calculate necessary indices
 !
                   ckl = index_three(c,k,l,n_vir,n_occ) 
-                  ki  = index_packed(k,i)                    ! Packed 
-                  cl  = index_two(c,l,n_vir)             ! Not packed
+                  ki  = index_two(k,i,n_occ)                 
+                  cl  = index_two(c,l,n_vir)           
 !
 !                 Set value of g_ckl_i
 !
@@ -201,7 +292,7 @@ contains
 !
 !     Deallocate unordered integrals g_ki_lc
 !
-      call deallocator(g_ki_lc,n_oo_packed,n_ov)
+      call deallocator(g_ki_lc,n_oo,n_ov)
 !
 !     Allocate redordered u amplitudes u_a,ckl 
 !
@@ -239,17 +330,25 @@ contains
          enddo
       enddo
 !
-!     Allocate the B1 term
-!
-      call allocator(b1_a_i,n_vir,n_occ)
-!
 !     Calculate the B1 term (b1_a_i = - sum_ckl u_a_ckl * g_ckl_i)
 !
-      call dgemm('N','N',n_vir,n_occ,n_oov,-one,u_a_ckl,n_vir,g_ckl_i,n_oov,zero,omega1,n_vir) 
+      call dgemm('N','N',n_vir,n_occ,n_oov,&
+                  -one,u_a_ckl,n_vir,g_ckl_i,n_oov,&
+                  one,omega1,n_vir) 
 !
 !     Print the omega vector 
 !
-      if (debug) call vec_print(omega1,n_vir,n_occ)
+      if (debug) then  
+         write(luprint,*) 
+         write(luprint,*) 'Omega(a,i) after B1 term has been added:'
+         write(luprint,*)
+         call vec_print(omega1,n_vir,n_occ)
+      endif
+!
+!     Deallocate remaining vectors 
+!
+      call deallocator(u_a_ckl,n_vir,n_oov)
+      call deallocator(g_ckl_i,n_oov,n_occ)
 !
    end subroutine mlcc_omega_b1
 !

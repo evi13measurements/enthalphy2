@@ -31,15 +31,6 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    luprint = lupri 
 !
-   write(luprint,*)
-   write(luprint,*) 'In mlcc_drv'
-   write(luprint,*)
-!
-   write(luprint,*)
-   write(luprint,*) 'mlcc_active: ', mlcc_active
-   write(luprint,*) 'print_mlcc:  ', print_mlcc 
-   write(luprint,*)
-!
 !  Initialize memory variables
 !
    call work_init(mem)
@@ -77,7 +68,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Calculate the omega vector 
 !
-!   call mlcc_omega_calc
+   call mlcc_omega_calc
 !
    call deallocator(t2am,n_ov_ov_packed,1)
    call deallocator(fock_diagonal,n_orbitals,1)

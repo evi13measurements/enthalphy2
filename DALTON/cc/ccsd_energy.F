@@ -781,6 +781,16 @@ C
            CALL CCRHSN(WORK(KOMEG1),WORK(KOMEG2),WORK(KT1AM),
      &                 WORK(KT2AM),WORK(KEND1),LWRK1,APROXR12)
          end if
+C (EFK, 2017) Print omega vector for debug of MLCC code
+        WRITE(LUPRI,*)
+        WRITE(LUPRI,*) 'Omega(a,i):'
+        WRITE(LUPRI,*)
+        DO I = 1,NRHFT
+          DO A = 1,NVIRT
+            NAI = NVIRT*(I-1)+A
+            WRITE(LUPRI,*) A,I,WORK(KOMEG1+NAI-1)
+          ENDDO
+        ENDDO
 C
   240    CONTINUE
 C

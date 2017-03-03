@@ -30,10 +30,6 @@ subroutine work_init(mem)
 !
    integer, intent(in)                    :: mem
 !
-   write(luprint,*)
-   write(luprint,*) 'In work_int'
-   write(luprint,*)
-!
    work_length = mem
    work_remains = mem
    work_used = 0
