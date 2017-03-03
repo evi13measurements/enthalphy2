@@ -83,7 +83,7 @@ contains
       implicit none
       real(dp),dimension(:,:)                :: t2,g_iajb
       real(dp),dimension(:,:), pointer       :: L_iajb   => null()
-      integer                                :: i,j,a,b,ai,aj,bi,bj,aibj,ajbi
+      integer                                :: i,j,a,b,ia,ja,ib,jb,aibj,ajbi,bj,ai
       real(dp)                               :: E
    !
    !
@@ -99,12 +99,18 @@ contains
          do j=1,n_occ
             do a=1,n_vir
                do b=1,n_vir
+!                 Calculating all needed indices
+                  ia=index_two(i,a,n_occ)
+                  ja=index_two(j,a,n_occ)
+                  ib=index_two(i,b,n_occ)
+                  jb=index_two(j,b,n_occ)
                   ai=index_two(a,i,n_vir)
-                  aj=index_two(a,j,n_vir)
-                  bi=index_two(b,i,n_vir)
                   bj=index_two(b,j,n_vir)
-                  L_iajb(ai,bj)=two*g_iajb(ai,bj)-g_iajb(aj,bi)
-                  E=E+L_iajb(ai,bj)*t2(index_packed(ai,bj),1)
+                  aibj=index_packed(ai,bj)
+!                 Constructing L_iajb
+                  L_iajb(ia,jb)=two*g_iajb(ia,jb)-g_iajb(ja,ib)
+!                 Calculating energy contribution
+                  E=E+L_iajb(ia,jb)*t2(aibj,1)
                enddo
             enddo
          enddo
