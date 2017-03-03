@@ -197,7 +197,7 @@ contains
 !
       implicit none
 !
-      double precision L_ij_J(n_oo_packed,n_J)
+      double precision L_ij_J(n_oo,n_J)
 !
       integer :: lucho_ij
       integer :: i,j,idummy
@@ -207,7 +207,7 @@ contains
       rewind(lucho_ij)
 !
       do j = 1,n_J
-         read(lucho_ij) (L_ij_J(i,j), i=1,n_oo_packed)
+         read(lucho_ij) (L_ij_J(i,j), i=1,n_oo)
       enddo
 !
       call gpclose(lucho_ij,'KEEP')    

@@ -211,9 +211,9 @@ subroutine mlcc_get_cholesky
 !
 ! Packing MO Cholesky and save to file
 !
-      write(lucho_ij)((cholesky_mo_sq(i,k),k=1,i),i=1,n_occ)
-      write(lucho_ia)((cholesky_mo_sq(i,k),k=n_occ+1,n_orbitals),i=1,n_occ)
-      write(lucho_ab)((cholesky_mo_sq(a,b),b=n_occ+1,n_orbitals),a=n_occ+1,n_orbitals)
+      write(lucho_ij)((cholesky_mo_sq(i,k),i=1,n_occ),k=1,n_occ)
+      write(lucho_ia)((cholesky_mo_sq(i,a),i=1,n_occ),a=n_occ+1,n_orbitals)
+      write(lucho_ab)((cholesky_mo_sq(a,b),a=n_occ+1,n_orbitals),b=n_occ+1,n_orbitals)
 !
   enddo
 !
@@ -282,9 +282,6 @@ subroutine hf_reader
 !     Calculate number of virtuals and amplitudes
 !
       n_vir          = n_orbitals - n_occ
-      n_t1am         = n_vir*n_occ    !! Eirik: I suggest we remove these amplitude specific numbers Sarai: Jepp
-      n_t2am         = n_t1am*n_t1am   !!  ---> n_t2am = n_oovv
-      n_t2am_pack    = n_t1am*(n_t1am+1)/2 !! ---> n_t2am_packed = n_ov_ov_packed 
       n_ov           = n_occ*n_vir
       n_oo           = n_occ*n_occ
       n_vv           = n_vir*n_vir
@@ -402,11 +399,11 @@ write(luprint,*)(g_ij_kl(index_packed(i,j),index_packed(i,j)),i=1,n_occ)
 enddo
    do i=1,n_occ
       do j=1,n_occ
-         ij=index_packed(i,j)
+         ij=index_two(i,j,n_occ)
          do k = 1,n_occ
-            kk=index_packed(k,k)
-            ik=index_packed(i,k)
-            kj=index_packed(j,k)
+            kk=index_two(k,k,n_occ)
+            ik=index_two(i,k,n_occ)
+            kj=index_two(j,k,n_occ)
             mo_fock_mat(i,j)=mo_fock_mat(i,j)+two*g_ij_kl(ij,kk)-g_ij_kl(ik,kj)
          enddo
       enddo
@@ -494,7 +491,7 @@ enddo
          do b = 1,n_vir
             ab=index_two(a,b,n_vir)
             do i = 1,n_occ
-               ii=index_packed(i,i)
+               ii=index_two(i,i,n_occ)
                ai=index_two(a,i,n_vir)
                ib=index_two(b,i,n_vir)
                mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+two*g_ab_ij(ab,ii)-g_ai_jb(ai,ib)
