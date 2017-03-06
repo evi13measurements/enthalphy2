@@ -4032,6 +4032,7 @@ C----------------------------------------------------------------------------
 C     Method 7: Using the Y = A + B*Tanh(C*N) function fitting we
 C               get an i value and analyze E = |J(f) - J(i)| / J(f)
 C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
+C               Here is used the Numerical Recipes'
 C----------------------------------------------------------------------------
 C
         ELSE IF (NCMTHD .EQ. 7) THEN
@@ -4151,6 +4152,7 @@ C----------------------------------------------------------------------------
 C     Method 8: Using the Y = A + B*Tanh(C*N) function fitting we
 C               get an i value and analyze E = |J(f) - J(i)| / J(f)
 C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
+C               Here it is used NL2SOL tool.
 C----------------------------------------------------------------------------
 C
         ELSE IF (NCMTHD .EQ. 8) THEN
