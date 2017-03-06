@@ -340,6 +340,9 @@ subroutine hf_reader
       integer                                :: available, required,max_batch_length,n_batch,batch_start
       integer                                :: batch_end,batch_length,g_off
       integer                                :: b_batch = 0
+!
+!
+!
 !!! ONE-ELECTRON CONTRIBUTION !!!
 !
 !
@@ -376,7 +379,10 @@ subroutine hf_reader
       call deallocator(fock_ao,n_basis,n_basis)
 !
 !
+!
 !!! TWO-ELECTRON CONTRIBUTION !!!
+!
+!
 !
 !!  occupied-occupied block: F_ij = h_ij + sum_k (2*g_ijkk - g_ikkj) !!
 !  
@@ -457,6 +463,7 @@ subroutine hf_reader
 !        Allocation of L_ab_J
 !
          call allocator(L_ab_J,n_vir*batch_length,n_J)
+         L_ab_J=zero
 !
 !        Read Cholesky vectors
 !
@@ -464,7 +471,7 @@ subroutine hf_reader
 !
 !        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
-         g_off = batch_start
+         g_off = index_two(1,batch_start,n_vir)
 !
          call dgemm('N','T',n_vir*batch_length,n_oo,n_J &
             ,one,L_ab_J,n_vir*batch_length,L_ij_J,n_oo &
@@ -494,7 +501,7 @@ subroutine hf_reader
 !
      call deallocator(L_ia_J,n_ov,n_J)
 !
-!     Calculation of two electron terms for virtual-virtual blocks
+!     Calculation of two-electron terms for virtual-virtual blocks
 !
       do a = 1,n_vir
          do b = 1,n_vir
@@ -509,11 +516,12 @@ subroutine hf_reader
             enddo
          enddo 
       enddo
-      write(luprint,*)'Vir-Vir Fock'
-      do b=1,5
-         write(luprint,*)(mo_fock_mat(n_occ+a,n_occ+b),a=1,5)
-      enddo
      call deallocator(g_ab_ij,n_vv,n_oo)
-      call deallocator(g_ia_jb,n_ov,n_ov)
+     call deallocator(g_ia_jb,n_ov,n_ov)
+!
+!    Clean-up of Fock matrix
+!
+     call mlcc_cleanup(mo_fock_mat,n_orbitals,n_orbitals)
+!
    end subroutine mlcc_fock
 

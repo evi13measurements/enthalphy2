@@ -241,14 +241,14 @@ contains
 !     Read from a_start
 !
       do j = 1,n_J
-        read(lucho_ab)(dummy,i=1,idummy),((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
+        read(lucho_ab)(dummy,i=1,idummy),(L_ab_J(a,j),a=1,ab_dim)
       enddo
    else
 !
 !     Read from start
 !
       do j = 1,n_J
-        read(lucho_ab)((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
+        read(lucho_ab)(L_ab_J(a,j),a=1,ab_dim)
       enddo
    endif
    !
@@ -274,4 +274,24 @@ contains
       enddo
 !
    end subroutine vec_print
+!
+   subroutine mlcc_cleanup(mat,M,N)
+!
+!  Purpose: Cleanup of matrices  Sarai: Is this threshold to high?
+!
+      implicit none
+      integer  :: M,N
+      real(dp),dimension(M,N) :: mat
+      integer  :: i,j
+      real(dp) :: thrs = 1.0d-6
+!
+      do i=1,M
+         do j=1,N
+            if (abs(mat(i,j)) .lt. thrs) then
+               mat(i,j)=zero
+            endif
+         enddo
+      enddo
+!
+   end subroutine mlcc_cleanup
 end module mlcc_utilities

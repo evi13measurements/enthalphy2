@@ -361,63 +361,106 @@ contains
    subroutine mlcc_omega_c1
 !
 !  Purpose: Calculate C1 term of Omega
-!  (Omega_ai^C1=sum_ck F_kc u^ac_ik)
+!  (Omega_ai^C1=sum_ck F_ck_T1 u^ac_ik)
 !
-!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, 28. Feb 2017
+!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Mars 2017
 !
    use mlcc_data
    use mlcc_utilities
    use mlcc_workspace
    implicit none
 !
-   real(dp),dimension(:,:),pointer  :: F_kc
-   real(dp),dimension(:,:),pointer  :: u_ck_ai
+   real(dp),dimension(:,:),pointer  :: F_ck => null()
+   real(dp),dimension(:,:),pointer  :: u_ck_ai => null()
    integer                          :: i,k,c,a
-   integer                          :: nck,nai,nak,nci,nckai,nciak
+   integer                          :: ck,ai,ak,ci,ckai,ciak
+   logical                          :: debug = .true.
 !
 !
 !  Allocation
 !
    call allocator(u_ck_ai,n_ov,n_ov)   ! 2*t_ck_ai-t_ci_ak
+   call allocator(F_ck,1,n_ov) ! T1-transformed fock matrix
 !
-! Set up u_ck_ai
+! Set up u_ck_ai and MO Fock matrix
 !
-   do i=1,n_occ
-      do a=1,n_vir
-         do k=1,n_occ
-            do c=1,n_vir
-               nck=index_two(c,k,n_vir)
-               nai=index_two(a,i,n_vir)
-               if (nck .le. nai) then
-                  nci=index_two(c,i,n_vir)
-                  nak=index_two(a,k,n_vir)
-                  nckai=index_packed(nck,nai)
-                  nciak=index_packed(nci,nak)
-                  u_ck_ai(nck,nai)=two*t2am(nckai,1)-t2am(nciak,1)
-               endif
+   do k = 1,n_occ
+      do c = 1,n_vir
+         ck = index_two(c,k,n_vir)
+!
+!        MO Fock matrix
+!
+         F_ck(1,ck) = mo_fock_mat(n_occ+c,k)
+         do i = 1,n_occ
+            do a = 1,n_vir
+!              
+!              u_ck_ai
+!
+               ai = index_two(a,i,n_vir)
+               ci = index_two(c,i,n_vir)
+               ak = index_two(a,k,n_vir)
+               ckai = index_packed(ck,ai)
+               ciak = index_packed(ci,ak)
+               u_ck_ai(ck,ai) = two*t2am(ckai,1)-t2am(ciak,1)
             enddo
          enddo
       enddo
    enddo
 !
-! Allocation 
-!
-   call allocator(F_kc,n_ov,1) ! T1-transformed fock matrix
-!
-!  IO - Read fock matrix
-!
-!
 !  T1 transformation
 !
 !
+!  Matrix multiplication
+!
+   call dgemm('N','N',1,n_ov,n_ov &
+      ,-one,F_ck,1,u_ck_ai,n_ov &
+      ,one,omega1,n_ov)
+!
 !  Deallocation
 !
-   call deallocator(F_kc,n_ov,1)
+   call deallocator(F_ck,n_ov,1)
    call deallocator(u_ck_ai,n_ov,n_ov)
 
    end subroutine mlcc_omega_c1
 !
    subroutine mlcc_omega_d1
+!
+!  Purpose: Calculate C1 term of Omega
+!  (Omega_ai^D1=F_ai_T1
+!
+!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Mars 2017
+!
+   use mlcc_data
+   use mlcc_utilities
+   use mlcc_workspace
+!
+   implicit none
+   integer :: a,i, ai
+   real(dp),dimension(:,:),pointer  :: F_a_i => null()
+!
+!  Allocation
+!
+   call allocator(F_a_i,n_vir,n_occ)
+!
+!  MO Fock matrix
+!
+   do i = 1,n_occ
+         do a = 1,n_vir
+         F_a_i(a,i) = mo_fock_mat(n_occ+a,i)
+      enddo
+   enddo
+!
+!  T1 transformation
+!
+!
+!  Add to omega
+!
+   call daxpy(n_ov,one,F_a_i,1,omega1,1)
+!
+!  Deallocation
+!
+   call deallocator(F_a_i,n_vir,n_occ)
+!
    end subroutine mlcc_omega_d1
 !
    subroutine mlcc_omega_e2
