@@ -24,6 +24,7 @@ contains
 !     I. The singles contribution to < mu | exp(-T) H exp(T) | R >
 !
       call mlcc_omega_a1
+!      omega1 = zero
       call mlcc_omega_b1
       call mlcc_omega_c1
       call mlcc_omega_d1
@@ -178,7 +179,7 @@ contains
 !
 !                    Calculate u_ckd_i
 !
-                     u_ckd_i = two*t2am(ckdi,1)-t2am(cidk,1)
+                     u_ckd_i(ckd,i) = two*t2am(ckdi,1)-t2am(cidk,1)
 !
                   enddo
                enddo
@@ -219,11 +220,13 @@ contains
 !
       implicit none
 !
-      integer :: lucho_ij,lucho_ia,idummy,j,i
+      integer :: i,j
 !
       logical :: debug = .true.
 !
-      integer :: a,c,k,l,ckl,ki,cl,ak,akcl,al,alck,ck,ai
+      double precision factor
+!
+      integer :: a,c,k,l,ckl,ki,ak,akcl,al,alck,ck,ai,cl,lc
 !
       real(dp), dimension(:,:), pointer :: L_ki_J        => null() 
       real(dp), dimension(:,:), pointer :: L_lc_J        => null()
@@ -237,7 +240,7 @@ contains
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
       call allocator(L_ki_J,n_oo,n_J)
-      call allocator(L_lc_J,n_occ*n_vir,n_J)
+      call allocator(L_lc_J,n_ov,n_J)
 !
       L_ki_J = zero
       L_lc_J = zero
@@ -258,7 +261,9 @@ contains
 !
 !     Calculate g_ki_lc = sum_J L_ki,J * L_lc,J^T 
 ! 
-      call dgemm('N','T',n_oo,n_ov,n_J,one,L_ki_J,n_oo,L_lc_J,n_ov,zero,g_ki_lc,n_oo) 
+      call dgemm('N','T',n_oo,n_ov,n_J,&
+                  one,L_ki_J,n_oo,L_lc_J,n_ov,&
+                  zero,g_ki_lc,n_oo) 
 !
 !     Deallocate the Cholesky vectors 
 !
@@ -280,11 +285,11 @@ contains
 !
                   ckl = index_three(c,k,l,n_vir,n_occ) 
                   ki  = index_two(k,i,n_occ)                 
-                  cl  = index_two(c,l,n_vir)           
+                  lc  = index_two(l,c,n_occ)           
 !
 !                 Set value of g_ckl_i
 !
-                  g_ckl_i(ckl,i) = g_ki_lc(ki,cl)
+                  g_ckl_i(ckl,i) = g_ki_lc(ki,lc)
 !
                enddo
             enddo
@@ -322,7 +327,7 @@ contains
                   ck   = index_two(c,k,n_vir)
                   alck = index_packed(al,ck)
 !
-!                 Set value of u_a_ckl
+!                 Set value of u_a_ckl = u_kl^ac = 2*t_kl^ac - t_lk^ac = 2*t_ak,cl - t_al,ck 
 !
                   u_a_ckl(a,ckl) = two*t2am(akcl,1) - t2am(alck,1)
 !                  
@@ -331,10 +336,11 @@ contains
          enddo
       enddo
 !
-!     Calculate the B1 term (b1_a_i = - sum_ckl u_a_ckl * g_ckl_i)
+!     Calculate the B1 term (- sum_ckl u_a_ckl * g_ckl_i)
 !
+      factor = -one 
       call dgemm('N','N',n_vir,n_occ,n_oov,&
-                  -one,u_a_ckl,n_vir,g_ckl_i,n_oov,&
+                  factor,u_a_ckl,n_vir,g_ckl_i,n_oov,&
                   one,omega1,n_vir) 
 !
 !     Print the omega vector 
