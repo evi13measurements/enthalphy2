@@ -29,6 +29,51 @@ contains
 !
    end subroutine read_cholesky_ia
 !
+   subroutine read_cholesky_ai(L_ai_J)
+!
+!     Purpose: Read Cholesky vectors L_ia^J from file and place them 
+!              in the incoming vector  
+!
+      use mlcc_workspace
+      implicit none
+!
+      double precision L_ai_J(n_ov,n_J)
+!
+      integer :: lucho_ia 
+      integer :: i,a,ia,ai,j
+      real(dp),dimension(:,:),pointer :: L_ia_J
+!
+!     Allocation
+!
+      call allocator(L_ia_J,n_ov,n_J)
+      L_ia_J=zero
+!     
+!     IO
+!
+      call read_cholesky_ia(L_ia_J)
+!
+!     Reorder
+!      
+      do i = 1,n_occ
+         do a = 1,n_vir
+!
+!           Needed indices
+!
+            ai=index_two(a,i,n_vir)
+            ia=index_two(i,a,n_occ)
+!
+            do j=1,n_J
+               L_ai_J(ai,j)=L_ia_J(ia,j)
+            enddo
+         enddo
+      enddo
+!
+!     Deallocation
+!
+      call deallocator(L_ia_J,n_ov,n_J)
+
+   end subroutine read_cholesky_ai
+!
    subroutine read_cholesky_ij(L_ij_J)
 !
 !     Purpose: Read Cholesky vectors L_ij^J from file and place them 

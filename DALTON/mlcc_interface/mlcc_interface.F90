@@ -331,16 +331,20 @@ subroutine hf_reader
       real(dp), dimension(:,:), pointer      :: ao_int  => null()
       real(dp), dimension(:,:), pointer      :: X => null()
       integer                                :: luaoin = -1
-      integer                                :: idummy,i,j,k,ij,kk,ik,kj,ii,a,b,ab,ai,ib,bi,ia
+      integer                                :: idummy,i,j,k,a,b,ij,kk,ik,kj,ii,jj,ji,ai,ib,bi,ia,aj,ja,ab
       real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
       real(dp), dimension(:,:), pointer      :: g_ab_ij => null()
-      real(dp), dimension(:,:), pointer      :: g_ia_jb => null()
+      real(dp), dimension(:,:), pointer      :: g_ai_jb => null()
+      real(dp), dimension(:,:), pointer      :: g_ia_jk => null()
+      real(dp), dimension(:,:), pointer      :: g_ai_jk => null()
       real(dp), dimension(:,:), pointer      :: L_ij_J => null()
       real(dp), dimension(:,:), pointer      :: L_ia_J => null()
+      real(dp), dimension(:,:), pointer      :: L_ai_J => null()
       real(dp), dimension(:,:), pointer      :: L_ab_J => null()
       integer                                :: available, required,max_batch_length,n_batch,batch_start
       integer                                :: batch_end,batch_length,g_off
       integer                                :: b_batch = 0
+      logical                                :: debug = .true.
 !
 !
 !
@@ -380,7 +384,6 @@ subroutine hf_reader
       call deallocator(fock_ao,n_basis,n_basis)
 !
 !
-!
 !!! TWO-ELECTRON CONTRIBUTION !!!
 !
 !
@@ -392,6 +395,8 @@ subroutine hf_reader
 ! 
    call allocator(L_ij_J,n_oo,n_J)
    call allocator(g_ij_kl,n_oo,n_oo)
+   L_ij_J=zero
+   g_ij_kl=zero
 !
 !  Read cholesky vectors
 !
@@ -399,7 +404,9 @@ subroutine hf_reader
 !
 !  g_ij_kl = sum_J(L_ij_J*L_J_kl)
 !
-   call dgemm('N','T',n_oo,n_oo,n_J,one,L_ij_J,n_oo,L_ij_J,n_oo,zero,g_ij_kl,n_oo)
+   call dgemm('N','T',n_oo,n_oo,n_J &
+      ,one,L_ij_J,n_oo,L_ij_J,n_oo &
+      ,zero,g_ij_kl,n_oo)
 !
 !  Add two-electron contributions to occupied-occupied block
 !
@@ -409,14 +416,10 @@ subroutine hf_reader
          do k = 1,n_occ
             kk=index_two(k,k,n_occ)
             ik=index_two(i,k,n_occ)
-            kj=index_two(j,k,n_occ)
+            kj=index_two(k,j,n_occ)
             mo_fock_mat(i,j)=mo_fock_mat(i,j)+two*g_ij_kl(ij,kk)-g_ij_kl(ik,kj)
          enddo
       enddo
-   enddo
-   write(luprint,*)'Occ-Occ Fock'
-   do i=1,n_occ
-      write(luprint,*)(mo_fock_mat(i,j),j=1,n_occ)
    enddo
 !
 !     Deallocate g_ij_kl
@@ -425,12 +428,60 @@ subroutine hf_reader
 !
 !!    Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !! OBS T1!
 !
+!
+!     Allocation for g_ia_jk 
+!
+     call allocator(L_ia_J,n_ov,n_J)
+     call allocator(g_ia_jk,n_ov,n_oo)
+!
+!     Reading Cholesky vector L_ia_J
+!
+      call read_cholesky_ia(L_ia_J)
+!
+!     g_ia_jk
+!
+      call dgemm('N','T',n_ov,n_oo,n_J,one,L_ia_J,n_ov,L_ij_J,n_oo,zero,g_ia_jk,n_ov)
+      call deallocator(L_ia_J,n_ov,n_J)
+!
+!     Allocation for g_ai_jk 
+!
+      call allocator(L_ai_J,n_ov,n_J)
+      call allocator(g_ai_jk,n_ov,n_oo)
+!
+!     Reading Cholesky vector L_ai_J
+!
+      call read_cholesky_ai(L_ai_J)
+!
+!     g_ai_jk
+!
+      call dgemm('N','T',n_ov,n_oo,n_J,one,L_ai_J,n_ov,L_ij_J,n_oo,zero,g_ai_jk,n_ov)
+      call deallocator(L_ai_J,n_ov,n_J)
+!
+!     Adding terms to Fock matrix
+!
       do i=1,n_occ
          do a=1,n_vir
-           mo_fock_mat(a,i)=zero
-           mo_fock_mat(i,a)=zero
+            do j=1,n_occ
+!
+!              Needed indices
+!
+               ia=index_two(i,a,n_occ)
+               ja=index_two(j,a,n_occ)
+!
+               ai=index_two(a,i,n_vir)
+               aj=index_two(a,j,n_vir)
+!
+               jj=index_two(j,j,n_occ)
+               ji=index_two(j,i,n_occ)
+               ij=index_two(i,j,n_occ)
+!
+               mo_fock_mat(i,a+n_occ)=mo_fock_mat(i,a+n_occ)+two*g_ia_jk(ia,jj)-g_ia_jk(ja,ij)
+               mo_fock_mat(a+n_occ,i)=mo_fock_mat(a+n_occ,i)+two*g_ai_jk(ai,jj)-g_ai_jk(aj,ji)
+            enddo
          enddo
       enddo
+      call deallocator(g_ia_jk,n_ov,n_oo)
+      call deallocator(g_ai_jk,n_ov,n_oo)
 !
 !!    Vacant-vacant block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
@@ -488,19 +539,23 @@ subroutine hf_reader
 !
       call deallocator(L_ij_J,n_oo,n_J)
 !
-!     Allocate for L_ia_J and g_ia_jb
+!     Allocate for g_ai_jb
 !
+      call allocator(g_ai_jb,n_ov,n_ov)
+      call allocator(L_ai_J,n_ov,n_J)
       call allocator(L_ia_J,n_ov,n_J)
-      call allocator(g_ia_jb,n_ov,n_ov)
 !
-!     Reading Cholesky vector L_ia_J
+!
+!     Reading Cholesky vector L_ia_J and L_ai_J
 !
       call read_cholesky_ia(L_ia_J)
-      call dgemm('N','T',n_ov,n_ov,n_J,one,L_ia_J,n_ov,L_ia_J,n_ov,zero,g_ia_jb,n_ov)
+      call read_cholesky_ai(L_ai_J)
+      call dgemm('N','T',n_ov,n_ov,n_J,one,L_ai_J,n_ov,L_ia_J,n_ov,zero,g_ai_jb,n_ov)
 !
 !     Deallocate L_ia_J
 !
      call deallocator(L_ia_J,n_ov,n_J)
+     call deallocator(L_ai_J,n_ov,n_J)
 !
 !     Calculation of two-electron terms for virtual-virtual blocks
 !
@@ -513,16 +568,32 @@ subroutine hf_reader
                bi=index_two(b,i,n_vir)
                ia=index_two(i,a,n_occ)
                ib=index_two(i,b,n_occ)
-               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+two*g_ab_ij(ab,ii)-g_ia_jb(ia,ib)
+               mo_fock_mat(n_occ+a,n_occ+b)=mo_fock_mat(n_occ+a,n_occ+b)+two*g_ab_ij(ab,ii)-g_ai_jb(ai,ib)
             enddo
          enddo 
       enddo
      call deallocator(g_ab_ij,n_vv,n_oo)
-     call deallocator(g_ia_jb,n_ov,n_ov)
+     call deallocator(g_ai_jb,n_ov,n_ov)
 !
 !    Clean-up of Fock matrix
 !
      call mlcc_cleanup(mo_fock_mat,n_orbitals,n_orbitals)
 !
+!     Prints
+!
+      if (debug) then
+         do i=1,n_occ
+            write(luprint,*)(mo_fock_mat(i,j),j=1,n_occ)
+         enddo
+         do i=1,n_vir
+            write(luprint,*)(mo_fock_mat(j,i+n_occ),j=1,n_occ)
+         enddo
+         do i=1,n_vir
+            write(luprint,*)(mo_fock_mat(i+n_occ,j),j=1,n_occ)
+         enddo
+         do i=1,5
+            write(luprint,*)(mo_fock_mat(i+n_occ,j+n_occ),j=1,5) 
+         enddo
+      endif
    end subroutine mlcc_fock
 
