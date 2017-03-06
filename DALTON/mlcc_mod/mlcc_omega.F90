@@ -9,6 +9,7 @@ module mlcc_omega
    use mlcc_data
    use mlcc_workspace
    use mlcc_utilities
+   use mlcc_cholesky
 !
 contains 
    subroutine mlcc_omega_calc
@@ -387,21 +388,25 @@ contains
          F_ck(1,ck) = mo_fock_mat(n_occ+c,k)
          do i = 1,n_occ
             do a = 1,n_vir
-!              
-!              u_ck_ai
+!
+!              Necessary indices
 !
                ai = index_two(a,i,n_vir)
                ci = index_two(c,i,n_vir)
                ak = index_two(a,k,n_vir)
+!
                ckai = index_packed(ck,ai)
                ciak = index_packed(ci,ak)
+!              
+!              u_ck_ai
+!
                u_ck_ai(ck,ai) = two*t2am(ckai,1)-t2am(ciak,1)
             enddo
          enddo
       enddo
    enddo
 !
-!  T1 transformation
+!  T1 transformation Sarai: Should have T1-transformed Fock in mem
 !
 !
 !  Matrix multiplication

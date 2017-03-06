@@ -324,6 +324,7 @@ subroutine hf_reader
       use mlcc_data
       use mlcc_workspace
       use mlcc_utilities
+      use mlcc_cholesky
 !
       implicit none
       real(dp), dimension(:,:), pointer      :: fock_ao  => null()
@@ -422,7 +423,7 @@ subroutine hf_reader
 ! 
       call deallocator(g_ij_kl,n_oo,n_oo)
 !
-!!    Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !!
+!!    Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !! OBS T1!
 !
       do i=1,n_occ
          do a=1,n_vir
@@ -431,7 +432,7 @@ subroutine hf_reader
          enddo
       enddo
 !
-!!    Vacant-occupied block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
+!!    Vacant-vacant block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
       call allocator(g_ab_ij,n_vv,n_oo)
       g_ab_ij=zero

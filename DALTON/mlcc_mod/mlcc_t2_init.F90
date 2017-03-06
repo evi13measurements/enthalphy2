@@ -11,6 +11,7 @@ contains
       use mlcc_data
       use mlcc_utilities
       use mlcc_workspace
+      use mlcc_cholesky
    !
       implicit none
    !
