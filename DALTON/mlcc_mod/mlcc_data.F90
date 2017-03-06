@@ -54,7 +54,7 @@ module mlcc_data
    real(dp), dimension(:,:), pointer  :: mo_fock_mat       => null()
 !
    integer                          :: luprint !general output unit
-   integer                          :: mem = 10000000
+   integer                          :: mem = 1000000
 end module mlcc_data
 
 module mlcc_input_data
