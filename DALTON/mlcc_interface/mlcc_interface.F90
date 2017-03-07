@@ -595,5 +595,37 @@ subroutine hf_reader
             write(luprint,*)(mo_fock_mat(i+n_occ,j+n_occ),j=1,5) 
          enddo
       endif
+!
+!     Save the blocks of the Fock matrix in memory (ij,ia,ai,ab)
+!
+      call allocator(F_i_j,n_occ,n_occ)
+      call allocator(F_i_a,n_occ,n_vir)
+      call allocator(F_a_i,n_vir,n_occ)
+      call allocator(F_a_b,n_vir,n_vir)
+!
+      F_i_j = zero
+      F_i_a = zero
+      F_a_i = zero
+      F_a_b = zero
+!
+      do i = 1,n_occ
+         do j = 1,n_occ
+            F_i_j(i,j) = mo_fock_mat(i,j)
+         enddo
+      enddo
+!
+      do i = 1,n_occ
+         do a = 1,n_vir
+            F_i_a(i,a) = mo_fock_mat(i,n_occ+a)
+            F_a_i(a,i) = mo_fock_mat(n_occ+a,i)
+         enddo
+      enddo
+!
+      do a = 1,n_vir
+         do b = 1,n_vir
+            F_a_b(a,b) = mo_fock_mat(n_occ+a,n_occ+b)
+         enddo
+      enddo
+!
    end subroutine mlcc_fock
 

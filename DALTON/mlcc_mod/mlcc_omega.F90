@@ -58,7 +58,7 @@ contains
 !
       integer :: ad,ad_dim,c,ci,cidk,ck,ckd,ckdi,di,dk,k,kc,d,da
 !
-      logical :: debug = .true.
+      logical :: debug = .false.
 !
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_da_J  => null()   ! L_ad^J; a is being batched over
@@ -112,7 +112,7 @@ contains
 !     for which we need to have enough room to store L_ad_J and g_ad_kc, and, later on in the same loop, 
 !     g_ad_kc and g_a_ckd simultaneously
 !
-      required        = max(n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir,2*n_vir*n_vir*n_occ*n_vir)
+      required        = max(n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_vir,2*n_vir*n_vir*n_occ*n_vir) ! Eirik: I am not sure if this is an accurate estimate of the required memory
       available       = get_available()
       batch_dimension = n_vir ! Batch over the virtual index a
 !
@@ -204,7 +204,9 @@ contains
          write(luprint,*) 
          write(luprint,*) 'Omega(a,i) after A1 term has been added:'
          write(luprint,*)
+!
          call vec_print(omega1,n_vir,n_occ)
+!
       endif
 !
 !     Deallocate vectors 
@@ -372,7 +374,7 @@ contains
 !
 !  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Mars 2017
 !
-   use mlcc_data
+   use mlcc_data ! Eirik: These use statements are not necessary (included in the module already)
    use mlcc_utilities
    use mlcc_workspace
    implicit none
@@ -447,7 +449,7 @@ contains
 !
    implicit none
    integer :: a,i, ai
-   real(dp),dimension(:,:),pointer  :: F_a_i => null()
+  ! real(dp),dimension(:,:),pointer  :: F_a_i => null() ! Eirik: I commented this 
 !
 !  Allocation
 !
@@ -455,11 +457,11 @@ contains
 !
 !  MO Fock matrix
 !
-   do i = 1,n_occ
-         do a = 1,n_vir
-         F_a_i(a,i) = mo_fock_mat(n_occ+a,i)
-      enddo
-   enddo
+   ! do i = 1,n_occ ! Eirik: I commented this 
+   !       do a = 1,n_vir
+   !       F_a_i(a,i) = mo_fock_mat(n_occ+a,i)
+   !    enddo
+   ! enddo
 !
 !  T1 transformation
 !
@@ -475,6 +477,114 @@ contains
    end subroutine mlcc_omega_d1
 !
    subroutine mlcc_omega_e2
+!
+!     MLCC Omega E2 term
+!     Written by Eirik F. Kjønstad and Sarai Folkestad, 7 Mar 2017
+!
+!     NB! Needs to be rewritten with T1 transformed integrals
+!     eventually (makes no difference for MP2 guess)
+!
+!     Calculates sum_c t_ij^ac (F_bc - sum_dkl g_ldkc u_kl^bd) - sum_k t_ik^ab (F_kj + sum_cdl g_kdlc u_lj^cd)
+!
+!     The first term is referred to as the E2.1 term, and comes out ordered as (b,jai) 
+!     The second term is referred to as the E2.2 term, and comes out ordered as (aib,j)
+!
+!     Both are added to the omega vector element omega2(ai,bj)
+!
+      implicit none 
+!
+      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld
+!
+      real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! To store the E2.1 term temporarily
+      real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! To store the E2.2 term temporarily
+      real(dp), dimension(:,:), pointer :: L_kc_J => null() ! L_kc^J
+      real(dp), dimension(:,:), pointer :: g_ld_kc => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: g_kdl_c => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: u_b_kdl => null() ! u_kl^bd 
+      real(dp), dimension(:,:), pointer :: F_b_c => null() ! F_bc, the virtual-virtual Fock matrix
+!
+!     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
+!
+      call allocator(L_kc_J,n_ov,n_J)
+      L_kc_J = zero
+!
+!     Read the Cholesky vector from file 
+!
+      call read_cholesky_ia(L_kc_J)
+!
+!     Allocate g_ck_dl = g_ckdl and set to zero 
+!
+      call allocator(g_ld_kc,n_ov,n_ov)
+      g_ld_kc = zero
+!
+!     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
+!
+      call dgemm('N','T',n_ov,n_ov,n_J,&
+                  one,L_kc_J,n_ov,L_kc_J,n_ov,&
+                  zero,g_ld_kc,n_ov)
+!
+!     Deallocate the Cholesky vector L_kc_J
+!
+      call deallocator(L_kc_J,n_ov,n_J)
+!
+!     Allocate u_b_kdl = u_kl^bd and set to zero
+!
+      call allocator(u_b_kdl,n_vir,n_oov)
+      u_b_kdl = zero
+!
+!     Allocate g_kdl_c = g_ldkc and set to zero 
+!
+      call allocator(g_kdl_c,n_oov,n_vir)
+      g_kdl_c = zero
+!
+!     Calculate u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
+!
+      do b = 1,n_vir ! Use as though "c" for g_kdl_c term 
+         do k = 1,n_occ
+            do d = 1,n_vir
+               do l = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  kdl  = index_three(k,d,l,n_occ,n_vir)
+                  ld   = index_two(l,d,n_occ)
+                  kc   = index_two(k,c,n_occ)
+!
+                  cl   = index_two(c,l,n_vir)
+                  ck   = index_two(c,k,n_vir)
+                  dl   = index_two(d,l,n_vir)
+                  dk   = index_two(d,k,n_vir)
+                  ckdl = index_packed(ck,dl)
+                  cldk = index_packed(cl,dk)
+!
+!                 Set the values of u_b_kdl and g_kdl_c
+!
+                  u_b_kdl(c,kdl) = two*t2am(ckdl,1) - t2am(cldk,1)
+!
+                  g_kdl_c(kdl,c) = g_ld_kc(ld,kc) ! g_ldkc 
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate the unordered integrals g_ld_kc = g_ldkc
+!
+      call deallocator(g_ld_kc,n_ov,n_ov)
+!
+!     Allocate F_b_c = F_bc and set to zero 
+!
+      call allocator(F_b_c,n_vir,n_vir)
+      F_b_c = zero 
+!
+!     Set the virtual-virtual Fock matrix F_b_c
+!
+      do b = 1,n_vir
+         do c = 1,n_vir
+            !
+         enddo
+      enddo
+!
    end subroutine mlcc_omega_e2
 !
    subroutine mlcc_omega_d2
