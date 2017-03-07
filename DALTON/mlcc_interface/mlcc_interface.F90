@@ -313,7 +313,6 @@ subroutine hf_reader
 
    end subroutine hf_reader
 !
-!
    subroutine mlcc_fock()
 !  Purpose: Construct Fock matrix in MO basis
 !
@@ -595,5 +594,6 @@ subroutine hf_reader
             write(luprint,*)(mo_fock_mat(i+n_occ,j+n_occ),j=1,5) 
          enddo
       endif
+!
    end subroutine mlcc_fock
 
