@@ -313,7 +313,6 @@ subroutine hf_reader
 
    end subroutine hf_reader
 !
-!
    subroutine mlcc_fock()
 !  Purpose: Construct Fock matrix in MO basis
 !
