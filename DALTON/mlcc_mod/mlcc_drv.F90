@@ -62,7 +62,10 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Set initial guess for the doubles amplitudes 
 !
-   call allocator(mo_fock_mat,n_orbitals,n_orbitals)
+   call allocator(F_i_j,n_occ,n_occ)
+   call allocator(F_i_a,n_occ,n_vir)
+   call allocator(F_a_i,n_vir,n_occ)
+   call allocator(F_a_b,n_vir,n_vir)
    call mlcc_fock
    call t2_init
 !
@@ -73,9 +76,12 @@ subroutine mlcc_drv(work,lwork,lupri)
    call deallocator(t2am,n_ov_ov_packed,1)
    call deallocator(fock_diagonal,n_orbitals,1)
    call deallocator(orb_coefficients,n_lambda,1)
-   call deallocator(mo_fock_mat,n_orbitals,n_orbitals)
    call deallocator(omega1,n_vir,n_occ) ! Omega_a,i
    call deallocator(omega2,n_ov_ov_packed,1)
+   call deallocator(F_i_j,n_occ,n_occ)
+   call deallocator(F_i_a,n_occ,n_vir)
+   call deallocator(F_a_i,n_vir,n_occ)
+   call deallocator(F_a_b,n_vir,n_vir)
 !
 !
 end subroutine mlcc_drv

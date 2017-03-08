@@ -345,6 +345,8 @@ subroutine hf_reader
       integer                                :: b_batch = 0
       logical                                :: debug = .true.
 !
+   call allocator(mo_fock_mat,n_orbitals,n_orbitals)
+!
 !
 !
 !!! ONE-ELECTRON CONTRIBUTION !!!
@@ -597,11 +599,6 @@ subroutine hf_reader
 !
 !     Save the blocks of the Fock matrix in memory (ij,ia,ai,ab)
 !
-      call allocator(F_i_j,n_occ,n_occ)
-      call allocator(F_i_a,n_occ,n_vir)
-      call allocator(F_a_i,n_vir,n_occ)
-      call allocator(F_a_b,n_vir,n_vir)
-!
       F_i_j = zero
       F_i_a = zero
       F_a_i = zero
@@ -625,6 +622,9 @@ subroutine hf_reader
             F_a_b(a,b) = mo_fock_mat(n_occ+a,n_occ+b)
          enddo
       enddo
+!
+
+   call deallocator(mo_fock_mat,n_orbitals,n_orbitals)
 !
    end subroutine mlcc_fock
 
