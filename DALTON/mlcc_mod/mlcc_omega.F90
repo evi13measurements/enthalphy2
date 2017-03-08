@@ -26,13 +26,13 @@ contains
       call mlcc_omega_a1
       call mlcc_omega_b1
       call mlcc_omega_c1
-      call mlcc_omega_d1 ! Eirik: Seg. fault somewhere in these routines? I get an error in e2 when the omega1 is calculated                         
+      call mlcc_omega_d1 
 !
 !     II. The doubles contribution to < mu | exp(-T) H exp(T) | R >
 !
       write(luprint,*) 'Calculating the doubles omega vector...'
       call mlcc_omega_e2
-      call mlcc_omega_d2
+     ! call mlcc_omega_d2 ! Eirik: I am working on this - commenting to avoid errors...
       call mlcc_omega_c2
       call mlcc_omega_a2
       call mlcc_omega_b2
@@ -871,6 +871,135 @@ contains
    end subroutine mlcc_omega_e2
 !
    subroutine mlcc_omega_d2
+!
+!     MLCC Omega D2 term
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, 8 Mar 2017
+!
+!     NB! Needs to be rewritten with T1 transformed integrals
+!     eventually (makes no difference for MP2 guess)
+!
+!     Calculates sum_ck u_jk^bc g_aikc - 1/2 * sum_ck u_jk^bc g_acki + 1/4 * sum_ck u_jk^bc sum_dl L_ldkc u_il^ad 
+!
+!     The first term is referred to as the D2.1 term, and comes out ordered as (....) 
+!     The second term is referred to as the D2.2 term, and comes out ordered as (....)
+!     The third term is referred to as the D2.3 term, and comes out ordered as (ai,bj)
+!
+!     All terms are added to the omega vector element omega2(ai,bj)
+!
+!     The routine adds the terms in the following order: D2.3, D2.1, D2.2
+!
+      implicit none 
+!
+      integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld
+!
+      real(dp), dimension(:,:), pointer :: L_kc_J => null() ! L_kc^J 
+      real(dp), dimension(:,:), pointer :: g_ld_kc => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: L_ld_kc => null() ! L_ldkc = 2 * g_ldkc - g_lckd 
+      real(dp), dimension(:,:), pointer :: u_ai_ld => null() ! u_il^ad = 2 * t_il^ad - t_li^ad 
+      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! To store the D2.3 term temporarily
+!
+!     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
+!
+      call allocator(L_kc_J,n_ov,n_J)
+      L_kc_J = zero
+!
+!     Read the Cholesky vector L_kc_J from file
+!
+      call read_cholesky_ia(L_kc_J)
+!
+!     Allocate g_ld_kc = g_ldkc and set to zero 
+!
+      call allocator(g_ld_kc,n_ov,n_ov)
+      g_ld_kc = zero 
+!
+!     Calculate g_ld_kc = g_ldkc = sum_J L_ld^J L_kc^J
+!
+      call dgemm('N','T',n_ov,n_ov,n_J,&
+                  one,L_kc_J,n_ov,L_kc_J,n_ov,&
+                  zero,g_ld_kc,n_ov)
+!
+!     Allocate L_ld_kc = L_ldkc and set to zero    
+!
+      call allocator(L_ld_kc,n_ov,n_ov)
+      L_ld_kc = zero 
+!
+!     Set the value of L_ld_kc using g_ld_kc 
+!
+      do l = 1,n_occ
+         do d = 1,n_vir
+            do k = 1,n_occ
+               do c = 1,n_vir
+!
+!                 Calculate the necessary indices 
+!
+                  ld = index_two(l,d,n_occ)
+                  kc = index_two(k,c,n_occ)
+                  lc = index_two(l,d,n_occ)
+                  kd = index_two(k,d,n_occ)
+!
+!                 Set the value of L_ld_kc
+!
+                  L_ld_kc(ld,kc) = two*g_ld_kc(ld,kc) - g_ld_kc(lc,kd)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate g_ld_kc & L_kc_J ! Eirik: we should consider keeping the latter in memory if possible,
+!                                   as it must be used later to form the integrals g_aikc 
+!
+      call deallocator(g_ld_kc,n_ov,n_ov)
+      call deallocator(L_kc_J,n_ov,n_J)
+!
+!     Allocate u_ai_ld = u_il^ad and set to zero 
+!
+      call allocator(u_ai_ld,n_ov,n_ov)
+      u_ai_ld = zero 
+! 
+!     Set the value of u_ai_ld = u_il^ad = 2 * t_il^ad - t_li^ad 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do l = 1,n_occ
+               do d = 1,n_vir
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a,i,n_vir)
+                  ld   = index_two(l,d,n_occ)
+!
+                  dl   = index_two(d,l,n_vir)
+                  aidl = index_packed(ai,dl)
+!
+                  al   = index_two(a,l,n_vir)
+                  di   = index_two(d,i,n_vir)
+                  aldi = index_packed(al,di)
+!
+!                 Set the value of u_ai_ld 
+!
+                  u_ai_ld(ai,ld) = two*t2am(aidl,1) - t2am(aldi,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Allocate the D2.3 term omega2_ai_bj and set to zero 
+!
+      call allocator(omega2_ai_bj,n_ov,n_ov)
+      omega2_ai_bj = zero 
+!
+!     Form the temporary vector sum_dl u_ai_ld L_ld_kc and place it in omega2_ai_bj ("bj = ck")
+!
+      call dgemm('N','N',n_ov,n_ov,n_ov,&
+                  one,u_ai_ld,n_ov,L_ld_kc,n_ov,&
+                  zero,omega2_ai_bj,n_ov)
+!
+!     Form the D2.3 term by dgemm (to do!)
+!
+!..... Remember: transpose u!
+!
    end subroutine mlcc_omega_d2
 !
    subroutine mlcc_omega_c2
