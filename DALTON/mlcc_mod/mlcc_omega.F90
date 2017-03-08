@@ -371,13 +371,10 @@ contains
    subroutine mlcc_omega_c1
 !
 !  Purpose: Calculate C1 term of Omega
-!  (Omega_ai^C1=sum_ck F_ck_T1 u^ac_ik)
+!  (Omega_ai^C1=sum_ck F_kc u_ai_ck)
 !
 !  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Mars 2017
 !
-   use mlcc_data ! Eirik: These use statements are not necessary (included in the module already)
-   use mlcc_utilities
-   use mlcc_workspace
    implicit none
 !
    real(dp),dimension(:,:),pointer  :: F_ck => null()
@@ -390,9 +387,9 @@ contains
 !  Allocation
 !
    call allocator(u_ck_ai,n_ov,n_ov)   ! 2*t_ck_ai-t_ci_ak
-   call allocator(F_ck,1,n_ov) ! T1-transformed fock matrix
+   call allocator(F_ck,1,n_ov) ! T1-transformed F_k_c reordered
 !
-! Set up u_ck_ai and MO Fock matrix
+! Set up u_ck_ai and MO Fock matrix virtual-occupied
 !
    do k = 1,n_occ
       do c = 1,n_vir
@@ -400,7 +397,7 @@ contains
 !
 !        MO Fock matrix
 !
-         F_ck(1,ck) = mo_fock_mat(n_occ+c,k)
+         F_ck(1,ck) = F_i_a(k,c)
          do i = 1,n_occ
             do a = 1,n_vir
 !
@@ -420,9 +417,6 @@ contains
          enddo
       enddo
    enddo
-!
-!  T1 transformation Sarai: Should have T1-transformed Fock in mem
-!
 !
 !  Matrix multiplication
 !
@@ -450,30 +444,10 @@ contains
 !
    implicit none
    integer :: a,i, ai
-  ! real(dp),dimension(:,:),pointer  :: F_a_i => null() ! Eirik: I commented this 
 !
-!  Allocation
+!  Add F_a_i to omega
 !
-  ! call allocator(F_a_i,n_vir,n_occ)
-!
-!  MO Fock matrix
-!
-   ! do i = 1,n_occ ! Eirik: I commented this 
-   !       do a = 1,n_vir
-   !       F_a_i(a,i) = mo_fock_mat(n_occ+a,i)
-   !    enddo
-   ! enddo
-!
-!  T1 transformation
-!
-!
-!  Add to omega
-!
-  ! call daxpy(n_ov,one,F_a_i,1,omega1,1)
-!
-!  Deallocation
-!
-  ! call deallocator(F_a_i,n_vir,n_occ)
+   call daxpy(n_ov,one,F_a_i,1,omega1,1)
 !
    end subroutine mlcc_omega_d1
 !
