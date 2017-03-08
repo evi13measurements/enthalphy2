@@ -160,7 +160,6 @@ contains
 !
 !     Adding terms to Fock matrix
 !
-      write(*,*)'1'
       do i=1,n_occ
          do a=1,n_vir
             do j=1,n_occ
@@ -184,7 +183,6 @@ contains
       enddo
       call deallocator(g_ia_jk,n_ov,n_oo)
       call deallocator(g_ai_jk,n_ov,n_oo)
-      write(*,*)'2'
 !
 !!    Vacant-vacant block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
@@ -204,7 +202,6 @@ contains
       batch_start=1
       batch_end=0
       batch_length=0
-      write(*,*)'3'
 !
 !     Start batchig loop
 !
@@ -238,7 +235,6 @@ contains
          call deallocator(L_ab_J,batch_length*n_vir,n_J)
 !
       enddo ! batching done
-      write(*,*)'4'
 !
 !     Deallocation of L_ij_J
 !
@@ -253,7 +249,6 @@ contains
 !
 !     Reading Cholesky vector L_ia_J and L_ai_J
 !
-      write(*,*)'5'
       call get_cholesky_ia(L_ia_J)
       call get_cholesky_ai(L_ai_J)
       call dgemm('N','T',n_ov,n_ov,n_J,one,L_ai_J,n_ov,L_ia_J,n_ov,zero,g_ai_jb,n_ov)
@@ -265,7 +260,6 @@ contains
 !
 !     Calculation of two-electron terms for virtual-virtual blocks
 !
-      write(*,*)'6'
       do a = 1,n_vir
          do b = 1,n_vir
             ab=index_two(a,b,n_vir)
@@ -281,7 +275,6 @@ contains
       enddo
      call deallocator(g_ab_ij,n_vv,n_oo)
      call deallocator(g_ai_jb,n_ov,n_ov)
-     write(*,*)'7'
 !
 !    Clean-up of Fock matrix
 !
@@ -289,7 +282,6 @@ contains
 !
 !     Prints
 !
-      write(*,*)'8'
       if (debug) then
          do i=1,n_occ
             write(luprint,*)(mo_fock_mat(i,j),j=1,n_occ)
@@ -304,7 +296,6 @@ contains
             write(luprint,*)(mo_fock_mat(i+n_occ,j+n_occ),j=1,5) 
          enddo
       endif
-      write(*,*)'9'
 !
 !     Save the blocks of the Fock matrix in memory (ij,ia,ai,ab)
 !

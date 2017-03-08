@@ -977,6 +977,84 @@ contains
    end subroutine mlcc_omega_d2
 !
    subroutine mlcc_omega_c2
+!
+!     MLCC Omega C2 term
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 8 Mar 2017
+!
+!     Omega C2 = -1/2* sum_(ck)t_bk_cj*(g_ki_ac -1/2 sum_(dl)t_al_di * g_kd_lc)
+!                 - sum_(ck) t_bk_ci (g_kj_ac-sum_(dl)t_al_dj*g_kd_lc)
+      implicit none
+!
+      real(dp),dimension(:,:),pointer        :: L_ia_J => null()
+      real(dp),dimension(:,:),pointer        :: g_kd_lc => null()
+      real(dp),dimension(:,:),pointer        :: g_dl_ck => null()
+      real(dp),dimension(:,:),pointer        :: t_ai_dl => null()
+      real(dp),dimension(:,:),pointer        :: X_ai_ck => null()
+      integer                                :: c,k,d,l,kd,lc,ck,dl,al,di,ai,aldi
+!
+!     Allocate L_ia_J
+!
+      call allocator(L_ia_J,n_ov,n_J)
+      L_ia_J=zero
+!
+!     Get L_ia_J
+!
+      call get_cholesky_ia(L_ia_J)
+!
+!     Create g_kd_lc = sum_J L_kd_J * L_lc_J
+!
+      call allocator(g_kd_lc,n_ov,n_ov)
+      g_kd_lc=zero
+!
+      call dgemm('N','T',n_ov,n_ov,n_J &
+         ,one,L_ia_J,n_ov,L_ia_J,n_ov &
+         ,zero,g_kd_lc,n_ov)
+!
+!     Reorder g_kd_lc as g_dl_ck and t_al_di as t_ai_dl
+!
+      call allocator(g_dl_ck,n_ov,n_ov)
+      call allocator(t_ai_dl,n_ov,n_ov)
+      g_dl_ck=zero
+      t_ai_dl=zero
+!
+      do c = 1,n_vir
+         do d = 1,n_vir
+            do k = 1,n_occ
+               do l = 1,n_occ
+!
+!                 Needed indices for reordering of g
+!
+                  kd=index_two(k,d,n_occ)
+                  lc=index_two(l,c,n_occ)
+                  dl=index_two(d,l,n_vir)
+                  ck=index_two(c,k,n_vir)
+!
+!                 Needed indices for reordering of t
+!
+                  al=index_two(c,l,n_vir)
+                  di=index_two(d,k,n_vir)
+                  ai=ck
+                  aldi=index_packed(al,di)
+!
+                  g_dl_ck(dl,ck)=g_kd_lc(kd,lc)
+!
+                  t_ai_dl(ai,dl)=t2am(aldi,1)
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     -1/2 * sum_(dl) t_ai_dl*g_dl_ck = X_ai_ck
+!
+      call allocator(X_ai_ck,n_ov,n_ov)
+!
+      call dgemm('N','N',n_ov,n_ov,n_ov &
+         ,-half,t_ai_dl,n_ov,g_dl_ck,n_ov &
+         ,zero,X_ai_ck,n_ov)
+!
+      call deallocator(L_ia_J,n_ov,n_J)
+      call deallocator(g_kd_lc,n_ov,n_ov)
+      call deallocator(g_dl_ck,n_ov,n_ov)
    end subroutine mlcc_omega_c2
 !
    subroutine mlcc_omega_a2
