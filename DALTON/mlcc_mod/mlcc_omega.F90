@@ -83,7 +83,7 @@ contains
 !
       call allocator(u_ckd_i,n_ovv,n_occ)
 !
-!        Calculate u_ckd_i
+!     Calculate u_ckd_i
 !
       do c=1,n_vir
          do k=1,n_occ
@@ -459,7 +459,14 @@ contains
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
 !
-!     Calculates sum_c t_ij^ac (F_bc - sum_dkl g_ldkc u_kl^bd) - sum_k t_ik^ab (F_kj + sum_cdl g_ldkc u_lj^dc)
+!     This routine calculates the E2 term,
+!
+!        sum_c t_ij^ac (F_bc - sum_dkl g_ldkc u_kl^bd) 
+!        - sum_k t_ik^ab (F_kj + sum_cdl g_ldkc u_lj^dc),
+!
+!     where
+!
+!        u_kl^bc = 2 * t_kl^bc - t_lk^bc.
 !
 !     The first term is referred to as the E2.1 term, and comes out ordered as (b,jai) 
 !     The second term is referred to as the E2.2 term, and comes out ordered as (aib,j)
@@ -472,22 +479,20 @@ contains
 !
       integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai,dlc,dkcl,dlck,aib,aibk,bk
 !
-      integer :: mem_left
+      real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! For storing the E2.1 term temporarily
+      real(dp), dimension(:,:), pointer :: L_kc_J       => null() ! L_kc^J
+      real(dp), dimension(:,:), pointer :: g_ld_kc      => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: g_kdl_c      => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: u_b_kdl      => null() ! u_kl^bd 
+      real(dp), dimension(:,:), pointer :: F_b_c        => null() ! F_bc, the virtual-virtual Fock matrix
+      real(dp), dimension(:,:), pointer :: X_b_c        => null() ! An intermediate, see below for definition
+      real(dp), dimension(:,:), pointer :: t_c_jai      => null() ! t_ij^ac 
 !
-      real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! To store the E2.1 term temporarily
-      real(dp), dimension(:,:), pointer :: L_kc_J => null() ! L_kc^J
-      real(dp), dimension(:,:), pointer :: g_ld_kc => null() ! g_ldkc 
-      real(dp), dimension(:,:), pointer :: g_kdl_c => null() ! g_ldkc 
-      real(dp), dimension(:,:), pointer :: u_b_kdl => null() ! u_kl^bd 
-      real(dp), dimension(:,:), pointer :: F_b_c => null() ! F_bc, the virtual-virtual Fock matrix
-      real(dp), dimension(:,:), pointer :: X_b_c => null() ! An intermediate, see below for definition
-      real(dp), dimension(:,:), pointer :: t_c_jai => null() ! t_ij^ac 
-!
-      real(dp), dimension(:,:), pointer :: g_k_dlc => null() ! g_ldkc 
-      real(dp), dimension(:,:), pointer :: u_dlc_j => null() ! u_lj^dc 
-      real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! To store the E2.2 term temporarily
-      real(dp), dimension(:,:), pointer :: Y_k_j => null() ! An intermediate, see below for definition 
-      real(dp), dimension(:,:), pointer :: t_aib_k => null() ! t_ik^ab 
+      real(dp), dimension(:,:), pointer :: g_k_dlc      => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: u_dlc_j      => null() ! u_lj^dc 
+      real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! For storing the E2.2 term temporarily
+      real(dp), dimension(:,:), pointer :: Y_k_j        => null() ! An intermediate, see below for definition 
+      real(dp), dimension(:,:), pointer :: t_aib_k      => null() ! t_ik^ab 
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -523,7 +528,7 @@ contains
       call allocator(g_kdl_c,n_oov,n_vir)
       g_kdl_c = zero
 !
-!     Calculate u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
+!     Determine u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
 !
       do b = 1,n_vir ! Use as though "c" for g_kdl_c term 
          do k = 1,n_occ
@@ -642,8 +647,8 @@ contains
                   bj   = index_two(b,j,n_vir)
                   aibj = index_packed(ai,bj)
 !
-!                 Restrict the indices to avoid adding (ai,bj) and (bj,ai), as they
-!                 are identical in packed indices
+!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+!                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
                      omega2(aibj,1) = omega2(aibj,1) + omega2_b_jai(b,jai)
@@ -669,7 +674,7 @@ contains
          call vec_print_packed(omega2,n_ov_ov_packed)
       endif 
 !
-!     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
+!     Allocate the Cholesky vector L_kc_J = L_kc^J and set it to zero 
 !
       call allocator(L_kc_J,n_ov,n_J)
       L_kc_J = zero
@@ -726,7 +731,7 @@ contains
 !
 !                 Set the value of g_k_dlc and u_dlc_j 
 !
-                  g_k_dlc(k,dlc) = g_ld_kc(ld,kc)                  ! g_ldkc 
+                  g_k_dlc(k,dlc) = g_ld_kc(ld,kc)                   ! g_ldkc 
                   u_dlc_j(dlc,k) = two*t2am(dlck,1)-t2am(dkcl,1)    ! u_lk^dc = 2 * t_lk^dc - t_kl^dc 
 !
                enddo
@@ -738,7 +743,7 @@ contains
 !
       call deallocator(g_ld_kc,n_ov,n_ov)
 !
-!    Allocate the intermediate Y_k_j = F_kj + sum_cdl u_lj^dc g_ldkc = F_k_j + sum_cdl g_k_dlc * u_dlc_j and set to zero 
+!     Allocate the intermediate Y_k_j = F_kj + sum_cdl u_lj^dc g_ldkc = F_k_j + sum_cdl g_k_dlc * u_dlc_j and set to zero 
 !
       call allocator(Y_k_j,n_occ,n_occ)
       Y_k_j = zero 
@@ -763,7 +768,7 @@ contains
       call allocator(t_aib_k,n_ovv,n_occ)
       t_aib_k = zero
 !
-!     Set the value of t_aib_k = t_ik^ab 
+!     Determine t_aib_k = t_ik^ab 
 !
       do a = 1,n_vir
          do i = 1,n_occ
@@ -817,8 +822,8 @@ contains
 !
                   aib  = index_three(a,i,b,n_vir,n_occ)
 !
-!                 Restrict the indices to avoid adding (ai,bj) and (bj,ai), as they
-!                 are identical in packed indices
+!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+!                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
                      omega2(aibj,1) = omega2(aibj,1) + omega2_aib_j(aib,j)
@@ -852,25 +857,33 @@ contains
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
 !
-!     Calculates sum_ck u_jk^bc g_aikc - 1/2 * sum_ck u_jk^bc g_acki + 1/4 * sum_ck u_jk^bc sum_dl L_ldkc u_il^ad 
+!     This routine calculates the D2 term,
+!
+!        sum_ck u_jk^bc g_aikc 
+!        - 1/2 * sum_ck u_jk^bc g_acki 
+!        + 1/4 * sum_ck u_jk^bc sum_dl L_ldkc u_il^ad,
+!
+!     where 
+!
+!        u_jk^bc = 2 * t_jk^bc - t_kj^bc,
+!        L_ldkc  = 2 * g_ldkc  - g_lckd.
 !
 !     The first term is referred to as the D2.1 term, and comes out ordered as (....) 
 !     The second term is referred to as the D2.2 term, and comes out ordered as (....)
 !     The third term is referred to as the D2.3 term, and comes out ordered as (ai,bj)
 !
 !     All terms are added to the omega vector element omega2(ai,bj)
-!
 !     The routine adds the terms in the following order: D2.3, D2.1, D2.2
 !
       implicit none 
 !
       integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld
 !
-      real(dp), dimension(:,:), pointer :: L_kc_J => null() ! L_kc^J 
-      real(dp), dimension(:,:), pointer :: g_ld_kc => null() ! g_ldkc 
-      real(dp), dimension(:,:), pointer :: L_ld_kc => null() ! L_ldkc = 2 * g_ldkc - g_lckd 
-      real(dp), dimension(:,:), pointer :: u_ai_ld => null() ! u_il^ad = 2 * t_il^ad - t_li^ad 
-      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! To store the D2.3 term temporarily
+      real(dp), dimension(:,:), pointer :: L_kc_J       => null()    ! L_kc^J 
+      real(dp), dimension(:,:), pointer :: g_ld_kc      => null()    ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: L_ld_kc      => null()    ! L_ldkc = 2 * g_ldkc - g_lckd 
+      real(dp), dimension(:,:), pointer :: u_ai_ld      => null()    ! u_il^ad = 2 * t_il^ad - t_li^ad 
+      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null()    ! For storing the D2.3 term temporarily
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -897,7 +910,7 @@ contains
       call allocator(L_ld_kc,n_ov,n_ov)
       L_ld_kc = zero 
 !
-!     Set the value of L_ld_kc using g_ld_kc 
+!     Determine L_ld_kc from g_ld_kc 
 !
       do l = 1,n_occ
          do d = 1,n_vir
@@ -931,7 +944,7 @@ contains
       call allocator(u_ai_ld,n_ov,n_ov)
       u_ai_ld = zero 
 ! 
-!     Set the value of u_ai_ld = u_il^ad = 2 * t_il^ad - t_li^ad 
+!     Determine u_ai_ld = u_il^ad = 2 * t_il^ad - t_li^ad 
 !
       do a = 1,n_vir
          do i = 1,n_occ
@@ -959,7 +972,7 @@ contains
          enddo
       enddo
 !
-!     Allocate the D2.3 term omega2_ai_bj and set to zero 
+!     Allocate the D2.3 term omega2_ai_bj and set it to zero 
 !
       call allocator(omega2_ai_bj,n_ov,n_ov)
       omega2_ai_bj = zero 
