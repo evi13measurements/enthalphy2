@@ -23,10 +23,10 @@ contains
 !
 !     I. The singles contribution to < mu | exp(-T) H exp(T) | R >
 !
-      call mlcc_omega_a1
-      call mlcc_omega_b1
-      call mlcc_omega_c1
-      call mlcc_omega_d1
+    !  call mlcc_omega_a1
+    !  call mlcc_omega_b1
+    !  call mlcc_omega_c1
+    !  call mlcc_omega_d1 ! Eirik: Seg. fault somewhere in these routines? I get an error in e2 when the omega1 is calculated                         
 !
 !     II. The doubles contribution to < mu | exp(-T) H exp(T) | R >
 !
@@ -485,7 +485,7 @@ contains
 !     NB! Needs to be rewritten with T1 transformed integrals
 !     eventually (makes no difference for MP2 guess)
 !
-!     Calculates sum_c t_ij^ac (F_bc - sum_dkl g_ldkc u_kl^bd) - sum_k t_ik^ab (F_kj + sum_cdl g_kdlc u_lj^cd)
+!     Calculates sum_c t_ij^ac (F_bc - sum_dkl g_ldkc u_kl^bd) - sum_k t_ik^ab (F_kj + sum_cdl g_ldkc u_lj^dc)
 !
 !     The first term is referred to as the E2.1 term, and comes out ordered as (b,jai) 
 !     The second term is referred to as the E2.2 term, and comes out ordered as (aib,j)
@@ -496,10 +496,11 @@ contains
 !
       logical :: debug = .true.
 !
-      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai
+      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai,dlc,dkcl,dlck,aib,aibk,bk
+!
+      integer :: mem_left
 !
       real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! To store the E2.1 term temporarily
-      real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! To store the E2.2 term temporarily
       real(dp), dimension(:,:), pointer :: L_kc_J => null() ! L_kc^J
       real(dp), dimension(:,:), pointer :: g_ld_kc => null() ! g_ldkc 
       real(dp), dimension(:,:), pointer :: g_kdl_c => null() ! g_ldkc 
@@ -507,6 +508,12 @@ contains
       real(dp), dimension(:,:), pointer :: F_b_c => null() ! F_bc, the virtual-virtual Fock matrix
       real(dp), dimension(:,:), pointer :: X_b_c => null() ! An intermediate, see below for definition
       real(dp), dimension(:,:), pointer :: t_c_jai => null() ! t_ij^ac 
+!
+      real(dp), dimension(:,:), pointer :: g_k_dlc => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: u_dlc_j => null() ! u_lj^dc 
+      real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! To store the E2.2 term temporarily
+      real(dp), dimension(:,:), pointer :: Y_k_j => null() ! An intermediate, see below for definition 
+      real(dp), dimension(:,:), pointer :: t_aib_k => null() ! t_ik^ab 
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -575,7 +582,14 @@ contains
 !
 !     Deallocate the unordered integrals g_ld_kc = g_ldkc
 !
-      call deallocator(g_ld_kc,n_ov,n_ov)
+      call deallocator(g_ld_kc,n_ov,n_ov) ! Eirik: for optimization, it may be possible to keep these integrals in memory,
+                                          !        because they are also needed for the E2.2 term. 
+                                          !
+                                          !        It is probably even better to simply reorder g_kdl_c to g_k_dlc
+                                          !        in the calculation of the E2.2 term (requires less memory).
+                                          !
+                                          !        For now (8 Mar 2017), I'll just keep it simple & stupid.
+                                          !
 !
 !     Have the pointer F_b_c point to existing F_a_b (using the former for convenience)
 !
@@ -654,9 +668,12 @@ contains
                   bj   = index_two(b,j,n_vir)
                   aibj = index_packed(ai,bj)
 !
-!                 Add the E2.1 term to omega 
+!                 Restrict the indices to avoid adding (ai,bj) and (bj,ai), as they
+!                 are identical in packed indices
 !
-                  omega2(aibj,1) = omega2(aibj,1) + omega2_b_jai(b,jai)
+                  if (ai .ge. bj) then
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_b_jai(b,jai)
+                  endif
 !
                enddo
             enddo
@@ -669,13 +686,186 @@ contains
       call deallocator(X_b_c,n_vir,n_vir)
       call deallocator(t_c_jai,n_vir,n_oov)
 !
-!     Print the E2.1 term 
+!     Print the omega vector, having added the E2.1 term to it
 !
       if (debug) then 
          write(luprint,*) 
-         write(luprint,*) 'Omega(aibj,1) after B1 term has been added:'
+         write(luprint,*) 'Omega(aibj,1) after E2.1 term has been added:'
          write(luprint,*)
-         call vec_print(omega2,n_ov_ov_packed,1)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif 
+!
+!     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
+!
+      call allocator(L_kc_J,n_ov,n_J)
+      L_kc_J = zero
+!
+!     Read the Cholesky vector from file 
+!
+      call read_cholesky_ia(L_kc_J)
+!
+!     Allocate g_ld_kc = g_ldkc and set to zero 
+!
+      call allocator(g_ld_kc,n_ov,n_ov)
+      g_ld_kc = zero
+!
+!     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
+!
+      call dgemm('N','T',n_ov,n_ov,n_J,&
+                  one,L_kc_J,n_ov,L_kc_J,n_ov,&
+                  zero,g_ld_kc,n_ov)
+!
+!     Deallocate the Cholesky vector L_kc_J
+!
+      call deallocator(L_kc_J,n_ov,n_J)
+!
+!     Allocate g_k_dlc = g_ldkc and set to zero 
+!
+      call allocator(g_k_dlc,n_occ,n_ovv)
+      g_k_dlc = zero 
+!
+!     Allocate u_dlc_j = u_lj^dc and set to zero
+!
+      call allocator(u_dlc_j,n_ovv,n_occ)
+      u_dlc_j = zero 
+!
+!     Set the value of g_k_dlc = g_ldkc and u_dlc_j = u_lj^dc 
+!
+      do k = 1,n_occ ! Use as though "j" for u_dlc_j term 
+         do d = 1,n_vir
+            do l = 1,n_occ
+               do c = 1,n_vir
+!
+!                 Calculate the necessary indices 
+!
+                  dlc  = index_three(d,l,c,n_vir,n_occ)
+                  ld   = index_two(l,d,n_occ)
+                  kc   = index_two(k,c,n_occ)
+!
+                  dl   = index_two(d,l,n_vir)
+                  ck   = index_two(c,k,n_vir)
+                  dlck = index_packed(dl,ck)
+!
+                  dk   = index_two(d,k,n_vir)
+                  cl   = index_two(c,l,n_vir)
+                  dkcl = index_packed(dk,cl)
+!
+!                 Set the value of g_k_dlc and u_dlc_j 
+!
+                  g_k_dlc(k,dlc) = g_ld_kc(ld,kc)                  ! g_ldkc 
+                  u_dlc_j(dlc,k) = two*t2am(dlck,1)-t2am(dkcl,1)    ! u_lk^dc = 2 * t_lk^dc - t_kl^dc 
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate the integrals g_ld_kc = g_ldkc 
+!
+      call deallocator(g_ld_kc,n_ov,n_ov)
+!
+!    Allocate the intermediate Y_k_j = F_kj + sum_cdl u_lj^dc g_ldkc = F_k_j + sum_cdl g_k_dlc * u_dlc_j and set to zero 
+!
+      call allocator(Y_k_j,n_occ,n_occ)
+      Y_k_j = zero 
+!
+!     Copy the occupied-occupied Fock matrix, such that Y_k_j = F_kj 
+!
+      call dcopy(n_oo,F_i_j,1,Y_k_j,1)
+!
+!     Add sum_cdl g_k_dlc * u_dlc_j to Y_k_j, such that Y_k_j = F_k_j + sum_cdl g_k_dlc * u_dlc_j
+!
+      call dgemm('N','N',n_occ,n_occ,n_ovv,&
+                 one,g_k_dlc,n_occ,u_dlc_j,n_ovv,&
+                 one,Y_k_j,n_occ)
+!
+!     Deallocate u_dlc_j and g_k_dlc 
+!
+      call deallocator(u_dlc_j,n_ovv,n_occ)
+      call deallocator(g_k_dlc,n_occ,n_ovv)
+!
+!     Allocate t_aib_k = t_ik^ab and set to zero 
+!
+      call allocator(t_aib_k,n_ovv,n_occ)
+      t_aib_k = zero
+!
+!     Set the value of t_aib_k = t_ik^ab 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do k = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  aib  = index_three(a,i,b,n_vir,n_occ)
+                  ai   = index_two(a,i,n_vir)
+                  bk   = index_two(b,k,n_vir)
+                  aibk = index_packed(ai,bk)
+!
+!                 Set the value of t_aib_k 
+!
+                  t_aib_k(aib,k) = t2am(aibk,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Allocate the E2.2 term and set to zero 
+!
+      call allocator(omega2_aib_j,n_ovv,n_occ)
+      omega2_aib_j = zero
+!
+!     Calculate the E2.2 term, - sum_k t_aib_k Y_k_j = - sum_k t_ik^ab (F_kj + sum_cdl g_ldkc u_lj^dc)
+!
+      call dgemm('N','N',n_ovv,n_occ,n_occ,&
+                  -one,t_aib_k,n_ovv,Y_k_j,n_occ,&
+                  zero,omega2_aib_j,n_ovv)
+!
+!     Deallocate t_aib_k and Y_k_j 
+!
+      call deallocator(t_aib_k,n_ovv,n_occ)
+      call deallocator(Y_k_j,n_occ,n_occ)
+!
+!     Add the E2.2 term to the omega vector 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a,i,n_vir)
+                  bj   = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+!
+                  aib  = index_three(a,i,b,n_vir,n_occ)
+!
+!                 Restrict the indices to avoid adding (ai,bj) and (bj,ai), as they
+!                 are identical in packed indices
+!
+                  if (ai .ge. bj) then
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_aib_j(aib,j)
+                  endif
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate the E2.2 term 
+!
+      call deallocator(omega2_aib_j,n_ovv,n_occ)
+!
+!     Print the omega vector, having added both the E2.1 and E2.2 terms
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after E2.2 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
       endif 
 !
    end subroutine mlcc_omega_e2
