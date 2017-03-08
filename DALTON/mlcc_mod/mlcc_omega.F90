@@ -30,6 +30,7 @@ contains
 !
 !     II. The doubles contribution to < mu | exp(-T) H exp(T) | R >
 !
+      write(luprint,*) 'Calculating the doubles omega vector...'
       call mlcc_omega_e2
       call mlcc_omega_d2
       call mlcc_omega_c2
@@ -119,7 +120,7 @@ contains
       write(luprint,*) 'Required',required
       write(luprint,*) 'Available',available
 !
-      if (debug) required = 1500000
+   !   if (debug) required = 1500000
 !
       max_batch_length = 0 ! Initilization of unset variables 
       n_batch = 0
@@ -493,7 +494,9 @@ contains
 !
       implicit none 
 !
-      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld
+      logical :: debug = .true.
+!
+      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai
 !
       real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! To store the E2.1 term temporarily
       real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! To store the E2.2 term temporarily
@@ -502,6 +505,8 @@ contains
       real(dp), dimension(:,:), pointer :: g_kdl_c => null() ! g_ldkc 
       real(dp), dimension(:,:), pointer :: u_b_kdl => null() ! u_kl^bd 
       real(dp), dimension(:,:), pointer :: F_b_c => null() ! F_bc, the virtual-virtual Fock matrix
+      real(dp), dimension(:,:), pointer :: X_b_c => null() ! An intermediate, see below for definition
+      real(dp), dimension(:,:), pointer :: t_c_jai => null() ! t_ij^ac 
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -512,7 +517,7 @@ contains
 !
       call read_cholesky_ia(L_kc_J)
 !
-!     Allocate g_ck_dl = g_ckdl and set to zero 
+!     Allocate g_ld_kc = g_ldkc and set to zero 
 !
       call allocator(g_ld_kc,n_ov,n_ov)
       g_ld_kc = zero
@@ -572,18 +577,106 @@ contains
 !
       call deallocator(g_ld_kc,n_ov,n_ov)
 !
-!     Allocate F_b_c = F_bc and set to zero 
+!     Have the pointer F_b_c point to existing F_a_b (using the former for convenience)
 !
-      call allocator(F_b_c,n_vir,n_vir)
-      F_b_c = zero 
+      F_b_c => F_a_b
 !
-!     Set the virtual-virtual Fock matrix F_b_c
+!     Allocate the intermediate X_b_c = F_bc - sum_dkl g_ldkc u_kl^bd and set to zero
 !
-      do b = 1,n_vir
-         do c = 1,n_vir
-            !
+      call allocator(X_b_c,n_vir,n_vir)
+      X_b_c = zero 
+!
+!     Copy the virtual-virtual Fock matrix into the intermediate 
+!
+      call dcopy(n_vv,F_b_c,1,X_b_c,1) ! X_b_c = F_bc 
+!
+!     Add the second contribution, - sum_dkl g_ldkc u_kl^bd = - sum_dkl u_b_kdl * g_kdl_c, to X_b_c
+!
+      call dgemm('N','N',n_vir,n_vir,n_oov,&
+                  -one,u_b_kdl,n_vir,g_kdl_c,n_oov,&
+                  one,X_b_c,n_vir)
+!
+!     Deallocate u_b_kdl & g_kdl_c
+!
+      call deallocator(u_b_kdl,n_vir,n_oov)
+      call deallocator(g_kdl_c,n_oov,n_vir)
+!
+!     Allocate t_c_jai = t_ij^ac and set to zero
+!
+      call allocator(t_c_jai,n_vir,n_oov)
+      t_c_jai = zero 
+!
+!     Set the value of t_c_jai = t_ij^ac 
+!
+      do c = 1,n_vir
+         do j = 1,n_occ
+            do a = 1,n_vir
+               do i = 1,n_occ
+!
+!                 Calculate the necessary indices
+!
+                  jai  = index_three(j,a,i,n_occ,n_vir)
+                  ai   = index_two(a,i,n_vir)
+                  cj   = index_two(c,j,n_vir)
+                  aicj = index_packed(ai,cj)
+!
+!                 Set the value of t_c_jai 
+!
+                  t_c_jai(c,jai) = t2am(aicj,1)
+!
+               enddo
+            enddo
          enddo
       enddo
+!
+!     Allocate the E2.1 term and set to zero
+!
+      call allocator(omega2_b_jai,n_vir,n_oov)
+      omega2_b_jai = zero 
+!
+!     Calculate the E2.1 term 
+!
+      call dgemm('N','N',n_vir,n_oov,n_vir,&
+                  one,X_b_c,n_vir,t_c_jai,n_vir,&
+                  zero,omega2_b_jai,n_vir)
+!
+!     Add the E2.1 term to the omega vector 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  jai  = index_three(j,a,i,n_occ,n_vir)
+                  ai   = index_two(a,i,n_vir)
+                  bj   = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+!
+!                 Add the E2.1 term to omega 
+!
+                  omega2(aibj,1) = omega2(aibj,1) + omega2_b_jai(b,jai)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate the E2.1 term, the X intermediate, and the reordered amplitudes 
+!
+      call deallocator(omega2_b_jai,n_vir,n_oov)
+      call deallocator(X_b_c,n_vir,n_vir)
+      call deallocator(t_c_jai,n_vir,n_oov)
+!
+!     Print the E2.1 term 
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after B1 term has been added:'
+         write(luprint,*)
+         call vec_print(omega2,n_ov_ov_packed,1)
+      endif 
 !
    end subroutine mlcc_omega_e2
 !
