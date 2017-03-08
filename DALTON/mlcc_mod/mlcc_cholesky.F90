@@ -214,15 +214,17 @@ contains
 !
    subroutine get_cholesky_ai(L_ai_J)
 !
-!  Purpose: Read and T1-transform ia cholesky vectors
+!  Purpose: Read and T1-transform cholesky_ai vectors
 !           L_ai_J_T1 = L_ia_J - sum_j t_aj*L_ji_J + sum_b t_bi*L_ab_J
 !                       - sum_(bj)t_aj*t_bi*L_jb_J
+!
+!  Required memory: 2*n_vir*n_J*batch_length + n_vir*n_occ*n_J
 !
       implicit none
 !
       double precision L_ai_J(n_ov,n_J)
 !
-      integer                          :: required,available,max_batch_length,n_batch
+      integer                          :: required,available,max_batch_length,n_batch,L_off
       integer                          :: a_batch,batch_start,batch_end,batch_length
       integer                          :: a,b,J,i,ai,Ja,ba,k,ik,iJ,kb,kJ
       real(dp),dimension(:,:),pointer  :: L_ba_J => null()
@@ -262,17 +264,17 @@ contains
 !
       do a_batch=1,n_batch
 !
+!        Get start, end and length of batch
+!
+         call one_batch_limits(batch_start,batch_end,a_batch,max_batch_length,n_vir)
+         batch_length=batch_end-batch_start+1
+!
 !        Allocate L_ab_J and L_Ja_b
 !
          call allocator(L_ba_J,n_vir*batch_length,n_J)
          call allocator(L_Ja_b,n_vir*n_J,batch_length)
          L_ba_J=zero
          L_Ja_b=zero
-!
-!        Get start, end and length of batch
-!
-         call one_batch_limits(batch_start,batch_end,a_batch,max_batch_length,n_vir)
-         batch_length=batch_end-batch_start+1
 !
 !        Read ab cholesky vectors, batching over a
 !  
@@ -295,20 +297,22 @@ contains
             enddo
          enddo
 !
-!        Add to L_Ja_i
+!        sum_b L_Ja_b*t_b_i = L_Ja_i 
+!        
+         L_off=index_two(1,batch_start,n_J)
 !
          call dgemm('N','N',batch_length*n_J,n_occ,n_vir &
             ,one,L_Ja_b,batch_length*n_J,t1am,n_vir &
-            , one, L_Ja_i(index_two(1,batch_start,n_J),1),n_vir*n_J)
+            , one, L_Ja_i(L_off,1),n_vir*n_J)
 !
 !        Deallocate L_ab_J and L_Ja_b
 !
          call deallocator(L_ba_J,n_vir*batch_length,n_J)
          call deallocator(L_Ja_b,n_vir*n_J,batch_length)
 !
-      enddo
+      enddo ! batching over a
 !
-!     Add terms to T1-transformed ai cholesky vector 
+!     Add terms to T1-transformed cholesky_ai vector 
 !
       do i = 1,n_occ
          do a = 1,n_vir
@@ -317,7 +321,7 @@ contains
 !              Needed indices
 !
                Ja=index_two(J,a,n_J)
-               ai=index_two(a,i,n_J)
+               ai=index_two(a,i,n_vir)
 !
                L_ai_J(ai,J)=L_ai_J(ai,J)+L_Ja_i(Ja,i)
 !
@@ -343,7 +347,7 @@ contains
       L_ik_J = zero 
       L_k_iJ = zero
 !  
-!     Read ij cholesky vectors
+!     Read cholesky_ij vectors
 !
       call read_cholesky_ij(L_ik_J)
 !
@@ -363,6 +367,9 @@ contains
             enddo
          enddo
       enddo
+!
+!     sum_k t_a_k*L_k_iJ = L_a_iJ
+!
       call dgemm('N','N',n_vir,n_occ*n_J,n_occ &
          ,-one,t1am,n_vir,L_k_iJ,n_occ &
          ,zero,L_a_iJ,n_vir)
@@ -400,18 +407,18 @@ contains
 !
       call read_cholesky_ia(L_kb_J)
 !
-!     Reorder L_kb_J L_kJ_b
+!     Reorder L_kb_J to L_kJ_b
 !
       do k = 1,n_occ
-         do b=1,n_vir
-            do J=1,n_J
+         do b = 1,n_vir
+            do J = 1,n_J
 !
 !              Needed indices
 !
-               kb=index_two(k,b,n_occ)
-               kJ=index_two(k,J,n_occ)
+               kb = index_two(k,b,n_occ)
+               kJ = index_two(k,J,n_occ)
 !
-               L_kJ_b(kJ,b)=L_kb_J(kb,J)
+               L_kJ_b(kJ,b) = L_kb_J(kb,J)
 !
             enddo
          enddo
@@ -424,6 +431,7 @@ contains
 !     Allocate L_kJ_i for dgemm
 !
       call allocator(L_kJ_i,n_occ*n_J,n_occ)
+      L_kJ_i = zero
 !
 !     sum_b L_kJ_b*t_b_i = L_kJ_i
 !
@@ -438,6 +446,7 @@ contains
 !     Allocate L_k_iJ
 !  
       call allocator(L_k_iJ,n_occ,n_occ*n_J)
+      L_k_iJ = zero
 !
 !     Reorder L_kJ_i to L_k_iJ    
 !
@@ -447,10 +456,10 @@ contains
 !
 !              Needed indices
 !
-               kJ=index_two(k,J,n_occ)
-               iJ=index_two(i,J,n_occ)
+               kJ = index_two(k,J,n_occ)
+               iJ = index_two(i,J,n_occ)
 !
-               L_k_iJ(k,iJ)=L_kJ_i(kJ,i)
+               L_k_iJ(k,iJ) = L_kJ_i(kJ,i)
 !
             enddo
          enddo
@@ -463,6 +472,7 @@ contains
 !     Allocate L_a_iJ for dgemm
 !
       call allocator(L_a_iJ,n_vir,n_occ*n_J)
+      L_a_iJ = zero
 !      
 !     sum_k t_a_k*L_k_iJ = L_a_iJ
 !
@@ -478,10 +488,10 @@ contains
 !
 !              Needed indices
 !
-               iJ=index_two(i,J,n_occ)
-               ai=index_two(a,i,n_vir)
+               iJ = index_two(i,J,n_occ)
+               ai = index_two(a,i,n_vir)
 !
-               L_ai_J(ai,J)=L_ai_J(ai,J)+L_a_iJ(a,iJ)
+               L_ai_J(ai,J) = L_ai_J(ai,J)+L_a_iJ(a,iJ)
             enddo
          enddo
       enddo
@@ -512,6 +522,8 @@ contains
 !    
       call allocator(L_ia_J,n_ov,n_J)
       call allocator(L_iJ_a,n_occ*n_J,n_vir)
+      L_ia_J = zero
+      L_iJ_a = zero
 !
 !     Reading needed cholesky vectors
 !
@@ -520,16 +532,16 @@ contains
 !
 !     Reorder L_ia_J to L_iJ_a
 !
-      do i=1,n_occ
-         do J=1,n_J
-            do a=1,n_vir
+      do i = 1,n_occ
+         do J = 1,n_J
+            do a = 1,n_vir
 !              
 !              Needed indices
 !
-               iJ=index_two(i,J,n_occ)
-               ia=index_two(i,a,n_occ)
+               iJ = index_two(i,J,n_occ)
+               ia = index_two(i,a,n_occ)
 !
-               L_iJ_a(iJ,a)=L_ia_J(ia,J)
+               L_iJ_a(iJ,a) = L_ia_J(ia,J)
             enddo
          enddo
       enddo
@@ -541,25 +553,26 @@ contains
 !     Allocate L_iJ_k
 !
       call allocator(L_iJ_k,n_occ*n_J,n_occ)
+      L_iJ_k=zero
 !
 !     T1-transformation
 !
       call dgemm('N','N',n_occ*n_J,n_occ,n_vir &
          , one,L_iJ_a,n_occ*n_J,t1am,n_vir &
-         , one,L_iJ_k,n_occ*n_J)
+         , zero,L_iJ_k,n_occ*n_J)
 !
 !     Place terms from L_iJ_k into L_ij_J
 !
-      do i=1,n_occ
-         do k=1,n_occ
-            do J=1,n_J
+      do i = 1,n_occ
+         do k = 1,n_occ
+            do J = 1,n_J
 !              
 !              Needed indices
 !
-               iJ=index_two(i,J,n_occ)
-               ik=index_two(i,k,n_occ)
+               iJ = index_two(i,J,n_occ)
+               ik = index_two(i,k,n_occ)
 !
-               L_ij_J(ik,J)=L_ij_J(ik,J)+L_iJ_k(iJ,k)
+               L_ij_J(ik,J) = L_ij_J(ik,J)+L_iJ_k(iJ,k)
             enddo
          enddo
       enddo

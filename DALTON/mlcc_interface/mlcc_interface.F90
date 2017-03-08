@@ -401,7 +401,7 @@ subroutine hf_reader
 !
 !  Read cholesky vectors
 !
-   call read_cholesky_ij(L_ij_J)
+   call get_cholesky_ij(L_ij_J)
 !
 !  g_ij_kl = sum_J(L_ij_J*L_J_kl)
 !
@@ -437,7 +437,7 @@ subroutine hf_reader
 !
 !     Reading Cholesky vector L_ia_J
 !
-      call read_cholesky_ia(L_ia_J)
+      call get_cholesky_ia(L_ia_J)
 !
 !     g_ia_jk
 !
@@ -451,7 +451,7 @@ subroutine hf_reader
 !
 !     Reading Cholesky vector L_ai_J
 !
-      call read_cholesky_ai(L_ai_J)
+      call get_cholesky_ai(L_ai_J)
 !
 !     g_ai_jk
 !
@@ -520,7 +520,7 @@ subroutine hf_reader
 !
 !        Read Cholesky vectors
 !
-         call read_cholesky_ab(L_ab_J,batch_start,batch_end,n_vir*batch_length)
+         call get_cholesky_ab(L_ab_J,batch_start,batch_end,n_vir*batch_length,.false.)
 !
 !        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
@@ -549,8 +549,8 @@ subroutine hf_reader
 !
 !     Reading Cholesky vector L_ia_J and L_ai_J
 !
-      call read_cholesky_ia(L_ia_J)
-      call read_cholesky_ai(L_ai_J)
+      call get_cholesky_ia(L_ia_J)
+      call get_cholesky_ai(L_ai_J)
       call dgemm('N','T',n_ov,n_ov,n_J,one,L_ai_J,n_ov,L_ia_J,n_ov,zero,g_ai_jb,n_ov)
 !
 !     Deallocate L_ia_J

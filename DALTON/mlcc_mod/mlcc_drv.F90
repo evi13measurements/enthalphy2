@@ -15,6 +15,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    use mlcc_utilities
    use mlcc_input_data
    use mlcc_t2_init
+   use mlcc_fock
 !
 !  mlcc3 driver
 !  Author Rolf H. Myhre
@@ -66,7 +67,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    call allocator(F_i_a,n_occ,n_vir)
    call allocator(F_a_i,n_vir,n_occ)
    call allocator(F_a_b,n_vir,n_vir)
-   call mlcc_fock
+   call mlcc_get_fock
    call t2_init
 !
 !  Calculate the omega vector 
