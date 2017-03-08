@@ -178,6 +178,33 @@ contains
 !
    end subroutine vec_print
 !
+   subroutine vec_print_packed(vec,dim)
+!
+!     Purpose: prints a vector with (aibj) indices, for t2am and omega2 in particular (replace by cleverer routine later...)
+!
+      implicit none
+!
+      integer a,i,b,j,ai,bj,aibj
+      integer dim
+      double precision vec(dim,1)
+!
+      do i = 1,n_occ
+         do a = 1,n_vir
+            do j = 1,n_occ
+               do b = 1,n_vir
+!
+                  ai = index_two(a,i,n_vir)
+                  bj = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+                  write(luprint,*) aibj,1,vec(aibj,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+   end subroutine vec_print_packed
+!
    subroutine mlcc_cleanup(mat,M,N)
 !
 !  Purpose: Cleanup of matrices  Sarai: Is this threshold to high?

@@ -791,6 +791,22 @@ C (EFK, 2017) Print omega vector for debug of MLCC code
             WRITE(LUPRI,*) A,I,WORK(KOMEG1+NAI-1)
           ENDDO
         ENDDO
+C (EFK, 2017) Print omega vector for debug of MLCC code
+        WRITE(LUPRI,*)
+        WRITE(LUPRI,*) 'Omega(aibj,1):'
+        WRITE(LUPRI,*)
+        DO I = 1,NRHFT
+          DO A = 1,NVIRT
+            DO J = 1,NRHFT 
+              DO B = 1,NVIRT 
+                NAI = NVIRT*(I-1)+A
+                NBJ = NVIRT*(J-1)+B
+                NAIBJ = (max(nai,nbj)*(max(nai,nbj)-3)/2) + nai + nbj
+                WRITE(LUPRI,*) NAIBJ,1,WORK(KOMEG2+NAIBJ-1)
+              ENDDO
+            ENDDO
+          ENDDO
+        ENDDO
 C
   240    CONTINUE
 C
