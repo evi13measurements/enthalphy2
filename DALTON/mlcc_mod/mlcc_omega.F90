@@ -23,10 +23,10 @@ contains
 !
 !     I. The singles contribution to < mu | exp(-T) H exp(T) | R >
 !
-    !  call mlcc_omega_a1
-    !  call mlcc_omega_b1
-    !  call mlcc_omega_c1
-    !  call mlcc_omega_d1 ! Eirik: Seg. fault somewhere in these routines? I get an error in e2 when the omega1 is calculated                         
+      call mlcc_omega_a1
+      call mlcc_omega_b1
+      call mlcc_omega_c1
+      call mlcc_omega_d1 ! Eirik: Seg. fault somewhere in these routines? I get an error in e2 when the omega1 is calculated                         
 !
 !     II. The doubles contribution to < mu | exp(-T) H exp(T) | R >
 !
@@ -454,7 +454,7 @@ contains
 !
 !  Allocation
 !
-   call allocator(F_a_i,n_vir,n_occ)
+  ! call allocator(F_a_i,n_vir,n_occ)
 !
 !  MO Fock matrix
 !
@@ -469,11 +469,11 @@ contains
 !
 !  Add to omega
 !
-   call daxpy(n_ov,one,F_a_i,1,omega1,1)
+  ! call daxpy(n_ov,one,F_a_i,1,omega1,1)
 !
 !  Deallocation
 !
-   call deallocator(F_a_i,n_vir,n_occ)
+  ! call deallocator(F_a_i,n_vir,n_occ)
 !
    end subroutine mlcc_omega_d1
 !
