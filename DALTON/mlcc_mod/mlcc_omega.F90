@@ -21,20 +21,22 @@ contains
 !
       implicit none
 !
+      integer :: memory_left_before, memory_left_after
+!
 !     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
 !
       call mlcc_omega_a1
       call mlcc_omega_b1
       call mlcc_omega_c1
-      call mlcc_omega_d1 
+      call mlcc_omega_d1     
 !
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
       call mlcc_omega_e2
-     ! call mlcc_omega_d2 
-     ! call mlcc_omega_c2
+      call mlcc_omega_d2 
+   !   call mlcc_omega_c2
 !
-     ! call mlcc_omega_a2
+    !  call mlcc_omega_a2
      ! call mlcc_omega_b2
 !
    end subroutine mlcc_omega_calc
@@ -215,7 +217,6 @@ contains
       call deallocator(u_ckd_i,n_ovv,n_occ)
       call deallocator(g_a_ckd,batch_length,n_ovv)
       call deallocator(L_kc_J,n_ov,n_J)
-      call deallocator(u_ckd_i,n_ovv,n_occ)
 !
    end subroutine mlcc_omega_a1
 !
@@ -426,7 +427,8 @@ contains
 !
 !  Deallocation
 !
-   call deallocator(F_ck,n_ov,1)
+  ! call deallocator(F_ck,n_ov,1) ! wrong order; I don't think this makes any difference...
+  call deallocator(F_ck,1,n_ov)
    call deallocator(u_ck_ai,n_ov,n_ov)
 
    end subroutine mlcc_omega_c1
@@ -438,12 +440,7 @@ contains
 !
 !  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Mars 2017
 !
-   use mlcc_data
-   use mlcc_utilities
-   use mlcc_workspace
-!
    implicit none
-   integer :: a,i, ai
 !
 !  Add F_a_i to omega
 !
@@ -484,7 +481,6 @@ contains
       real(dp), dimension(:,:), pointer :: g_ld_kc      => null() ! g_ldkc 
       real(dp), dimension(:,:), pointer :: g_kdl_c      => null() ! g_ldkc 
       real(dp), dimension(:,:), pointer :: u_b_kdl      => null() ! u_kl^bd 
-      real(dp), dimension(:,:), pointer :: F_b_c        => null() ! F_bc, the virtual-virtual Fock matrix
       real(dp), dimension(:,:), pointer :: X_b_c        => null() ! An intermediate, see below for definition
       real(dp), dimension(:,:), pointer :: t_c_jai      => null() ! t_ij^ac 
 !
@@ -513,6 +509,7 @@ contains
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_kc_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ld_kc,n_ov)
+
 !
 !     Deallocate the Cholesky vector L_kc_J
 !
@@ -530,7 +527,7 @@ contains
 !
 !     Determine u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
 !
-      do b = 1,n_vir ! Use as though "c" for g_kdl_c term 
+      do c = 1,n_vir ! Use as though "b" for g_kdl_c term 
          do k = 1,n_occ
             do d = 1,n_vir
                do l = 1,n_occ
@@ -561,18 +558,12 @@ contains
 !
 !     Deallocate the unordered integrals g_ld_kc = g_ldkc
 !
-      call deallocator(g_ld_kc,n_ov,n_ov) ! Eirik: for optimization, it may be possible to keep these integrals in memory,
-                                          !        because they are also needed for the E2.2 term. 
+      call deallocator(g_ld_kc,n_ov,n_ov) !
+                                          !   It is probably better to simply reorder g_kdl_c to g_k_dlc
+                                          !   in the calculation of the E2.2 term (requires less memory).
                                           !
-                                          !        It is probably even better to simply reorder g_kdl_c to g_k_dlc
-                                          !        in the calculation of the E2.2 term (requires less memory).
+                                          !   For now (8 Mar 2017), I'll just keep it simple & stupid.
                                           !
-                                          !        For now (8 Mar 2017), I'll just keep it simple & stupid.
-                                          !
-!
-!     Have the pointer F_b_c point to existing F_a_b (using the former for convenience)
-!
-      F_b_c => F_a_b
 !
 !     Allocate the intermediate X_b_c = F_bc - sum_dkl g_ldkc u_kl^bd and set to zero
 !
@@ -581,7 +572,7 @@ contains
 !
 !     Copy the virtual-virtual Fock matrix into the intermediate 
 !
-      call dcopy(n_vv,F_b_c,1,X_b_c,1) ! X_b_c = F_bc 
+      call dcopy(n_vv,F_a_b,1,X_b_c,1) ! X_b_c = F_bc 
 !
 !     Add the second contribution, - sum_dkl g_ldkc u_kl^bd = - sum_dkl u_b_kdl * g_kdl_c, to X_b_c
 !
@@ -589,7 +580,7 @@ contains
                   -one,u_b_kdl,n_vir,g_kdl_c,n_oov,&
                   one,X_b_c,n_vir)
 !
-!     Deallocate u_b_kdl & g_kdl_c
+!     Deallocate u_b_kdl and g_kdl_c
 !
       call deallocator(u_b_kdl,n_vir,n_oov)
       call deallocator(g_kdl_c,n_oov,n_vir)
@@ -987,43 +978,43 @@ contains
 !
 !     Form the D2.3 term 1/4 * sum_kc Z_ai_kc u_kc_bj = 1/4 * sum_kc Z_ai_kc(ai,kc) * u_ai_ld^T(kc,bj)
 !
-      call dgemm('N','T',n_ov,n_ov,n_ov,&
-                  one/four,omega2_ai_bj,n_ov,u_ai_ld,n_ov,& 
-                  zero,omega2_ai_bj,n_ov)
-!
-!     Add the D2.3 term to the omega vector 
-!
-      do a = 1,n_vir
-         do i = 1,n_occ
-            do b = 1,n_vir
-               do j = 1,n_occ
-!
-!                 Calculate the necessary indices 
-!
-                  ai   = index_two(a,i,n_vir)
-                  bj   = index_two(b,j,n_vir)
-                  aibj = index_packed(ai,bj)
-!
-!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
-!                 as they are identical in packed indices
-!
-                  if (ai .ge. bj) then
-                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
-                  endif
-!
-               enddo
-            enddo
-         enddo
-      enddo
-!
-!     Print the omega vector, having added the D2.3 term 
-!
-      if (debug) then 
-         write(luprint,*) 
-         write(luprint,*) 'Omega(aibj,1) after D2.3 term has been added:'
-         write(luprint,*)
-         call vec_print_packed(omega2,n_ov_ov_packed)
-      endif
+!       call dgemm('N','T',n_ov,n_ov,n_ov,&
+!                   one/four,omega2_ai_bj,n_ov,u_ai_ld,n_ov,& 
+!                   zero,omega2_ai_bj,n_ov)
+! !
+! !     Add the D2.3 term to the omega vector 
+! !
+!       do a = 1,n_vir
+!          do i = 1,n_occ
+!             do b = 1,n_vir
+!                do j = 1,n_occ
+! !
+! !                 Calculate the necessary indices 
+! !
+!                   ai   = index_two(a,i,n_vir)
+!                   bj   = index_two(b,j,n_vir)
+!                   aibj = index_packed(ai,bj)
+! !
+! !                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+! !                 as they are identical in packed indices
+! !
+!                   if (ai .ge. bj) then
+!                      omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+!                   endif
+! !
+!                enddo
+!             enddo
+!          enddo
+!       enddo
+! !
+! !     Print the omega vector, having added the D2.3 term 
+! !
+!       if (debug) then 
+!          write(luprint,*) 
+!          write(luprint,*) 'Omega(aibj,1) after D2.3 term has been added:'
+!          write(luprint,*)
+!          call vec_print_packed(omega2,n_ov_ov_packed)
+!       endif
 !
    end subroutine mlcc_omega_d2
 !
