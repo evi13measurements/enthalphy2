@@ -546,7 +546,6 @@ subroutine hf_reader
       call allocator(L_ai_J,n_ov,n_J)
       call allocator(L_ia_J,n_ov,n_J)
 !
-!
 !     Reading Cholesky vector L_ia_J and L_ai_J
 !
       call get_cholesky_ia(L_ia_J)

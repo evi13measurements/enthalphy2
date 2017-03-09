@@ -14,7 +14,6 @@ module mlcc_workspace
    integer, private :: work_remains = 0
    integer, private :: work_used    = 0
 !
-!
 contains
 !
    subroutine work_init(mem)
@@ -69,11 +68,10 @@ contains
 !
    subroutine deallocator(elm,M,N)
 !
-!
-!     Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!     January 2017
+!     Deallocator 
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
 !  
-!     Purpose: dallocation and update of memory info
+!     Deallocation and update of memory information
 !  
       implicit none
 !  
@@ -90,8 +88,8 @@ contains
          stop
       endif
 !  
-      work_remains = work_remains+4*size
-      work_used = work_used-4*size
+      work_remains = work_remains + 4*size
+      work_used    = work_used - 4*size
 !
    end subroutine deallocator
 !
@@ -154,7 +152,7 @@ contains
 !
    end subroutine deallocator_int
 !
-   integer function get_available
+   integer function get_available()
 !
 !     Get available memory 
 !     Written by Eirik F. Kjønstad and Sarai F. Folkestad, Mar 2017

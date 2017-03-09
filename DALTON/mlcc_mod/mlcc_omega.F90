@@ -21,21 +21,21 @@ contains
 !
       implicit none
 !
-!     I. The singles contribution to < mu | exp(-T) H exp(T) | R >
+!     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
 !
       call mlcc_omega_a1
       call mlcc_omega_b1
       call mlcc_omega_c1
       call mlcc_omega_d1 
 !
-!     II. The doubles contribution to < mu | exp(-T) H exp(T) | R >
+!     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
-      write(luprint,*) 'Calculating the doubles omega vector...'
       call mlcc_omega_e2
-     ! call mlcc_omega_d2 ! Eirik: I am working on this - commenting to avoid errors...
-      call mlcc_omega_c2
-      call mlcc_omega_a2
-      call mlcc_omega_b2
+     ! call mlcc_omega_d2 
+     ! call mlcc_omega_c2
+!
+     ! call mlcc_omega_a2
+     ! call mlcc_omega_b2
 !
    end subroutine mlcc_omega_calc
 !
@@ -877,13 +877,15 @@ contains
 !
       implicit none 
 !
-      integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld
+      logical :: debug = .true.
 !
-      real(dp), dimension(:,:), pointer :: L_kc_J       => null()    ! L_kc^J 
-      real(dp), dimension(:,:), pointer :: g_ld_kc      => null()    ! g_ldkc 
-      real(dp), dimension(:,:), pointer :: L_ld_kc      => null()    ! L_ldkc = 2 * g_ldkc - g_lckd 
-      real(dp), dimension(:,:), pointer :: u_ai_ld      => null()    ! u_il^ad = 2 * t_il^ad - t_li^ad 
-      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null()    ! For storing the D2.3 term temporarily
+      integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld,aibj,bj
+!
+      real(dp), dimension(:,:), pointer :: L_kc_J       => null() ! L_kc^J 
+      real(dp), dimension(:,:), pointer :: g_ld_kc      => null() ! g_ldkc 
+      real(dp), dimension(:,:), pointer :: L_ld_kc      => null() ! L_ldkc = 2 * g_ldkc - g_lckd 
+      real(dp), dimension(:,:), pointer :: u_ai_ld      => null() ! u_il^ad = 2 * t_il^ad - t_li^ad 
+      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! For storing the D2.3 term temporarily
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -933,8 +935,8 @@ contains
          enddo
       enddo
 !
-!     Deallocate g_ld_kc & L_kc_J ! Eirik: we should consider keeping the latter in memory if possible,
-!                                   as it must be used later to form the integrals g_aikc 
+!     Deallocate g_ld_kc and L_kc_J ! Eirik: we should consider keeping the latter in memory if possible,
+!                                            as it must be used later to form the integrals g_aikc 
 !
       call deallocator(g_ld_kc,n_ov,n_ov)
       call deallocator(L_kc_J,n_ov,n_J)
@@ -977,15 +979,51 @@ contains
       call allocator(omega2_ai_bj,n_ov,n_ov)
       omega2_ai_bj = zero 
 !
-!     Form the temporary vector sum_dl u_ai_ld L_ld_kc and place it in omega2_ai_bj ("bj = ck")
+!     Form the temporary vector sum_dl u_ai_ld L_ld_kc and place it in omega2_ai_bj
 !
       call dgemm('N','N',n_ov,n_ov,n_ov,&
                   one,u_ai_ld,n_ov,L_ld_kc,n_ov,&
+                  zero,omega2_ai_bj,n_ov)          ! Think of the result as an intermediate, say Z_ai_kc 
+!
+!     Form the D2.3 term 1/4 * sum_kc Z_ai_kc u_kc_bj = 1/4 * sum_kc Z_ai_kc(ai,kc) * u_ai_ld^T(kc,bj)
+!
+      call dgemm('N','T',n_ov,n_ov,n_ov,&
+                  one/four,omega2_ai_bj,n_ov,u_ai_ld,n_ov,& 
                   zero,omega2_ai_bj,n_ov)
 !
-!     Form the D2.3 term by dgemm (to do!)
+!     Add the D2.3 term to the omega vector 
 !
-!..... Remember: transpose u!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a,i,n_vir)
+                  bj   = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+!
+!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+!                 as they are identical in packed indices
+!
+                  if (ai .ge. bj) then
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                  endif
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Print the omega vector, having added the D2.3 term 
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after D2.3 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif
 !
    end subroutine mlcc_omega_d2
 !
