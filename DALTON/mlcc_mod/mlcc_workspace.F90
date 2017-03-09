@@ -1,231 +1,166 @@
 module mlcc_workspace
 !
+!  MLCC Workspace 
+!  Written by Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad, Jan 2017
 !
-!  mlcc mod work definitions
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
-!
-!  Purpose: define pointers needed for memory management
+!  A collection of subroutines for memory management and monitoring
 !
    use mlcc_types
    use mlcc_data
 !   
    implicit none
 !
-   integer, private                       :: work_length = 0
-   integer, private                       :: work_remains = 0
-   integer, private                       :: work_used = 0
-!
+   integer, private :: work_length  = 0
+   integer, private :: work_remains = 0
+   integer, private :: work_used    = 0
 !
 contains
 !
-subroutine work_init(mem)
+   subroutine work_init(mem)
 !
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
+!     Work initilization 
+!     Written by Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad, Jan 2017
+!  
+!     Sets up memory management
 !
-!  Purpose: set up memory management
-!
-   implicit none
-!
-   integer, intent(in)                    :: mem
-!
-   work_length = mem
-   work_remains = mem
-   work_used = 0
-!
+      implicit none
+!  
+      integer, intent(in) :: mem
+!  
+      work_length  = mem
+      work_remains = mem
+      work_used    = 0  
 !   
-end subroutine work_init
+   end subroutine work_init
 !
+   subroutine allocator(elm,M,N)
 !
-subroutine allocator(elm,M,N)
-!
-!
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
-!
-!  Purpose: allocation and update of memory info
-!
-   implicit none
+!     Allocator 
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
 !  
-   integer, intent(in)                      :: M,N
-   real(dp), dimension(:,:), pointer        :: elm
-   integer                                  :: size
-   integer                                  :: stat, error
-!
-   size = M*N
-!
-   allocate(elm(M,N),stat = error)
-!
-   if (stat .ne. 0) then
-      print*,"error: couldn't allocate memory for array, size=",size
-      stop
-   endif
-!    
-!
-   work_remains = work_remains-4*size
-   work_used = work_used+4*size
-   if (work_remains .lt. 0) then
-      print*,"error: User specified memory too small"
-      stop
-   endif
-end subroutine allocator
-!
-!
-subroutine deallocator(elm,M,N)
-!
-!
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
-!
-!  Purpose: dallocation and update of memory info
-!
-   implicit none
-!
-   real(dp), dimension(:,:), pointer       :: elm
-   integer                                 :: stat, error
-   integer, intent(in)                     :: M, N
-   integer                                 :: size
-!
-   size = M*N
-!
-   deallocate(elm,stat = error)  
-   if (stat .ne. 0) then
-      print*,"error: couldn't deallocate array"
-      stop
-   endif
-! 
-   work_remains = work_remains+4*size
-   work_used = work_used-4*size
-!
-end subroutine deallocator
-!
-!
-subroutine allocator_int(elm,M,N)
-!
-!
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
-!
-!  Purpose: allocation and update of memory info
-!
-   implicit none
+!     Allocates array and updates memory variables
 !  
-   integer, intent(in)                      :: M,N
-   integer, dimension(:,:), pointer         :: elm
-   integer                                  :: size
-   integer                                  :: stat, error
-!
-   size = M*N
-!
-   allocate(elm(M,N),stat = error)
-!
-   if (stat .ne. 0) then
-      print*,"error: couldn't allocate memory for array, size=",size
-      stop
-   endif
-!    
-!
-   work_remains = work_remains-2*size
-   work_used = work_used+2*size
-   if (work_remains .lt. 0) then
-      print*,"error: User specified memory too small"
-      stop
-   endif
-end subroutine allocator_int
-!
-!
-subroutine deallocator_int(elm,M,N)
-!
-!
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
-!
-!  Purpose: dallocation and update of memory info
-!
-   implicit none
-!
-   integer, dimension(:,:), pointer        :: elm
-   integer                                 :: stat, error
-   integer, intent(in)                     :: M, N
-   integer                                 :: size
-!
-   size = M*N
-!
-   deallocate(elm,stat = error)  
-   if (stat .ne. 0) then
-      print*,"error: couldn't deallocate array"
-      stop
-   endif
-! 
-   work_remains = work_remains+2*size
-   work_used = work_used-2*size
-end subroutine deallocator_int
-!
-subroutine vec_allocator(elm,N)
-!
-!  (Eirik: These vector allocators will not be necessary... To remove...)
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
-!
-!  Purpose: allocation of vector and update of memory info
-!
-   implicit none
+      implicit none
+!     
+      integer, intent(in)                :: M,N
+      real(dp), dimension(:,:), pointer  :: elm
+      integer                            :: size
+      integer                            :: stat, error
 !  
-   integer, intent(in)                      :: N
-   real(dp), dimension(:), pointer          :: elm
-   integer                                  :: size
-   integer                                  :: stat, error
+      size = M*N
+!  
+      allocate(elm(M,N),stat = error)
+!  
+      if (stat .ne. 0) then
+         print*,"Error: couldn't allocate memory for array of size",size
+         stop
+      endif
+!       
+      work_remains = work_remains - 4*size
+      work_used    = work_used + 4*size
 !
-   size = N
+      if (work_remains .lt. 0) then
+         print*,"Error: user-specified memory too small"
+         stop
+      endif
 !
-   allocate(elm(N),stat = error)
+   end subroutine allocator
 !
-   if (stat .ne. 0) then
-      print*,"error: couldn't allocate memory for array, size=",size
-      stop
-   endif
-!    
+   subroutine deallocator(elm,M,N)
 !
-   work_remains = work_remains-size
-   work_used = work_used+size
-   if (work_remains .lt. 0) then
-      print*,"error: User specified memory too small"
-      stop
-   endif  
+!     Deallocator 
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
+!  
+!     Deallocation and update of memory information
+!  
+      implicit none
+!  
+      real(dp), dimension(:,:), pointer       :: elm
+      integer                                 :: stat, error
+      integer, intent(in)                     :: M, N
+      integer                                 :: size
+!  
+      size = M*N
+!  
+      deallocate(elm,stat = error)  
+      if (stat .ne. 0) then
+         print*,"error: couldn't deallocate array"
+         stop
+      endif
+!  
+      work_remains = work_remains + 4*size
+      work_used    = work_used - 4*size
 !
-end subroutine vec_allocator
+   end subroutine deallocator
 !
-subroutine vec_deallocator(elm,N)
+   subroutine allocator_int(elm,M,N)
 !
+!     Allocator for integer arrays  
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
+!  
+!     Allocation and update of memory information
+!  
+      implicit none
+!     
+      integer, intent(in)              :: M,N
+      integer, dimension(:,:), pointer :: elm
+      integer                          :: size
+      integer                          :: stat, error
+!  
+      size = M*N
+!  
+      allocate(elm(M,N),stat = error)
+!  
+      if (stat .ne. 0) then
+         print*,"Error: couldn't allocate memory for array of size",size
+         stop
+      endif 
+!  
+      work_remains = work_remains-2*size
+      work_used = work_used+2*size
+      if (work_remains .lt. 0) then
+         print*,"Error: user-specified memory too small"
+         stop
+      endif
 !
-!  Authors Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad
-!  January 2017
+   end subroutine allocator_int
 !
-!  Purpose: dallocation of vector and update of memory info
+   subroutine deallocator_int(elm,M,N)
 !
-   implicit none
+!     Deallocator for integer arrays 
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
+!  
+!     Deallocation and update of memory information
+!  
+      implicit none
+!  
+      integer, dimension(:,:), pointer :: elm
+      integer                          :: stat, error
+      integer, intent(in)              :: M, N
+      integer                          :: size
+!  
+      size = M*N
+!  
+      deallocate(elm,stat = error)  
+      if (stat .ne. 0) then
+         print*,"error: couldn't deallocate array"
+         stop
+      endif
+!  
+      work_remains = work_remains + 2*size
+      work_used    = work_used - 2*size
 !
-   real(dp), dimension(:), pointer         :: elm
-   integer                                 :: stat, error
-   integer, intent(in)                     :: N
-   integer                                 :: size
+   end subroutine deallocator_int
 !
-   size = N
+   integer function get_available()
 !
-   deallocate(elm,stat = error)  
-   if (stat .ne. 0) then
-      print*,"error: couldn't deallocate array"
-      stop
-   endif
-! 
-   work_remains = work_remains+size
-   work_used = work_used-size
+!     Get available memory 
+!     Written by Eirik F. Kjønstad and Sarai F. Folkestad, Mar 2017
+!  
+!     Returns the available memory 
+!  
+      get_available = work_remains
 !
-end subroutine vec_deallocator
+   end function get_available
 !
-integer function get_available()
-   get_available=work_remains
-end function get_available
-
 end module mlcc_workspace
