@@ -21,8 +21,6 @@ contains
 !
       implicit none
 !
-      integer :: memory_left_before, memory_left_after
-!
 !     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
 !
       call mlcc_omega_a1
@@ -51,9 +49,7 @@ contains
 !
       implicit none
 !
-      integer :: lucho_ia,lucho_ab
-!
-      integer :: i,j,a,idummy
+      integer :: i,j,a
 !
       integer :: required,available,max_batch_length,batch_dimension,n_batch
 !
@@ -136,15 +132,15 @@ contains
 !        For each batch, get the limits for the a index 
 !
          call one_batch_limits(a_begin,a_end,a_batch,max_batch_length,batch_dimension)
+         batch_length = a_end - a_begin + 1 
 !
 !        Allocate the Cholesky vector L_da_J = L_ad^J
 !
-         batch_length = a_end - a_begin + 1 
-         call allocator(L_da_J,batch_length*n_vir,n_J)
+         ad_dim = batch_length*n_vir ! Dimension of ad for the batch over index a 
+         call allocator(L_da_J,ad_dim,n_J)
 !
 !        Read in the reordered Cholesky vector L_da_J = L_ad^J 
 !
-         ad_dim = batch_length*n_vir ! Dimension of ad for the batch over index a 
          call read_cholesky_ab_reorder(L_da_J,a_begin,a_end,ad_dim)
 !
 !        Allocate g_da_kc = g_adkc and set to zero
@@ -590,7 +586,7 @@ contains
       call allocator(t_c_jai,n_vir,n_oov)
       t_c_jai = zero 
 !
-!     Set the value of t_c_jai = t_ij^ac 
+!     Determine t_c_jai = t_ij^ac 
 !
       do c = 1,n_vir
          do j = 1,n_occ
@@ -613,7 +609,7 @@ contains
          enddo
       enddo
 !
-!     Allocate the E2.1 term and set to zero
+!     Allocate the E2.1 term and set it to zero
 !
       call allocator(omega2_b_jai,n_vir,n_oov)
       omega2_b_jai = zero 
@@ -699,7 +695,7 @@ contains
       call allocator(u_dlc_j,n_ovv,n_occ)
       u_dlc_j = zero 
 !
-!     Set the value of g_k_dlc = g_ldkc and u_dlc_j = u_lj^dc 
+!     Determine g_k_dlc = g_ldkc and u_dlc_j = u_lj^dc 
 !
       do k = 1,n_occ ! Use as though "j" for u_dlc_j term 
          do d = 1,n_vir
@@ -734,7 +730,8 @@ contains
 !
       call deallocator(g_ld_kc,n_ov,n_ov)
 !
-!     Allocate the intermediate Y_k_j = F_kj + sum_cdl u_lj^dc g_ldkc = F_k_j + sum_cdl g_k_dlc * u_dlc_j and set to zero 
+!     Allocate the intermediate Y_k_j = F_kj  + sum_cdl u_lj^dc g_ldkc 
+!                                     = F_k_j + sum_cdl g_k_dlc * u_dlc_j, and set it to zero
 !
       call allocator(Y_k_j,n_occ,n_occ)
       Y_k_j = zero 
@@ -743,7 +740,7 @@ contains
 !
       call dcopy(n_oo,F_i_j,1,Y_k_j,1)
 !
-!     Add sum_cdl g_k_dlc * u_dlc_j to Y_k_j, such that Y_k_j = F_k_j + sum_cdl g_k_dlc * u_dlc_j
+!     Add sum_cdl g_k_dlc u_dlc_j to Y_k_j, such that Y_k_j = F_k_j + sum_cdl g_k_dlc u_dlc_j
 !
       call dgemm('N','N',n_occ,n_occ,n_ovv,&
                  one,g_k_dlc,n_occ,u_dlc_j,n_ovv,&
@@ -754,7 +751,7 @@ contains
       call deallocator(u_dlc_j,n_ovv,n_occ)
       call deallocator(g_k_dlc,n_occ,n_ovv)
 !
-!     Allocate t_aib_k = t_ik^ab and set to zero 
+!     Allocate t_aib_k = t_ik^ab and set it to zero 
 !
       call allocator(t_aib_k,n_ovv,n_occ)
       t_aib_k = zero
@@ -870,13 +867,28 @@ contains
 !
       logical :: debug = .true.
 !
-      integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld,aibj,bj
+      integer :: required,available,max_batch_length,batch_dimension,n_batch
+!
+      integer :: a_begin,a_end,a_batch,batch_length,a_full,ac_dim 
+!
+      integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld,aibj,bj,bjck,bk,bkcj,cj,ck,ca,ki
 !
       real(dp), dimension(:,:), pointer :: L_kc_J       => null() ! L_kc^J 
       real(dp), dimension(:,:), pointer :: g_ld_kc      => null() ! g_ldkc 
       real(dp), dimension(:,:), pointer :: L_ld_kc      => null() ! L_ldkc = 2 * g_ldkc - g_lckd 
       real(dp), dimension(:,:), pointer :: u_ai_ld      => null() ! u_il^ad = 2 * t_il^ad - t_li^ad 
-      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! For storing the D2.3 term temporarily
+!
+      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! For storing the D2.3 & D2.1 terms temporarily
+!
+      real(dp), dimension(:,:), pointer :: g_ai_kc      => null() ! g_aikc 
+      real(dp), dimension(:,:), pointer :: u_kc_bj      => null() ! u_jk^bc
+      real(dp), dimension(:,:), pointer :: L_ai_J       => null() ! L_ai^J 
+!
+      real(dp), dimension(:,:), pointer :: g_ai_ck      => null() ! g_acki
+      real(dp), dimension(:,:), pointer :: g_ca_ki      => null() ! g_acki; a is batched over 
+      real(dp), dimension(:,:), pointer :: L_ca_J       => null() ! L_ac^J; a is batched over 
+      real(dp), dimension(:,:), pointer :: L_ki_J       => null() ! L_ki^J 
+      real(dp), dimension(:,:), pointer :: u_ck_bj      => null() ! u_jk^bc
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -903,7 +915,7 @@ contains
       call allocator(L_ld_kc,n_ov,n_ov)
       L_ld_kc = zero 
 !
-!     Determine L_ld_kc from g_ld_kc 
+!     Determine L_ld_kc = L_ldkc from g_ld_kc = g_ldkc 
 !
       do l = 1,n_occ
          do d = 1,n_vir
@@ -914,10 +926,10 @@ contains
 !
                   ld = index_two(l,d,n_occ)
                   kc = index_two(k,c,n_occ)
-                  lc = index_two(l,d,n_occ)
+                  lc = index_two(l,c,n_occ)
                   kd = index_two(k,d,n_occ)
 !
-!                 Set the value of L_ld_kc
+!                 Set the value of L_ld_kc = 2 * g_ldkc - g_lckd 
 !
                   L_ld_kc(ld,kc) = two*g_ld_kc(ld,kc) - g_ld_kc(lc,kd)
 !
@@ -926,8 +938,7 @@ contains
          enddo
       enddo
 !
-!     Deallocate g_ld_kc and L_kc_J ! Eirik: we should consider keeping the latter in memory if possible,
-!                                            as it must be used later to form the integrals g_aikc 
+!     Deallocate g_ld_kc and L_kc_J
 !
       call deallocator(g_ld_kc,n_ov,n_ov)
       call deallocator(L_kc_J,n_ov,n_J)
@@ -974,47 +985,352 @@ contains
 !
       call dgemm('N','N',n_ov,n_ov,n_ov,&
                   one,u_ai_ld,n_ov,L_ld_kc,n_ov,&
-                  zero,omega2_ai_bj,n_ov)          ! Think of the result as an intermediate, say Z_ai_kc 
+                  zero,omega2_ai_bj,n_ov)          ! Think of the result as an intermediate, say Z_ai_kc    
 !
-!     Form the D2.3 term 1/4 * sum_kc Z_ai_kc u_kc_bj = 1/4 * sum_kc Z_ai_kc(ai,kc) * u_ai_ld^T(kc,bj)
+!     Form the D2.3 term, 1/4 sum_kc Z_ai_kc u_kc_bj = 1/4 sum_kc Z_ai_kc(ai,kc) u_ai_ld(bj,kc)
 !
-!       call dgemm('N','T',n_ov,n_ov,n_ov,&
-!                   one/four,omega2_ai_bj,n_ov,u_ai_ld,n_ov,& 
-!                   zero,omega2_ai_bj,n_ov)
-! !
-! !     Add the D2.3 term to the omega vector 
-! !
-!       do a = 1,n_vir
-!          do i = 1,n_occ
-!             do b = 1,n_vir
-!                do j = 1,n_occ
-! !
-! !                 Calculate the necessary indices 
-! !
-!                   ai   = index_two(a,i,n_vir)
-!                   bj   = index_two(b,j,n_vir)
-!                   aibj = index_packed(ai,bj)
-! !
-! !                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
-! !                 as they are identical in packed indices
-! !
-!                   if (ai .ge. bj) then
-!                      omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
-!                   endif
-! !
-!                enddo
-!             enddo
-!          enddo
-!       enddo
-! !
-! !     Print the omega vector, having added the D2.3 term 
-! !
-!       if (debug) then 
-!          write(luprint,*) 
-!          write(luprint,*) 'Omega(aibj,1) after D2.3 term has been added:'
-!          write(luprint,*)
-!          call vec_print_packed(omega2,n_ov_ov_packed)
-!       endif
+      call dgemm('N','T',n_ov,n_ov,n_ov,&
+                  one/four,omega2_ai_bj,n_ov,u_ai_ld,n_ov,& 
+                  zero,omega2_ai_bj,n_ov)
+!
+!     Some mathematical justification for the above matrix multiplication. We have 
+!
+!           1/4 * sum_ck (sum_dl u_il^ad L_ldkc) u_jk^bc = 1/4 * sum_ck Z_ai,kc u_kc,bj,
+!
+!     where Z_ai,kc = sum_dl u_ai,ld L_ld,kc. Note that u_ai_ld(ai,ld) = u_il^ad, 
+!     which means that u_ai_ld(bj,kc)^T = u_ai_ld(kc,bj) = u_kj^cb = u_jk^bc.
+!
+!
+!     Add the D2.3 term to the omega vector 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a,i,n_vir)
+                  bj   = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+!
+!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+!                 as they are identical in packed indices
+!
+                  if (ai .ge. bj) then
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                  endif
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate the omega2_ai_bj and u_ai_ld(ai,ld) = u_il^ad vector
+!
+      call deallocator(omega2_ai_bj,n_ov,n_ov)
+      call deallocator(u_ai_ld,n_ov,n_ov) ! Eirik: note that u_ai_ld(bj,kc) = u_jk^bc, and thus this vector could be reused 
+!                                                  to calculate the D2.1 term. This would require some more memory than
+!                                                  I have assumed available, for now (9 Mar).
+!
+!     Print the omega vector, having added the D2.3 term 
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after D2.3 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif                
+!
+!     Allocate the L_ai_J and L_kc_J terms and set them to zero 
+!
+      call allocator(L_ai_J,n_ov,n_J)
+      call allocator(L_kc_J,n_ov,n_J)
+!
+      L_ai_J = zero
+      L_kc_J = zero
+!
+!     Read the Cholesky vectors from file 
+!
+      call read_cholesky_ai(L_ai_J)
+      call read_cholesky_ia(L_kc_J)
+!
+!     Allocate g_ai_kc = g_aikc and set it zero
+!
+      call allocator(g_ai_kc,n_ov,n_ov)
+      g_ai_kc = zero 
+!
+!     Form the g_ai_kc integrals from L_ai_J and L_kc_J
+!  
+      call dgemm('N','T',n_ov,n_ov,n_J,&
+                  one,L_ai_J,n_ov,L_kc_J,n_ov,&
+                  zero,g_ai_kc,n_ov)
+!
+!     Deallocate the Cholesky vectors L_ai_J and L_kc_J
+!
+      call deallocator(L_ai_J,n_ov,n_J)
+      call deallocator(L_kc_J,n_ov,n_J)
+!
+!     Allocate u_kc_bj and set it to zero 
+!
+      call allocator(u_kc_bj,n_ov,n_ov)
+      u_kc_bj = zero
+!
+!     Determine u_kc_bj = u_jk^bc = 2 * t_jk^bc - t_kj^bc 
+!
+      do k = 1,n_occ
+         do c = 1,n_vir
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  kc   = index_two(k,c,n_occ)
+                  bj   = index_two(b,j,n_vir)
+!  
+                  ck   = index_two(c,k,n_vir)
+                  bjck = index_packed(bj,ck)
+!
+                  bk   = index_two(b,k,n_vir)
+                  cj   = index_two(c,j,n_vir)
+                  bkcj = index_packed(bk,cj)
+!
+!                 Set the value of u_kc_bj
+!     
+                  u_kc_bj(kc,bj) = two*t2am(bjck,1) - t2am(bkcj,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo 
+!
+!     Allocate omega2_ai_bj and set it to zero 
+!
+      call allocator(omega2_ai_bj,n_ov,n_ov)
+      omega2_ai_bj = zero 
+!
+!     Calculate the D2.1 term sum_ck u_jk^bc g_aikc = sum_ck g_ai_kc u_kc_bj
+!
+      call dgemm('N','N',n_ov,n_ov,n_ov,&
+                  one,g_ai_kc,n_ov,u_kc_bj,n_ov,&
+                  zero,omega2_ai_bj,n_ov)
+!
+!     Add the D2.1 term to the omega vector 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a,i,n_vir)
+                  bj   = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+!
+!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+!                 as they are identical in packed indices
+!
+                  if (ai .ge. bj) then
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                  endif
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate g_ai_kc, u_kc_bj, and the omega2_ai_bj vectors 
+!
+      call deallocator(g_ai_kc,n_ov,n_ov)
+      call deallocator(u_kc_bj,n_ov,n_ov)
+      call deallocator(omega2_ai_bj,n_ov,n_ov)
+!
+!     Print the omega vector, having added the D2.1 term 
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after D2.1 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif 
+!
+! - 1/2 * sum_ck u_jk^bc g_acki = -1/2 * sum_ck g_ai_ck u_ck_bj 
+!
+!     Allocate L_ki_J and set it to zero
+!
+      call allocator(L_ki_J,n_oo,n_J)
+      L_ki_J = zero 
+!
+!     Read the Cholesky vector L_ki_J from file 
+!
+      call read_cholesky_ij(L_ki_J)
+!
+!     Allocate the full g_ai_ck = g_acki and set it to zero 
+!
+      call allocator(g_ai_ck,n_ov,n_ov)
+      g_ai_ck = zero 
+!
+!     Prepare for batching over the index a to calculate g_ai_ck = g_acki
+!
+!        To calculate this term, we need to hold L_ac^J and g_acki
+!        in memory simultaneously 
+!
+      required = n_vir*n_vir*n_J + n_vir*n_vir*n_occ*n_occ ! Eirik: This estimate has to be updated,
+                                                           !        when we account for the T1 transformation
+      available = get_available()
+      batch_dimension = n_vir
+!
+!     Determine the batching variables 
+!
+      call n_one_batch(required,available,max_batch_length,n_batch,batch_dimension) 
+!
+!     Determine g_ai_ck = g_acki successively in batches over a 
+!
+      do a_batch = 1,n_batch
+!
+!        For each batch, get the limits for the a index        
+!
+         call one_batch_limits(a_begin,a_end,a_batch,max_batch_length,batch_dimension)
+         batch_length = a_end - a_begin + 1 
+!
+!        Allocate the Cholesky vector L_ca_J = L_ac^J and set it to zero 
+!
+         ac_dim = batch_length*n_vir         ! Dimension of ac for the batch over index a 
+         call allocator(L_ca_J,ac_dim,n_J)
+         L_ca_J = zero
+!
+!        Read the Cholesky vector from file 
+!
+         call read_cholesky_ab_reorder(L_ca_J,a_begin,a_end,ac_dim)
+!
+!        Allocate the integral g_ca_ki = g_acki and set to zero 
+!
+         call allocator(g_ca_ki,ac_dim,n_ov)
+         g_ca_ki = zero
+!
+!        Calculate g_ca_ki = g_acki from L_ca_J = L_ac^J and L_ki_J = L_ki^J
+!
+         call dgemm('N','T',ac_dim,n_oo,n_J,&
+                     one,L_ca_J,ac_dim,L_ki_J,n_oo,&
+                     one,g_ca_ki,ac_dim)
+!
+!        Reorder the integrals g_ca_ki (reduced a) = g_acki = g_ai_ck (full a)
+!
+         do a = 1,batch_length
+            do c = 1,n_vir
+               do k = 1,n_occ
+                  do i = 1,n_occ
+!
+!                    Calculate the necessary indices 
+!
+                     a_full = a - 1 + a_begin            ! The full matrix index a
+                     ai     = index_two(a_full,i,n_vir)
+                     ck     = index_two(c,k,n_vir)
+!
+                     ca     = index_two(c,a,n_vir)
+                     ki     = index_two(k,i,n_occ)
+!
+!                    Set the value of g_ai_ck = g_acki 
+!
+                     g_ai_ck(ai,ck) = g_ca_ki(ca,ki) ! g_acki
+!
+                  enddo
+               enddo
+            enddo
+         enddo
+!
+!        Deallocate the g_ca_ki and L_ca_J vectors
+!
+         call deallocator(g_ca_ki,ac_dim,n_oo)
+         call deallocator(L_ca_J,ac_dim,n_J)
+!
+      enddo ! End of loop over batches of a 
+!
+! ! - 1/2 * sum_ck u_jk^bc g_acki = -1/2 * sum_ck g_ai_ck u_ck_bj 
+!
+!     Allocate the u_ck_bj = u_jk^bc vector and set it to zero 
+!
+      call allocator(u_ck_bj,n_ov,n_ov)
+      u_ck_bj = zero 
+!
+!     Determine u_ck_bj = u_jk^bc = 2 * t_jk^bc - t_kj^bc 
+!
+      do c = 1,n_vir
+         do k = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  ck   = index_two(c,k,n_vir)
+                  bj   = index_two(b,j,n_vir)
+!
+                  bjck = index_packed(bj,ck)
+!
+                  bk   = index_two(b,k,n_vir)
+                  cj   = index_two(c,j,n_vir)
+                  bkcj = index_packed(bk,cj)
+!
+!                 Set the value of u_ck_bj 
+!
+                  u_ck_bj(ck,bj) = two*t2am(bjck,1) - t2am(bkcj,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Allocate the D2.2 term and set it to zero 
+!
+      call allocator(omega2_ai_bj,n_ov,n_ov)
+      omega2_ai_bj = zero
+!
+!     Calculate the D2.2 term, - 1/2 * sum_ck u_jk^bc g_acki = -1/2 * sum_ck g_ai_ck u_ck_bj
+!
+      call dgemm('N','N',n_ov,n_ov,n_ov,&
+                  -one/two,g_ai_ck,n_ov,u_ck_bj,n_ov,&
+                  zero,omega2_ai_bj,n_ov)
+!
+!     Add the D2.2 term to the omega vector 
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a,i,n_vir)
+                  bj   = index_two(b,j,n_vir)
+                  aibj = index_packed(ai,bj)
+!
+!                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
+!                 as they are identical in packed indices
+!
+                  if (ai .ge. bj) then
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                  endif
+!
+               enddo
+            enddo
+         enddo
+      enddo      
+!
+!     Print the omega vector, having added the D2.2 term 
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after D2.2 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif 
+!
+!     Deallocate g_ai_ck, u_ck_bj, and the temporary omega2_ai_bj
+!
+      call deallocator(g_ai_ck,n_ov,n_ov)
+      call deallocator(u_ck_bj,n_ov,n_ov)
+      call deallocator(omega2_ai_bj,n_ov,n_ov)
 !
    end subroutine mlcc_omega_d2
 !
