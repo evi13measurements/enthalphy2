@@ -31,11 +31,10 @@ contains
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
       call mlcc_omega_e2
-      call mlcc_omega_d2 
-   !   call mlcc_omega_c2
-!
-    !  call mlcc_omega_a2
-     ! call mlcc_omega_b2
+      call mlcc_omega_d2
+      call mlcc_omega_c2
+      call mlcc_omega_a2
+      call mlcc_omega_b2
 !
    end subroutine mlcc_omega_calc
 !
@@ -502,10 +501,11 @@ contains
 !
 !     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
 !
+            write(luprint,*) 'Lalala 1.1'
+      call flshfo(luprint)
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_kc_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ld_kc,n_ov)
-
 !
 !     Deallocate the Cholesky vector L_kc_J
 !
@@ -532,10 +532,10 @@ contains
 !
                   kdl  = index_three(k,d,l,n_occ,n_vir)
                   ld   = index_two(l,d,n_occ)
-                  kc   = index_two(k,b,n_occ)
+                  kc   = index_two(k,c,n_occ)
 !
-                  cl   = index_two(b,l,n_vir)
-                  ck   = index_two(b,k,n_vir)
+                  cl   = index_two(c,l,n_vir)
+                  ck   = index_two(c,k,n_vir)
                   dl   = index_two(d,l,n_vir)
                   dk   = index_two(d,k,n_vir)
                   ckdl = index_packed(ck,dl)
