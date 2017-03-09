@@ -195,8 +195,7 @@ contains
 !     Setup of variables needed for batching
 !
       available = get_available()
-      required = n_vir*n_vir*n_J*4
-!
+      required = 2*n_vir*n_vir*n_J*4 + 2*n_vir*n_occ*n_J*4
       call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
 !
       batch_start=1

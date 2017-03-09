@@ -655,10 +655,10 @@ contains
 !  
          call allocator(L_a_Jb,batch_length,n_vir*n_J)
 !
-!        T1-transformation
+!        t1_a_i * L_i_Jb = L_a_Jb
 !
          call dgemm('N','N',batch_length,n_vir*n_J,n_occ &
-            ,-one,t1am(start,1),n_vir,L_i_Jb &
+            ,-one,t1am(start,1),n_vir,L_i_Jb,n_occ &
             ,zero, L_a_Jb,batch_length)
 !
 !        Add terms of L_a_Jb to L_ab_J

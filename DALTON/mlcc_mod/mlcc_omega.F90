@@ -534,10 +534,10 @@ contains
 !
                   kdl  = index_three(k,d,l,n_occ,n_vir)
                   ld   = index_two(l,d,n_occ)
-                  kc   = index_two(k,c,n_occ)
+                  kc   = index_two(k,b,n_occ)
 !
-                  cl   = index_two(c,l,n_vir)
-                  ck   = index_two(c,k,n_vir)
+                  cl   = index_two(b,l,n_vir)
+                  ck   = index_two(b,k,n_vir)
                   dl   = index_two(d,l,n_vir)
                   dk   = index_two(d,k,n_vir)
                   ckdl = index_packed(ck,dl)
@@ -986,11 +986,21 @@ contains
       implicit none
 !
       real(dp),dimension(:,:),pointer        :: L_ia_J => null()
+      real(dp),dimension(:,:),pointer        :: L_ki_J => null()
+      real(dp),dimension(:,:),pointer        :: L_ca_J => null()
       real(dp),dimension(:,:),pointer        :: g_kd_lc => null()
       real(dp),dimension(:,:),pointer        :: g_dl_ck => null()
+      real(dp),dimension(:,:),pointer        :: g_ki_ca => null()
+      real(dp),dimension(:,:),pointer        :: g_ai_ck => null()
       real(dp),dimension(:,:),pointer        :: t_ai_dl => null()
+      real(dp),dimension(:,:),pointer        :: t_ck_bj => null()
       real(dp),dimension(:,:),pointer        :: X_ai_ck => null()
+      real(dp),dimension(:,:),pointer        :: Y_ai_bj => null()
       integer                                :: c,k,d,l,kd,lc,ck,dl,al,di,ai,aldi
+      integer                                :: i,a,ca,ki,b,bj,bk,cj,j,bkcj,aibj,aj,bi
+      integer                                :: required,available,n_batch,max_batch_length,a_start
+      integer                                :: a_end,a_batch,a_length
+      logical                                :: debug = .true.
 !
 !     Allocate L_ia_J
 !
@@ -1052,9 +1062,188 @@ contains
          ,-half,t_ai_dl,n_ov,g_dl_ck,n_ov &
          ,zero,X_ai_ck,n_ov)
 !
+!     Deallocate L_ia_J, g_kd_lc and g_dl_ck
+!
       call deallocator(L_ia_J,n_ov,n_J)
       call deallocator(g_kd_lc,n_ov,n_ov)
       call deallocator(g_dl_ck,n_ov,n_ov)
+!
+!     Constructing g_ki_ac ordered as g_ki_ca
+!
+!
+!     Allocate g_ki_ca
+!
+      call allocator(g_ki_ca,n_oo,n_vv)
+      g_ki_ca = zero
+!
+!     Allocate L_ki_J
+!
+      call allocator(L_ki_J,n_ov,n_J)
+!
+!     Get cholesky vectors of ij-type
+!
+      call get_cholesky_ij(L_ki_J)
+!
+!     Prepare batching over a 
+!
+!
+!     Setup of variables needed for batching
+!
+      available = get_available()
+      required = 2*n_vir*n_vir*n_J*4 + 2*n_vir*n_occ*n_J*4
+      call n_one_batch(required,available,max_batch_length,n_batch,n_vir)
+!
+      a_start=1
+      a_end=0
+      a_length=0
+!
+!     Start looping over batches
+!
+      do a_batch = 1,n_batch
+!
+!        Get batch limits  and  length of batch
+!
+         call one_batch_limits(a_start,a_end,a_batch,max_batch_length,n_vir)
+         a_length=a_end-a_start+1
+!
+!        Allocation for L_ac_J as L_ca_J (L_ca_J = L_acJ)
+!
+         call allocator(L_ca_J,n_vir*a_length,n_J)
+         L_ca_J=zero
+!
+!        Read Cholesky vectors
+!
+         call get_cholesky_ab(L_ca_J,a_start,a_end,n_vir*a_length,.true.)
+!
+!        g_ki_ca = sum_J L_ki_J*L_ca_J
+!
+         call dgemm('N','T',n_oo,n_vir*a_length,n_J &
+            ,one,L_ki_J,n_oo,L_ca_J,n_vir*a_length &
+            ,one,g_ki_ca(1,index_two(1,a_start,n_vir)),n_oo)
+!
+!        Deallocate L_ca_J
+!
+         call deallocator(L_ca_J,n_vir*a_length,n_J)
+      enddo ! End of batching
+!
+!     Deallocate L_ki_J
+!
+      call deallocator(L_ki_J,n_ov,n_J)
+!
+!     Reorder g_ki_ca to g_ai_ck
+!
+      call allocator(g_ai_ck,n_ov,n_ov)
+!
+      do i = 1,n_occ
+         do k = 1,n_occ
+            do a = 1,n_vir
+               do c = 1,n_vir
+!
+!                 Needed indices
+!
+                  ki=index_two(k,i,n_occ)
+                  ca=index_two(c,a,n_vir)
+                  ai=index_two(a,i,n_vir)
+                  ck=index_two(c,k,n_vir)
+!
+                  g_ai_ck(ai,ck) = g_ki_ca(ki,ca)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+      call deallocator(g_ki_ca,n_oo,n_vv)
+!
+!     X_ai_ck = X_ai_ck + g_ai_ck
+!
+      call daxpy(n_ov*n_ov,one,g_ai_ck,1,X_ai_ck,1)
+!
+!     Deallocate g_ai_kc
+!
+      call deallocator(g_ai_ck,n_ov,n_ov)
+!
+!     reorder t_bkcj_1 as t_ck_bj
+!
+      call allocator(t_ck_bj,n_ov,n_ov)
+!
+      do c = 1,n_vir
+         do k = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Needed indices
+!
+                  bk = index_two(b,k,n_vir)
+                  cj = index_two(c,j,n_vir)
+                  bkcj = index_packed(bk,ck)
+!
+                  bj = index_two(b,j,n_vir)
+                  ck = index_two(c,k,n_vir)
+!
+                  t_ck_bj = t1am(bkcj,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Allocate intermediate Y_ai_bj
+!
+      call allocator(Y_ai_bj,n_ov,n_ov)
+      Y_ai_bj = zero
+!
+!     Y_ai_bj = - sum_(ck) X_ai_ck*t_ck_bj
+!
+      call dgemm('N','N',n_ov,n_ov,n_ov &
+         ,-one,X_ai_ck,n_ov,t_ck_bj,n_ov &
+         , zero,Y_ai_bj,n_ov)
+!
+!     Deallocate t_ck_bj
+!
+      call deallocator(t_ck_bj,n_ov,n_ov)
+!
+!     Omega_aibj,1 = 1/2*Y_ai_bj + Y_aj_bi
+!
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Needed indices
+!
+                  ai=index_two(a,i,n_vir)
+                  bj=index_two(b,j,n_vir)
+!
+                  if (ai .ge. bj) then
+                     aj=index_two(a,j,n_vir)
+                     bi=index_two(b,i,n_vir)
+!
+                     aibj=index_packed(ai,bj)
+!
+                     omega2(aibj,1)=omega2(aibj,1)+half*Y_ai_bj(ai,bj)+Y_ai_bj(aj,bi)
+!
+                  endif
+!  
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate intermediate Y_ai_bj
+!
+      call deallocator(Y_ai_bj,n_ov,n_ov)
+!
+!
+!     Print the omega vector, having added D2
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after D2 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif 
+!
    end subroutine mlcc_omega_c2
 !
    subroutine mlcc_omega_a2
