@@ -33,6 +33,7 @@ contains
       call mlcc_omega_e2
       call mlcc_omega_d2
       call mlcc_omega_c2
+      call permute_ai_bj
       call mlcc_omega_a2
       call mlcc_omega_b2
 !
@@ -1539,7 +1540,7 @@ contains
                   bj = index_two(b,j,n_vir)
                   ck = index_two(c,k,n_vir)
 !
-                  t_ck_bj = t1am(bkcj,1)
+                  t_ck_bj = t2am(bkcj,1)
 !
                enddo
             enddo
@@ -1614,10 +1615,17 @@ contains
       implicit none
 !
       real(dp),dimension(:,:),pointer     :: g_ai_bj => null()
+      real(dp),dimension(:,:),pointer     :: g_ca_db => null()
+      real(dp),dimension(:,:),pointer     :: g_ab_cd => null()
+      real(dp),dimension(:,:),pointer     :: t_cd_ij => null()
+      real(dp),dimension(:,:),pointer     :: omega2_ab_ij => null()
       real(dp),dimension(:,:),pointer     :: L_ai_J => null()
-      integer                             :: a,i,b,j,ai,bj,aibj
-      integer                             :: n_batch_a,n_batch_b,a_start,a_end,b_start,b_end,a_length,b_length
-      integer                             :: required,available
+      real(dp),dimension(:,:),pointer     :: L_ca_J => null()
+      real(dp),dimension(:,:),pointer     :: L_db_J => null()
+      integer                             :: a,i,b,j,ai,bj,aibj,c,d,ca,db,ab,cd,ci,cidj,ij,dj
+      integer                             :: a_n_batch,b_n_batch,a_start,a_end,b_start,b_end,a_length,b_length
+      integer                             :: required,available,a_max_length,b_max_length,a_batch,b_batch
+      logical                             :: debug = .true.
 !
 !!!   A2.1 term   !!!
 !
@@ -1665,10 +1673,292 @@ contains
 !
 !!!   A2.2 term !!!
 !
+!
+!     Create g_ac_bd by batching over both a and b
+!
+!
+!     Prepare for batching over a
+!
+!
+!     How many batches?
+!
+      required = 2*n_vv*n_J*4 + 2*n_ov*n_J ! Needed to get cholesky of ab-type
+      available=get_available()
+!
+      a_max_length=0
+!
+      call n_one_batch(required,available,a_max_length,a_n_batch,n_vir)
+!
+!     Initialize some variables for batching
+!
+      a_start=0
+      a_end=0
+      a_length=0
+!
+!     Start looping over a-batches
+!
+      do a_batch = 1,a_n_batch
+!
+         call one_batch_limits(a_start,a_end,a_batch,a_max_length,n_vir)
+         a_length=a_end-a_start+1
+!
+!        Get cholesky vectors L_ac^J ordered as L_ca_J
+!
+         call allocator(L_ca_J,n_vir*a_length,n_J)
+!
+         call get_cholesky_ab(L_ca_J,a_start,a_end,n_vir*a_length,.true.) 
+!        
+!        Prepare for batching over b
+!
+!
+!        How many batches ?
+!
+         required = 2*n_vv*n_J*4 + 2*n_ov*n_J*4 + 2*n_vv*a_length*n_vir*4 ! Needed to get cholesky of ab-type 
+                                                                          ! and to generate g_ac_bd.
+         available=get_available()
+!  
+         b_max_length=0
+!  
+         call n_one_batch(required,available,b_max_length,b_n_batch,n_vir)
+!  
 
+         if (a_n_batch .eq. 1 .and. b_n_batch .eq. 1 ) then ! No need to read ab-type cholesky twice. 
+                                                            ! Note that this means that a_length=b_length=n_vir
+!
+!           Allocate full g_ca_db because we have room for it!
+!
+            call allocator(g_ca_db,n_vv,n_vv)
+!
+            call dgemm('N','T',n_vv,n_vv,n_J &
+               ,one,L_ca_J,n_vv,L_ca_J,n_vv &
+               ,zero,g_ca_db,n_vv)
+!
+!           Allocate for reordered g_ca_db(g_ab_cd) and t_ci_dj (t_cd_ij)
+!
+            call allocator(g_ab_cd,n_vv,n_vv)
+            call allocator(t_cd_ij,n_vv,n_oo)
+            do c = 1,n_vir
+               do d = 1,n_vir
+!
+!                 Reorder g_ca_db to g_ab_cd
+!
+                  do a = 1,n_vir
+                     do b = 1,n_vir
+!
+!                       Needed indices
+!  
+                        ca=index_two(c,a,n_vir)
+                        db=index_two(d,b,n_vir)
+                        ab=index_two(a,b,n_vir)
+                        cd=index_two(c,d,n_vir)
+!
+                        g_ab_cd(ab,cd)=g_ca_db(ca,db)
+                     enddo
+                  enddo
+!
+!                 Reorder t_ci_dj to t_cd_ij
+!
+                  do i = 1,n_occ
+                     do j = 1,n_occ
+!
+!                       Needed indices
+!  
+                        cd=index_two(c,d,n_vir)
+                        ij=index_two(i,j,n_occ)
+                        ci=index_two(c,i,n_vir)
+                        dj=index_two(d,j,n_vir)
+!
+                        cidj=index_packed(ci,dj)
+!
+                        t_cd_ij(cd,ij)=t2am(cidj,1)
+!
+                     enddo
+                  enddo
+               enddo
+            enddo
+            call deallocator(g_ca_db,n_vv,n_vv)
+!
+            call allocator(omega2_ab_ij,n_vv,n_oo)
+!
+!           omega2_ab_ij= sum_(cd) g_ab_cd*t_cd_ij
+!
+            call dgemm('N','N',n_vv,n_oo,n_vv &
+               ,one,g_ab_cd,n_vv,t_cd_ij,n_vv &
+               ,zero,omega2_ab_ij,n_vv)
+!
+!           Deallocate t_cd_ij and g_ab_cd
+!
+            call deallocator(g_ab_cd,n_vv,n_vv)
+            call deallocator(t_cd_ij,n_vv,n_oo)
+!
+!           Reorder into omega2_aibj
+!
+               do i = 1,n_occ
+                  do j = 1,n_occ
+                     do a = 1,n_vir
+                        do b = 1,n_vir
+!
+!                          Needed indices
+!  
+                           ai=index_two(a,i,n_vir)
+                           bj=index_two(b,j,n_vir)
+                           if (ai .ge. bj) then
+                              ab=index_two(a,b,n_vir)
+                              ij=index_two(i,j,n_occ)
+!  
+                              aibj=index_packed(ai,bj)
+                              omega2(aibj,1)=omega2(aibj,1)+omega2_ab_ij(ab,ij)
+!  
+                           endif
+                        enddo
+                     enddo
+                  enddo
+               enddo
+!
+            call deallocator(omega2_ab_ij,n_vv,n_oo)
+!
+         else
+!
+!           Initialize some variables for batching over b
+!
+            b_start=0
+            b_end=0
+            b_length=0  
+!
+!           Start looping over batches of b
+!
+            do b_batch = 1,b_n_batch
+!
+               call one_batch_limits(b_start,b_end,b_batch,b_max_length,n_vir)
+               b_length=b_end-b_start+1
+!
+!              Get cholesky vectors L_bd^J ordered as L_db_J
+!
+               call allocator(L_db_J,n_vir*b_length,n_J)
+!  
+               call get_cholesky_ab(L_db_J,b_start,b_end,n_vir*b_length,.true.) 
+!
+!              Allocate g_ac_bd for batches of a and b, ordered as g_ca_db
+!
+               call allocator(g_ca_db,n_vir*a_length,n_vir*b_length)
+!
+!              g_ca_db = sum_J L_ca_J*L_db_J
+!
+               call dgemm('N','T',n_vir*a_length,n_vir*b_length,n_J &
+                  ,one,L_ca_J,n_vir*a_length,L_db_J,n_vir*b_length &
+                  ,zero,g_ca_db,n_vir*a_length)
+!
+!              Reorder g_ca_db into g_ab_cd and t_ci_dj into t_cd_ij
+!
+               call allocator(g_ab_cd,a_length*b_length,n_vir*n_vir)
+               call allocator(t_cd_ij,n_vv,n_oo)
+!
+               do c = 1,n_vir 
+                  do d = 1,n_vir
+!
+!                    Reorder g_ca_db to g_ab_cd
+!
+                     do a = 1,a_length
+                        do b = 1,b_length
+!
+!                          Needed indices
+!
+                           ca=index_two(c,a,n_vir)
+                           db=index_two(d,b,n_vir)
+                           ab=index_two(a,b,n_vir)
+                           cd=index_two(c,d,n_vir)
+!  
+                           g_ab_cd(ab,cd)=g_ca_db(ca,db)
+                        enddo
+                     enddo
+!
+!                 Reorder t_ci_dj to t_cd_ij
+!
+                  do i = 1,n_occ
+                     do j = 1,n_occ
+!
+!                          Needed indices
+!     
+                           cd=index_two(c,d,n_vir)
+                           ij=index_two(i,j,n_occ)
+                           ci=index_two(c,i,n_vir)
+                           dj=index_two(d,j,n_vir)
+!  
+                           cidj=index_packed(ci,dj)
+!  
+                           t_cd_ij(cd,ij)=t2am(cidj,1)
+!   
+                        enddo
+                     enddo
+                  enddo
+               enddo
+!
+               call deallocator(g_ca_db,n_vir*a_length,n_vir*b_length)
+!
+!
+               call allocator(omega2_ab_ij,a_length*b_length,n_oo)
+!  
+!              omega2_ab_ij= sum_(cd) g_ab_cd*t_cd_ij
+!  
+               call dgemm('N','N',a_length*b_length,n_oo,n_vv &
+                  ,one,g_ab_cd,a_length*b_length,t_cd_ij,n_vv &
+                  ,zero,omega2_ab_ij,a_length*b_length)
+!  
+!              Deallocate t_cd_ij and g_ab_cd
+!
+               call deallocator(t_cd_ij,n_vv,n_oo)
+               call deallocator(g_ab_cd,a_length*b_length,n_vir*n_vir)
+!
+!              Reorder into omega2_aibj
+!  
+               do i = 1,n_occ
+                  do j = 1,n_occ
+                     do a = 1,a_length
+                        do b = 1,b_length
+!  
+!                          Needed indices
+!     
+                           Ai=index_two(a+a_start-1,i,n_vir) ! A is full-space a index
+                           Bj=index_two(b+b_start-1,j,n_vir) ! B is full-space b index
+                           if (Ai .ge. Bj) then
+                              ab=index_two(a,b,a_length)
+                              ij=index_two(i,j,n_occ)
+!     
+                              AiBj=index_packed(Ai,Bj)
+                              omega2(AiBj,1)=omega2(AiBj,1)+omega2_ab_ij(ab,ij)
+!     
+                           endif
+                        enddo
+                     enddo
+                  enddo
+               enddo
+!
+               call deallocator(omega2_ab_ij,n_vv,n_oo)
+!
+            enddo
+!
+         endif
+!
+         call deallocator(L_ca_J,n_vv,n_J)
+!
+      enddo
+!
+!
+!     Print the omega vector, having added A2
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after A2 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif
+!
    end subroutine mlcc_omega_a2
 !
    subroutine mlcc_omega_b2
    end subroutine mlcc_omega_b2
 !
+   subroutine permute_ai_bj
+   end subroutine permute_ai_bj
+   !
 end module mlcc_omega
