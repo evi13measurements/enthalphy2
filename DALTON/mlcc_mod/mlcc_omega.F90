@@ -1605,6 +1605,67 @@ contains
    end subroutine mlcc_omega_c2
 !
    subroutine mlcc_omega_a2
+!
+!     MLCC Omega A2 term
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 10 Mar 2017
+!
+!     Omega A2 = g_ai_bj + sum_(cd)g_ac_bd * t_ci_dj = A2.1 + A.2.2
+!
+      implicit none
+!
+      real(dp),dimension(:,:),pointer     :: g_ai_bj => null()
+      real(dp),dimension(:,:),pointer     :: L_ai_J => null()
+      integer                             :: a,i,b,j,ai,bj,aibj
+      integer                             :: n_batch_a,n_batch_b,a_start,a_end,b_start,b_end,a_length,b_length
+      integer                             :: required,available
+!
+!!!   A2.1 term   !!!
+!
+!
+!     Create g_ai_bj 
+!  
+      call allocator(g_ai_bj,n_ov,n_ov)
+      call allocator(L_ai_J,n_ov,n_J)
+!
+      call get_cholesky_ai(L_ai_J)
+!
+!     g_ai_bj=sum_J L_ai_J*L_bj_J
+!
+      call dgemm('N','T',n_ov,n_ov,n_J &
+         ,one, L_ai_J,n_ov,L_ai_J,n_ov &
+         ,zero,g_ai_bj,n_ov)
+!
+      call deallocator(L_ai_J,n_ov,n_J)
+!
+!     Add A2.1 to Omega 2
+!     
+      do a = 1,n_vir
+         do i = 1,n_occ
+            do b = 1,n_vir
+               do j = 1,n_occ
+!
+!                 Needed indices
+!
+                  ai=index_two(a,i,n_vir)
+                  bj=index_two(b,j,n_vir)
+!
+                  if(ai .ge. bj) then
+!
+                     aibj=index_packed(ai,bj)
+                     omega2(aibj,1)=g_ai_bj(ai,bj)
+!
+                  endif
+               enddo
+            enddo
+         enddo
+      enddo
+!
+      call deallocator(g_ai_bj,n_ov,n_ov)
+!
+!
+!!!   A2.2 term !!!
+!
+
    end subroutine mlcc_omega_a2
 !
    subroutine mlcc_omega_b2
