@@ -62,7 +62,7 @@ contains
       real(dp), dimension(:,:), pointer :: L_da_J  => null()   ! L_ad^J; a is being batched over
       real(dp), dimension(:,:), pointer :: g_da_kc => null()   ! g_adkc; a is being batched over
       real(dp), dimension(:,:), pointer :: g_a_ckd => null()   ! reordered g_adkc; a is being batched over
-      real(dp), dimension(:,:), pointer :: u_ckd_i => null() 
+      real(dp), dimension(:,:), pointer :: u_ckd_i => null()   ! u_ki^cd
 !
 !     Allocate Cholesky vector L_kc_J
 !
@@ -116,8 +116,6 @@ contains
 !
       write(luprint,*) 'Required',required
       write(luprint,*) 'Available',available
-!
-   !   if (debug) required = 1500000
 !
       max_batch_length = 0 ! Initilization of unset variables 
       n_batch = 0
@@ -225,22 +223,15 @@ contains
 !
       implicit none
 !
-      integer :: i,j
-!
       logical :: debug = .true.
 !
-      double precision factor
+      integer :: a,c,k,l,ckl,ki,ak,akcl,al,alck,ck,ai,cl,lc,i,j
 !
-      integer :: a,c,k,l,ckl,ki,ak,akcl,al,alck,ck,ai,cl,lc
-!
-      real(dp), dimension(:,:), pointer :: L_ki_J        => null() 
-      real(dp), dimension(:,:), pointer :: L_lc_J        => null()
-      real(dp), dimension(:,:), pointer :: g_ki_lc       => null()
-      real(dp), dimension(:,:), pointer :: g_ckl_i       => null() ! Reordered two-electron integrals
-      real(dp), dimension(:,:), pointer :: u_a_ckl       => null() ! Reordered u_kl^ac = 2 t_kl^ac - t_lk^ac
-      real(dp), dimension(:,:), pointer :: b1_a_i        => null() 
-!
-!     I. Calculation and reordering of g_ki,lc = sum_J L_ki^J * L_lc^J 
+      real(dp), dimension(:,:), pointer :: L_ki_J  => null() ! L_ki^J 
+      real(dp), dimension(:,:), pointer :: L_lc_J  => null() ! L_lc^J 
+      real(dp), dimension(:,:), pointer :: g_ki_lc => null() ! g_kilc 
+      real(dp), dimension(:,:), pointer :: g_ckl_i => null() ! g_kilc 
+      real(dp), dimension(:,:), pointer :: u_a_ckl => null() ! u_kl^ac = 2 t_kl^ac - t_lk^ac
 !
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
@@ -250,36 +241,33 @@ contains
       L_ki_J = zero
       L_lc_J = zero
 !
-!     Read L_ki,J
+!     Read the Cholesky vectors L_ki_J and L_lc_J
 !
       call read_cholesky_ij(L_ki_J)
-!
-!     Read L_lc,J
-!
       call read_cholesky_ia(L_lc_J)
 !
-!     Allocate integrals g_ki_lc
+!     Allocate integrals g_ki_lc = g_kilc
 !
       call allocator(g_ki_lc,n_oo,n_ov)
 !
       g_ki_lc = zero
 !
-!     Calculate g_ki_lc = sum_J L_ki,J * L_lc,J^T 
+!     Calculate g_ki_lc = sum_J L_ki_J L_lc_J^T 
 ! 
       call dgemm('N','T',n_oo,n_ov,n_J,&
                   one,L_ki_J,n_oo,L_lc_J,n_ov,&
                   zero,g_ki_lc,n_oo) 
 !
-!     Deallocate the Cholesky vectors 
+!     Deallocate the Cholesky vectors L_ki_J and L_lc_J
 !
       call deallocator(L_ki_J,n_oo,n_J)
       call deallocator(L_lc_J,n_ov,n_J)
 !
-!     Allocate reordered integrals g_ckl,i 
+!     Allocate reordered integrals g_ckl_i = g_kilc 
 !
       call allocator(g_ckl_i,n_oov,n_occ)
 !
-!     Save reordered integrals g_ckl,i
+!     Determine g_ckl_i = g_kilc 
 !
       do c = 1,n_vir
          do k = 1,n_occ
@@ -305,15 +293,12 @@ contains
 !
       call deallocator(g_ki_lc,n_oo,n_ov)
 !
-!     Allocate redordered u amplitudes u_a,ckl 
+!     Allocate redordered u_a_ckl = u_kl^ac and set it to zero
 !
       call allocator(u_a_ckl,n_vir,n_oov)
-!
-!     Set u_a,ckl to zero
-!
       u_a_ckl = zero
 !
-!     Save reordered u_a,ckl 
+!     Determine u_a_ckl = u_kl^ac
 !
       do c = 1,n_vir
          do k = 1,n_occ
@@ -332,7 +317,7 @@ contains
                   ck   = index_two(c,k,n_vir)
                   alck = index_packed(al,ck)
 !
-!                 Set value of u_a_ckl = u_kl^ac = 2*t_kl^ac - t_lk^ac = 2*t_ak,cl - t_al,ck 
+!                 Set the value of u_a_ckl = u_kl^ac = 2*t_kl^ac - t_lk^ac = 2*t_ak,cl - t_al,ck 
 !
                   u_a_ckl(a,ckl) = two*t2am(akcl,1) - t2am(alck,1)
 !                  
@@ -341,11 +326,10 @@ contains
          enddo
       enddo
 !
-!     Calculate the B1 term (- sum_ckl u_a_ckl * g_ckl_i)
+!     Calculate the B1 term, - sum_ckl u_a_ckl g_ckl_i
 !
-      factor = -one 
       call dgemm('N','N',n_vir,n_occ,n_oov,&
-                  factor,u_a_ckl,n_vir,g_ckl_i,n_oov,&
+                  -one,u_a_ckl,n_vir,g_ckl_i,n_oov,&
                   one,omega1,n_vir) 
 !
 !     Print the omega vector 
@@ -1247,8 +1231,6 @@ contains
 !
       enddo ! End of loop over batches of a 
 !
-! ! - 1/2 * sum_ck u_jk^bc g_acki = -1/2 * sum_ck g_ai_ck u_ck_bj 
-!
 !     Allocate the u_ck_bj = u_jk^bc vector and set it to zero 
 !
       call allocator(u_ck_bj,n_ov,n_ov)
@@ -1591,7 +1573,6 @@ contains
 !     Deallocate intermediate Y_ai_bj
 !
       call deallocator(Y_ai_bj,n_ov,n_ov)
-!
 !
 !     Print the omega vector, having added D2
 !
