@@ -1975,7 +1975,48 @@ contains
       real(dp),dimension(:,:),pointer     :: L_ij_J      => null()
       integer                             :: c,d,k,l,i,j,kl,ij,ci,dj,kc,ld,cidj,cd,ki,lj,ak,bl,akbl,ab,b,a,ai,bj,aibj
 !
-!     Read cholesky veckors of ia-type into L_kc_J
+!     Read cholesky vector of type L_ij_J
+!
+      call allocator(L_ij_J,n_oo,n_J)
+!
+      call get_cholesky_ij(L_ij_J)
+!
+!     Create g_ki_lj = sum_J L_li_J*L_lj_J
+!
+      call allocator(g_ki_lj,n_oo,n_oo)
+!
+      call dgemm('N','T',n_oo,n_oo,n_J &
+         ,one,L_ij_J,n_oo,L_ij_J,n_oo &
+         ,zero,g_ki_lj,n_oo)
+!
+      call deallocator(L_ij_J,n_oo,n_J)
+!
+!     Reordering g_ki_lj to g_kl_ij
+!
+      call allocator(g_kl_ij,n_oo,n_oo)
+!
+      do k = 1,n_occ
+         do l = 1,n_occ
+            do i = 1,n_occ
+               do j=1,n_occ
+!
+!                 Needed indices
+!
+                  ki=index_two(k,i,n_occ)
+                  lj=index_two(l,j,n_occ)
+                  kl=index_two(k,l,n_occ)
+                  ij=index_two(i,j,n_occ)
+!
+                  g_kl_ij(kl,ij)=g_ki_lj(ki,lj)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+      call deallocator(g_ki_lj,n_oo,n_oo)
+!
+!     Read cholesky vectors of ia-type into L_kc_J
 !
       call allocator(L_kc_J,n_ov,n_J)
 !
@@ -2023,47 +2064,6 @@ contains
          enddo
       enddo
       call deallocator(g_kc_ld,n_ov,n_ov)
-!
-!     Read cholesky vector of type L_ij_J
-!
-      call allocator(L_ij_J,n_oo,n_J)
-!
-      call get_cholesky_ij(L_ij_J)
-!
-!     Create g_ki_lj
-!
-      call allocator(g_ki_lj,n_oo,n_oo)
-!
-      call dgemm('N','T',n_oo,n_oo,n_J &
-         ,one,L_ij_J,n_oo,L_ij_J,n_oo &
-         ,zero,g_ki_lj,n_oo)
-!
-      call deallocator(L_ij_J,n_oo,n_J)
-!
-!     Reordering g_ki_lj to g_kl_ij
-!
-      call allocator(g_kl_ij,n_oo,n_oo)
-!
-      do k = 1,n_occ
-         do l = 1,n_occ
-            do i = 1,n_occ
-               do j=1,n_occ
-!
-!                 Needed indices
-!
-                  ki=index_two(k,i,n_occ)
-                  lj=index_two(l,j,n_occ)
-                  kl=index_two(k,l,n_occ)
-                  ij=index_two(i,j,n_occ)
-!
-                  g_kl_ij(kl,ij)=g_ki_lj(ki,lj)
-!
-               enddo
-            enddo
-         enddo
-      enddo
-!
-      call deallocator(g_ki_lj,n_oo,n_oo)
 !
       call dgemm('N','N',n_oo,n_oo,n_vv &
          ,one,g_kl_cd,n_oo,t_cd_ij,n_vv &
