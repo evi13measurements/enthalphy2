@@ -1593,6 +1593,11 @@ contains
 !
 !     Omega A2 = g_ai_bj + sum_(cd)g_ac_bd * t_ci_dj = A2.1 + A.2.2
 !
+!     Structure: Batching over both a and b. If no batching is necessary L_ab_J is only read once, and g_ac_bd 
+!                is constructed and kept in memory full size. 
+!                g_ac_bd is reordered as g_ab_cd and t_ci_dj is reordered as t_cd_ij.
+!                Omega contribution for A2.2 is ordered as Omega_ab_ij, and is reordered into the packed omega2 vector.          
+!
       implicit none
 !
       real(dp),dimension(:,:),pointer     :: g_ai_bj => null()
@@ -1943,6 +1948,10 @@ contains
 !
 !     Omega B2 = sum_(kl) t_ak_bl*(g_kilj+sum_(cd) t_ci_dj * g_kc_ld) 
 !
+!     Structure: g_kilj is constructed first and reordered as g_kl_ij. 
+!                Then the contraction over cd is performed, and the results added ti g_kl_ij.
+!                t_ak_bl is then reordered as t_ab_kl and the contraction over kl is performed.
+!
       implicit none
       real(dp),dimension(:,:),pointer     :: g_kc_ld     => null()
       real(dp),dimension(:,:),pointer     :: g_kl_cd     => null()
@@ -2116,6 +2125,37 @@ contains
    end subroutine mlcc_omega_b2
 !
    subroutine permute_ai_bj
+!
+!     MLCC Omega2 permutation (P_ij^ab omega_ai_bj). To be performed after E2,D2 and C2 terms are added to omega2.
+! 
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 12 Mar 2017
+!     
+      implicit none
+!
+      integer           :: a,b,i,j,ai,aj,bi,bj,aibj,ajbi
+!
+      do i = 1,n_occ
+         do j = 1,n_occ
+            do a = 1,n_vir
+               do b = 1,n_vir
+!
+!                 Needed indices
+!  
+                  ai=index_two(a,i,n_vir)
+                  aj=index_two(a,j,n_vir)
+                  bi=index_two(b,i,n_vir)
+                  bj=index_two(b,j,n_vir)
+!           
+                  if (ai .ge. bj) then
+                     aibj=index_packed(ai,bj)
+                     ajbi=index_packed(aj,bi)
+                     omega2(aibj,1)=omega2(aibj,1)+omega2(ajbi,1)
+                  endif
+               enddo
+            enddo
+         enddo
+      enddo
+
    end subroutine permute_ai_bj
    !
 end module mlcc_omega
