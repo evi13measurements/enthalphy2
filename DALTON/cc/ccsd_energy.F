@@ -834,6 +834,8 @@ C
             WRITE(LUPRI,529) 'Norm^2 of omega1 after ccvec:',OMNM1
             WRITE(LUPRI,529) 'Norm^2 of omega2 after ccvec:',OMNM2
          END IF
+C (EFK,2017) For debug of MLCC code 
+          WRITE(LUPRI,*) 'Norm:',OMNM
 
 C
          IF (CCSLV) THEN

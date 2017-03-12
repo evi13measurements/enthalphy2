@@ -32,7 +32,7 @@ contains
 !
       call mlcc_omega_e2
       call mlcc_omega_d2
-      call mlcc_omega_c2
+      call mlcc_omega_c2 
       call permute_ai_bj
       call mlcc_omega_a2
       call mlcc_omega_b2
@@ -1575,11 +1575,11 @@ contains
 !
       call deallocator(Y_ai_bj,n_ov,n_ov)
 !
-!     Print the omega vector, having added D2
+!     Print the omega vector, having added C2
 !
       if (debug) then 
          write(luprint,*) 
-         write(luprint,*) 'Omega(aibj,1) after D2 term has been added:'
+         write(luprint,*) 'Omega(aibj,1) after C2 term has been added:'
          write(luprint,*)
          call vec_print_packed(omega2,n_ov_ov_packed)
       endif 
@@ -1641,7 +1641,7 @@ contains
                   if(ai .ge. bj) then
 !
                      aibj=index_packed(ai,bj)
-                     omega2(aibj,1)=g_ai_bj(ai,bj)
+                     omega2(aibj,1)=g_ai_bj(ai,bj) !! Eirik: As you probably know, we should not overwrite omega2 here!
 !
                   endif
                enddo
