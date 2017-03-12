@@ -1593,6 +1593,11 @@ contains
 !
 !     Omega A2 = g_ai_bj + sum_(cd)g_ac_bd * t_ci_dj = A2.1 + A.2.2
 !
+!     Structure: Batching over both a and b. If no batching is necessary L_ab_J is only read once, and g_ac_bd 
+!                is constructed and kept in memory full size. 
+!                g_ac_bd is reordered as g_ab_cd and t_ci_dj is reordered as t_cd_ij.
+!                Omega contribution for A2.2 is ordered as Omega_ab_ij, and is reordered into the packed omega2 vector.          
+!
       implicit none
 !
       real(dp),dimension(:,:),pointer     :: g_ai_bj => null()
@@ -1661,7 +1666,7 @@ contains
 !     Prepare for batching over a
 !
 !
-!     How many batches?
+!     How many a-batches?
 !
       required = 2*n_vv*n_J*4 + 2*n_ov*n_J ! Needed to get cholesky of ab-type
       available=get_available()
@@ -1937,9 +1942,220 @@ contains
    end subroutine mlcc_omega_a2
 !
    subroutine mlcc_omega_b2
+!
+!     MLCC Omega B2 term
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 11 Mar 2017
+!
+!     Omega B2 = sum_(kl) t_ak_bl*(g_kilj+sum_(cd) t_ci_dj * g_kc_ld) 
+!
+!     Structure: g_kilj is constructed first and reordered as g_kl_ij. 
+!                Then the contraction over cd is performed, and the results added ti g_kl_ij.
+!                t_ak_bl is then reordered as t_ab_kl and the contraction over kl is performed.
+!
+      implicit none
+      real(dp),dimension(:,:),pointer     :: g_kc_ld     => null()
+      real(dp),dimension(:,:),pointer     :: g_kl_cd     => null()
+      real(dp),dimension(:,:),pointer     :: g_kl_ij     => null()
+      real(dp),dimension(:,:),pointer     :: g_ki_lj     => null()
+      real(dp),dimension(:,:),pointer     :: t_cd_ij     => null()
+      real(dp),dimension(:,:),pointer     :: t_ab_kl     => null()
+      real(dp),dimension(:,:),pointer     :: X_kl_ij     => null()
+      real(dp),dimension(:,:),pointer     :: omega_ab_ij => null()
+      real(dp),dimension(:,:),pointer     :: L_kc_J      => null()
+      real(dp),dimension(:,:),pointer     :: L_ij_J      => null()
+      integer                             :: c,d,k,l,i,j,kl,ij,ci,dj,kc,ld,cidj,cd,ki,lj,ak,bl,akbl,ab,b,a,ai,bj,aibj
+!
+!     Read cholesky vector of type L_ij_J
+!
+      call allocator(L_ij_J,n_oo,n_J)
+!
+      call get_cholesky_ij(L_ij_J)
+!
+!     Create g_ki_lj = sum_J L_li_J*L_lj_J
+!
+      call allocator(g_ki_lj,n_oo,n_oo)
+!
+      call dgemm('N','T',n_oo,n_oo,n_J &
+         ,one,L_ij_J,n_oo,L_ij_J,n_oo &
+         ,zero,g_ki_lj,n_oo)
+!
+      call deallocator(L_ij_J,n_oo,n_J)
+!
+!     Reordering g_ki_lj to g_kl_ij
+!
+      call allocator(g_kl_ij,n_oo,n_oo)
+!
+      do k = 1,n_occ
+         do l = 1,n_occ
+            do i = 1,n_occ
+               do j=1,n_occ
+!
+!                 Needed indices
+!
+                  ki=index_two(k,i,n_occ)
+                  lj=index_two(l,j,n_occ)
+                  kl=index_two(k,l,n_occ)
+                  ij=index_two(i,j,n_occ)
+!
+                  g_kl_ij(kl,ij)=g_ki_lj(ki,lj)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+      call deallocator(g_ki_lj,n_oo,n_oo)
+!
+!     Read cholesky vectors of ia-type into L_kc_J
+!
+      call allocator(L_kc_J,n_ov,n_J)
+!
+      call get_cholesky_ia(L_kc_J)
+!
+!     Create g_ck_ld = sum_(J) L_kc_J*L_ld_J
+!
+      call allocator(g_kc_ld,n_ov,n_ov)
+!
+      call dgemm('N','T',n_ov,n_ov,n_J &
+         ,one,L_kc_J,n_ov,L_kc_J,n_ov &
+         ,zero,g_kc_ld,n_ov)
+!
+!     Deallocate cholesky vectors L_ck_J
+!
+     call deallocator(L_kc_J,n_ov,n_J)
+!
+!     Reorder g_kc_ld as g_kl_cd, also reordering t_ci_dj as t_cd_ij
+!
+      call allocator(t_cd_ij,n_vv,n_oo)
+      call allocator(g_kl_cd,n_oo,n_vv)
+!
+      do k = 1,n_occ
+         do c = 1,n_vir
+            do l = 1,n_occ
+               do d = 1,n_vir
+!
+!                 Needed indices
+!
+
+                  cd=index_two(c,d,n_vir)
+                  kl=index_two(k,l,n_occ)
+                  kc=index_two(k,c,n_occ)
+                  ld=index_two(l,d,n_occ)
+!
+                  ci=index_two(c,k,n_vir)
+                  dj=index_two(d,l,n_vir)
+                  ij=index_two(k,l,n_occ)
+                  cidj=index_packed(ci,dj)
+!
+                  g_kl_cd(kl,cd)=g_kc_ld(kc,ld)
+                  t_cd_ij(cd,ij)=t2am(cidj,1)
+               enddo
+            enddo
+         enddo
+      enddo
+      call deallocator(g_kc_ld,n_ov,n_ov)
+!
+      call dgemm('N','N',n_oo,n_oo,n_vv &
+         ,one,g_kl_cd,n_oo,t_cd_ij,n_vv &
+         ,one,g_kl_ij,n_oo)
+!
+      call deallocator(t_cd_ij,n_vv,n_oo)
+      call deallocator(g_kl_cd,n_oo,n_vv)
+!
+!     Reorder t_ak_bl to t_ab_kl
+!
+      call allocator(t_ab_kl,n_vv,n_oo)
+!
+      do a = 1,n_vir
+         do b = 1,n_vir
+            do k = 1,n_occ
+               do l=1,n_occ
+!
+!                 Needed indices
+!
+                  ak=index_two(a,k,n_vir)
+                  bl=index_two(b,l,n_vir)
+                  ab=index_two(a,b,n_vir)
+                  kl=index_two(k,l,n_occ)
+!
+                  akbl=index_packed(ak,bl)
+!
+                  t_ab_kl(ab,kl)=t2am(akbl,1)
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     omega_ab_ij= sum_(kl) t_ab_kl*X_kl_ij
+!
+      call allocator(omega_ab_ij,n_vv,n_oo)
+!
+      call dgemm('N','N',n_vv,n_oo,n_oo &
+         ,one,t_ab_kl,n_vv,g_kl_ij,n_oo &
+         ,zero,omega_ab_ij,n_vv)
+!
+      call deallocator(t_ab_kl,n_vv,n_oo)
+      call deallocator(g_kl_ij,n_oo,n_oo)
+!
+!     Reorder omega
+!
+      do a = 1,n_vir
+         do b = 1,n_vir
+            do i = 1,n_occ
+               do j = 1,n_occ
+!
+!                 Needed indices
+!
+                  ai=index_two(a,i,n_vir)
+                  bj=index_two(b,j,n_vir)
+                  if (ai .ge. bj) then
+                     ab=index_two(a,b,n_vir)
+                     ij=index_two(i,j,n_occ)
+                     aibj=index_packed(ai,bj)
+                     omega2(aibj,1)=omega2(aibj,1)+omega_ab_ij(ab,ij)
+                  endif
+               enddo
+            enddo
+         enddo
+      enddo
+!
+      call deallocator(omega_ab_ij,n_vv,n_oo)  
+!   
    end subroutine mlcc_omega_b2
 !
    subroutine permute_ai_bj
+!
+!     MLCC Omega2 permutation (P_ij^ab omega_ai_bj). To be performed after E2,D2 and C2 terms are added to omega2.
+! 
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 12 Mar 2017
+!     
+      implicit none
+!
+      integer           :: a,b,i,j,ai,aj,bi,bj,aibj,ajbi
+!
+      do i = 1,n_occ
+         do j = 1,n_occ
+            do a = 1,n_vir
+               do b = 1,n_vir
+!
+!                 Needed indices
+!  
+                  ai=index_two(a,i,n_vir)
+                  aj=index_two(a,j,n_vir)
+                  bi=index_two(b,i,n_vir)
+                  bj=index_two(b,j,n_vir)
+!           
+                  if (ai .ge. bj) then
+                     aibj=index_packed(ai,bj)
+                     ajbi=index_packed(aj,bi)
+                     omega2(aibj,1)=omega2(aibj,1)+omega2(ajbi,1)
+                  endif
+               enddo
+            enddo
+         enddo
+      enddo
+
    end subroutine permute_ai_bj
    !
 end module mlcc_omega
