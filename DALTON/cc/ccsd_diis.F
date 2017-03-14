@@ -267,7 +267,7 @@ C
 #include "priunit.h"
 #include "dummy.h"
 C
-      PARAMETER (MAXVEC=80)
+      PARAMETER (MAXVEC=80) ! (EFK: Actually MAXDIIS? Mismatch with the above DIIS routine... 8 there, 80 here)
       PARAMETER (ZERO=0.0D0,ONE=1.0D0)
 C
       LOGICAL FIRST
@@ -319,7 +319,7 @@ C
          REWIND(LUSDIS)
       ENDIF
 C
-      WRITE(LUTDIS) S
+      WRITE(LUTDIS) S 
       WRITE(LUSDIS) T
 C
       NLOOP=NITER
