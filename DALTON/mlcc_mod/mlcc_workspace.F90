@@ -33,6 +33,7 @@ contains
 !   
    end subroutine work_init
 !
+
    subroutine allocator(elm,M,N)
 !
 !     Allocator 
@@ -92,6 +93,65 @@ contains
       work_used    = work_used - 4*size
 !
    end subroutine deallocator
+   subroutine allocator_n(elm,M,N)
+!
+!     Allocator 
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
+!  
+!     Allocates array and updates memory variables
+!  
+      implicit none
+!     
+      integer, intent(in)                    :: M,N
+      real(dp), dimension(:,:), allocatable  :: elm
+      integer                                :: size
+      integer                                :: stat, error
+!  
+      size = M*N
+!  
+      allocate(elm(M,N),stat = error)
+!  
+      if (stat .ne. 0) then
+         print*,"Error: couldn't allocate memory for array of size",size
+         stop
+      endif
+!       
+      work_remains = work_remains - 4*size
+      work_used    = work_used + 4*size
+!
+      if (work_remains .lt. 0) then
+         print*,"Error: user-specified memory too small"
+         stop
+      endif
+!
+   end subroutine allocator_n
+!
+   subroutine deallocator_n(elm,M,N)
+!
+!     Deallocator 
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Jan 2017
+!  
+!     Deallocation and update of memory information
+!  
+      implicit none
+!  
+      real(dp), dimension(:,:), allocatable   :: elm
+      integer                                 :: stat, error
+      integer, intent(in)                     :: M, N
+      integer                                 :: size
+!  
+      size = M*N
+!  
+      deallocate(elm,stat = error)  
+      if (stat .ne. 0) then
+         print*,"error: couldn't deallocate array"
+         stop
+      endif
+!  
+      work_remains = work_remains + 4*size
+      work_used    = work_used - 4*size
+!
+   end subroutine deallocator_n
 !
    subroutine allocator_int(elm,M,N)
 !
