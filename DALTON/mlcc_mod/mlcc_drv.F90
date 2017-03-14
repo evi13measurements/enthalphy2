@@ -16,6 +16,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    use mlcc_input_data
    use mlcc_t2_init
    use mlcc_fock
+   use mlcc_energy
 !
 !  mlcc3 driver
 !  Author Rolf H. Myhre
@@ -72,7 +73,12 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Calculate the omega vector 
 !
-   call mlcc_omega_calc
+ !  call mlcc_omega_calc
+!
+!
+!  Start the coupled cluster solver for the ground state energy
+!
+   call mlcc_energy_drv
 !
    call deallocator(t2am,n_ov_ov_packed,1)
    call deallocator(fock_diagonal,n_orbitals,1)

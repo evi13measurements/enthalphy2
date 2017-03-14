@@ -32,7 +32,7 @@ contains
 !
       call mlcc_omega_e2
       call mlcc_omega_d2
-      call mlcc_omega_c2
+      call mlcc_omega_c2 
       call mlcc_omega_a2
       call mlcc_omega_b2
 !
@@ -1647,6 +1647,7 @@ contains
                   if(ai .ge. bj) then
 !
                      aibj=index_packed(ai,bj)
+!
                      omega2(aibj,1)=omega2(aibj,1)+g_ai_bj(ai,bj)
 !
                   endif
