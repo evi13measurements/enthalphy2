@@ -33,7 +33,6 @@ contains
       call mlcc_omega_e2
       call mlcc_omega_d2
       call mlcc_omega_c2
-      call permute_ai_bj
       call mlcc_omega_a2
       call mlcc_omega_b2
 !
@@ -75,7 +74,7 @@ contains
 !
 !     Read Cholesky vector L_kc_J
 !
-      call read_cholesky_ia(L_kc_J)
+      call get_cholesky_ia(L_kc_J)
 !
 !     Allocate u_ckd_i = u_ki^cd
 !
@@ -139,7 +138,7 @@ contains
 !
 !        Read in the reordered Cholesky vector L_da_J = L_ad^J 
 !
-         call read_cholesky_ab_reorder(L_da_J,a_begin,a_end,ad_dim)
+         call get_cholesky_ab(L_da_J,a_begin,a_end,ad_dim,.true.)
 !
 !        Allocate g_da_kc = g_adkc and set to zero
 !
@@ -244,8 +243,8 @@ contains
 !
 !     Read the Cholesky vectors L_ki_J and L_lc_J
 !
-      call read_cholesky_ij(L_ki_J)
-      call read_cholesky_ia(L_lc_J)
+      call get_cholesky_ij(L_ki_J)
+      call get_cholesky_ia(L_lc_J)
 !
 !     Allocate integrals g_ki_lc = g_kilc
 !
@@ -448,13 +447,13 @@ contains
 !     The first term is referred to as the E2.1 term, and comes out ordered as (b,jai) 
 !     The second term is referred to as the E2.2 term, and comes out ordered as (aib,j)
 !
-!     Both are added to the omega vector element omega2(ai,bj)
+!     Both are permuted added to the omega vector element omega2(ai,bj)
 !
       implicit none 
 !
       logical :: debug = .true.
 !
-      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai,dlc,dkcl,dlck,aib,aibk,bk
+      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai,dlc,dkcl,dlck,aib,aibk,bk,bja,ibj
 !
       real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! For storing the E2.1 term temporarily
       real(dp), dimension(:,:), pointer :: L_kc_J       => null() ! L_kc^J
@@ -477,7 +476,7 @@ contains
 !
 !     Read the Cholesky vector from file 
 !
-      call read_cholesky_ia(L_kc_J)
+      call get_cholesky_ia(L_kc_J)
 !
 !     Allocate g_ld_kc = g_ldkc and set to zero 
 !
@@ -615,6 +614,8 @@ contains
 !                 Calculate the necessary indices 
 !
                   jai  = index_three(j,a,i,n_occ,n_vir)
+                  ibj  = index_three(i,b,j,n_occ,n_vir)
+!
                   ai   = index_two(a,i,n_vir)
                   bj   = index_two(b,j,n_vir)
                   aibj = index_packed(ai,bj)
@@ -623,7 +624,7 @@ contains
 !                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
-                     omega2(aibj,1) = omega2(aibj,1) + omega2_b_jai(b,jai)
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_b_jai(b,jai) + omega2_b_jai(a,ibj)
                   endif
 !
                enddo
@@ -653,7 +654,7 @@ contains
 !
 !     Read the Cholesky vector from file 
 !
-      call read_cholesky_ia(L_kc_J)
+      call get_cholesky_ia(L_kc_J)
 !
 !     Allocate g_ld_kc = g_ldkc and set to zero 
 !
@@ -794,12 +795,13 @@ contains
                   aibj = index_packed(ai,bj)
 !
                   aib  = index_three(a,i,b,n_vir,n_occ)
+                  bja  = index_three(b,j,a,n_vir,n_occ) 
 !
 !                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
 !                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
-                     omega2(aibj,1) = omega2(aibj,1) + omega2_aib_j(aib,j)
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_aib_j(aib,j) + omega2_aib_j(bja,i)
                   endif
 !
                enddo
@@ -882,7 +884,7 @@ contains
 !
 !     Read the Cholesky vector L_kc_J from file
 !
-      call read_cholesky_ia(L_kc_J)
+      call get_cholesky_ia(L_kc_J)
 !
 !     Allocate g_ld_kc = g_ldkc and set to zero 
 !
@@ -997,13 +999,14 @@ contains
 !
                   ai   = index_two(a,i,n_vir)
                   bj   = index_two(b,j,n_vir)
+!
                   aibj = index_packed(ai,bj)
 !
 !                 Restrict the indices to avoid adding both (ai,bj) and (bj,ai), 
 !                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
-                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj) + omega2_ai_bj(bj,ai)
                   endif
 !
                enddo
@@ -1037,8 +1040,8 @@ contains
 !
 !     Read the Cholesky vectors from file 
 !
-      call read_cholesky_ai(L_ai_J)
-      call read_cholesky_ia(L_kc_J)
+      call get_cholesky_ai(L_ai_J)
+      call get_cholesky_ia(L_kc_J)
 !
 !     Allocate g_ai_kc = g_aikc and set it zero
 !
@@ -1117,7 +1120,7 @@ contains
 !                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
-                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj) + omega2_ai_bj(bj,ai)
                   endif
 !
                enddo
@@ -1149,7 +1152,7 @@ contains
 !
 !     Read the Cholesky vector L_ki_J from file 
 !
-      call read_cholesky_ij(L_ki_J)
+      call get_cholesky_ij(L_ki_J)
 !
 !     Allocate the full g_ai_ck = g_acki and set it to zero 
 !
@@ -1187,7 +1190,7 @@ contains
 !
 !        Read the Cholesky vector from file 
 !
-         call read_cholesky_ab_reorder(L_ca_J,a_begin,a_end,ac_dim)
+         call get_cholesky_ab(L_ca_J,a_begin,a_end,ac_dim,.true.)
 !
 !        Allocate the integral g_ca_ki = g_acki and set to zero 
 !
@@ -1292,7 +1295,7 @@ contains
 !                 as they are identical in packed indices
 !
                   if (ai .ge. bj) then
-                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj)
+                     omega2(aibj,1) = omega2(aibj,1) + omega2_ai_bj(ai,bj) + omega2_ai_bj(bj,ai)
                   endif
 !
                enddo
@@ -1337,7 +1340,7 @@ contains
       real(dp),dimension(:,:),pointer        :: t_ck_bj => null()
       real(dp),dimension(:,:),pointer        :: X_ai_ck => null()
       real(dp),dimension(:,:),pointer        :: Y_ai_bj => null()
-      integer                                :: c,k,d,l,kd,lc,ck,dl,al,di,ai,aldi
+      integer                                :: c,k,d,l,kd,lc,ck,dl,al,di,ai,aldi,cl,dk,cldk
       integer                                :: i,a,ca,ki,b,bj,bk,cj,j,bkcj,aibj,aj,bi
       integer                                :: required,available,n_batch,max_batch_length,a_start
       integer                                :: a_end,a_batch,a_length
@@ -1382,14 +1385,13 @@ contains
 !
 !                 Needed indices for reordering of t
 !
-                  al=index_two(c,l,n_vir)
-                  di=index_two(d,k,n_vir)
-                  ai=ck
-                  aldi=index_packed(al,di)
+                  cl=index_two(c,l,n_vir)
+                  dk=index_two(d,k,n_vir)
+                  cldk=index_packed(cl,dk)
 !
                   g_dl_ck(dl,ck)=g_kd_lc(kd,lc)
 !
-                  t_ai_dl(ai,dl)=t2am(aldi,1)
+                  t_ai_dl(ck,dl)=t2am(cldk,1)
                enddo
             enddo
          enddo
@@ -1410,7 +1412,6 @@ contains
       call deallocator(g_dl_ck,n_ov,n_ov)
 !
 !     Constructing g_ki_ac ordered as g_ki_ca
-!
 !
 !     Allocate g_ki_ca
 !
@@ -1517,12 +1518,12 @@ contains
 !
                   bk = index_two(b,k,n_vir)
                   cj = index_two(c,j,n_vir)
-                  bkcj = index_packed(bk,ck)
+                  bkcj = index_packed(bk,cj)
 !
                   bj = index_two(b,j,n_vir)
                   ck = index_two(c,k,n_vir)
 !
-                  t_ck_bj = t2am(bkcj,1)
+                  t_ck_bj(ck,bj) = t2am(bkcj,1)
 !
                enddo
             enddo
@@ -1562,7 +1563,7 @@ contains
 !
                      aibj=index_packed(ai,bj)
 !
-                     omega2(aibj,1)=omega2(aibj,1)+half*Y_ai_bj(ai,bj)+Y_ai_bj(aj,bi)
+                     omega2(aibj,1)=omega2(aibj,1)+half*Y_ai_bj(ai,bj)+Y_ai_bj(aj,bi)+half*Y_ai_bj(bj,ai)+Y_ai_bj(bi,aj)
 !
                   endif
 !  
@@ -1646,7 +1647,7 @@ contains
                   if(ai .ge. bj) then
 !
                      aibj=index_packed(ai,bj)
-                     omega2(aibj,1)=g_ai_bj(ai,bj)
+                     omega2(aibj,1)=omega2(aibj,1)+g_ai_bj(ai,bj)
 !
                   endif
                enddo
@@ -1964,6 +1965,7 @@ contains
       real(dp),dimension(:,:),pointer     :: L_kc_J      => null()
       real(dp),dimension(:,:),pointer     :: L_ij_J      => null()
       integer                             :: c,d,k,l,i,j,kl,ij,ci,dj,kc,ld,cidj,cd,ki,lj,ak,bl,akbl,ab,b,a,ai,bj,aibj
+      logical                             :: debug = .true.
 !
 !     Read cholesky vector of type L_ij_J
 !
@@ -2122,40 +2124,17 @@ contains
 !
       call deallocator(omega_ab_ij,n_vv,n_oo)  
 !   
+!
+!
+!     Print the omega vector, having added B2
+!
+      if (debug) then 
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after B2 term has been added:'
+         write(luprint,*)
+         call vec_print_packed(omega2,n_ov_ov_packed)
+      endif
+!
    end subroutine mlcc_omega_b2
 !
-   subroutine permute_ai_bj
-!
-!     MLCC Omega2 permutation (P_ij^ab omega_ai_bj). To be performed after E2,D2 and C2 terms are added to omega2.
-! 
-!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 12 Mar 2017
-!     
-      implicit none
-!
-      integer           :: a,b,i,j,ai,aj,bi,bj,aibj,ajbi
-!
-      do i = 1,n_occ
-         do j = 1,n_occ
-            do a = 1,n_vir
-               do b = 1,n_vir
-!
-!                 Needed indices
-!  
-                  ai=index_two(a,i,n_vir)
-                  aj=index_two(a,j,n_vir)
-                  bi=index_two(b,i,n_vir)
-                  bj=index_two(b,j,n_vir)
-!           
-                  if (ai .ge. bj) then
-                     aibj=index_packed(ai,bj)
-                     ajbi=index_packed(aj,bi)
-                     omega2(aibj,1)=omega2(aibj,1)+omega2(ajbi,1)
-                  endif
-               enddo
-            enddo
-         enddo
-      enddo
-
-   end subroutine permute_ai_bj
-   !
 end module mlcc_omega

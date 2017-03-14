@@ -17,28 +17,28 @@ contains
       use mlcc_cholesky
 !
       implicit none
-      real(dp), dimension(:,:), pointer      :: fock_ao  => null()
-      real(dp), dimension(:,:), pointer      :: ao_int  => null()
-      real(dp), dimension(:,:), pointer      :: h1mo  => null()
-      real(dp), dimension(:,:), pointer      :: X => null()
-      integer                                :: luaoin = -1
-      integer                                :: idummy,i,j,k,a,b,ij,kk,ik,kj,ii,jj,ji,ai,ib,bi,ia,aj,ja,ab
-      real(dp), dimension(:,:), pointer      :: g_ij_kl => null()
-      real(dp), dimension(:,:), pointer      :: g_ab_ij => null()
-      real(dp), dimension(:,:), pointer      :: g_ai_jb => null()
-      real(dp), dimension(:,:), pointer      :: g_ia_jk => null()
-      real(dp), dimension(:,:), pointer      :: g_ai_jk => null()
-      real(dp), dimension(:,:), pointer      :: L_ij_J => null()
-      real(dp), dimension(:,:), pointer      :: L_ia_J => null()
-      real(dp), dimension(:,:), pointer      :: L_ai_J => null()
-      real(dp), dimension(:,:), pointer      :: L_ab_J => null()
-      integer                                :: available, required,max_batch_length,n_batch,batch_start
-      integer                                :: batch_end,batch_length,g_off
-      integer                                :: b_batch = 0
-      logical                                :: debug = .true.
+      real(dp), dimension(:,:), allocatable      :: fock_ao
+      real(dp), dimension(:,:), allocatable      :: ao_int 
+      real(dp), dimension(:,:), allocatable      :: h1mo   
+      real(dp), dimension(:,:), allocatable      :: X      
+      integer                                    :: luaoin = -1
+      integer                                    :: idummy,i,j,k,a,b,ij,kk,ik,kj,ii,jj,ji,ai,ib,bi,ia,aj,ja,ab
+      real(dp), dimension(:,:), allocatable      :: g_ij_kl
+      real(dp), dimension(:,:), allocatable      :: g_ab_ij
+      real(dp), dimension(:,:), allocatable      :: g_ai_jb
+      real(dp), dimension(:,:), allocatable      :: g_ia_jk
+      real(dp), dimension(:,:), allocatable      :: g_ai_jk
+      real(dp), dimension(:,:), allocatable      :: L_ij_J 
+      real(dp), dimension(:,:), allocatable      :: L_ia_J 
+      real(dp), dimension(:,:), allocatable      :: L_ai_J 
+      real(dp), dimension(:,:), allocatable      :: L_ab_J 
+      integer                                    :: available, required,max_batch_length,n_batch,batch_start
+      integer                                    :: batch_end,batch_length,g_off
+      integer                                    :: b_batch = 0
+      logical                                    :: debug = .true.
 !
-   call allocator(mo_fock_mat,n_orbitals,n_orbitals)
-   call allocator(h1mo,n_orbitals,n_orbitals)
+   call allocator_n(mo_fock_mat,n_orbitals,n_orbitals)
+   call allocator_n(h1mo,n_orbitals,n_orbitals)
    mo_fock_mat = zero
    h1mo = zero
 !
@@ -49,7 +49,7 @@ contains
 !
 !  Allocate for one-electron ao integrals
 !
-      call allocator(ao_int,n_basis_2_pack,1)
+      call allocator_n(ao_int,n_basis_2_pack,1)
 !
 !  Read one-electron ao integrals
 !
@@ -62,16 +62,16 @@ contains
 !
 !  Allocate ao fock matrix, add one-electron contributions
 !
-      call allocator(fock_ao,n_basis,n_basis)
+      call allocator_n(fock_ao,n_basis,n_basis)
       call squareup(ao_int,fock_ao,n_basis)   
 !
 !  Deallocation of ao integrals
 !   
-      call deallocator(ao_int,n_basis_2_pack,1) 
+      call deallocator_n(ao_int,n_basis_2_pack,1) 
 !
 !  Transform to one-electron part to mo and add to mo_fock_mat 
 !
-      call allocator(X,n_basis,n_orbitals)
+      call allocator_n(X,n_basis,n_orbitals)
 !
       call dgemm('N','N',n_basis,n_orbitals,n_basis,one,fock_ao,n_basis,orb_coefficients,n_basis,zero,X,n_basis)
       call dgemm('T','N',n_orbitals,n_orbitals,n_basis,one,orb_coefficients,n_basis,X,n_basis,zero,h1mo,n_orbitals)
@@ -79,10 +79,10 @@ contains
 !     T1-transformation of one-electron integrals in mo basis
 !
       call h1mo_T1(h1mo,mo_fock_mat)
-      call deallocator(h1mo,n_orbitals,n_orbitals)
+      call deallocator_n(h1mo,n_orbitals,n_orbitals)
 !
-      call deallocator(X,n_basis,n_orbitals)
-      call deallocator(fock_ao,n_basis,n_basis)
+      call deallocator_n(X,n_basis,n_orbitals)
+      call deallocator_n(fock_ao,n_basis,n_basis)
 !
 !
 !!! TWO-ELECTRON CONTRIBUTION !!!
@@ -94,8 +94,8 @@ contains
 !
 !  Allocation for L_ij_J_pack
 ! 
-   call allocator(L_ij_J,n_oo,n_J)
-   call allocator(g_ij_kl,n_oo,n_oo)
+   call allocator_n(L_ij_J,n_oo,n_J)
+   call allocator_n(g_ij_kl,n_oo,n_oo)
    L_ij_J=zero
    g_ij_kl=zero
 !
@@ -125,15 +125,15 @@ contains
 !
 !     Deallocate g_ij_kl
 ! 
-      call deallocator(g_ij_kl,n_oo,n_oo)
+      call deallocator_n(g_ij_kl,n_oo,n_oo)
 !
 !!    Occupied-vacant blocks F_ai=F_ia=0 because this Fock matrix satisfies the HF equations !! OBS T1!
 !
 !
 !     Allocation for g_ia_jk 
 !
-     call allocator(L_ia_J,n_ov,n_J)
-     call allocator(g_ia_jk,n_ov,n_oo)
+     call allocator_n(L_ia_J,n_ov,n_J)
+     call allocator_n(g_ia_jk,n_ov,n_oo)
 !
 !     Reading Cholesky vector L_ia_J
 !
@@ -142,12 +142,12 @@ contains
 !     g_ia_jk
 !
       call dgemm('N','T',n_ov,n_oo,n_J,one,L_ia_J,n_ov,L_ij_J,n_oo,zero,g_ia_jk,n_ov)
-      call deallocator(L_ia_J,n_ov,n_J)
+      call deallocator_n(L_ia_J,n_ov,n_J)
 !
 !     Allocation for g_ai_jk 
 !
-      call allocator(L_ai_J,n_ov,n_J)
-      call allocator(g_ai_jk,n_ov,n_oo)
+      call allocator_n(L_ai_J,n_ov,n_J)
+      call allocator_n(g_ai_jk,n_ov,n_oo)
 !
 !     Reading Cholesky vector L_ai_J
 !
@@ -156,7 +156,7 @@ contains
 !     g_ai_jk
 !
       call dgemm('N','T',n_ov,n_oo,n_J,one,L_ai_J,n_ov,L_ij_J,n_oo,zero,g_ai_jk,n_ov)
-      call deallocator(L_ai_J,n_ov,n_J)
+      call deallocator_n(L_ai_J,n_ov,n_J)
 !
 !     Adding terms to Fock matrix
 !
@@ -181,12 +181,12 @@ contains
             enddo
          enddo
       enddo
-      call deallocator(g_ia_jk,n_ov,n_oo)
-      call deallocator(g_ai_jk,n_ov,n_oo)
+      call deallocator_n(g_ia_jk,n_ov,n_oo)
+      call deallocator_n(g_ai_jk,n_ov,n_oo)
 !
 !!    Vacant-vacant block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
-      call allocator(g_ab_ij,n_vv,n_oo)
+      call allocator_n(g_ab_ij,n_vv,n_oo)
       g_ab_ij=zero
 !
 !     Batching over a
@@ -205,7 +205,6 @@ contains
 !     Start batchig loop
 !
       do b_batch = 1,n_batch
-
 !
 !        Get batch limits  and  length of batch
 !
@@ -214,7 +213,7 @@ contains
 !
 !        Allocation of L_ab_J
 !
-         call allocator(L_ab_J,n_vir*batch_length,n_J)
+         call allocator_n(L_ab_J,n_vir*batch_length,n_J)
          L_ab_J=zero
 !
 !        Read Cholesky vectors
@@ -231,19 +230,19 @@ contains
 !
 !        Deallocation of L_ab_J
 !
-         call deallocator(L_ab_J,batch_length*n_vir,n_J)
+         call deallocator_n(L_ab_J,batch_length*n_vir,n_J)
 !
       enddo ! batching done
 !
 !     Deallocation of L_ij_J
 !
-      call deallocator(L_ij_J,n_oo,n_J)
+      call deallocator_n(L_ij_J,n_oo,n_J)
 !
 !     Allocate for g_ai_jb
 !
-      call allocator(g_ai_jb,n_ov,n_ov)
-      call allocator(L_ai_J,n_ov,n_J)
-      call allocator(L_ia_J,n_ov,n_J)
+      call allocator_n(g_ai_jb,n_ov,n_ov)
+      call allocator_n(L_ai_J,n_ov,n_J)
+      call allocator_n(L_ia_J,n_ov,n_J)
 !
 !
 !     Reading Cholesky vector L_ia_J and L_ai_J
@@ -254,8 +253,8 @@ contains
 !
 !     Deallocate L_ia_J
 !
-     call deallocator(L_ia_J,n_ov,n_J)
-     call deallocator(L_ai_J,n_ov,n_J)
+     call deallocator_n(L_ia_J,n_ov,n_J)
+     call deallocator_n(L_ai_J,n_ov,n_J)
 !
 !     Calculation of two-electron terms for virtual-virtual blocks
 !
@@ -272,8 +271,8 @@ contains
             enddo
          enddo 
       enddo
-     call deallocator(g_ab_ij,n_vv,n_oo)
-     call deallocator(g_ai_jb,n_ov,n_ov)
+     call deallocator_n(g_ab_ij,n_vv,n_oo)
+     call deallocator_n(g_ai_jb,n_ov,n_ov)
 !
 !    Clean-up of Fock matrix
 !
@@ -323,7 +322,7 @@ contains
       enddo
 !
 
-   call deallocator(mo_fock_mat,n_orbitals,n_orbitals)
+   call deallocator_n(mo_fock_mat,n_orbitals,n_orbitals)
 !
    end subroutine mlcc_get_fock
 !
@@ -341,17 +340,17 @@ contains
    double precision h1(n_orbitals,n_orbitals)
    double precision h1_T1(n_orbitals,n_orbitals)
 !
-   real(dp),dimension(:,:),pointer     :: x => null()
-   real(dp),dimension(:,:),pointer     :: y => null()
-   real(dp),dimension(:,:),pointer     :: t1 => null()
-   real(dp),dimension(:,:),pointer     :: Z => null() ! Intermediate for matrix multiplication
-   integer                             :: p,q,a,i
+   real(dp),dimension(:,:),allocatable     :: x 
+   real(dp),dimension(:,:),allocatable     :: y 
+   real(dp),dimension(:,:),allocatable     :: t1
+   real(dp),dimension(:,:),allocatable     :: Z ! Intermediate for matrix multiplication
+   integer                                 :: p,q,a,i
 !
 !  Create t1, x, and y
 !
-   call allocator(t1,n_orbitals,n_orbitals)
-   call allocator(y,n_orbitals,n_orbitals)
-   call allocator(x,n_orbitals,n_orbitals)
+   call allocator_n(t1,n_orbitals,n_orbitals)
+   call allocator_n(y,n_orbitals,n_orbitals)
+   call allocator_n(x,n_orbitals,n_orbitals)
    t1 = zero
    x = zero
    y = zero
@@ -378,11 +377,11 @@ contains
 !
 !  Deallocate t1
 !
-   call deallocator(t1,n_orbitals,n_orbitals)
+   call deallocator_n(t1,n_orbitals,n_orbitals)
 !
 !  Allocate Intermediate
 !   
-   call allocator(Z,n_orbitals,n_orbitals)
+   call allocator_n(Z,n_orbitals,n_orbitals)
 !
 !  h1_T1 = x*h1*y^T = x*Z
 !
@@ -396,9 +395,9 @@ contains
 !
 !  Deallocations
 !
-   call deallocator(Z,n_orbitals,n_orbitals)
-   call deallocator(y,n_orbitals,n_orbitals)
-   call deallocator(x,n_orbitals,n_orbitals)
+   call deallocator_n(Z,n_orbitals,n_orbitals)
+   call deallocator_n(y,n_orbitals,n_orbitals)
+   call deallocator_n(x,n_orbitals,n_orbitals)
 !
    end subroutine h1mo_T1
 end module mlcc_fock

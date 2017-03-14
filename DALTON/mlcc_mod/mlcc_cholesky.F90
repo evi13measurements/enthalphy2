@@ -42,11 +42,11 @@ contains
 !
       integer :: lucho_ia 
       integer :: i,a,ia,ai,j
-      real(dp),dimension(:,:),pointer :: L_ia_J
+      real(dp),dimension(:,:),allocatable :: L_ia_J
 !
 !     Allocation
 !
-      call allocator(L_ia_J,n_ov,n_J)
+      call allocator_n(L_ia_J,n_ov,n_J)
       L_ia_J=zero
 !     
 !     IO
@@ -71,7 +71,7 @@ contains
 !
 !     Deallocation
 !
-      call deallocator(L_ia_J,n_ov,n_J)
+      call deallocator_n(L_ia_J,n_ov,n_J)
 
    end subroutine read_cholesky_ai
 !
@@ -224,18 +224,18 @@ contains
 !
       double precision L_ai_J(n_ov,n_J)
 !
-      integer                          :: required,available,max_batch_length,n_batch,L_off
-      integer                          :: a_batch,batch_start,batch_end,batch_length
-      integer                          :: a,b,J,i,ai,Ja,ba,k,ik,iJ,kb,kJ
-      real(dp),dimension(:,:),pointer  :: L_ba_J => null()
-      real(dp),dimension(:,:),pointer  :: L_Ja_b => null()
-      real(dp),dimension(:,:),pointer  :: L_Ja_i => null()
-      real(dp),dimension(:,:),pointer  :: L_ik_J => null()
-      real(dp),dimension(:,:),pointer  :: L_k_iJ => null()
-      real(dp),dimension(:,:),pointer  :: L_a_iJ => null()
-      real(dp),dimension(:,:),pointer  :: L_kJ_b => null()
-      real(dp),dimension(:,:),pointer  :: L_kJ_i => null()
-      real(dp),dimension(:,:),pointer  :: L_kb_J => null()
+      integer                              :: required,available,max_batch_length,n_batch,L_off
+      integer                              :: a_batch,batch_start,batch_end,batch_length
+      integer                              :: a,b,J,i,ai,Ja,ba,k,ik,iJ,kb,kJ
+      real(dp),dimension(:,:),allocatable  :: L_ba_J
+      real(dp),dimension(:,:),allocatable  :: L_Ja_b
+      real(dp),dimension(:,:),allocatable  :: L_Ja_i
+      real(dp),dimension(:,:),allocatable  :: L_ik_J
+      real(dp),dimension(:,:),allocatable  :: L_k_iJ
+      real(dp),dimension(:,:),allocatable  :: L_a_iJ
+      real(dp),dimension(:,:),allocatable  :: L_kJ_b
+      real(dp),dimension(:,:),allocatable  :: L_kJ_i
+      real(dp),dimension(:,:),allocatable  :: L_kb_J
 !
       call read_cholesky_ai(L_ai_J)
 !
@@ -246,7 +246,7 @@ contains
 !
 !     Allocate L_Ja_i
 !
-      call allocator(L_Ja_i,n_J*n_vir,n_occ)
+      call allocator_n(L_Ja_i,n_J*n_vir,n_occ)
       L_Ja_i=zero
 !
 !     Batching setup
@@ -271,8 +271,8 @@ contains
 !
 !        Allocate L_ab_J and L_Ja_b
 !
-         call allocator(L_ba_J,n_vir*batch_length,n_J)
-         call allocator(L_Ja_b,n_vir*n_J,batch_length)
+         call allocator_n(L_ba_J,n_vir*batch_length,n_J)
+         call allocator_n(L_Ja_b,n_vir*n_J,batch_length)
          L_ba_J=zero
          L_Ja_b=zero
 !
@@ -307,8 +307,8 @@ contains
 !
 !        Deallocate L_ab_J and L_Ja_b
 !
-         call deallocator(L_ba_J,n_vir*batch_length,n_J)
-         call deallocator(L_Ja_b,n_vir*n_J,batch_length)
+         call deallocator_n(L_ba_J,n_vir*batch_length,n_J)
+         call deallocator_n(L_Ja_b,n_vir*n_J,batch_length)
 !
       enddo ! batching over a
 !
@@ -331,7 +331,7 @@ contains
 !
 !     Deallocate L_Ja_i
 !
-      call deallocator(L_Ja_i,n_J*n_vir,n_occ)
+      call deallocator_n(L_Ja_i,n_J*n_vir,n_occ)
 !
 !
 !!!     L_ij_J contributions    !!!
@@ -340,9 +340,9 @@ contains
 !
 !     Allocate L_a_iJ, L_ik_J, L_k_iJ
 !
-      call allocator(L_a_iJ,n_vir,n_J*n_occ)
-      call allocator(L_ik_J,n_oo,n_J)
-      call allocator(L_k_iJ,n_occ,n_occ*n_J)
+      call allocator_n(L_a_iJ,n_vir,n_J*n_occ)
+      call allocator_n(L_ik_J,n_oo,n_J)
+      call allocator_n(L_k_iJ,n_occ,n_occ*n_J)
       L_a_iJ = zero   
       L_ik_J = zero 
       L_k_iJ = zero
@@ -392,16 +392,16 @@ contains
 !
 !     Deallocate L_a_iJ, L_ik_J, L_k_iJ
 !
-      call deallocator(L_a_iJ,n_vir,n_J*n_occ)      
-      call deallocator(L_ik_J,n_oo,n_J)
-      call deallocator(L_k_iJ,n_occ,n_occ*n_J)
+      call deallocator_n(L_a_iJ,n_vir,n_J*n_occ)      
+      call deallocator_n(L_ik_J,n_oo,n_J)
+      call deallocator_n(L_k_iJ,n_occ,n_occ*n_J)
 !
 !
 !!!    L_jb_J contributions    !!!     
 !
 !
-      call allocator(L_kJ_b,n_occ*n_J,n_vir)
-      call allocator(L_kb_J,n_occ*n_vir,n_J)
+      call allocator_n(L_kJ_b,n_occ*n_J,n_vir)
+      call allocator_n(L_kb_J,n_occ*n_vir,n_J)
 !
 !     Read L_kb_J
 !
@@ -426,11 +426,11 @@ contains
 !
 !     Deallocate L_kb_J
 !
-      call deallocator(L_kb_J,n_occ*n_vir,n_J)
+      call deallocator_n(L_kb_J,n_occ*n_vir,n_J)
 !
 !     Allocate L_kJ_i for dgemm
 !
-      call allocator(L_kJ_i,n_occ*n_J,n_occ)
+      call allocator_n(L_kJ_i,n_occ*n_J,n_occ)
       L_kJ_i = zero
 !
 !     sum_b L_kJ_b*t_b_i = L_kJ_i
@@ -441,11 +441,11 @@ contains
 !
 !     Deallocate L_kJ_b
 !
-      call deallocator(L_kJ_b,n_occ*n_J,n_vir)
+      call deallocator_n(L_kJ_b,n_occ*n_J,n_vir)
 !
 !     Allocate L_k_iJ
 !  
-      call allocator(L_k_iJ,n_occ,n_occ*n_J)
+      call allocator_n(L_k_iJ,n_occ,n_occ*n_J)
       L_k_iJ = zero
 !
 !     Reorder L_kJ_i to L_k_iJ    
@@ -467,11 +467,11 @@ contains
 !
 !     Deallocate L_kJ_i
 !
-      call deallocator(L_kJ_i,n_occ*n_J,n_occ)
+      call deallocator_n(L_kJ_i,n_occ*n_J,n_occ)
 !
 !     Allocate L_a_iJ for dgemm
 !
-      call allocator(L_a_iJ,n_vir,n_occ*n_J)
+      call allocator_n(L_a_iJ,n_vir,n_occ*n_J)
       L_a_iJ = zero
 !      
 !     sum_k t_a_k*L_k_iJ = L_a_iJ
@@ -496,8 +496,8 @@ contains
          enddo
       enddo
 
-      call deallocator(L_a_iJ,n_vir,n_occ*n_J)
-      call deallocator(L_k_iJ,n_occ,n_occ*n_J)
+      call deallocator_n(L_a_iJ,n_vir,n_occ*n_J)
+      call deallocator_n(L_k_iJ,n_occ,n_occ*n_J)
 !
   end subroutine get_cholesky_ai
 !
@@ -513,15 +513,15 @@ contains
 !
       double precision L_ij_J(n_oo,n_J)
 !
-      real(dp),dimension(:,:),pointer     :: L_ia_J => null()
-      real(dp),dimension(:,:),pointer     :: L_iJ_a => null()
-      real(dp),dimension(:,:),pointer     :: L_iJ_k => null()
-      integer                             :: i,J,a,ij,ia,ik,k
+      real(dp),dimension(:,:),allocatable     :: L_ia_J
+      real(dp),dimension(:,:),allocatable     :: L_iJ_a
+      real(dp),dimension(:,:),allocatable     :: L_iJ_k
+      integer                                 :: i,J,a,ij,ia,ik,k
 !
 !     Allocation
 !    
-      call allocator(L_ia_J,n_ov,n_J)
-      call allocator(L_iJ_a,n_occ*n_J,n_vir)
+      call allocator_n(L_ia_J,n_ov,n_J)
+      call allocator_n(L_iJ_a,n_occ*n_J,n_vir)
       L_ia_J = zero
       L_iJ_a = zero
 !
@@ -548,11 +548,11 @@ contains
 !
 !     Deallocate L_ia_J
 !
-      call deallocator(L_ia_J,n_ov,n_J)
+      call deallocator_n(L_ia_J,n_ov,n_J)
 !
 !     Allocate L_iJ_k
 !
-      call allocator(L_iJ_k,n_occ*n_J,n_occ)
+      call allocator_n(L_iJ_k,n_occ*n_J,n_occ)
       L_iJ_k=zero
 !
 !     T1-transformation
@@ -579,8 +579,8 @@ contains
 !
 !     Deallocate L_iJ_k and L_iJ_a
 !
-      call deallocator(L_iJ_k,n_occ*n_J,n_occ)
-      call deallocator(L_iJ_a,n_occ*n_J,n_vir)
+      call deallocator_n(L_iJ_k,n_occ*n_J,n_occ)
+      call deallocator_n(L_iJ_a,n_occ*n_J,n_vir)
 !     
   end subroutine get_cholesky_ij
 !
@@ -598,12 +598,12 @@ contains
       integer :: start,end
       logical,intent(in) :: reorder
 !
-      real(dp),dimension(:,:),pointer     :: L_ib_J => null()
-      real(dp),dimension(:,:),pointer     :: L_Jb_i => null()
-      real(dp),dimension(:,:),pointer     :: L_Jb_a => null()
-      real(dp),dimension(:,:),pointer     :: L_a_Jb => null()
-      real(dp),dimension(:,:),pointer     :: L_i_Jb => null()
-      integer                             :: batch_length
+      real(dp),dimension(:,:),allocatable     :: L_ib_J
+      real(dp),dimension(:,:),allocatable     :: L_Jb_i
+      real(dp),dimension(:,:),allocatable     :: L_Jb_a
+      real(dp),dimension(:,:),allocatable     :: L_a_Jb
+      real(dp),dimension(:,:),allocatable     :: L_i_Jb
+      integer                                 :: batch_length
       double precision L_ab_J(ab_dim,n_J)
       batch_length = end-start+1
 !
@@ -613,7 +613,7 @@ contains
 !
 !        Allocate L_ib_J
 !     
-         call allocator(L_ib_J,n_ov,n_J)
+         call allocator_n(L_ib_J,n_ov,n_J)
          L_ib_J=zero
 !
 !        Read L_ia_J
@@ -627,7 +627,7 @@ contains
 !
 !        Allocate L_i,Jb
 !
-         call allocator(L_i_Jb,n_occ,n_J*n_vir)
+         call allocator_n(L_i_Jb,n_occ,n_J*n_vir)
          L_i_Jb=zero
 !
 !        Reorder L_ib_J to L_i_Jb
@@ -649,11 +649,11 @@ contains
 !
 !        Dellocate L_ib_J
 !  
-         call deallocator(L_ib_J,n_ov,n_J)
+         call deallocator_n(L_ib_J,n_ov,n_J)
 !
 !        Allocate L_a_Jb for batch of a
 !  
-         call allocator(L_a_Jb,batch_length,n_vir*n_J)
+         call allocator_n(L_a_Jb,batch_length,n_vir*n_J)
 !
 !        t1_a_i * L_i_Jb = L_a_Jb
 !
@@ -679,14 +679,14 @@ contains
 !
 !        Dellocate L_i_Jb and L_a_Jb for batch of a
 !
-         call deallocator(L_a_Jb,batch_length,n_J*n_vir)
-         call deallocator(L_i_Jb,n_J*n_vir,n_occ)
+         call deallocator_n(L_a_Jb,batch_length,n_J*n_vir)
+         call deallocator_n(L_i_Jb,n_J*n_vir,n_occ)
 !
       else  !! Batching over b !!
 !
 !        Allocate L_ib_J
 !     
-         call allocator(L_ib_J,n_ov,n_J)
+         call allocator_n(L_ib_J,n_ov,n_J)
          L_ib_J=zero
 !
 !        Read L_ia_J
@@ -700,7 +700,7 @@ contains
 !
 !        Allocate L_Jb,i for batch of b
 !
-         call allocator(L_Jb_i,n_J*batch_length,n_occ)
+         call allocator_n(L_Jb_i,n_J*batch_length,n_occ)
          L_Jb_i=zero
 !
 !        Reorder L_ib_J to L_Jb_i
@@ -722,11 +722,11 @@ contains
 !
 !        Dellocate L_ib_J
 !  
-         call deallocator(L_ib_J,n_ov,n_J)
+         call deallocator_n(L_ib_J,n_ov,n_J)
 !
 !        Allocate L_Jb_a for batch of b
 !  
-         call allocator(L_Jb_a,n_J*batch_length,n_vir)
+         call allocator_n(L_Jb_a,n_J*batch_length,n_vir)
 !
 !        T1-transformation
 !
@@ -752,8 +752,8 @@ contains
 !
 !        Dellocate L_Jb,i and L_Jb_a for batch of b
 !
-         call deallocator(L_Jb_a,n_J*batch_length,n_vir)
-         call deallocator(L_Jb_i,n_J*batch_length,n_occ)
+         call deallocator_n(L_Jb_a,n_J*batch_length,n_vir)
+         call deallocator_n(L_Jb_i,n_J*batch_length,n_occ)
 !
       endif
 !
