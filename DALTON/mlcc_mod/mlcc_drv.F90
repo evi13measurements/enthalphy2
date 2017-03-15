@@ -29,8 +29,6 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    real(dp), intent(in), dimension(lwork) :: work !work static array
 !
-   integer :: i,j,a,b,nai,nbj,naibj
-!
    luprint = lupri 
 !
 !  Initialize memory variables

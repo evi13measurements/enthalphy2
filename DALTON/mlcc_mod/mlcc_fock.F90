@@ -22,7 +22,8 @@ contains
       real(dp), dimension(:,:), allocatable      :: h1mo   
       real(dp), dimension(:,:), allocatable      :: X      
       integer                                    :: luaoin = -1
-      integer                                    :: idummy,i,j,k,a,b,ij,kk,ik,kj,ii,jj,ji,ai,ib,bi,ia,aj,ja,ab
+      integer                                    :: idummy=0,i=0,j=0,k=0,a=0,b=0,ij=0,kk=0,ik=0,kj=0,ii=0,jj=0
+      integer                                    :: ji=0,ai=0,ib=0,bi=0,ia=0,aj=0,ja=0,ab=0
       real(dp), dimension(:,:), allocatable      :: g_ij_kl
       real(dp), dimension(:,:), allocatable      :: g_ab_ij
       real(dp), dimension(:,:), allocatable      :: g_ai_jb
@@ -32,8 +33,8 @@ contains
       real(dp), dimension(:,:), allocatable      :: L_ia_J 
       real(dp), dimension(:,:), allocatable      :: L_ai_J 
       real(dp), dimension(:,:), allocatable      :: L_ab_J 
-      integer                                    :: available, required,max_batch_length,n_batch,batch_start
-      integer                                    :: batch_end,batch_length,g_off
+      integer                                    :: available=0,required=0,max_batch_length=0,n_batch=0,batch_start=0
+      integer                                    :: batch_end=0,batch_length=0,g_off=0
       integer                                    :: b_batch = 0
       logical                                    :: debug = .true.
 !
@@ -344,7 +345,7 @@ contains
    real(dp),dimension(:,:),allocatable     :: y 
    real(dp),dimension(:,:),allocatable     :: t1
    real(dp),dimension(:,:),allocatable     :: Z ! Intermediate for matrix multiplication
-   integer                                 :: p,q,a,i
+   integer                                 :: p=0,q=0,a=0,i=0
 !
 !  Create t1, x, and y
 !

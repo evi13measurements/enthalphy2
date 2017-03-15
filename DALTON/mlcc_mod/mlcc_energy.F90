@@ -12,7 +12,7 @@ module mlcc_energy
 !  Some DIIS specific variables 
 !
    integer :: maxdiis = 8
-   integer :: ludiis_dt, ludiis_t_dt
+   integer :: ludiis_dt = -1, ludiis_t_dt = -1
    real(dp), dimension(:,:), pointer :: G           => null() ! The DIIS matrix, G * w = H, G = G(maxdiis,maxdiis)
    real(dp), dimension(:,:), pointer :: copy_of_G   => null() ! Copy for purposes...
    real(dp), dimension(:,:), pointer :: H           => null() ! The DIIS vector, G * w = H, H = H(maxdiis,1)
@@ -30,22 +30,22 @@ contains
       implicit none 
 !
       logical :: debug = .true.
-      integer :: idum
+      integer :: idum=0
 !
       logical :: converged           = .false.
       logical :: converged_energy    = .false.
       logical :: converged_solution  = .false.
 !
-      integer :: max_iterations = 3
+      integer :: max_iterations = 20
       integer :: iteration = 1
+!
+      integer :: memory_lef
 !
       real(dp) :: energy_threshold = 1.0D-8
       real(dp) :: solution_threshold = 1.0D-6
       real(dp) :: energy = zero 
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm
-!
-      integer :: record_length
 !
 !     Enter the iterative loop 
 !
@@ -54,10 +54,17 @@ contains
 !
 !        Calculate the current coupled cluster energy 
 ! 
+         memory_lef = get_available()
+         write(luprint,*) 'Memory:',memory_lef
+         call flshfo(luprint)
+!
          write(luprint,*) 'Blablabla1'
          call flshfo(luprint)
          prev_energy = energy 
-         call mlcc_ccsd_energy(energy)
+                  memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 1:',memory_lef
+         call flshfo(luprint)
+         call mlcc_ccsd_energy(energy) !  Fixed memory leak (Eirik,15 Mar 2017)
          write(luprint,*) 'Blablabla2'
          call flshfo(luprint)
          write(luprint,*) 'THE ENERGY:::',energy
@@ -69,6 +76,9 @@ contains
 !         
          write(luprint,*) 'Blablabla3'
          call flshfo(luprint)
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 2:',memory_lef
+         call flshfo(luprint)
          call mlcc_omega_calc
 
          write(luprint,*) 'Blablabla4'
@@ -76,6 +86,9 @@ contains
 !
 !        Test for convergence of the omega vector and the energy 
 !
+memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 3:',memory_lef
+         call flshfo(luprint)
          call mlcc_norm(omega_norm,omega1,omega2)
 !
          converged_energy   = abs(energy-prev_energy) .lt. energy_threshold
@@ -105,10 +118,16 @@ contains
 !
          write(luprint,*) 'Blablabla5'
          call flshfo(luprint)
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 4:',memory_lef
+         call flshfo(luprint)
          if (.not. converged) then 
             call mlcc_ccsd_update_amplitudes(iteration)
             iteration = iteration + 1
          endif
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 5:',memory_lef
+         call flshfo(luprint)
          write(luprint,*) 'Blablabla6'
          call flshfo(luprint)
 !
@@ -116,6 +135,9 @@ contains
 !
          call mlcc_get_fock
          write(luprint,*) 'Blablabla7'
+         call flshfo(luprint)
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 6:',memory_lef
          call flshfo(luprint)
 !
 !        Print some information necessary for debug purposes
@@ -138,6 +160,10 @@ contains
 !
 		enddo
 !
+!     Deallocate DIIS matrix 
+!
+      call deallocator(G,maxdiis+1,maxdiis+1)
+!
 	end subroutine mlcc_energy_drv
 !
    subroutine mlcc_ccsd_energy(energy)
@@ -155,7 +181,7 @@ contains
 !
       real(dp) :: energy 
 !
-      integer :: a,i,b,j,ai,bj,aibj,ia,jb,ib,ja
+      integer :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0,ia=0,jb=0,ib=0,ja=0
 !
       real(dp), dimension(:,:), pointer :: L_ia_J  => null() ! L_ia_J
       real(dp), dimension(:,:), pointer :: g_ia_jb => null() ! g_iajb
@@ -216,6 +242,10 @@ contains
          enddo
       enddo
 !
+!     Deallocate g_ia_jb (Eirik: debugging, 15 Mar 2017)
+!
+      call deallocator(g_ia_jb,n_ov,n_ov)
+!
 !     Print the t1 amplitudes 
 !
 !       write(luprint,*) 't1am(a,i):'
@@ -234,8 +264,6 @@ contains
 !     Calculates the norm of the singles-packed-doubles vector vec 
 !
       implicit none 
-!
-      integer :: a,i,b,j,ai,bj,aibj
 !
       real(dp) :: norm,norm1,norm2,ddot
 !
@@ -280,11 +308,11 @@ contains
 !        
       implicit none
 !
-      integer :: idum,iteration,dim_G
+      integer :: idum=0,iteration,dim_G
 !
-      integer :: lu_error
+      integer :: lu_error=0
 !
-      integer :: a,i,b,j,ai,bj,aibj,p,current_index
+      integer :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0,p=0,current_index=0
 !
       real(dp) :: ddot,norm_of_solution
 !
@@ -355,82 +383,67 @@ contains
          rewind(ludiis_dt)
          rewind(ludiis_t_dt)
       endif
-            write(luprint,*) 'abla2.5, current_index:',current_index
-      call flshfo(luprint)
-
-      write(luprint,*) 'dt1_k(a,i):'
-      call vec_print(dt1_k,n_vir,n_occ)
-      write(luprint,*) 'dt2_k(aibj,1):'
-      call flshfo(luprint)
-      call vec_print_packed(dt2_k,n_ov_ov_packed)
-      write(luprint,*) 'done dt2_k(aibj,1):'
-      call flshfo(luprint)
+      ! write(luprint,*) 'dt1_k(a,i):'
+      ! call vec_print(dt1_k,n_vir,n_occ)
+      ! write(luprint,*) 'dt2_k(aibj,1):'
+      ! call flshfo(luprint)
+      ! call vec_print_packed(dt2_k,n_ov_ov_packed)
 !
 !     Write dt_k to file (singles, then doubles)
 !
+      write(luprint,*) 'Writing current dt_k to file'
+      call flshfo(luprint)
       write(ludiis_dt,*) ((dt1_k(a,i),a=1,n_vir),i=1,n_occ),(dt2_k(p,1),p=1,n_ov_ov_packed)
 !
 !     Add the quasi-Newton amplitude correction to the amplitudes (t_k <- t_k + dt_k)
 !
-            write(luprint,*) 'abla2.53'
-      call flshfo(luprint)
       call daxpy(n_ov,one,dt1_k,1,t1am,1)
       call daxpy(n_ov_ov_packed,one,dt2_k,1,t2am,1)
-      write(luprint,*) 'tdt1_k(a,i):'
-      call vec_print(t1am,n_vir,n_occ)
-      write(luprint,*) 'tdt2_k(aibj,1):'
-      call vec_print_packed(t2am,n_ov_ov_packed)
-      call flshfo(luprint)
-                  write(luprint,*) 'abla2.57'
-      call flshfo(luprint)
 !
 !     Write t_k + dt_k to file 
 !
-      write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
-            write(luprint,*) 'abla2.6'
+      write(luprint,*) 'Writing current t_k + dt_k to file'
       call flshfo(luprint)
+      write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
 !
 !     If the first iteration, then allocate the matrices 
 !
       if (iteration .eq. 1) then 
 !
-!        Allocate 
+!        Allocate the G matrix 
 !
          call allocator(G,maxdiis+1,maxdiis+1)
-         call allocator(copy_of_G,maxdiis+1,maxdiis+1)
-         call allocator(H,maxdiis+1,1)
-         call allocator_int(lu_integers,maxdiis+1,1)
 !
 !        Set the G matrix and the LU integers array 
 !
-         lu_integers = 0 ! Is altered later 
          G = zero ! Is altered later
-         copy_of_G = zero
 !
       endif
 !
-      if (current_index .eq. 1) G = zero
+!     Allocate temporary matrices 
 !
-!     Set the H vector (1 1 1 1 ...)
+      call allocator(copy_of_G,maxdiis+1,maxdiis+1)
+      call allocator(H,maxdiis+1,1)
+      call allocator_int(lu_integers,maxdiis+1,1)
 !
+      lu_integers = 0 ! Is altered later 
+      copy_of_G = zero
       H = zero ! Fixed throughout the calculation, but is overwritten by dgetrs & must be reset in every iteration 
+!
+      if (current_index .eq. 1) G = zero
 !
 !     Calculate the effective dimensionality of G & set its values    
 !
       dim_G = current_index
       rewind(ludiis_dt)
 !
-write(luprint,*) 'abla3'
-      call flshfo(luprint)
       do j = 1,dim_G
 !
 !        Read the jth entry of the file containing the dt's
 !
-write(luprint,*) 'abla3.2, read number', j 
-      call flshfo(luprint)
+         write(luprint,*) 'Reading dt_j from file, j = ', j 
+         call flshfo(luprint)
          read(ludiis_dt,*) ((dt1_j(a,i),a=1,n_vir),i=1,n_occ),(dt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file 
-write(luprint,*) 'abla3.4'
-      call flshfo(luprint)
 !
 !        Calculate G(current_index,j) = dt_current_index * dt_j + 1
 !
@@ -441,8 +454,6 @@ write(luprint,*) 'abla3.4'
          G(j,current_index+1) = -one 
 !
       enddo
-      write(luprint,*) 'abla4'
-      call flshfo(luprint)
       H(dim_G+1,1) = -one
 !
       write(luprint,*) 'The G matrix'
@@ -457,13 +468,10 @@ write(luprint,*) 'abla3.4'
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
 !
-write(luprint,*) 'abla5'
-      call flshfo(luprint)
-!
       if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
       lu_error = -1
-      call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H 
+      call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful solution of G * omega = H'
 !
@@ -492,12 +500,12 @@ write(luprint,*) 'abla5'
       call dzero(t2am,n_ov_ov_packed)
       rewind(ludiis_t_dt)
 !
-write(luprint,*) 'abla6'
-      call flshfo(luprint)
       do j = 1,dim_G
 !
 !        Read the jth t + dt contribution on file 
 !
+         write(luprint,*) 'Reading t_j + dt_j from file, j = ', j 
+         call flshfo(luprint)
          read(ludiis_t_dt,*) ((tdt1_j(a,i),a=1,n_vir),i=1,n_occ),(tdt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file
 !
 !        Add the contributions w_j * (t_j + dt_j) to the amplitudes 
@@ -515,6 +523,9 @@ write(luprint,*) 'abla6'
       call deallocator(tdt2_j,n_ov_ov_packed,1)
       call deallocator(dt1_k,n_vir,n_occ)
       call deallocator(dt2_k,n_ov_ov_packed,1)
+      call deallocator(copy_of_G,maxdiis+1,maxdiis+1)
+      call deallocator(H,maxdiis+1,1)
+      call deallocator_int(lu_integers,maxdiis+1,1)
 !
    end subroutine mlcc_ccsd_update_amplitudes
 !
