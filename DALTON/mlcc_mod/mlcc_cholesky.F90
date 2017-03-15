@@ -249,6 +249,9 @@ contains
       call allocator_n(L_Ja_i,n_J*n_vir,n_occ)
       L_Ja_i=zero
 !
+      write(luprint,*) 'AI Chol 1'
+      call flshfo(luprint)
+!
 !     Batching setup
 !
       required = 2*n_vv*n_J*4
@@ -499,6 +502,9 @@ contains
       call deallocator_n(L_a_iJ,n_vir,n_occ*n_J)
       call deallocator_n(L_k_iJ,n_occ,n_occ*n_J)
 !
+      write(luprint,*) 'AI Chol 2'
+      call flshfo(luprint)
+!
   end subroutine get_cholesky_ai
 !
    subroutine get_cholesky_ij(L_ij_J)
@@ -520,6 +526,9 @@ contains
 !
 !     Allocation
 !    
+      write(luprint,*) 'IJ Chol 1'
+      call flshfo(luprint)
+!
       call allocator_n(L_ia_J,n_ov,n_J)
       call allocator_n(L_iJ_a,n_occ*n_J,n_vir)
       L_ia_J = zero
@@ -581,6 +590,9 @@ contains
 !
       call deallocator_n(L_iJ_k,n_occ*n_J,n_occ)
       call deallocator_n(L_iJ_a,n_occ*n_J,n_vir)
+!
+ write(luprint,*) 'IJ Chol 2'
+      call flshfo(luprint)
 !     
   end subroutine get_cholesky_ij
 !
@@ -608,6 +620,9 @@ contains
       batch_length = end-start+1
 !
 !     Testing which index is batched
+!
+       write(luprint,*) 'AB Chol 1'
+      call flshfo(luprint)
 !
       if (reorder) then !! Batching over a !!
 !
@@ -754,6 +769,9 @@ contains
 !
          call deallocator_n(L_Jb_a,n_J*batch_length,n_vir)
          call deallocator_n(L_Jb_i,n_J*batch_length,n_occ)
+!
+write(luprint,*) 'AB Chol 2'
+      call flshfo(luprint)
 !
       endif
 !

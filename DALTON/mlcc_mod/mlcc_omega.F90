@@ -23,21 +23,43 @@ contains
 !
 !     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
 !
+     write(luprint,*) 'om1 1'
+      call flshfo(luprint)
       call mlcc_omega_a1
+           write(luprint,*) 'om1 2'
+      call flshfo(luprint)
       call mlcc_omega_b1
+           write(luprint,*) 'om1 3'
+      call flshfo(luprint)
       call mlcc_omega_c1
+           write(luprint,*) 'om1 4'
+      call flshfo(luprint)
       call mlcc_omega_d1 
+           write(luprint,*) 'om1 5'
+      call flshfo(luprint)
 !
       write(luprint,*) 'Omega(a,i):'
       call vec_print(omega1,n_vir,n_occ)   
 !
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
+      write(luprint,*) 'heiiheii1'
+      call flshfo(luprint)
       call mlcc_omega_e2
+      write(luprint,*) 'heiiheii2'
+      call flshfo(luprint)
       call mlcc_omega_d2
+      write(luprint,*) 'heiiheii3'
+      call flshfo(luprint)
       call mlcc_omega_c2 
+      write(luprint,*) 'heiiheii4'
+      call flshfo(luprint)
       call mlcc_omega_a2
+      write(luprint,*) 'heiiheii5'
+      call flshfo(luprint)
       call mlcc_omega_b2
+      write(luprint,*) 'heiiheii6'
+      call flshfo(luprint)
 !
       write(luprint,*) 'Omega(aibj,1):'
       call vec_print_packed(omega2,n_ov_ov_packed)
@@ -406,9 +428,12 @@ contains
 !
 !  Matrix multiplication
 !
-   call dgemm('N','N',1,n_ov,n_ov &
-      ,-one,F_ck,1,u_ck_ai,n_ov &
-      ,one,omega1,n_ov)
+   ! call dgemm('N','N',1,n_ov,n_ov &
+   !    ,-one,F_ck,1,u_ck_ai,n_ov &
+   !    ,one,omega1,n_ov)
+      call dgemm('N','N',1,n_ov,n_ov &
+      ,one,F_ck,1,u_ck_ai,n_ov &
+      ,one,omega1,n_ov) ! Eirik: debug -- should there be a -one in front of this term?? Is the (1,ai) ordering a problem?
 !
 !  Deallocation
 !
@@ -482,6 +507,8 @@ contains
 !
 !     Read the Cholesky vector from file 
 !
+            write(luprint,*) 'Lalala 1.0'
+      call flshfo(luprint)
       call get_cholesky_ia(L_kc_J)
 !
 !     Allocate g_ld_kc = g_ldkc and set to zero 
@@ -513,6 +540,8 @@ contains
 !
 !     Determine u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
 !
+            write(luprint,*) 'Lalala 1.2'
+      call flshfo(luprint)
       do c = 1,n_vir ! Use as though "b" for g_kdl_c term 
          do k = 1,n_occ
             do d = 1,n_vir
@@ -541,6 +570,8 @@ contains
             enddo
          enddo
       enddo
+                  write(luprint,*) 'Lalala 1.3'
+      call flshfo(luprint)
 !
 !     Deallocate the unordered integrals g_ld_kc = g_ldkc
 !
@@ -553,6 +584,8 @@ contains
 !
 !     Allocate the intermediate X_b_c = F_bc - sum_dkl g_ldkc u_kl^bd and set to zero
 !
+            write(luprint,*) 'Lalala 1.4'
+      call flshfo(luprint)
       call allocator(X_b_c,n_vir,n_vir)
       X_b_c = zero 
 !
@@ -565,6 +598,8 @@ contains
       call dgemm('N','N',n_vir,n_vir,n_oov,&
                   -one,u_b_kdl,n_vir,g_kdl_c,n_oov,&
                   one,X_b_c,n_vir)
+                  write(luprint,*) 'Lalala 1.5'
+      call flshfo(luprint)
 !
 !     Deallocate u_b_kdl and g_kdl_c
 !
@@ -578,6 +613,8 @@ contains
 !
 !     Determine t_c_jai = t_ij^ac 
 !
+            write(luprint,*) 'Lalala 1.6'
+      call flshfo(luprint)
       do c = 1,n_vir
          do j = 1,n_occ
             do a = 1,n_vir
@@ -598,6 +635,8 @@ contains
             enddo
          enddo
       enddo
+                  write(luprint,*) 'Lalala 1.7'
+      call flshfo(luprint)
 !
 !     Allocate the E2.1 term and set it to zero
 !
@@ -612,6 +651,8 @@ contains
 !
 !     Add the E2.1 term to the omega vector 
 !
+            write(luprint,*) 'Lalala 1.8'
+      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -637,6 +678,8 @@ contains
             enddo
          enddo
       enddo
+                  write(luprint,*) 'Lalala 1.9'
+      call flshfo(luprint)
 !
 !     Deallocate the E2.1 term, the X intermediate, and the reordered amplitudes 
 !
@@ -689,6 +732,8 @@ contains
 !
 !     Determine g_k_dlc = g_ldkc and u_dlc_j = u_lj^dc 
 !
+            write(luprint,*) 'Lalala 2.0'
+      call flshfo(luprint)
       do k = 1,n_occ ! Use as though "j" for u_dlc_j term 
          do d = 1,n_vir
             do l = 1,n_occ
@@ -717,6 +762,8 @@ contains
             enddo
          enddo
       enddo
+                  write(luprint,*) 'Lalala 2.1'
+      call flshfo(luprint)
 !
 !     Deallocate the integrals g_ld_kc = g_ldkc 
 !
@@ -750,6 +797,8 @@ contains
 !
 !     Determine t_aib_k = t_ik^ab 
 !
+            write(luprint,*) 'Lalala 2.2'
+      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -770,6 +819,8 @@ contains
             enddo
          enddo
       enddo
+                  write(luprint,*) 'Lalala 2.3'
+      call flshfo(luprint)
 !
 !     Allocate the E2.2 term and set to zero 
 !
@@ -789,6 +840,8 @@ contains
 !
 !     Add the E2.2 term to the omega vector 
 !
+            write(luprint,*) 'Lalala 2.4'
+      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -814,6 +867,8 @@ contains
             enddo
          enddo
       enddo
+                  write(luprint,*) 'Lalala 2.5'
+      call flshfo(luprint)
 !
 !     Deallocate the E2.2 term 
 !
@@ -1977,12 +2032,14 @@ contains
 !     Read cholesky vector of type L_ij_J
 !
       call allocator(L_ij_J,n_oo,n_J)
+      L_ij_J = zero ! Eirik: debug
 !
       call get_cholesky_ij(L_ij_J)
 !
 !     Create g_ki_lj = sum_J L_li_J*L_lj_J
 !
       call allocator(g_ki_lj,n_oo,n_oo)
+      g_ki_lj = zero ! Eirik: debug 
 !
       call dgemm('N','T',n_oo,n_oo,n_J &
          ,one,L_ij_J,n_oo,L_ij_J,n_oo &
@@ -1993,7 +2050,10 @@ contains
 !     Reordering g_ki_lj to g_kl_ij
 !
       call allocator(g_kl_ij,n_oo,n_oo)
+      g_kl_ij = zero ! Eirik: debug
 !
+   write(luprint,*) 'B2 loop 1'
+   call flshfo(luprint)
       do k = 1,n_occ
          do l = 1,n_occ
             do i = 1,n_occ
@@ -2012,6 +2072,8 @@ contains
             enddo
          enddo
       enddo
+      write(luprint,*) 'B2 loop 2'
+   call flshfo(luprint)
 !
       call deallocator(g_ki_lj,n_oo,n_oo)
 !

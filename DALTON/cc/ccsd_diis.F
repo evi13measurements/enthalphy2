@@ -376,6 +376,13 @@ C
 C
   300 CONTINUE
 C
+C (EFK, 2017) Print t vector for debug of MLCC code
+        WRITE(LUPRI,*)
+        WRITE(LUPRI,*) 't1am(a,i):'
+        WRITE(LUPRI,*)
+        WRITE(LUPRI,*) T 
+        WRITE(LUPRI,*)
+C
       RETURN
       END
       SUBROUTINE LUS(A,LDA,N,IPVT,X,B)

@@ -7,6 +7,7 @@ module mlcc_energy
    use mlcc_data
    use mlcc_omega 
    use mlcc_fock
+   use mlcc_utilities
 !
 !  Some DIIS specific variables 
 !
@@ -35,7 +36,7 @@ contains
       logical :: converged_energy    = .false.
       logical :: converged_solution  = .false.
 !
-      integer :: max_iterations = 35
+      integer :: max_iterations = 3
       integer :: iteration = 1
 !
       real(dp) :: energy_threshold = 1.0D-8
@@ -53,8 +54,12 @@ contains
 !
 !        Calculate the current coupled cluster energy 
 ! 
+         write(luprint,*) 'Blablabla1'
+         call flshfo(luprint)
          prev_energy = energy 
          call mlcc_ccsd_energy(energy)
+         write(luprint,*) 'Blablabla2'
+         call flshfo(luprint)
          write(luprint,*) 'THE ENERGY:::',energy
 !
 !        Reset the omega vector and re-calculate it
@@ -62,11 +67,11 @@ contains
          omega1 = zero
          omega2 = zero
 !         
-         write(luprint,*) 'bla 1'
+         write(luprint,*) 'Blablabla3'
          call flshfo(luprint)
          call mlcc_omega_calc
 
-         write(luprint,*) 'bla 2'
+         write(luprint,*) 'Blablabla4'
          call flshfo(luprint)
 !
 !        Test for convergence of the omega vector and the energy 
@@ -98,14 +103,20 @@ contains
 !        Find the next set of amplitudes, by a DIIS step,
 !        if the equations have not yet converged
 !
+         write(luprint,*) 'Blablabla5'
+         call flshfo(luprint)
          if (.not. converged) then 
             call mlcc_ccsd_update_amplitudes(iteration)
             iteration = iteration + 1
          endif
+         write(luprint,*) 'Blablabla6'
+         call flshfo(luprint)
 !
 !        Recalculate the (T1-transformed) Fock matrix
 !
          call mlcc_get_fock
+         write(luprint,*) 'Blablabla7'
+         call flshfo(luprint)
 !
 !        Print some information necessary for debug purposes
 !
@@ -205,6 +216,14 @@ contains
          enddo
       enddo
 !
+!     Print the t1 amplitudes 
+!
+!       write(luprint,*) 't1am(a,i):'
+!       call vec_print(t1am,n_vir,n_occ)
+! !
+!       write(luprint,*) 't2am(aibj,1):'
+!       call vec_print_packed(t2am,n_ov_ov_packed)
+!
    end subroutine mlcc_ccsd_energy
 !
    subroutine mlcc_norm(norm,vec1,vec2)
@@ -295,6 +314,8 @@ contains
 !
 !     Calculate the current d_k vector
 !
+      write(luprint,*) 'abla1'
+      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -320,6 +341,8 @@ contains
             enddo
          enddo
       enddo
+      write(luprint,*) 'abla2'
+      call flshfo(luprint)
 !
 !     Calculate the current index for overwriting the G matrix (G(:,current_index) and G(current_index,:) is overwritten)
 !
@@ -328,9 +351,20 @@ contains
       if (current_index .eq. 0) current_index = maxdiis
 !
       if (current_index .eq. 1) then
+         write(luprint,*) 'Rewinding both files'
          rewind(ludiis_dt)
          rewind(ludiis_t_dt)
       endif
+            write(luprint,*) 'abla2.5, current_index:',current_index
+      call flshfo(luprint)
+
+      write(luprint,*) 'dt1_k(a,i):'
+      call vec_print(dt1_k,n_vir,n_occ)
+      write(luprint,*) 'dt2_k(aibj,1):'
+      call flshfo(luprint)
+      call vec_print_packed(dt2_k,n_ov_ov_packed)
+      write(luprint,*) 'done dt2_k(aibj,1):'
+      call flshfo(luprint)
 !
 !     Write dt_k to file (singles, then doubles)
 !
@@ -338,12 +372,23 @@ contains
 !
 !     Add the quasi-Newton amplitude correction to the amplitudes (t_k <- t_k + dt_k)
 !
+            write(luprint,*) 'abla2.53'
+      call flshfo(luprint)
       call daxpy(n_ov,one,dt1_k,1,t1am,1)
       call daxpy(n_ov_ov_packed,one,dt2_k,1,t2am,1)
+      write(luprint,*) 'tdt1_k(a,i):'
+      call vec_print(t1am,n_vir,n_occ)
+      write(luprint,*) 'tdt2_k(aibj,1):'
+      call vec_print_packed(t2am,n_ov_ov_packed)
+      call flshfo(luprint)
+                  write(luprint,*) 'abla2.57'
+      call flshfo(luprint)
 !
 !     Write t_k + dt_k to file 
 !
       write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
+            write(luprint,*) 'abla2.6'
+      call flshfo(luprint)
 !
 !     If the first iteration, then allocate the matrices 
 !
@@ -375,11 +420,17 @@ contains
       dim_G = current_index
       rewind(ludiis_dt)
 !
+write(luprint,*) 'abla3'
+      call flshfo(luprint)
       do j = 1,dim_G
 !
 !        Read the jth entry of the file containing the dt's
 !
+write(luprint,*) 'abla3.2, read number', j 
+      call flshfo(luprint)
          read(ludiis_dt,*) ((dt1_j(a,i),a=1,n_vir),i=1,n_occ),(dt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file 
+write(luprint,*) 'abla3.4'
+      call flshfo(luprint)
 !
 !        Calculate G(current_index,j) = dt_current_index * dt_j + 1
 !
@@ -390,6 +441,8 @@ contains
          G(j,current_index+1) = -one 
 !
       enddo
+      write(luprint,*) 'abla4'
+      call flshfo(luprint)
       H(dim_G+1,1) = -one
 !
       write(luprint,*) 'The G matrix'
@@ -403,6 +456,9 @@ contains
       lu_error = -1
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
+!
+write(luprint,*) 'abla5'
+      call flshfo(luprint)
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
@@ -436,6 +492,8 @@ contains
       call dzero(t2am,n_ov_ov_packed)
       rewind(ludiis_t_dt)
 !
+write(luprint,*) 'abla6'
+      call flshfo(luprint)
       do j = 1,dim_G
 !
 !        Read the jth t + dt contribution on file 
