@@ -420,8 +420,8 @@ contains
 !
    real(dp),dimension(:,:),pointer  :: F_ck => null()
    real(dp),dimension(:,:),pointer  :: u_ck_ai => null()
-   integer                          :: i,k,c,a
-   integer                          :: ck,ai,ak,ci,ckai,ciak
+   integer                          :: i=0,k=0,c=0,a=0
+   integer                          :: ck=0,ai=0,ak=0,ci=0,ckai=0,ciak=0
    logical                          :: debug = .false.
 !
 !
@@ -1438,10 +1438,10 @@ contains
       real(dp),dimension(:,:),pointer        :: t_ck_bj => null()
       real(dp),dimension(:,:),pointer        :: X_ai_ck => null()
       real(dp),dimension(:,:),pointer        :: Y_ai_bj => null()
-      integer                                :: c,k,d,l,kd,lc,ck,dl,al,di,ai,aldi,cl,dk,cldk
-      integer                                :: i,a,ca,ki,b,bj,bk,cj,j,bkcj,aibj,aj,bi
-      integer                                :: required,available,n_batch,max_batch_length,a_start
-      integer                                :: a_end,a_batch,a_length
+      integer                                :: c=0,k=0,d=0,l=0,kd=0,lc=0,ck=0,dl=0,al=0,di=0,ai=0,aldi=0,cl=0,dk=0,cldk=0
+      integer                                :: i=0,a=0,ca=0,ki=0,b=0,bj=0,bk=0,cj=0,j=0,bkcj=0,aibj=0,aj=0,bi=0
+      integer                                :: required=0,available=0,n_batch=0,max_batch_length=0,a_start=0
+      integer                                :: a_end=0,a_batch=0,a_length=0
       logical                                :: debug = .false.
 !
 !     Allocate L_ia_J
@@ -1714,9 +1714,9 @@ contains
       real(dp),dimension(:,:),pointer     :: L_ai_J => null()
       real(dp),dimension(:,:),pointer     :: L_ca_J => null()
       real(dp),dimension(:,:),pointer     :: L_db_J => null()
-      integer                             :: a,i,b,j,ai,bj,aibj,c,d,ca,db,ab,cd,ci,cidj,ij,dj
-      integer                             :: a_n_batch,b_n_batch,a_start,a_end,b_start,b_end,a_length,b_length
-      integer                             :: required,available,a_max_length,b_max_length,a_batch,b_batch
+      integer                             :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0,c=0,d=0,ca=0,db=0,ab=0,cd=0,ci=0,cidj=0,ij=0,dj=0
+      integer                             :: a_n_batch=0,b_n_batch=0,a_start=0,a_end=0,b_start=0,b_end=0,a_length=0,b_length=0
+      integer                             :: required=0,available=0,a_max_length=0,b_max_length=0,a_batch=0,b_batch=0
       logical                             :: debug = .false.
 !
 !!!   A2.1 term   !!!
@@ -2070,7 +2070,8 @@ contains
       real(dp),dimension(:,:),pointer     :: omega_ab_ij => null()
       real(dp),dimension(:,:),pointer     :: L_kc_J      => null()
       real(dp),dimension(:,:),pointer     :: L_ij_J      => null()
-      integer                             :: c,d,k,l,i,j,kl,ij,ci,dj,kc,ld,cidj,cd,ki,lj,ak,bl,akbl,ab,b,a,ai,bj,aibj
+      integer                             :: c=0,d=0,k=0,l=0,i=0,j=0,kl=0,ij=0,ci=0,dj=0,kc=0,ld=0,cidj=0,cd=0,ki=0
+      integer                             :: lj=0,ak=0,bl=0,akbl=0,ab=0,b=0,a=0,ai=0,bj=0,aibj=0
       logical                             :: debug = .false.
 !
 !     Read cholesky vector of type L_ij_J

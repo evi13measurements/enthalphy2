@@ -26,7 +26,7 @@ contains
 !   
       implicit none
 !
-      integer :: N
+      integer, intent(in) :: N
 !
       packed_size = N*(N+1)/2
 !
@@ -41,9 +41,10 @@ contains
 !
       implicit none
 !
-      real(dp),dimension(:,:),intent(in)     ::    packed
-      real(dp),dimension(:,:)                ::    unpacked
-      integer                                ::    i,j,N
+      real(dp),dimension(:,:),intent(in)     :: packed
+      real(dp),dimension(:,:)                :: unpacked
+      integer, intent(in)                    :: N
+      integer                                :: i=0,j=0
 !
       do i=1,N
          do j=1,N
@@ -63,9 +64,10 @@ contains
 !
       implicit none
 !
-      real(dp),dimension(:,:)              ::    packed
-      real(dp),dimension(:,:),intent(in)   ::    unpacked
-      integer                              ::    i,j,N
+      real(dp),dimension(:,:)              :: packed
+      real(dp),dimension(:,:),intent(in)   :: unpacked
+      integer                              :: i=0,j=0
+      integer, intent(in)                  :: N
 !
       do i = 1,N
          do j = 1,N
@@ -81,7 +83,7 @@ contains
 !
       implicit none
 !
-      integer :: p,q,r,dim_p,dim_q
+      integer, intent(in) :: p,q,r,dim_p,dim_q
 !
       index_three = dim_p*(dim_q*(r-1)+q-1)+p
 !
@@ -93,7 +95,7 @@ contains
 !
       implicit none
 !
-      integer :: p,q,dim_p
+      integer, intent(in) :: p,q,dim_p
 !
       index_two = dim_p*(q-1)+p
 !
@@ -118,6 +120,7 @@ contains
 !     
       integer, intent(in)           :: required, available, batch_dimension
       integer                       :: max_batch_length,n_batch
+!
       if (required .lt. available) then
          n_batch = 1
          max_batch_length = batch_dimension
@@ -166,9 +169,10 @@ contains
 !
       implicit none
 !
-      integer p,q,pq
-      integer dim_1,dim_2
-      double precision vec(dim_1,dim_2)
+      integer :: p=0,q=0,pq=0
+!
+      integer, intent(in)  :: dim_1,dim_2
+      real(dp), intent(in) :: vec(dim_1,dim_2)
 !
       do q = 1,dim_2
          do p = 1,dim_1
@@ -184,9 +188,10 @@ contains
 !
       implicit none
 !
-      integer a,i,b,j,ai,bj,aibj
-      integer dim
-      double precision vec(dim,1)
+      integer :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0
+!
+      integer, intent(in)  :: dim
+      real(dp), intent(in) :: vec(dim,1)
 !
       do i = 1,n_occ
          do a = 1,n_vir
@@ -210,9 +215,12 @@ contains
 !  Purpose: Cleanup of matrices  Sarai: Is this threshold to high?
 !
       implicit none
-      integer  :: M,N
-      real(dp),dimension(M,N) :: mat
-      integer  :: i,j
+!
+      integer, intent(in) :: M,N
+!
+      real(dp), dimension(M,N) :: mat
+!
+      integer  :: i=0,j=0
       real(dp) :: thrs = 1.0d-6
 !
       do i=1,M

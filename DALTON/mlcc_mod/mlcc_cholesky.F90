@@ -16,7 +16,7 @@ contains
       double precision L_ia_J(n_ov,n_J)
 !
       integer :: lucho_ia 
-      integer :: i,j,idummy
+      integer :: i=0,j=0,idummy=0
 !
       lucho_ia = -1
       call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
@@ -41,7 +41,7 @@ contains
       double precision L_ai_J(n_ov,n_J)
 !
       integer :: lucho_ia 
-      integer :: i,a,ia,ai,j
+      integer :: i=0,a=0,ia=0,ai=0,j=0
       real(dp),dimension(:,:),allocatable :: L_ia_J
 !
 !     Allocation
@@ -85,7 +85,7 @@ contains
       double precision L_ij_J(n_oo,n_J)
 !
       integer :: lucho_ij
-      integer :: i,j,idummy
+      integer :: i=0,j=0,idummy=0
 !
       lucho_ij = -1
       call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
@@ -112,11 +112,11 @@ contains
    implicit none
 !
    integer :: lucho_ab,ab_dim
-   integer :: a,b,j,idummy,i
+   integer :: a=0,b=0,j=0,idummy=0,i=0
    integer :: b_start,b_end
    real(dp),dimension(ab_dim,n_J) :: L_ab_J
    real(dp) :: dummy
-   integer  :: batch_length 
+   integer  :: batch_length=0
 !
    batch_length = b_end-b_start+1
 !
@@ -165,11 +165,11 @@ contains
    implicit none
 !
    integer :: lucho_ab,ab_dim
-   integer :: a,b,j,idummy,i,k
+   integer :: a=0,b=0,j=0,idummy=0,i=0,k=0
    integer :: a_start,a_end
    real(dp),dimension(ab_dim,n_J) :: L_ba_J
    real(dp) :: dummy
-   integer  :: batch_length 
+   integer  :: batch_length=0
 !
    batch_length = a_end-a_start+1
 !
@@ -226,9 +226,9 @@ contains
 !
       double precision L_ai_J(n_ov,n_J)
 !
-      integer                              :: required,available,max_batch_length,n_batch,L_off
-      integer                              :: a_batch,batch_start,batch_end,batch_length
-      integer                              :: a,b,J,i,ai,Ja,ba,k,ik,iJ,kb,kJ
+      integer                              :: required=0,available=0,max_batch_length=0,n_batch=0,L_off=0
+      integer                              :: a_batch=0,batch_start=0,batch_end=0,batch_length=0
+      integer                              :: a=0,b=0,J=0,i=0,ai=0,Ja=0,ba=0,k=0,ik=0,iJ=0,kb=0,kJ=0
       real(dp),dimension(:,:),allocatable  :: L_ba_J
       real(dp),dimension(:,:),allocatable  :: L_Ja_b
       real(dp),dimension(:,:),allocatable  :: L_Ja_i
@@ -534,7 +534,7 @@ contains
       real(dp),dimension(:,:),allocatable     :: L_ia_J
       real(dp),dimension(:,:),allocatable     :: L_iJ_a
       real(dp),dimension(:,:),allocatable     :: L_iJ_k
-      integer                                 :: i,J,a,ij,ia,ik,k
+      integer                                 :: i=0,J=0,a=0,ij=0,ia=0,ik=0,k=0
 !
          ! memory_lef = get_available()
          ! write(luprint,*) 'Memory IJ begin:',memory_lef
@@ -628,7 +628,7 @@ contains
       integer :: memory_lef
 !
       integer :: lucho_ab,ab_dim
-      integer :: a,b,J,i,ia,aJ,ib,Jb,ab
+      integer :: a=0,b=0,J=0,i=0,ia=0,aJ=0,ib=0,Jb=0,ab=0
       integer :: start,end
       logical,intent(in) :: reorder
 !
@@ -637,7 +637,7 @@ contains
       real(dp),dimension(:,:),allocatable     :: L_Jb_a
       real(dp),dimension(:,:),allocatable     :: L_a_Jb
       real(dp),dimension(:,:),allocatable     :: L_i_Jb
-      integer                                 :: batch_length
+      integer                                 :: batch_length=0
       double precision L_ab_J(ab_dim,n_J)
       batch_length = end-start+1
 !

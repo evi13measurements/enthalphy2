@@ -39,15 +39,13 @@ contains
       integer :: max_iterations = 20
       integer :: iteration = 1
 !
-      real(dp) :: memory_lef
+      integer :: memory_lef
 !
       real(dp) :: energy_threshold = 1.0D-8
       real(dp) :: solution_threshold = 1.0D-6
       real(dp) :: energy = zero 
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm
-!
-      integer :: record_length
 !
 !     Enter the iterative loop 
 !
@@ -310,11 +308,11 @@ memory_lef = get_available()
 !        
       implicit none
 !
-      integer :: idum,iteration,dim_G
+      integer :: idum=0,iteration,dim_G
 !
-      integer :: lu_error
+      integer :: lu_error=0
 !
-      integer :: a,i,b,j,ai,bj,aibj,p,current_index
+      integer :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0,p=0,current_index=0
 !
       real(dp) :: ddot,norm_of_solution
 !
@@ -385,40 +383,28 @@ memory_lef = get_available()
          rewind(ludiis_dt)
          rewind(ludiis_t_dt)
       endif
-            write(luprint,*) 'abla2.5, current_index:',current_index
-      call flshfo(luprint)
-
-      write(luprint,*) 'dt1_k(a,i):'
-      call vec_print(dt1_k,n_vir,n_occ)
-      write(luprint,*) 'dt2_k(aibj,1):'
-      call flshfo(luprint)
-      call vec_print_packed(dt2_k,n_ov_ov_packed)
-      write(luprint,*) 'done dt2_k(aibj,1):'
-      call flshfo(luprint)
+      ! write(luprint,*) 'dt1_k(a,i):'
+      ! call vec_print(dt1_k,n_vir,n_occ)
+      ! write(luprint,*) 'dt2_k(aibj,1):'
+      ! call flshfo(luprint)
+      ! call vec_print_packed(dt2_k,n_ov_ov_packed)
 !
 !     Write dt_k to file (singles, then doubles)
 !
+      write(luprint,*) 'Writing current dt_k to file'
+      call flshfo(luprint)
       write(ludiis_dt,*) ((dt1_k(a,i),a=1,n_vir),i=1,n_occ),(dt2_k(p,1),p=1,n_ov_ov_packed)
 !
 !     Add the quasi-Newton amplitude correction to the amplitudes (t_k <- t_k + dt_k)
 !
-            write(luprint,*) 'abla2.53'
-      call flshfo(luprint)
       call daxpy(n_ov,one,dt1_k,1,t1am,1)
       call daxpy(n_ov_ov_packed,one,dt2_k,1,t2am,1)
-      write(luprint,*) 'tdt1_k(a,i):'
-      call vec_print(t1am,n_vir,n_occ)
-      write(luprint,*) 'tdt2_k(aibj,1):'
-      call vec_print_packed(t2am,n_ov_ov_packed)
-      call flshfo(luprint)
-                  write(luprint,*) 'abla2.57'
-      call flshfo(luprint)
 !
 !     Write t_k + dt_k to file 
 !
-      write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
-            write(luprint,*) 'abla2.6'
+      write(luprint,*) 'Writing current t_k + dt_k to file'
       call flshfo(luprint)
+      write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
 !
 !     If the first iteration, then allocate the matrices 
 !
@@ -451,17 +437,13 @@ memory_lef = get_available()
       dim_G = current_index
       rewind(ludiis_dt)
 !
-write(luprint,*) 'abla3'
-      call flshfo(luprint)
       do j = 1,dim_G
 !
 !        Read the jth entry of the file containing the dt's
 !
-write(luprint,*) 'abla3.2, read number', j 
-      call flshfo(luprint)
+         write(luprint,*) 'Reading dt_j from file, j = ', j 
+         call flshfo(luprint)
          read(ludiis_dt,*) ((dt1_j(a,i),a=1,n_vir),i=1,n_occ),(dt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file 
-write(luprint,*) 'abla3.4'
-      call flshfo(luprint)
 !
 !        Calculate G(current_index,j) = dt_current_index * dt_j + 1
 !
@@ -472,8 +454,6 @@ write(luprint,*) 'abla3.4'
          G(j,current_index+1) = -one 
 !
       enddo
-      write(luprint,*) 'abla4'
-      call flshfo(luprint)
       H(dim_G+1,1) = -one
 !
       write(luprint,*) 'The G matrix'
@@ -487,18 +467,11 @@ write(luprint,*) 'abla3.4'
       lu_error = -1
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
-            write(luprint,*) 'The G matrix after dgetrf'
-      write(luprint,*) G 
-!
-write(luprint,*) 'abla5'
-      call flshfo(luprint)
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
       lu_error = -1
       call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H
-            write(luprint,*) 'The G matrix after dgetrs'
-      write(luprint,*) G  
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful solution of G * omega = H'
 !
@@ -527,12 +500,12 @@ write(luprint,*) 'abla5'
       call dzero(t2am,n_ov_ov_packed)
       rewind(ludiis_t_dt)
 !
-write(luprint,*) 'abla6'
-      call flshfo(luprint)
       do j = 1,dim_G
 !
 !        Read the jth t + dt contribution on file 
 !
+         write(luprint,*) 'Reading t_j + dt_j from file, j = ', j 
+         call flshfo(luprint)
          read(ludiis_t_dt,*) ((tdt1_j(a,i),a=1,n_vir),i=1,n_occ),(tdt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file
 !
 !        Add the contributions w_j * (t_j + dt_j) to the amplitudes 
