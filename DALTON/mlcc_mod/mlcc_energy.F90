@@ -12,7 +12,7 @@ module mlcc_energy
 !  Some DIIS specific variables 
 !
    integer :: maxdiis = 8
-   integer :: ludiis_dt, ludiis_t_dt
+   integer :: ludiis_dt = -1, ludiis_t_dt = -1
    real(dp), dimension(:,:), pointer :: G           => null() ! The DIIS matrix, G * w = H, G = G(maxdiis,maxdiis)
    real(dp), dimension(:,:), pointer :: copy_of_G   => null() ! Copy for purposes...
    real(dp), dimension(:,:), pointer :: H           => null() ! The DIIS vector, G * w = H, H = H(maxdiis,1)
@@ -30,14 +30,16 @@ contains
       implicit none 
 !
       logical :: debug = .true.
-      integer :: idum
+      integer :: idum=0
 !
       logical :: converged           = .false.
       logical :: converged_energy    = .false.
       logical :: converged_solution  = .false.
 !
-      integer :: max_iterations = 3
+      integer :: max_iterations = 20
       integer :: iteration = 1
+!
+      real(dp) :: memory_lef
 !
       real(dp) :: energy_threshold = 1.0D-8
       real(dp) :: solution_threshold = 1.0D-6
@@ -54,10 +56,17 @@ contains
 !
 !        Calculate the current coupled cluster energy 
 ! 
+         memory_lef = get_available()
+         write(luprint,*) 'Memory:',memory_lef
+         call flshfo(luprint)
+!
          write(luprint,*) 'Blablabla1'
          call flshfo(luprint)
          prev_energy = energy 
-         call mlcc_ccsd_energy(energy)
+                  memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 1:',memory_lef
+         call flshfo(luprint)
+         call mlcc_ccsd_energy(energy) !  Fixed memory leak (Eirik,15 Mar 2017)
          write(luprint,*) 'Blablabla2'
          call flshfo(luprint)
          write(luprint,*) 'THE ENERGY:::',energy
@@ -69,6 +78,9 @@ contains
 !         
          write(luprint,*) 'Blablabla3'
          call flshfo(luprint)
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 2:',memory_lef
+         call flshfo(luprint)
          call mlcc_omega_calc
 
          write(luprint,*) 'Blablabla4'
@@ -76,6 +88,9 @@ contains
 !
 !        Test for convergence of the omega vector and the energy 
 !
+memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 3:',memory_lef
+         call flshfo(luprint)
          call mlcc_norm(omega_norm,omega1,omega2)
 !
          converged_energy   = abs(energy-prev_energy) .lt. energy_threshold
@@ -105,10 +120,16 @@ contains
 !
          write(luprint,*) 'Blablabla5'
          call flshfo(luprint)
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 4:',memory_lef
+         call flshfo(luprint)
          if (.not. converged) then 
             call mlcc_ccsd_update_amplitudes(iteration)
             iteration = iteration + 1
          endif
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 5:',memory_lef
+         call flshfo(luprint)
          write(luprint,*) 'Blablabla6'
          call flshfo(luprint)
 !
@@ -116,6 +137,9 @@ contains
 !
          call mlcc_get_fock
          write(luprint,*) 'Blablabla7'
+         call flshfo(luprint)
+         memory_lef = get_available()
+         write(luprint,*) 'Memory iterative 6:',memory_lef
          call flshfo(luprint)
 !
 !        Print some information necessary for debug purposes
@@ -138,6 +162,10 @@ contains
 !
 		enddo
 !
+!     Deallocate DIIS matrix 
+!
+      call deallocator(G,maxdiis+1,maxdiis+1)
+!
 	end subroutine mlcc_energy_drv
 !
    subroutine mlcc_ccsd_energy(energy)
@@ -155,7 +183,7 @@ contains
 !
       real(dp) :: energy 
 !
-      integer :: a,i,b,j,ai,bj,aibj,ia,jb,ib,ja
+      integer :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0,ia=0,jb=0,ib=0,ja=0
 !
       real(dp), dimension(:,:), pointer :: L_ia_J  => null() ! L_ia_J
       real(dp), dimension(:,:), pointer :: g_ia_jb => null() ! g_iajb
@@ -216,6 +244,10 @@ contains
          enddo
       enddo
 !
+!     Deallocate g_ia_jb (Eirik: debugging, 15 Mar 2017)
+!
+      call deallocator(g_ia_jb,n_ov,n_ov)
+!
 !     Print the t1 amplitudes 
 !
 !       write(luprint,*) 't1am(a,i):'
@@ -234,8 +266,6 @@ contains
 !     Calculates the norm of the singles-packed-doubles vector vec 
 !
       implicit none 
-!
-      integer :: a,i,b,j,ai,bj,aibj
 !
       real(dp) :: norm,norm1,norm2,ddot
 !
@@ -394,26 +424,27 @@ contains
 !
       if (iteration .eq. 1) then 
 !
-!        Allocate 
+!        Allocate the G matrix 
 !
          call allocator(G,maxdiis+1,maxdiis+1)
-         call allocator(copy_of_G,maxdiis+1,maxdiis+1)
-         call allocator(H,maxdiis+1,1)
-         call allocator_int(lu_integers,maxdiis+1,1)
 !
 !        Set the G matrix and the LU integers array 
 !
-         lu_integers = 0 ! Is altered later 
          G = zero ! Is altered later
-         copy_of_G = zero
 !
       endif
 !
-      if (current_index .eq. 1) G = zero
+!     Allocate temporary matrices 
 !
-!     Set the H vector (1 1 1 1 ...)
+      call allocator(copy_of_G,maxdiis+1,maxdiis+1)
+      call allocator(H,maxdiis+1,1)
+      call allocator_int(lu_integers,maxdiis+1,1)
 !
+      lu_integers = 0 ! Is altered later 
+      copy_of_G = zero
       H = zero ! Fixed throughout the calculation, but is overwritten by dgetrs & must be reset in every iteration 
+!
+      if (current_index .eq. 1) G = zero
 !
 !     Calculate the effective dimensionality of G & set its values    
 !
@@ -456,6 +487,8 @@ write(luprint,*) 'abla3.4'
       lu_error = -1
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
+            write(luprint,*) 'The G matrix after dgetrf'
+      write(luprint,*) G 
 !
 write(luprint,*) 'abla5'
       call flshfo(luprint)
@@ -463,7 +496,9 @@ write(luprint,*) 'abla5'
       if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
       lu_error = -1
-      call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H 
+      call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H
+            write(luprint,*) 'The G matrix after dgetrs'
+      write(luprint,*) G  
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful solution of G * omega = H'
 !
@@ -515,6 +550,9 @@ write(luprint,*) 'abla6'
       call deallocator(tdt2_j,n_ov_ov_packed,1)
       call deallocator(dt1_k,n_vir,n_occ)
       call deallocator(dt2_k,n_ov_ov_packed,1)
+      call deallocator(copy_of_G,maxdiis+1,maxdiis+1)
+      call deallocator(H,maxdiis+1,1)
+      call deallocator_int(lu_integers,maxdiis+1,1)
 !
    end subroutine mlcc_ccsd_update_amplitudes
 !

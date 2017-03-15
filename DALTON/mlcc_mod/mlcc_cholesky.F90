@@ -222,6 +222,8 @@ contains
 !
       implicit none
 !
+      integer :: memory_lef
+!
       double precision L_ai_J(n_ov,n_J)
 !
       integer                              :: required,available,max_batch_length,n_batch,L_off
@@ -236,6 +238,10 @@ contains
       real(dp),dimension(:,:),allocatable  :: L_kJ_b
       real(dp),dimension(:,:),allocatable  :: L_kJ_i
       real(dp),dimension(:,:),allocatable  :: L_kb_J
+!
+         ! memory_lef = get_available()
+         ! write(luprint,*) 'Memory AI start:',memory_lef
+         ! call flshfo(luprint)
 !
       call read_cholesky_ai(L_ai_J)
 !
@@ -505,6 +511,10 @@ contains
       write(luprint,*) 'AI Chol 2'
       call flshfo(luprint)
 !
+         ! memory_lef = get_available()
+         ! write(luprint,*) 'Memory AI end:',memory_lef
+         ! call flshfo(luprint)
+!
   end subroutine get_cholesky_ai
 !
    subroutine get_cholesky_ij(L_ij_J)
@@ -517,12 +527,18 @@ contains
 !
       implicit none
 !
+      integer :: memory_lef
+!
       double precision L_ij_J(n_oo,n_J)
 !
       real(dp),dimension(:,:),allocatable     :: L_ia_J
       real(dp),dimension(:,:),allocatable     :: L_iJ_a
       real(dp),dimension(:,:),allocatable     :: L_iJ_k
       integer                                 :: i,J,a,ij,ia,ik,k
+!
+         ! memory_lef = get_available()
+         ! write(luprint,*) 'Memory IJ begin:',memory_lef
+         ! call flshfo(luprint)
 !
 !     Allocation
 !    
@@ -593,6 +609,10 @@ contains
 !
  write(luprint,*) 'IJ Chol 2'
       call flshfo(luprint)
+!
+         ! memory_lef = get_available()
+         ! write(luprint,*) 'Memory IJ end:',memory_lef
+         ! call flshfo(luprint)
 !     
   end subroutine get_cholesky_ij
 !
@@ -604,6 +624,8 @@ contains
 !   reorder = .true. => batch over first index
 !   Required memory: n_J*batch_length*n_vir + n_vir*n_occ*n_J*2
       implicit none
+!
+      integer :: memory_lef
 !
       integer :: lucho_ab,ab_dim
       integer :: a,b,J,i,ia,aJ,ib,Jb,ab
@@ -618,6 +640,10 @@ contains
       integer                                 :: batch_length
       double precision L_ab_J(ab_dim,n_J)
       batch_length = end-start+1
+!
+         ! memory_lef = get_available()
+         ! write(luprint,*) 'Memory AB begin:',memory_lef
+         ! call flshfo(luprint)
 !
 !     Testing which index is batched
 !
@@ -770,10 +796,15 @@ contains
          call deallocator_n(L_Jb_a,n_J*batch_length,n_vir)
          call deallocator_n(L_Jb_i,n_J*batch_length,n_occ)
 !
+!
+      endif
+!
 write(luprint,*) 'AB Chol 2'
       call flshfo(luprint)
 !
-      endif
+         ! memory_lef = get_available()
+         ! write(luprint,*) 'Memory AB end:',memory_lef
+         ! call flshfo(luprint)
 !
   end subroutine get_cholesky_ab
 end module mlcc_cholesky

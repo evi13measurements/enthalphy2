@@ -21,20 +21,37 @@ contains
 !
       implicit none
 !
+      integer :: memory_lef = 0
+!
 !     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
 !
+         memory_lef = get_available()
+         write(luprint,*) 'Memory 1:',memory_lef
+         call flshfo(luprint)
      write(luprint,*) 'om1 1'
       call flshfo(luprint)
       call mlcc_omega_a1
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 2:',memory_lef
+         call flshfo(luprint)
            write(luprint,*) 'om1 2'
       call flshfo(luprint)
       call mlcc_omega_b1
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 3:',memory_lef
+         call flshfo(luprint)
            write(luprint,*) 'om1 3'
       call flshfo(luprint)
       call mlcc_omega_c1
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 4:',memory_lef
+         call flshfo(luprint)
            write(luprint,*) 'om1 4'
       call flshfo(luprint)
       call mlcc_omega_d1 
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 5:',memory_lef
+         call flshfo(luprint)
            write(luprint,*) 'om1 5'
       call flshfo(luprint)
 !
@@ -46,18 +63,33 @@ contains
       write(luprint,*) 'heiiheii1'
       call flshfo(luprint)
       call mlcc_omega_e2
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 6:',memory_lef
+         call flshfo(luprint)
       write(luprint,*) 'heiiheii2'
       call flshfo(luprint)
-      call mlcc_omega_d2
+      call mlcc_omega_d2 ! Something is not deallocated here!! This should now be fixed...!
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 7:',memory_lef
+         call flshfo(luprint)
       write(luprint,*) 'heiiheii3'
       call flshfo(luprint)
-      call mlcc_omega_c2 
+      call mlcc_omega_c2  ! Something is not deallocated here!! This should now be fixed...! NB this is very memory intensive, as it is now 
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 8:',memory_lef
+         call flshfo(luprint)
       write(luprint,*) 'heiiheii4'
       call flshfo(luprint)
       call mlcc_omega_a2
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 9:',memory_lef
+         call flshfo(luprint)
       write(luprint,*) 'heiiheii5'
       call flshfo(luprint)
       call mlcc_omega_b2
+               memory_lef = get_available()
+         write(luprint,*) 'Memory 10:',memory_lef
+         call flshfo(luprint)
       write(luprint,*) 'heiiheii6'
       call flshfo(luprint)
 !
@@ -76,13 +108,13 @@ contains
 !
       implicit none
 !
-      integer :: i,j,a
+      integer :: i=0,j=0,a=0
 !
-      integer :: required,available,max_batch_length,batch_dimension,n_batch
+      integer :: required=0,available=0,max_batch_length=0,batch_dimension=0,n_batch=0
 !
-      integer :: a_begin,a_end,a_batch,batch_length
+      integer :: a_begin=0,a_end=0,a_batch=0,batch_length=0
 !
-      integer :: ad,ad_dim,c,ci,cidk,ck,ckd,ckdi,di,dk,k,kc,d,da
+      integer :: ad=0,ad_dim=0,c=0,ci=0,cidk=0,ck=0,ckd=0,ckdi=0,di=0,dk=0,k=0,kc=0,d=0,da=0
 !
       logical :: debug = .false.
 !
@@ -107,6 +139,7 @@ contains
 !     Allocate u_ckd_i = u_ki^cd
 !
       call allocator(u_ckd_i,n_ovv,n_occ)
+      u_ckd_i = zero
 !
 !     Calculate u_ckd_i
 !
@@ -253,7 +286,7 @@ contains
 !
       logical :: debug = .false.
 !
-      integer :: a,c,k,l,ckl,ki,ak,akcl,al,alck,ck,ai,cl,lc,i,j
+      integer :: a=0,c=0,k=0,l=0,ckl=0,ki=0,ak=0,akcl=0,al=0,alck=0,ck=0,ai=0,cl=0,lc=0,i=0,j=0
 !
       real(dp), dimension(:,:), pointer :: L_ki_J  => null() ! L_ki^J 
       real(dp), dimension(:,:), pointer :: L_lc_J  => null() ! L_lc^J 
@@ -484,7 +517,8 @@ contains
 !
       logical :: debug = .false.
 !
-      integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai,dlc,dkcl,dlck,aib,aibk,bk,bja,ibj
+      integer :: b=0,c=0,k=0,d=0,ck=0,ckdl=0,cl=0,cldk=0,dk=0,dl=0,kc=0,kdl=0,l=0,ld=0
+      integer :: a=0,ai=0,aibj=0,bj=0,aicj=0,cj=0,i=0,j=0,jai=0,dlc=0,dkcl=0,dlck=0,aib=0,aibk=0,bk=0,bja=0,ibj=0
 !
       real(dp), dimension(:,:), pointer :: omega2_b_jai => null() ! For storing the E2.1 term temporarily
       real(dp), dimension(:,:), pointer :: L_kc_J       => null() ! L_kc^J
@@ -915,11 +949,12 @@ contains
 !
       logical :: debug = .false.
 !
-      integer :: required,available,max_batch_length,batch_dimension,n_batch
+      integer :: required=0,available=0,max_batch_length=0,batch_dimension=0,n_batch=0
 !
-      integer :: a_begin,a_end,a_batch,batch_length,a_full,ac_dim 
+      integer :: a_begin=0,a_end=0,a_batch=0,batch_length=0,a_full=0,ac_dim=0 
 !
-      integer :: ai,aidl,al,aldi,a,i,b,j,c,d,di,dl,k,kc,kd,l,lc,ld,aibj,bj,bjck,bk,bkcj,cj,ck,ca,ki
+      integer :: ai=0,aidl=0,al=0,aldi=0,a=0,i=0,b=0,j=0,c=0,d=0,di=0,dl=0,k=0,kc=0,kd=0,l=0
+      integer :: lc=0,ld=0,aibj=0,bj=0,bjck=0,bk=0,bkcj=0,cj=0,ck=0,ca=0,ki=0
 !
       real(dp), dimension(:,:), pointer :: L_kc_J       => null() ! L_kc^J 
       real(dp), dimension(:,:), pointer :: g_ld_kc      => null() ! g_ldkc 
@@ -1077,6 +1112,7 @@ contains
 !
 !     Deallocate the omega2_ai_bj and u_ai_ld(ai,ld) = u_il^ad vector
 !
+      call deallocator(L_ld_kc,n_ov,n_ov) ! Eirik: debugging (15 Mar, 2017)
       call deallocator(omega2_ai_bj,n_ov,n_ov)
       call deallocator(u_ai_ld,n_ov,n_ov) ! Eirik: note that u_ai_ld(bj,kc) = u_jk^bc, and thus this vector could be reused 
 !                                                  to calculate the D2.1 term. This would require some more memory than
@@ -1255,7 +1291,7 @@ contains
 !
 !        Allocate the integral g_ca_ki = g_acki and set to zero 
 !
-         call allocator(g_ca_ki,ac_dim,n_ov)
+         call allocator(g_ca_ki,ac_dim,n_oo) ! Eirik: debugging: n_oo was n_ov!! ( 15 Mar, 2017)
          g_ca_ki = zero
 !
 !        Calculate g_ca_ki = g_acki from L_ca_J = L_ac^J and L_ki_J = L_ki^J
@@ -1378,6 +1414,7 @@ contains
       call deallocator(g_ai_ck,n_ov,n_ov)
       call deallocator(u_ck_bj,n_ov,n_ov)
       call deallocator(omega2_ai_bj,n_ov,n_ov)
+      call deallocator(L_ki_J,n_oo,n_J) ! Eirik: debugging (15 Mar, 2017)
 !
    end subroutine mlcc_omega_d2
 !
@@ -1460,17 +1497,19 @@ contains
 !
 !     -1/2 * sum_(dl) t_ai_dl*g_dl_ck = X_ai_ck
 !
-      call allocator(X_ai_ck,n_ov,n_ov)
+      call allocator(X_ai_ck,n_ov,n_ov) ! Eirik: At this point, there are five vectors in memory!! (counting with L_ia^J) I think we must
+                                          ! restructure this to avoid using this much memory (15 Mar, 2017)
 !
       call dgemm('N','N',n_ov,n_ov,n_ov &
          ,-half,t_ai_dl,n_ov,g_dl_ck,n_ov &
          ,zero,X_ai_ck,n_ov)
 !
-!     Deallocate L_ia_J, g_kd_lc and g_dl_ck
+!     Deallocate L_ia_J, g_kd_lc and g_dl_ck, (and t_ai_dl, debug, Eirik 15 Mar 2017)
 !
       call deallocator(L_ia_J,n_ov,n_J)
       call deallocator(g_kd_lc,n_ov,n_ov)
       call deallocator(g_dl_ck,n_ov,n_ov)
+      call deallocator(t_ai_dl,n_ov,n_ov)
 !
 !     Constructing g_ki_ac ordered as g_ki_ca
 !
@@ -1481,7 +1520,8 @@ contains
 !
 !     Allocate L_ki_J
 !
-      call allocator(L_ki_J,n_ov,n_J)
+      call allocator(L_ki_J,n_oo,n_J) ! Eirik: debugging, n_oo was n_ov!!
+      L_ki_J = zero ! Eirik: setting this to zero for safety's sake (15 Mar, 2017)
 !
 !     Get cholesky vectors of ij-type
 !
@@ -1531,7 +1571,7 @@ contains
 !
 !     Deallocate L_ki_J
 !
-      call deallocator(L_ki_J,n_ov,n_J)
+      call deallocator(L_ki_J,n_oo,n_J) ! Eirik: debugging, n_oo was n_ov!! (15 Mar, 2017)
 !
 !     Reorder g_ki_ca to g_ai_ck
 !
@@ -1601,6 +1641,10 @@ contains
       call dgemm('N','N',n_ov,n_ov,n_ov &
          ,-one,X_ai_ck,n_ov,t_ck_bj,n_ov &
          , zero,Y_ai_bj,n_ov)
+!
+!     Deallocate the X intermediate (Eirik: debugging, 15 Mar 2017)
+!
+      call deallocator(X_ai_ck,n_ov,n_ov)
 !
 !     Deallocate t_ck_bj
 !
