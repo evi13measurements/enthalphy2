@@ -13,7 +13,7 @@ contains
 !
       implicit none
 !
-      double precision L_ia_J(n_ov,n_J)
+      real(dp) :: L_ia_J(n_ov,n_J)
 !
       integer :: lucho_ia 
       integer :: i=0,j=0,idummy=0
@@ -38,7 +38,7 @@ contains
       use mlcc_workspace
       implicit none
 !
-      double precision L_ai_J(n_ov,n_J)
+      real(dp) :: L_ai_J(n_ov,n_J)
 !
       integer :: lucho_ia 
       integer :: i=0,a=0,ia=0,ai=0,j=0
@@ -82,7 +82,7 @@ contains
 !
       implicit none
 !
-      double precision L_ij_J(n_oo,n_J)
+      real(dp) :: L_ij_J(n_oo,n_J)
 !
       integer :: lucho_ij
       integer :: i=0,j=0,idummy=0
@@ -206,7 +206,7 @@ contains
 !
       implicit none
 !
-      double precision L_ia_J(n_ov,n_J)
+      real(dp) :: L_ia_J(n_ov,n_J)
 !
       call read_cholesky_ia(L_ia_J)
 !
@@ -224,7 +224,7 @@ contains
 !
       integer :: memory_lef
 !
-      double precision L_ai_J(n_ov,n_J)
+      real(dp) :: L_ai_J(n_ov,n_J)
 !
       integer                              :: required=0,available=0,max_batch_length=0,n_batch=0,L_off=0
       integer                              :: a_batch=0,batch_start=0,batch_end=0,batch_length=0
@@ -529,7 +529,7 @@ contains
 !
       integer :: memory_lef
 !
-      double precision L_ij_J(n_oo,n_J)
+      real(dp) :: L_ij_J(n_oo,n_J)
 !
       real(dp),dimension(:,:),allocatable     :: L_ia_J
       real(dp),dimension(:,:),allocatable     :: L_iJ_a
@@ -638,7 +638,7 @@ contains
       real(dp),dimension(:,:),allocatable     :: L_a_Jb
       real(dp),dimension(:,:),allocatable     :: L_i_Jb
       integer                                 :: batch_length=0
-      double precision L_ab_J(ab_dim,n_J)
+      real(dp) :: L_ab_J(ab_dim,n_J)
       batch_length = end-start+1
 !
          ! memory_lef = get_available()
