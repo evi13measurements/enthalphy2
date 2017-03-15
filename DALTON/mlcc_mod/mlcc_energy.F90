@@ -47,26 +47,19 @@ contains
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm
 !
+!      Allocate G matrix
+!
+      call allocator(G,maxdiis+1,maxdiis+1)
+!
 !     Enter the iterative loop 
 !
 		do while ((.not. converged) .and. (iteration .le. max_iterations))
-         write(luprint,*) 'Bla', (.not. converged) .and. (iteration .le. max_iterations)
 !
 !        Calculate the current coupled cluster energy 
 ! 
-         memory_lef = get_available()
-         write(luprint,*) 'Memory:',memory_lef
-         call flshfo(luprint)
-!
-         write(luprint,*) 'Blablabla1'
-         call flshfo(luprint)
          prev_energy = energy 
-                  memory_lef = get_available()
-         write(luprint,*) 'Memory iterative 1:',memory_lef
-         call flshfo(luprint)
+!
          call mlcc_ccsd_energy(energy) !  Fixed memory leak (Eirik,15 Mar 2017)
-         write(luprint,*) 'Blablabla2'
-         call flshfo(luprint)
          write(luprint,*) 'THE ENERGY:::',energy
 !
 !        Reset the omega vector and re-calculate it
@@ -74,21 +67,12 @@ contains
          omega1 = zero
          omega2 = zero
 !         
-         write(luprint,*) 'Blablabla3'
-         call flshfo(luprint)
-         memory_lef = get_available()
-         write(luprint,*) 'Memory iterative 2:',memory_lef
-         call flshfo(luprint)
+         write(luprint,*)'Entering mlcc_omega_calc'
          call mlcc_omega_calc
-
-         write(luprint,*) 'Blablabla4'
-         call flshfo(luprint)
+         write(luprint,*)'Exiting mlcc_omega_calc'
 !
 !        Test for convergence of the omega vector and the energy 
 !
-memory_lef = get_available()
-         write(luprint,*) 'Memory iterative 3:',memory_lef
-         call flshfo(luprint)
          call mlcc_norm(omega_norm,omega1,omega2)
 !
          converged_energy   = abs(energy-prev_energy) .lt. energy_threshold
@@ -101,7 +85,7 @@ memory_lef = get_available()
          if (iteration .eq. 1) then 
 !
 !        Open the files that stores dt and t + dt 
-!
+!  
             ludiis_dt   = -1  ! dt
             call gpopen(ludiis_dt,'DIIS_DT','UNKNOWN','SEQUENTIAL','FORMATTED',idum,.false.)
             rewind(ludiis_dt)
@@ -116,35 +100,20 @@ memory_lef = get_available()
 !        Find the next set of amplitudes, by a DIIS step,
 !        if the equations have not yet converged
 !
-         write(luprint,*) 'Blablabla5'
-         call flshfo(luprint)
-         memory_lef = get_available()
-         write(luprint,*) 'Memory iterative 4:',memory_lef
-         call flshfo(luprint)
          if (.not. converged) then 
             call mlcc_ccsd_update_amplitudes(iteration)
             iteration = iteration + 1
          endif
-         memory_lef = get_available()
-         write(luprint,*) 'Memory iterative 5:',memory_lef
-         call flshfo(luprint)
-         write(luprint,*) 'Blablabla6'
-         call flshfo(luprint)
 !
 !        Recalculate the (T1-transformed) Fock matrix
 !
          call mlcc_get_fock
-         write(luprint,*) 'Blablabla7'
-         call flshfo(luprint)
-         memory_lef = get_available()
-         write(luprint,*) 'Memory iterative 6:',memory_lef
-         call flshfo(luprint)
 !
 !        Print some information necessary for debug purposes
 !
          if (debug) then 
 !
-            write(luprint,*)
+            write(luprint,*) 
             write(luprint,*) 'Iteration nr.:',iteration-1
             write(luprint,*)
             write(luprint,*) 'Current CCSD energy:',energy 
@@ -342,8 +311,6 @@ memory_lef = get_available()
 !
 !     Calculate the current d_k vector
 !
-      write(luprint,*) 'abla1'
-      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -369,8 +336,6 @@ memory_lef = get_available()
             enddo
          enddo
       enddo
-      write(luprint,*) 'abla2'
-      call flshfo(luprint)
 !
 !     Calculate the current index for overwriting the G matrix (G(:,current_index) and G(current_index,:) is overwritten)
 !
@@ -383,11 +348,6 @@ memory_lef = get_available()
          rewind(ludiis_dt)
          rewind(ludiis_t_dt)
       endif
-      ! write(luprint,*) 'dt1_k(a,i):'
-      ! call vec_print(dt1_k,n_vir,n_occ)
-      ! write(luprint,*) 'dt2_k(aibj,1):'
-      ! call flshfo(luprint)
-      ! call vec_print_packed(dt2_k,n_ov_ov_packed)
 !
 !     Write dt_k to file (singles, then doubles)
 !
@@ -412,7 +372,8 @@ memory_lef = get_available()
 !
 !        Allocate the G matrix 
 !
-         call allocator(G,maxdiis+1,maxdiis+1)
+!         call allocator(G,maxdiis+1,maxdiis+1) ! Sarai: I think we should always allocate and deallocate in same routine.
+!                                               !        Moved this to driver, outsidel loop.
 !
 !        Set the G matrix and the LU integers array 
 !

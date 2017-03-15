@@ -28,31 +28,31 @@ contains
          memory_lef = get_available()
          write(luprint,*) 'Memory 1:',memory_lef
          call flshfo(luprint)
-     write(luprint,*) 'om1 1'
+     write(luprint,*) 'Entering omega1 A'
       call flshfo(luprint)
       call mlcc_omega_a1
                memory_lef = get_available()
          write(luprint,*) 'Memory 2:',memory_lef
          call flshfo(luprint)
-           write(luprint,*) 'om1 2'
+           write(luprint,*) 'Entering omega1 B'
       call flshfo(luprint)
       call mlcc_omega_b1
                memory_lef = get_available()
          write(luprint,*) 'Memory 3:',memory_lef
          call flshfo(luprint)
-           write(luprint,*) 'om1 3'
+           write(luprint,*) 'Entering omega1 C'
       call flshfo(luprint)
       call mlcc_omega_c1
                memory_lef = get_available()
          write(luprint,*) 'Memory 4:',memory_lef
          call flshfo(luprint)
-           write(luprint,*) 'om1 4'
+           write(luprint,*) 'Entering omega1 D'
       call flshfo(luprint)
       call mlcc_omega_d1 
                memory_lef = get_available()
          write(luprint,*) 'Memory 5:',memory_lef
          call flshfo(luprint)
-           write(luprint,*) 'om1 5'
+           write(luprint,*) 'Exiting omega1'
       call flshfo(luprint)
 !
       write(luprint,*) 'Omega(a,i):'
@@ -60,37 +60,37 @@ contains
 !
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
-      write(luprint,*) 'heiiheii1'
+      write(luprint,*) 'Entering Omega2 E'
       call flshfo(luprint)
       call mlcc_omega_e2
                memory_lef = get_available()
          write(luprint,*) 'Memory 6:',memory_lef
          call flshfo(luprint)
-      write(luprint,*) 'heiiheii2'
+      write(luprint,*) 'Entering Omega2 D'
       call flshfo(luprint)
       call mlcc_omega_d2 ! Something is not deallocated here!! This should now be fixed...!
                memory_lef = get_available()
          write(luprint,*) 'Memory 7:',memory_lef
          call flshfo(luprint)
-      write(luprint,*) 'heiiheii3'
+      write(luprint,*) 'Entering Omega2 C'
       call flshfo(luprint)
       call mlcc_omega_c2  ! Something is not deallocated here!! This should now be fixed...! NB this is very memory intensive, as it is now 
                memory_lef = get_available()
          write(luprint,*) 'Memory 8:',memory_lef
          call flshfo(luprint)
-      write(luprint,*) 'heiiheii4'
+      write(luprint,*) 'Entering Omega2 A'
       call flshfo(luprint)
       call mlcc_omega_a2
                memory_lef = get_available()
-         write(luprint,*) 'Memory 9:',memory_lef
-         call flshfo(luprint)
+      write(luprint,*) 'Entering Omega2 B'
+      call flshfo(luprint)
       write(luprint,*) 'heiiheii5'
       call flshfo(luprint)
       call mlcc_omega_b2
                memory_lef = get_available()
          write(luprint,*) 'Memory 10:',memory_lef
          call flshfo(luprint)
-      write(luprint,*) 'heiiheii6'
+            write(luprint,*) 'Exiting Omega2'
       call flshfo(luprint)
 !
       write(luprint,*) 'Omega(aibj,1):'
@@ -418,17 +418,22 @@ contains
 !
    implicit none
 !
-   real(dp),dimension(:,:),pointer  :: F_ck => null()
-   real(dp),dimension(:,:),pointer  :: u_ck_ai => null()
+   real(dp),dimension(:,:),pointer  :: F_ck      => null()
+   real(dp),dimension(:,:),pointer  :: u_ai_ck   => null()
+   real(dp),dimension(:,:),pointer  :: omega1_ai => null()
    integer                          :: i=0,k=0,c=0,a=0
-   integer                          :: ck=0,ai=0,ak=0,ci=0,ckai=0,ciak=0
+   integer                          :: ck=0,ai=0,ak=0,ci=0,aick=0,akci=0
    logical                          :: debug = .false.
 !
 !
 !  Allocation
 !
-   call allocator(u_ck_ai,n_ov,n_ov)   ! 2*t_ck_ai-t_ci_ak
-   call allocator(F_ck,1,n_ov) ! T1-transformed F_k_c reordered
+   call allocator(u_ai_ck,n_ov,n_ov)   ! 2*t_ck_ai-t_ci_ak
+   call allocator(F_ck,n_ov,1) ! T1-transformed F_k_c reordered
+   call allocator(omega1_ai,n_ov,1)
+   u_ai_ck=zero
+   F_ck=zero
+   omega1_ai=zero
 !
 ! Set up u_ck_ai and MO Fock matrix virtual-occupied
 !
@@ -438,7 +443,7 @@ contains
 !
 !        MO Fock matrix
 !
-         F_ck(1,ck) = F_i_a(k,c)
+         F_ck(ck,1) = F_i_a(k,c)
          do i = 1,n_occ
             do a = 1,n_vir
 !
@@ -448,12 +453,12 @@ contains
                ci = index_two(c,i,n_vir)
                ak = index_two(a,k,n_vir)
 !
-               ckai = index_packed(ck,ai)
-               ciak = index_packed(ci,ak)
+               aick = index_packed(ck,ai)
+               akci = index_packed(ci,ak)
 !              
 !              u_ck_ai
 !
-               u_ck_ai(ck,ai) = two*t2am(ckai,1)-t2am(ciak,1)
+               u_ai_ck(ai,ck) = two*t2am(aick,1)-t2am(akci,1)
             enddo
          enddo
       enddo
@@ -461,17 +466,24 @@ contains
 !
 !  Matrix multiplication
 !
-   ! call dgemm('N','N',1,n_ov,n_ov &
-   !    ,-one,F_ck,1,u_ck_ai,n_ov &
-   !    ,one,omega1,n_ov)
-      call dgemm('N','N',1,n_ov,n_ov &
-      ,one,F_ck,1,u_ck_ai,n_ov &
-      ,one,omega1,n_ov) ! Eirik: debug -- should there be a -one in front of this term?? Is the (1,ai) ordering a problem?
+      call dgemm('N','N',n_ov,1,n_ov &
+      ,one,u_ai_ck,n_ov,F_ck,n_ov &
+      ,zero,omega1_ai,n_ov)
+!
+!     Add to omega1
+!
+       do i = 1,n_occ
+            do a = 1,n_vir
+               ai=index_two(a,i,n_vir)
+               omega1(a,i)=omega1(a,i)+omega1_ai(ai,1)
+            enddo
+         enddo
 !
 !  Deallocation
 !
-  call deallocator(F_ck,1,n_ov)
-   call deallocator(u_ck_ai,n_ov,n_ov)
+   call deallocator(F_ck,n_ov,1)
+   call deallocator(omega1_ai,n_ov,1)
+   call deallocator(u_ai_ck,n_ov,n_ov)
 
    end subroutine mlcc_omega_c1
 !
@@ -866,6 +878,8 @@ contains
                   -one,t_aib_k,n_ovv,Y_k_j,n_occ,&
                   zero,omega2_aib_j,n_ovv)
 !
+      write(luprint,*)'Dgemm in E2 done'
+      call flshfo(luprint)
 !     Deallocate t_aib_k and Y_k_j 
 !
       call deallocator(t_aib_k,n_ovv,n_occ)

@@ -18,6 +18,7 @@ contains
       integer :: lucho_ia 
       integer :: i=0,j=0,idummy=0
 !
+      write(luprint,*)'read cholesky ia'
       lucho_ia = -1
       call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ia)
@@ -46,6 +47,7 @@ contains
 !
 !     Allocation
 !
+      write(luprint,*)'read cholesky ai'
       call allocator_n(L_ia_J,n_ov,n_J)
       L_ia_J=zero
 !     
@@ -87,6 +89,7 @@ contains
       integer :: lucho_ij
       integer :: i=0,j=0,idummy=0
 !
+      write(luprint,*)'read cholesky ij'
       lucho_ij = -1
       call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ij)
@@ -120,6 +123,7 @@ contains
 !
    batch_length = b_end-b_start+1
 !
+   write(luprint,*)'read cholesky ab'
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
    rewind(lucho_ab)
@@ -133,16 +137,16 @@ contains
 !     Read from a_start
 !
       do j = 1,n_J
-         read(lucho_ab)(dummy,i=1,idummy),((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
- !       read(lucho_ab)(dummy,i=1,idummy),(L_ab_J(a,j),a=1,ab_dim)
+ !        read(lucho_ab)(dummy,i=1,idummy),((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
+        read(lucho_ab)(dummy,i=1,idummy),(L_ab_J(a,j),a=1,ab_dim)
       enddo
    else
 !
 !     Read from start
 !
       do j = 1,n_J
-         read(lucho_ab)((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
- !       read(lucho_ab)(L_ab_J(a,j),a=1,ab_dim)
+ !        read(lucho_ab)((L_ab_J(index_two(a,b,n_vir),j),b=1,batch_length),a=1,n_vir)
+        read(lucho_ab)(L_ab_J(a,j),a=1,ab_dim)
       enddo
    endif
    !
@@ -173,6 +177,7 @@ contains
 !
    batch_length = a_end-a_start+1
 !
+   write(luprint,*)'read cholesky ab reordered'
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
    rewind(lucho_ab)
@@ -207,6 +212,7 @@ contains
       implicit none
 !
       double precision L_ia_J(n_ov,n_J)
+      write(luprint,*)'get cholesky ia'
 !
       call read_cholesky_ia(L_ia_J)
 !
@@ -243,6 +249,7 @@ contains
          ! write(luprint,*) 'Memory AI start:',memory_lef
          ! call flshfo(luprint)
 !
+      write(luprint,*)'get cholesky ai'
       call read_cholesky_ai(L_ai_J)
 !
 !
@@ -254,9 +261,6 @@ contains
 !
       call allocator_n(L_Ja_i,n_J*n_vir,n_occ)
       L_Ja_i=zero
-!
-      write(luprint,*) 'AI Chol 1'
-      call flshfo(luprint)
 !
 !     Batching setup
 !
@@ -508,9 +512,6 @@ contains
       call deallocator_n(L_a_iJ,n_vir,n_occ*n_J)
       call deallocator_n(L_k_iJ,n_occ,n_occ*n_J)
 !
-      write(luprint,*) 'AI Chol 2'
-      call flshfo(luprint)
-!
          ! memory_lef = get_available()
          ! write(luprint,*) 'Memory AI end:',memory_lef
          ! call flshfo(luprint)
@@ -542,7 +543,7 @@ contains
 !
 !     Allocation
 !    
-      write(luprint,*) 'IJ Chol 1'
+      write(luprint,*)'get cholesky ij'
       call flshfo(luprint)
 !
       call allocator_n(L_ia_J,n_ov,n_J)
@@ -606,13 +607,6 @@ contains
 !
       call deallocator_n(L_iJ_k,n_occ*n_J,n_occ)
       call deallocator_n(L_iJ_a,n_occ*n_J,n_vir)
-!
- write(luprint,*) 'IJ Chol 2'
-      call flshfo(luprint)
-!
-         ! memory_lef = get_available()
-         ! write(luprint,*) 'Memory IJ end:',memory_lef
-         ! call flshfo(luprint)
 !     
   end subroutine get_cholesky_ij
 !
@@ -641,14 +635,10 @@ contains
       double precision L_ab_J(ab_dim,n_J)
       batch_length = end-start+1
 !
-         ! memory_lef = get_available()
-         ! write(luprint,*) 'Memory AB begin:',memory_lef
-         ! call flshfo(luprint)
+      write(luprint,*)'get cholesky ab'
 !
 !     Testing which index is batched
 !
-       write(luprint,*) 'AB Chol 1'
-      call flshfo(luprint)
 !
       if (reorder) then !! Batching over a !!
 !
@@ -798,13 +788,6 @@ contains
 !
 !
       endif
-!
-write(luprint,*) 'AB Chol 2'
-      call flshfo(luprint)
-!
-         ! memory_lef = get_available()
-         ! write(luprint,*) 'Memory AB end:',memory_lef
-         ! call flshfo(luprint)
 !
   end subroutine get_cholesky_ab
 end module mlcc_cholesky
