@@ -79,6 +79,7 @@ subroutine mlcc_drv(work,lwork,lupri)
    call mlcc_energy_drv
 !
    call deallocator(t2am,n_ov_ov_packed,1)
+   call deallocator(t1am,n_vir,n_occ)
    call deallocator(fock_diagonal,n_orbitals,1)
    call deallocator(orb_coefficients,n_lambda,1)
    call deallocator(omega1,n_vir,n_occ) ! Omega_a,i
