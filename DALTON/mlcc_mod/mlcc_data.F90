@@ -52,10 +52,10 @@ module mlcc_data
 !   
 !  the mo fock matrix, standard and t1- and c1-transformed
    real(dp), dimension(:,:), allocatable  :: mo_fock_mat
-   real(dp), dimension(:,:), pointer  :: F_i_j => null()
-   real(dp), dimension(:,:), pointer  :: F_i_a => null()
-   real(dp), dimension(:,:), pointer  :: F_a_i => null()
-   real(dp), dimension(:,:), pointer  :: F_a_b => null()
+   real(dp), dimension(:,:), pointer      :: F_i_j => null()
+   real(dp), dimension(:,:), pointer      :: F_i_a => null()
+   real(dp), dimension(:,:), pointer      :: F_a_i => null()
+   real(dp), dimension(:,:), pointer      :: F_a_b => null()
 !
    integer                          :: luprint !general output unit
    integer                          :: mem = 100000000
