@@ -406,7 +406,6 @@ contains
 !
 !  Deallocation
 !
-  ! call deallocator(F_ck,n_ov,1) ! wrong order; I don't think this makes any difference...
   call deallocator(F_ck,1,n_ov)
    call deallocator(u_ck_ai,n_ov,n_ov)
 
