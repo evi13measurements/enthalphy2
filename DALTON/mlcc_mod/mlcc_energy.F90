@@ -6,12 +6,14 @@ module mlcc_energy
    use mlcc_workspace
    use mlcc_data
    use mlcc_omega 
+   use mlcc_fock
 !
 !  Some DIIS specific variables 
 !
    integer :: maxdiis = 8
    integer :: ludiis_dt, ludiis_t_dt
    real(dp), dimension(:,:), pointer :: G           => null() ! The DIIS matrix, G * w = H, G = G(maxdiis,maxdiis)
+   real(dp), dimension(:,:), pointer :: copy_of_G   => null() ! Copy for purposes...
    real(dp), dimension(:,:), pointer :: H           => null() ! The DIIS vector, G * w = H, H = H(maxdiis,1)
    integer,  dimension(:,:), pointer :: lu_integers => null() ! An integer array from LU factorization of G by dgetrf routine
 !
@@ -37,7 +39,7 @@ contains
       integer :: iteration = 1
 !
       real(dp) :: energy_threshold = 1.0D-8
-      real(dp) :: solution_threshold = 1.0D-8
+      real(dp) :: solution_threshold = 1.0D-6
       real(dp) :: energy = zero 
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm
@@ -82,19 +84,13 @@ contains
 !
 !        Open the files that stores dt and t + dt 
 !
-            record_length = (n_ov + n_ov_ov_packed)*dp 
-            write(luprint,*) 'DP equals',dp 
             ludiis_dt   = -1  ! dt
-            ludiis_dt = 1000
-            open(unit=ludiis_dt,file='DIIS_DT',access='DIRECT',recl=record_length,&
-                      form='UNFORMATTED',action="READWRITE",status="UNKNOWN") ! S in old code
-         !   rewind(ludiis_dt) ! This is probably unneccessary
-            write(luprint,*) 'LUDIIS_DT', ludiis_dt
+            call gpopen(ludiis_dt,'DIIS_DT','UNKNOWN','SEQUENTIAL','FORMATTED',idum,.false.)
+            rewind(ludiis_dt)
 !  
             ludiis_t_dt = -1  ! t + dt
-            ludiis_t_dt = 1001 
-            open(unit=ludiis_t_dt,file='DIIS_T_DT',access='DIRECT',recl=record_length,&
-                      form='UNFORMATTED',action="READWRITE",status="UNKNOWN") ! S in old code
+            call gpopen(ludiis_t_dt,'DIIS_T_DT','UNKNOWN','SEQUENTIAL','FORMATTED',idum,.false.)
+            rewind(ludiis_t_dt)
 !
          endif 
 !
@@ -106,6 +102,10 @@ contains
             call mlcc_ccsd_update_amplitudes(iteration)
             iteration = iteration + 1
          endif
+!
+!        Recalculate the (T1-transformed) Fock matrix
+!
+         call mlcc_get_fock
 !
 !        Print some information necessary for debug purposes
 !
@@ -287,6 +287,9 @@ contains
       call allocator(dt2_j,n_ov_ov_packed,1) ! Time could be saved by overwriting the omega vector instead,
                                              ! but this makes things difficult to read & understand (see old DIIS routine)
 !
+      dt1_j = zero
+      dt2_j = zero
+!
       dt1_k = zero
       dt2_k = zero 
 !
@@ -318,30 +321,20 @@ contains
          enddo
       enddo
 !
-!     Write the current quasi-Newton amplitude correction, dt_k, to file 
-!
-!
 !     Calculate the current index for overwriting the G matrix (G(:,current_index) and G(current_index,:) is overwritten)
 !
       current_index = modulo(iteration,maxdiis)
-      write(luprint,*) 'The modulo',current_index,iteration,maxdiis
-      call flshfo(luprint)
+      write(luprint,*) 'Current_index,iteration,maxdiis',current_index,iteration,maxdiis
       if (current_index .eq. 0) current_index = maxdiis
 !
-!     If the current index is 1, rewind the file before writing (so as to overwrite the oldest t and t + dt)
-!
       if (current_index .eq. 1) then
-!
-        ! rewind(ludiis_dt)
-        ! rewind(ludiis_t_dt)
-!
+         rewind(ludiis_dt)
+         rewind(ludiis_t_dt)
       endif
 !
 !     Write dt_k to file (singles, then doubles)
 !
-      write(unit=ludiis_dt,rec=current_index) ((dt1_k(a,i),a=1,n_vir),i=1,n_occ),(dt2_k(p,1),p=1,n_ov_ov_packed)
-      write(luprint,*) 'Bla 3'
-      call flshfo(luprint)
+      write(ludiis_dt,*) ((dt1_k(a,i),a=1,n_vir),i=1,n_occ),(dt2_k(p,1),p=1,n_ov_ov_packed)
 !
 !     Add the quasi-Newton amplitude correction to the amplitudes (t_k <- t_k + dt_k)
 !
@@ -350,7 +343,7 @@ contains
 !
 !     Write t_k + dt_k to file 
 !
-      write(unit=ludiis_t_dt,rec=current_index) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
+      write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
 !
 !     If the first iteration, then allocate the matrices 
 !
@@ -358,40 +351,46 @@ contains
 !
 !        Allocate 
 !
-         call allocator(G,maxdiis,maxdiis)
-         call allocator(H,maxdiis,1)
-         call allocator_int(lu_integers,maxdiis,1)
+         call allocator(G,maxdiis+1,maxdiis+1)
+         call allocator(copy_of_G,maxdiis+1,maxdiis+1)
+         call allocator(H,maxdiis+1,1)
+         call allocator_int(lu_integers,maxdiis+1,1)
 !
 !        Set the G matrix and the LU integers array 
 !
          lu_integers = 0 ! Is altered later 
          G = zero ! Is altered later
+         copy_of_G = zero
 !
       endif
 !
+      if (current_index .eq. 1) G = zero
+!
 !     Set the H vector (1 1 1 1 ...)
 !
-      H = one ! Fixed throughout the calculation, but is overwritten by dgetrs & must be reset in every iteration 
+      H = zero ! Fixed throughout the calculation, but is overwritten by dgetrs & must be reset in every iteration 
 !
 !     Calculate the effective dimensionality of G & set its values    
 !
-      dim_G = min(iteration,maxdiis) ! 1,2,3,4,5,6,7,8,8,8,8,8,8,...
-      write(luprint,*) 'Dimension of G:',dim_G
-!
-    !  rewind(ludiis_dt)
+      dim_G = current_index
+      rewind(ludiis_dt)
 !
       do j = 1,dim_G
 !
 !        Read the jth entry of the file containing the dt's
 !
-         read(unit=ludiis_dt,rec=current_index) ((dt1_j(a,i),a=1,n_vir),i=1,n_occ),(dt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file 
+         read(ludiis_dt,*) ((dt1_j(a,i),a=1,n_vir),i=1,n_occ),(dt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file 
 !
 !        Calculate G(current_index,j) = dt_current_index * dt_j + 1
 !
-         G(current_index,j) = ddot(n_ov,dt1_k,1,dt1_j,1)+ddot(n_ov_ov_packed,dt2_k,1,dt2_j,1) + one
+         G(current_index,j) = ddot(n_ov,dt1_k,1,dt1_j,1)
+         G(current_index,j) = G(current_index,j) + ddot(n_ov_ov_packed,dt2_k,1,dt2_j,1)
          G(j,current_index) = G(current_index,j)
+         G(current_index+1,j) = -one
+         G(j,current_index+1) = -one 
 !
       enddo
+      H(dim_G+1,1) = -one
 !
       write(luprint,*) 'The G matrix'
       write(luprint,*) G 
@@ -400,35 +399,22 @@ contains
 !
 !     Solve the eigenvalue problem G * w = H 
 !
-      call dgetrf(dim_G,dim_G,G,maxdiis,lu_integers,lu_error)
-!
-      write(luprint,*) 'The G matrix'
-      write(luprint,*) G 
+      copy_of_G = G
+      lu_error = -1
+      lu_integers = 0
+      call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
-      write(luprint,*) 'The LU_INTEGERS vector'
-      write(luprint,*) lu_integers
 !
       lu_error = -1
-      call dgetrs('N',dim_G,1,G,maxdiis,lu_integers,H,maxdiis,lu_error) ! Solution is placed in H 
-!
-            write(luprint,*) 'blablabla 7'
-            call flshfo(luprint)
+      call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H 
 !
       if (lu_error .eq. 0) write(luprint,*) 'Successful solution of G * omega = H'
 !
+      write(luprint,*) 'The integers',lu_integers
+  !    if (current_index .eq. 1) H = 1 ! This is the only solution for this case (hack)
+!
       write(luprint,*) 'The H vector (ie, the solution)'
-      write(luprint,*) H
-!
-!     Normalize the solution (H)
-!
-      norm_of_solution = zero 
-      do j = 1,dim_G
-         norm_of_solution = norm_of_solution + H(j,1)
-      enddo
-      H = H/norm_of_solution
-!
-      write(luprint,*) 'The H vector, normalized (ie, the solution)'
       write(luprint,*) H
 !
 !     Deallocate the temporary dt vector
@@ -446,33 +432,22 @@ contains
 !
 !     Update the amplitudes 
 !
-     ! t1am = zero
-    ! t2am = zero
       call dzero(t1am,n_ov)
       call dzero(t2am,n_ov_ov_packed)
-     ! rewind(ludiis_t_dt)
-                  write(luprint,*) 'blablabla 8'
-            call flshfo(luprint)
+      rewind(ludiis_t_dt)
+!
       do j = 1,dim_G
 !
 !        Read the jth t + dt contribution on file 
 !
-                  write(luprint,*) 'blablabla 8.5'
-            call flshfo(luprint)
-         read(unit=ludiis_t_dt,rec=current_index) ((tdt1_j(a,i),a=1,n_vir),i=1,n_occ),(tdt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file
-                  write(luprint,*) 'blablabla 8.7'
-            call flshfo(luprint)
+         read(ludiis_t_dt,*) ((tdt1_j(a,i),a=1,n_vir),i=1,n_occ),(tdt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file
 !
 !        Add the contributions w_j * (t_j + dt_j) to the amplitudes 
 !
-      !   t1am = t1am + H(j,1)*tdt1_j
-       !  t2am = t2am + H(j,1)*tdt2_j
-                         write(luprint,*) 'blablabla 8.8'
-            call flshfo(luprint)
-       call daxpy(n_ov,H(j,1),tdt1_j,1,t1am,1)
-       call daxpy(n_ov_ov_packed,H(j,1),tdt2_j,1,t2am,1)
-                         write(luprint,*) 'blablabla 8.9'
-            call flshfo(luprint)
+         write(luprint,*) 'Adding prefactor',H(j,1)
+!
+         call daxpy(n_ov,H(j,1),tdt1_j,1,t1am,1)
+         call daxpy(n_ov_ov_packed,H(j,1),tdt2_j,1,t2am,1)
 !
       enddo
 !
@@ -482,8 +457,6 @@ contains
       call deallocator(tdt2_j,n_ov_ov_packed,1)
       call deallocator(dt1_k,n_vir,n_occ)
       call deallocator(dt2_k,n_ov_ov_packed,1)
-                  write(luprint,*) 'blablabla 9'
-            call flshfo(luprint)
 !
    end subroutine mlcc_ccsd_update_amplitudes
 !

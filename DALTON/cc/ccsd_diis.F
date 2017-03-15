@@ -93,6 +93,7 @@ CRDA      CALL READ3(S,LEN,IPOSP(I),IFILS)
       call getwa(ifils,s,iposp(i),len)
       DO 5 J=1,LEN
 5     T(J)=T(J)+C(I)*S(J)
+      write(lupri,*) 'Coefficient',I,C(I)
 4     CONTINUE
       RETURN
       END
@@ -334,6 +335,7 @@ C
          READ(LUSDIS) S
 C
          ERR=DDOT(NDIM,T,1,S,1)
+         WRITE(LUPRI,*) 'Dot I,ITER,I*ITER',I,NITER,ERR
 C
          A(I,IVEC)    =  ERR
          A(IVEC,I)    =  ERR
@@ -345,6 +347,12 @@ C
 C
       A(NLOOP+1,NLOOP+1) =  ZERO
       B(NLOOP+1)         = -ONE
+C
+   !   WRITE(LUPRI,*) 'The G matrix', A
+   !   WRITE(LUPRI,*) 'The H vector', B
+      WRITE(LUPRI,*) 'MAXDIIS',MXDIIS
+      WRITE(LUPRI,*) 'NLOOP',NLOOP
+      WRITE(LUPRI,*) 'IVEC',IVEC 
 C
       NSIZ=NLOOP+1
 C
@@ -364,6 +372,7 @@ C
          READ(LUTDIS) S
 C
          CALL DAXPY(NDIM,C(I),S,1,T,1)
+         write(lupri,*) 'Coefficient',I,C(I)
 C
   300 CONTINUE
 C

@@ -26,7 +26,10 @@ contains
       call mlcc_omega_a1
       call mlcc_omega_b1
       call mlcc_omega_c1
-      call mlcc_omega_d1     
+      call mlcc_omega_d1 
+!
+      write(luprint,*) 'Omega(a,i):'
+      call vec_print(omega1,n_vir,n_occ)   
 !
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
@@ -35,6 +38,9 @@ contains
       call mlcc_omega_c2 
       call mlcc_omega_a2
       call mlcc_omega_b2
+!
+      write(luprint,*) 'Omega(aibj,1):'
+      call vec_print_packed(omega2,n_ov_ov_packed)
 !
    end subroutine mlcc_omega_calc
 !
@@ -223,7 +229,7 @@ contains
 !
       implicit none
 !
-      logical :: debug = .true.
+      logical :: debug = .false.
 !
       integer :: a,c,k,l,ckl,ki,ak,akcl,al,alck,ck,ai,cl,lc,i,j
 !
@@ -361,7 +367,7 @@ contains
    real(dp),dimension(:,:),pointer  :: u_ck_ai => null()
    integer                          :: i,k,c,a
    integer                          :: ck,ai,ak,ci,ckai,ciak
-   logical                          :: debug = .true.
+   logical                          :: debug = .false.
 !
 !
 !  Allocation
@@ -451,7 +457,7 @@ contains
 !
       implicit none 
 !
-      logical :: debug = .true.
+      logical :: debug = .false.
 !
       integer :: b,c,k,d,ck,ckdl,cl,cldk,dk,dl,kc,kdl,l,ld,a,ai,aibj,bj,aicj,cj,i,j,jai,dlc,dkcl,dlck,aib,aibk,bk,bja,ibj
 !
@@ -852,7 +858,7 @@ contains
 !
       implicit none 
 !
-      logical :: debug = .true.
+      logical :: debug = .false.
 !
       integer :: required,available,max_batch_length,batch_dimension,n_batch
 !
@@ -1344,7 +1350,7 @@ contains
       integer                                :: i,a,ca,ki,b,bj,bk,cj,j,bkcj,aibj,aj,bi
       integer                                :: required,available,n_batch,max_batch_length,a_start
       integer                                :: a_end,a_batch,a_length
-      logical                                :: debug = .true.
+      logical                                :: debug = .false.
 !
 !     Allocate L_ia_J
 !
@@ -1612,7 +1618,7 @@ contains
       integer                             :: a,i,b,j,ai,bj,aibj,c,d,ca,db,ab,cd,ci,cidj,ij,dj
       integer                             :: a_n_batch,b_n_batch,a_start,a_end,b_start,b_end,a_length,b_length
       integer                             :: required,available,a_max_length,b_max_length,a_batch,b_batch
-      logical                             :: debug = .true.
+      logical                             :: debug = .false.
 !
 !!!   A2.1 term   !!!
 !
@@ -1966,7 +1972,7 @@ contains
       real(dp),dimension(:,:),pointer     :: L_kc_J      => null()
       real(dp),dimension(:,:),pointer     :: L_ij_J      => null()
       integer                             :: c,d,k,l,i,j,kl,ij,ci,dj,kc,ld,cidj,cd,ki,lj,ak,bl,akbl,ab,b,a,ai,bj,aibj
-      logical                             :: debug = .true.
+      logical                             :: debug = .false.
 !
 !     Read cholesky vector of type L_ij_J
 !
