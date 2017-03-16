@@ -362,7 +362,7 @@ contains
 !  
 !     Read cholesky_ij vectors
 !
-      call read_cholesky_ij(L_ik_J)
+      call read_cholesky_ij(L_ik_J) ! L_ik_J(ik,J) = L_ik^J 
 !
 !     Reorder ij cholesky vectors
 !
@@ -375,13 +375,13 @@ contains
                ik=index_two(i,k,n_occ)
                iJ=index_two(i,J,n_occ)
 !
-               L_k_iJ(k,iJ)=L_ik_J(ik,J)
+               L_k_iJ(k,iJ)=L_ik_J(ik,J) ! L_k_iJ(k,iJ) = L_ik^J
 !
             enddo
          enddo
       enddo
 !
-!     sum_k t_a_k*L_k_iJ = L_a_iJ
+!     - sum_k t_a_k*L_k_iJ = L_a_iJ  ! Here we assume L_ik^J = L_ki^J - this is safe, right?
 !
       call dgemm('N','N',n_vir,n_occ*n_J,n_occ &
          ,-one,t1am,n_vir,L_k_iJ,n_occ &

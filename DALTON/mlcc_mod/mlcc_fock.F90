@@ -74,8 +74,13 @@ contains
 !
       call allocator_n(X,n_basis,n_orbitals)
 !
-      call dgemm('N','N',n_basis,n_orbitals,n_basis,one,fock_ao,n_basis,orb_coefficients,n_basis,zero,X,n_basis)
-      call dgemm('T','N',n_orbitals,n_orbitals,n_basis,one,orb_coefficients,n_basis,X,n_basis,zero,h1mo,n_orbitals)
+      call dgemm('N','N',n_basis,n_orbitals,n_basis,&
+                  one,fock_ao,n_basis,orb_coefficients,n_basis,&
+                  zero,X,n_basis)
+!
+      call dgemm('T','N',n_orbitals,n_orbitals,n_basis,&
+                  one,orb_coefficients,n_basis,X,n_basis,&
+                  zero,h1mo,n_orbitals)
 ! 
 !     T1-transformation of one-electron integrals in mo basis
 !
@@ -177,7 +182,7 @@ contains
                ji=index_two(j,i,n_occ)
                ij=index_two(i,j,n_occ)
 !
-               mo_fock_mat(i,a+n_occ)=mo_fock_mat(i,a+n_occ)+two*g_ia_jk(ia,jj)-g_ia_jk(ja,ij)
+               mo_fock_mat(i,a+n_occ)=mo_fock_mat(i,a+n_occ)+two*g_ia_jk(ia,jj)-g_ia_jk(ja,ij) ! g_ia_jk(ja,ij) = g_jaij = g_ijja
                mo_fock_mat(a+n_occ,i)=mo_fock_mat(a+n_occ,i)+two*g_ai_jk(ai,jj)-g_ai_jk(aj,ji)
             enddo
          enddo

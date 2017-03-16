@@ -986,8 +986,8 @@ C
 C (EFK,2017)
          WRITE(LUPRI,*) 'THRENR',THRENR
          WRITE(LUPRI,*) 'THRVEC',THRVEC
-C         THRENR = 1.0D-10
-C         THRVEC = 1.0D-10
+         THRENR = 1.0D-10
+         THRVEC = 1.0D-10
 C
          ITER = ITER+1
          IF (ITER .GT. MAXITE) THEN

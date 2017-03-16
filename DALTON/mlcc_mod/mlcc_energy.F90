@@ -41,8 +41,8 @@ contains
 !
       integer :: memory_lef
 !
-      real(dp) :: energy_threshold = 1.0D-10
-      real(dp) :: solution_threshold = 1.0D-10
+      real(dp) :: energy_threshold = 1.0D-12
+      real(dp) :: solution_threshold = 1.0D-12
       real(dp) :: energy = zero 
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm
