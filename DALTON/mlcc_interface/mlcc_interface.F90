@@ -104,24 +104,6 @@ subroutine mlcc_interface_drv(work,lwork,lupri)
 !
 end subroutine mlcc_interface_drv
 !
-subroutine mlcc_iajb(vec)
-!
-!  MLCC iajb MO integral calculator
-!  Authors Sarai Folkestad, Eirik Kjønstad, January 2017
-!
-!  Purpose: read in atomic orbitals and calculate iajb MO integrals
-!
-   use mlcc_data
-   use mlcc_types
-!
-   implicit none
-!
-   real(dp), dimension(n_t2am_pack,1) :: vec
-!
-   vec = zero
-!
-end subroutine mlcc_iajb
-!
 subroutine mlcc_get_cholesky
 !
 !  MLCC Cholesky vector reader, and transformator

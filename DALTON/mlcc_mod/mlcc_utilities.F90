@@ -226,7 +226,7 @@ contains
       do i=1,M
          do j=1,N
             if (abs(mat(i,j)) .lt. thrs) then
-               mat(i,j)=zero
+          !     mat(i,j)=zero
             endif
          enddo
       enddo

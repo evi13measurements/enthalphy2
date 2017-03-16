@@ -284,8 +284,8 @@ contains
 !
 !        Allocate L_ab_J and L_Ja_b
 !
-         call allocator_n(L_ba_J,n_vir*batch_length,n_J)
-         call allocator_n(L_Ja_b,n_vir*n_J,batch_length)
+         call allocator_n(L_ba_J,n_vir*batch_length,n_J) ! L_ab^J = L_ba_J(ba,J)
+         call allocator_n(L_Ja_b,batch_length*n_J,n_vir)
          L_ba_J=zero
          L_Ja_b=zero
 !
@@ -304,7 +304,7 @@ contains
                   ba=index_two(b,a,n_vir)
                   Ja=index_two(J,a,n_J)
 !
-                  L_Ja_b(Ja,b)=L_ba_J(ba,J)
+                  L_Ja_b(Ja,b)=L_ba_J(ba,J) ! L_ab^J
 !
                enddo
             enddo
@@ -321,7 +321,7 @@ contains
 !        Deallocate L_ab_J and L_Ja_b
 !
          call deallocator_n(L_ba_J,n_vir*batch_length,n_J)
-         call deallocator_n(L_Ja_b,n_vir*n_J,batch_length)
+         call deallocator_n(L_Ja_b,batch_length*n_J,n_vir)
 !
       enddo ! batching over a
 !
@@ -362,7 +362,7 @@ contains
 !  
 !     Read cholesky_ij vectors
 !
-      call read_cholesky_ij(L_ik_J)
+      call read_cholesky_ij(L_ik_J) ! L_ik_J(ik,J) = L_ik^J 
 !
 !     Reorder ij cholesky vectors
 !
@@ -375,13 +375,13 @@ contains
                ik=index_two(i,k,n_occ)
                iJ=index_two(i,J,n_occ)
 !
-               L_k_iJ(k,iJ)=L_ik_J(ik,J)
+               L_k_iJ(k,iJ)=L_ik_J(ik,J) ! L_k_iJ(k,iJ) = L_ik^J
 !
             enddo
          enddo
       enddo
 !
-!     sum_k t_a_k*L_k_iJ = L_a_iJ
+!     - sum_k t_a_k*L_k_iJ = L_a_iJ  ! Here we assume L_ik^J = L_ki^J - this is safe, right?
 !
       call dgemm('N','N',n_vir,n_occ*n_J,n_occ &
          ,-one,t1am,n_vir,L_k_iJ,n_occ &
@@ -556,7 +556,8 @@ contains
       call read_cholesky_ij(L_ij_J)
       call read_cholesky_ia(L_ia_J)
 !
-!     Reorder L_ia_J to L_iJ_a
+!     Reorder L_ia_J to L_iJ_a ! Eirik: Perhaps less error-prone if we just brute force add this by a sum over a,
+!                                       instead of reordering & dgemm-ing. 
 !
       do i = 1,n_occ
          do J = 1,n_J
@@ -621,6 +622,7 @@ contains
 !
       integer :: memory_lef
 !
+      integer :: ba=0 ! Eirik: attempting a debug
       integer :: lucho_ab,ab_dim
       integer :: a=0,b=0,J=0,i=0,ia=0,aJ=0,ib=0,Jb=0,ab=0
       integer :: start,end
@@ -654,7 +656,7 @@ contains
 !
 !        Read L_ab_J for batch of a
 !
-         call read_cholesky_ab_reorder(L_ab_J,start,end,ab_dim)
+         call read_cholesky_ab_reorder(L_ab_J,start,end,ab_dim) ! Eirik: L_ab_J(ba) = L_ab^J 
 !
 !        Allocate L_i,Jb
 !
@@ -686,7 +688,7 @@ contains
 !  
          call allocator_n(L_a_Jb,batch_length,n_vir*n_J)
 !
-!        t1_a_i * L_i_Jb = L_a_Jb
+!        - t1_a_i * L_i_Jb = L_a_Jb
 !
          call dgemm('N','N',batch_length,n_vir*n_J,n_occ &
             ,-one,t1am(start,1),n_vir,L_i_Jb,n_occ &
@@ -701,9 +703,15 @@ contains
 !                 Needed indices
 !
                   Jb=index_two(J,b,n_J)
-                  ab=index_two(a,b,n_vir)
+                !  ab=index_two(a,b,n_vir) ! Eirik: I suspect this index is not correctly calculated.
+                                           !        Since L_ab_J is a ab_dim x J array, its first index is
+                                           !        index_two(a,b,batch_length), I think. I try:
+                !  ab=index_two(a,b,batch_length)
+                !  Eirik: What about the ba order? L_ab_J(ba) = L_ab_J(ba)+L_a_Jb(a,Jb). I try:
+                  ba = index_two(b,a,n_vir)
+                  L_ab_J(ba,J) = L_ab_J(ba,J) + L_a_Jb(a,Jb) ! WORKS! Much, much closer now. 
 !
-                  L_ab_J(ab,J)=L_ab_J(ab,J)+L_a_Jb(a,Jb)
+             !     L_ab_J(ab,J)=L_ab_J(ab,J)+L_a_Jb(a,Jb)
                enddo
             enddo
          enddo
@@ -745,7 +753,7 @@ contains
                   ib=index_two(i,b+start-1,n_occ) ! OBS: in L_ib_J we have all b, not the case for L_Jb_i
                   Jb=index_two(J,b,n_J)
 !
-                  L_Jb_i(Jb,i)=L_ib_J(ib,J)
+                  L_Jb_i(Jb,i)=L_ib_J(ib,J) ! The quantity on the right is the entire L_ib^J matrix; the left the batched. OK
 !
                enddo
             enddo
