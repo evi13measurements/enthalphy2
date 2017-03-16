@@ -1992,6 +1992,15 @@ C----------------------
 C
       TIMI     = SECOND()
       CALL CCRHS_I(OMEGA1,T2AM,WORK(KFOCK),WORK(KEND2),LWRK2,ISYMTR,1)
+C (EFK,2017 for debugging MLCC code )
+      DO I = 1,NRHFT+NVIRT
+        DO A = 1,NRHFT+NVIRT
+C         F_IA, where I and A are general
+          NAI = NVIRT*(I-1) + A 
+          WRITE(LUPRI,*) 'I,A,F_IA',I,A,WORK(KFOCK+NAI-1)
+        ENDDO
+      ENDDO 
+C
       TIMI     = SECOND() - TIMI
 
 C-----------------------------------------------------------------
@@ -8546,8 +8555,8 @@ C
      *                  ISYMEI)
          ENDIF
 C
-         CALL CCRHS_E(OMEGA2,T2AM,WORK(KEMAT1),WORK(KEMAT2),
-     *                WORK(KEND1),LWRK1,ISYMTR,ISYMEI)
+C         CALL CCRHS_E(OMEGA2,T2AM,WORK(KEMAT1),WORK(KEMAT2),
+C     *                WORK(KEND1),LWRK1,ISYMTR,ISYMEI)
 C
       ENDIF
 C

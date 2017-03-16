@@ -36,13 +36,13 @@ contains
       logical :: converged_energy    = .false.
       logical :: converged_solution  = .false.
 !
-      integer :: max_iterations = 20
+      integer :: max_iterations = 50
       integer :: iteration = 1
 !
       integer :: memory_lef
 !
-      real(dp) :: energy_threshold = 1.0D-8
-      real(dp) :: solution_threshold = 1.0D-6
+      real(dp) :: energy_threshold = 1.0D-10
+      real(dp) :: solution_threshold = 1.0D-10
       real(dp) :: energy = zero 
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm

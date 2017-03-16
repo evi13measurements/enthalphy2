@@ -983,7 +983,12 @@ C
      &            DABS(EN2R12-EN1R12).LT. THRENR
          LCONV2 = OMNM    .LT. THRVEC
          LCONVG = LCONV1 .AND. LCONV2
-
+C (EFK,2017)
+         WRITE(LUPRI,*) 'THRENR',THRENR
+         WRITE(LUPRI,*) 'THRVEC',THRVEC
+C         THRENR = 1.0D-10
+C         THRVEC = 1.0D-10
+C
          ITER = ITER+1
          IF (ITER .GT. MAXITE) THEN
            WRITE(LUPRI,*) 'Energy not converged in ',MAXITE,

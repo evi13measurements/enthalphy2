@@ -30,13 +30,15 @@ contains
          call flshfo(luprint)
      write(luprint,*) 'Entering omega1 A'
       call flshfo(luprint)
-      call mlcc_omega_a1
+      call mlcc_omega_a1 ! This is the G term in the old code. -1.4259234603561466E-003 (ours) -1.4259246117271341E-003 (old)
+   !                                                            Error : 1.15 * 10^(-9)
                memory_lef = get_available()
          write(luprint,*) 'Memory 2:',memory_lef
          call flshfo(luprint)
            write(luprint,*) 'Entering omega1 B'
       call flshfo(luprint)
-      call mlcc_omega_b1
+      call mlcc_omega_b1 ! This is the H term in the old code. 2.0521348553625856E-003 (ours) 2.0521147588601551E-003 (old)
+   !                                                           Error: 2.00 * 10^(-8) 
                memory_lef = get_available()
          write(luprint,*) 'Memory 3:',memory_lef
          call flshfo(luprint)
@@ -552,8 +554,6 @@ contains
 !
 !     Read the Cholesky vector from file 
 !
-            write(luprint,*) 'Lalala 1.0'
-      call flshfo(luprint)
       call get_cholesky_ia(L_kc_J)
 !
 !     Allocate g_ld_kc = g_ldkc and set to zero 
@@ -563,8 +563,6 @@ contains
 !
 !     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
 !
-            write(luprint,*) 'Lalala 1.1'
-      call flshfo(luprint)
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_kc_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ld_kc,n_ov)
@@ -587,7 +585,7 @@ contains
 !
             write(luprint,*) 'Lalala 1.2'
       call flshfo(luprint)
-      do c = 1,n_vir ! Use as though "b" for g_kdl_c term 
+      do c = 1,n_vir ! Use as though "b" for u_b_kdl term 
          do k = 1,n_occ
             do d = 1,n_vir
                do l = 1,n_occ
@@ -951,8 +949,8 @@ contains
 !        u_jk^bc = 2 * t_jk^bc - t_kj^bc,
 !        L_ldkc  = 2 * g_ldkc  - g_lckd.
 !
-!     The first term is referred to as the D2.1 term, and comes out ordered as (....) 
-!     The second term is referred to as the D2.2 term, and comes out ordered as (....)
+!     The first term is referred to as the D2.1 term, and comes out ordered as (ai,bj) 
+!     The second term is referred to as the D2.2 term, and comes out ordered as (ai,bj)
 !     The third term is referred to as the D2.3 term, and comes out ordered as (ai,bj)
 !
 !     All terms are added to the omega vector element omega2(ai,bj)
@@ -973,8 +971,9 @@ contains
       real(dp), dimension(:,:), pointer :: g_ld_kc      => null() ! g_ldkc 
       real(dp), dimension(:,:), pointer :: L_ld_kc      => null() ! L_ldkc = 2 * g_ldkc - g_lckd 
       real(dp), dimension(:,:), pointer :: u_ai_ld      => null() ! u_il^ad = 2 * t_il^ad - t_li^ad 
+      real(dp), dimension(:,:), pointer :: Z_ai_kc      => null() ! An intermediate, see below
 !
-      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! For storing the D2.3 & D2.1 terms temporarily
+      real(dp), dimension(:,:), pointer :: omega2_ai_bj => null() ! For storing the D2.3, D2.2 & D2.1 terms temporarily
 !
       real(dp), dimension(:,:), pointer :: g_ai_kc      => null() ! g_aikc 
       real(dp), dimension(:,:), pointer :: u_kc_bj      => null() ! u_jk^bc
@@ -1022,6 +1021,7 @@ contains
 !
                   ld = index_two(l,d,n_occ)
                   kc = index_two(k,c,n_occ)
+!
                   lc = index_two(l,c,n_occ)
                   kd = index_two(k,d,n_occ)
 !
@@ -1072,21 +1072,35 @@ contains
          enddo
       enddo
 !
-!     Allocate the D2.3 term omega2_ai_bj and set it to zero 
+!     Allocate the D2.3 term omega2_ai_bj and set it to zero (remove, I think)
 !
-      call allocator(omega2_ai_bj,n_ov,n_ov)
-      omega2_ai_bj = zero 
+     ! call allocator(omega2_ai_bj,n_ov,n_ov)
+     ! omega2_ai_bj = zero  ! Debugging, Eirik, 16 Mar 2017
 !
-!     Form the temporary vector sum_dl u_ai_ld L_ld_kc and place it in omega2_ai_bj
+!     Allocate the intermediate Z_ai_kc = sum_dl u_ai_ld L_ld_kc and set it to zero
+!
+      call allocator(Z_ai_kc,n_ov,n_ov)
+      Z_ai_kc = zero
+!
+!     Form the intermediate Z_ai_kc = sum_dl u_ai_ld L_ld_kc
 !
       call dgemm('N','N',n_ov,n_ov,n_ov,&
                   one,u_ai_ld,n_ov,L_ld_kc,n_ov,&
-                  zero,omega2_ai_bj,n_ov)          ! Think of the result as an intermediate, say Z_ai_kc    
+                  zero,Z_ai_kc,n_ov)
+!
+!     Deallocate L_ld_kc
+!
+      call deallocator(L_ld_kc,n_ov,n_ov) ! Remove the one below...!
+!
+!     Allocate the D2.3 term omega2_ai_bj and set it to zero
+!
+      call allocator(omega2_ai_bj,n_ov,n_ov)
+      omega2_ai_bj = zero
 !
 !     Form the D2.3 term, 1/4 sum_kc Z_ai_kc u_kc_bj = 1/4 sum_kc Z_ai_kc(ai,kc) u_ai_ld(bj,kc)
 !
       call dgemm('N','T',n_ov,n_ov,n_ov,&
-                  one/four,omega2_ai_bj,n_ov,u_ai_ld,n_ov,& 
+                  one/four,Z_ai_kc,n_ov,u_ai_ld,n_ov,& 
                   zero,omega2_ai_bj,n_ov)
 !
 !     Some mathematical justification for the above matrix multiplication. We have 
@@ -1096,6 +1110,10 @@ contains
 !     where Z_ai,kc = sum_dl u_ai,ld L_ld,kc. Note that u_ai_ld(ai,ld) = u_il^ad, 
 !     which means that u_ai_ld(bj,kc)^T = u_ai_ld(kc,bj) = u_kj^cb = u_jk^bc.
 !
+!
+!     Deallocate the Z_ai_kc intermediate 
+!
+      call deallocator(Z_ai_kc,n_ov,n_ov)
 !
 !     Add the D2.3 term to the omega vector 
 !
@@ -1125,7 +1143,7 @@ contains
 !
 !     Deallocate the omega2_ai_bj and u_ai_ld(ai,ld) = u_il^ad vector
 !
-      call deallocator(L_ld_kc,n_ov,n_ov) ! Eirik: debugging (15 Mar, 2017)
+     ! call deallocator(L_ld_kc,n_ov,n_ov) ! Eirik: debugging (15 Mar, 2017)
       call deallocator(omega2_ai_bj,n_ov,n_ov)
       call deallocator(u_ai_ld,n_ov,n_ov) ! Eirik: note that u_ai_ld(bj,kc) = u_jk^bc, and thus this vector could be reused 
 !                                                  to calculate the D2.1 term. This would require some more memory than
