@@ -8555,8 +8555,8 @@ C
      *                  ISYMEI)
          ENDIF
 C
-C         CALL CCRHS_E(OMEGA2,T2AM,WORK(KEMAT1),WORK(KEMAT2),
-C     *                WORK(KEND1),LWRK1,ISYMTR,ISYMEI)
+         CALL CCRHS_E(OMEGA2,T2AM,WORK(KEMAT1),WORK(KEMAT2),
+     *                WORK(KEND1),LWRK1,ISYMTR,ISYMEI)
 C
       ENDIF
 C
