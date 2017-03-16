@@ -1475,6 +1475,10 @@ contains
          ,one,L_ia_J,n_ov,L_ia_J,n_ov &
          ,zero,g_kd_lc,n_ov)
 !
+!     Deallocate
+!
+      call deallocator(L_ia_J,n_ov,n_J)
+!
 !     Reorder g_kd_lc as g_dl_ck and t_al_di as t_ai_dl
 !
       call allocator(g_dl_ck,n_ov,n_ov)
@@ -1507,20 +1511,19 @@ contains
             enddo
          enddo
       enddo
+
+      call deallocator(g_kd_lc,n_ov,n_ov)
 !
 !     -1/2 * sum_(dl) t_ai_dl*g_dl_ck = X_ai_ck
 !
-      call allocator(X_ai_ck,n_ov,n_ov) ! Eirik: At this point, there are five vectors in memory!! (counting with L_ia^J) I think we must
-                                          ! restructure this to avoid using this much memory (15 Mar, 2017)
+      call allocator(X_ai_ck,n_ov,n_ov)
 !
       call dgemm('N','N',n_ov,n_ov,n_ov &
          ,-half,t_ai_dl,n_ov,g_dl_ck,n_ov &
          ,zero,X_ai_ck,n_ov)
 !
-!     Deallocate L_ia_J, g_kd_lc and g_dl_ck, (and t_ai_dl, debug, Eirik 15 Mar 2017)
+!     Deallocate L_ia_J and g_dl_ck, 
 !
-      call deallocator(L_ia_J,n_ov,n_J)
-      call deallocator(g_kd_lc,n_ov,n_ov)
       call deallocator(g_dl_ck,n_ov,n_ov)
       call deallocator(t_ai_dl,n_ov,n_ov)
 !
@@ -1533,8 +1536,7 @@ contains
 !
 !     Allocate L_ki_J
 !
-      call allocator(L_ki_J,n_oo,n_J) ! Eirik: debugging, n_oo was n_ov!!
-      L_ki_J = zero ! Eirik: setting this to zero for safety's sake (15 Mar, 2017)
+      call allocator(L_ki_J,n_oo,n_J) 
 !
 !     Get cholesky vectors of ij-type
 !
@@ -1584,7 +1586,7 @@ contains
 !
 !     Deallocate L_ki_J
 !
-      call deallocator(L_ki_J,n_oo,n_J) ! Eirik: debugging, n_oo was n_ov!! (15 Mar, 2017)
+      call deallocator(L_ki_J,n_oo,n_J)
 !
 !     Reorder g_ki_ca to g_ai_ck
 !
@@ -1655,7 +1657,7 @@ contains
          ,-one,X_ai_ck,n_ov,t_ck_bj,n_ov &
          , zero,Y_ai_bj,n_ov)
 !
-!     Deallocate the X intermediate (Eirik: debugging, 15 Mar 2017)
+!     Deallocate the X intermediate
 !
       call deallocator(X_ai_ck,n_ov,n_ov)
 !
@@ -1663,7 +1665,7 @@ contains
 !
       call deallocator(t_ck_bj,n_ov,n_ov)
 !
-!     Omega_aibj,1 = 1/2*Y_ai_bj + Y_aj_bi
+!     Omega_aibj,1 =P_ai_bj( 1/2*Y_ai_bj + Y_aj_bi)
 !
       do a = 1,n_vir
          do i = 1,n_occ
@@ -1788,7 +1790,7 @@ contains
 !
 !     How many a-batches?
 !
-      required = 2*n_vv*n_J*4 + 2*n_ov*n_J ! Needed to get cholesky of ab-type
+      required = 2*n_vv*n_J*4 + 2*n_ov*n_J*4 + 2*n_vv*n_vv*4 ! Needed to get cholesky of ab-type and for g_ab_bd
       available=get_available()
 !
       a_max_length=0
@@ -1897,7 +1899,7 @@ contains
             call deallocator(g_ab_cd,n_vv,n_vv)
             call deallocator(t_cd_ij,n_vv,n_oo)
 !
-!           Reorder into omega2_aibj
+!           Reorder into omega2
 !
                do i = 1,n_occ
                   do j = 1,n_occ
@@ -1953,6 +1955,8 @@ contains
                call dgemm('N','T',n_vir*a_length,n_vir*b_length,n_J &
                   ,one,L_ca_J,n_vir*a_length,L_db_J,n_vir*b_length &
                   ,zero,g_ca_db,n_vir*a_length)
+!
+               call deallocator(L_db_J,n_vir*b_length,n_J)
 !
 !              Reorder g_ca_db into g_ab_cd and t_ci_dj into t_cd_ij
 !
@@ -2069,7 +2073,7 @@ contains
 !     Omega B2 = sum_(kl) t_ak_bl*(g_kilj+sum_(cd) t_ci_dj * g_kc_ld) 
 !
 !     Structure: g_kilj is constructed first and reordered as g_kl_ij. 
-!                Then the contraction over cd is performed, and the results added ti g_kl_ij.
+!                Then the contraction over cd is performed, and the results added to g_kl_ij.
 !                t_ak_bl is then reordered as t_ab_kl and the contraction over kl is performed.
 !
       implicit none
@@ -2108,10 +2112,8 @@ contains
 !     Reordering g_ki_lj to g_kl_ij
 !
       call allocator(g_kl_ij,n_oo,n_oo)
-      g_kl_ij = zero ! Eirik: debug
+      g_kl_ij = zero
 !
-   write(luprint,*) 'B2 loop 1'
-   call flshfo(luprint)
       do k = 1,n_occ
          do l = 1,n_occ
             do i = 1,n_occ
@@ -2130,8 +2132,6 @@ contains
             enddo
          enddo
       enddo
-      write(luprint,*) 'B2 loop 2'
-   call flshfo(luprint)
 !
       call deallocator(g_ki_lj,n_oo,n_oo)
 !
@@ -2151,7 +2151,7 @@ contains
 !
 !     Deallocate cholesky vectors L_ck_J
 !
-     call deallocator(L_kc_J,n_ov,n_J)
+      call deallocator(L_kc_J,n_ov,n_J)
 !
 !     Reorder g_kc_ld as g_kl_cd, also reordering t_ci_dj as t_cd_ij
 !
