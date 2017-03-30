@@ -53,7 +53,7 @@ contains
 !
 !     Enter the iterative loop 
 !
-		do while ((.not. converged) .and. (iteration .le. max_iterations))
+      do while ((.not. converged) .and. (iteration .le. max_iterations))
 !
 !        Calculate the current coupled cluster energy 
 ! 
@@ -128,13 +128,13 @@ contains
 !
          endif
 !
-		enddo
+      enddo
 !
 !     Deallocate DIIS matrix 
 !
       call deallocator(G,maxdiis+1,maxdiis+1)
 !
-	end subroutine mlcc_energy_drv
+   end subroutine mlcc_energy_drv
 !
    subroutine mlcc_ccsd_energy(energy)
 !
@@ -227,16 +227,16 @@ contains
 !
       implicit none 
 !
-      real(dp) :: norm,norm1,norm2,ddot
+      real(dp) :: norm,norm_1,norm_2,ddot
 !
       real(dp), dimension(n_vir,n_occ)      :: vec1
       real(dp), dimension(n_ov_ov_packed,1) :: vec2
 !
 !     Calculate the norm 
 !
-      norm1 = ddot(n_ov,vec1,1,vec1,1)             ! vec1^2
-      norm2 = ddot(n_ov_ov_packed,vec2,1,vec2,1)   ! vec2^2
-      norm  = sqrt(norm1 + norm2)                  ! norm = sqrt(vec1^2 + vec2^2)
+      norm_1 = ddot(n_ov,vec1,1,vec1,1)            ! vec1^2
+      norm_2 = ddot(n_ov_ov_packed,vec2,1,vec2,1)  ! vec2^2
+      norm  = sqrt(norm_1 + norm_2)                ! norm = sqrt(vec1^2 + vec2^2)
 !
    end subroutine mlcc_norm
 !
