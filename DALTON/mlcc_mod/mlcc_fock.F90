@@ -36,7 +36,7 @@ contains
       integer                                    :: available=0,required=0,max_batch_length=0,n_batch=0,batch_start=0
       integer                                    :: batch_end=0,batch_length=0,g_off=0
       integer                                    :: b_batch = 0
-      logical                                    :: debug = .true.
+      logical                                    :: debug = .false.
 !
    call allocator_n(mo_fock_mat,n_orbitals,n_orbitals)
    call allocator_n(h1mo,n_orbitals,n_orbitals)

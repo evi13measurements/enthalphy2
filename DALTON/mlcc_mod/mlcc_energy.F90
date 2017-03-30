@@ -29,7 +29,7 @@ contains
 !
       implicit none 
 !
-      logical :: debug = .true.
+      logical :: debug = .false.
       integer :: idum=0
 !
       logical :: converged           = .false.
@@ -41,8 +41,8 @@ contains
 !
       integer :: memory_lef
 !
-      real(dp) :: energy_threshold = 1.0D-12
-      real(dp) :: solution_threshold = 1.0D-12
+      real(dp) :: energy_threshold = 1.0D-9
+      real(dp) :: solution_threshold = 1.0D-9
       real(dp) :: energy = zero 
       real(dp) :: prev_energy = zero
       real(dp) :: omega_norm
@@ -60,16 +60,16 @@ contains
          prev_energy = energy 
 !
          call mlcc_ccsd_energy(energy) !  Fixed memory leak (Eirik,15 Mar 2017)
-         write(luprint,*) 'THE ENERGY:::',energy
+!         write(luprint,*) 'THE ENERGY:::',energy
 !
 !        Reset the omega vector and re-calculate it
 !  
          omega1 = zero
          omega2 = zero
 !         
-         write(luprint,*)'Entering mlcc_omega_calc'
+!         write(luprint,*)'Entering mlcc_omega_calc'
          call mlcc_omega_calc
-         write(luprint,*)'Exiting mlcc_omega_calc'
+!         write(luprint,*)'Exiting mlcc_omega_calc'
 !
 !        Test for convergence of the omega vector and the energy 
 !
@@ -79,8 +79,9 @@ contains
          converged_solution = omega_norm              .lt. solution_threshold
 !
          if (converged_energy .and. converged_solution) converged = .true.
-         if (converged_energy) write(luprint,*) 'Energy has converged!'
-         if (converged_solution) write(luprint,*) 'Solution has converged!'
+         if (converged_energy) write(luprint,*) 'Energy has converged after', iteration, 'iterations!'
+         if (converged_solution) write(luprint,*) 'Solution has converged after', iteration, 'iterations!'
+         if (converged_solution) write(luprint,*) 'THE ENERGY:::',energy
 !
          if (iteration .eq. 1) then 
 !
@@ -215,14 +216,6 @@ contains
 !
       call deallocator(g_ia_jb,n_ov,n_ov)
 !
-!     Print the t1 amplitudes 
-!
-!       write(luprint,*) 't1am(a,i):'
-!       call vec_print(t1am,n_vir,n_occ)
-! !
-!       write(luprint,*) 't2am(aibj,1):'
-!       call vec_print_packed(t2am,n_ov_ov_packed)
-!
    end subroutine mlcc_ccsd_energy
 !
    subroutine mlcc_norm(norm,vec1,vec2)
@@ -340,19 +333,19 @@ contains
 !     Calculate the current index for overwriting the G matrix (G(:,current_index) and G(current_index,:) is overwritten)
 !
       current_index = modulo(iteration,maxdiis)
-      write(luprint,*) 'Current_index,iteration,maxdiis',current_index,iteration,maxdiis
+!      write(luprint,*) 'Current_index,iteration,maxdiis',current_index,iteration,maxdiis
       if (current_index .eq. 0) current_index = maxdiis
 !
       if (current_index .eq. 1) then
-         write(luprint,*) 'Rewinding both files'
+!         write(luprint,*) 'Rewinding both files'
          rewind(ludiis_dt)
          rewind(ludiis_t_dt)
       endif
 !
 !     Write dt_k to file (singles, then doubles)
 !
-      write(luprint,*) 'Writing current dt_k to file'
-      call flshfo(luprint)
+!      write(luprint,*) 'Writing current dt_k to file'
+ !     call flshfo(luprint)
       write(ludiis_dt,*) ((dt1_k(a,i),a=1,n_vir),i=1,n_occ),(dt2_k(p,1),p=1,n_ov_ov_packed)
 !
 !     Add the quasi-Newton amplitude correction to the amplitudes (t_k <- t_k + dt_k)
@@ -362,8 +355,8 @@ contains
 !
 !     Write t_k + dt_k to file 
 !
-      write(luprint,*) 'Writing current t_k + dt_k to file'
-      call flshfo(luprint)
+!      write(luprint,*) 'Writing current t_k + dt_k to file'
+!      call flshfo(luprint)
       write(ludiis_t_dt,*) ((t1am(a,i),a=1,n_vir),i=1,n_occ),(t2am(p,1),p=1,n_ov_ov_packed)
 !
 !     If the first iteration, then allocate the matrices 
@@ -402,8 +395,8 @@ contains
 !
 !        Read the jth entry of the file containing the dt's
 !
-         write(luprint,*) 'Reading dt_j from file, j = ', j 
-         call flshfo(luprint)
+!         write(luprint,*) 'Reading dt_j from file, j = ', j 
+!         call flshfo(luprint)
          read(ludiis_dt,*) ((dt1_j(a,i),a=1,n_vir),i=1,n_occ),(dt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file 
 !
 !        Calculate G(current_index,j) = dt_current_index * dt_j + 1
@@ -417,10 +410,10 @@ contains
       enddo
       H(dim_G+1,1) = -one
 !
-      write(luprint,*) 'The G matrix'
-      write(luprint,*) G 
-      write(luprint,*) 'The H vector'
-      write(luprint,*) H
+!      write(luprint,*) 'The G matrix'
+!      write(luprint,*) G 
+!      write(luprint,*) 'The H vector'
+!      write(luprint,*) H
 !
 !     Solve the eigenvalue problem G * w = H 
 !
@@ -429,18 +422,18 @@ contains
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
 !
-      if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
+!      if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
       lu_error = -1
       call dgetrs('N',maxdiis+1,1,copy_of_G,maxdiis+1,lu_integers,H,maxdiis+1,lu_error) ! Solution is placed in H
 !
-      if (lu_error .eq. 0) write(luprint,*) 'Successful solution of G * omega = H'
+!      if (lu_error .eq. 0) write(luprint,*) 'Successful solution of G * omega = H'
 !
-      write(luprint,*) 'The integers',lu_integers
+!      write(luprint,*) 'The integers',lu_integers
   !    if (current_index .eq. 1) H = 1 ! This is the only solution for this case (hack)
 !
-      write(luprint,*) 'The H vector (ie, the solution)'
-      write(luprint,*) H
+!      write(luprint,*) 'The H vector (ie, the solution)'
+!      write(luprint,*) H
 !
 !     Deallocate the temporary dt vector
 !
@@ -465,13 +458,13 @@ contains
 !
 !        Read the jth t + dt contribution on file 
 !
-         write(luprint,*) 'Reading t_j + dt_j from file, j = ', j 
-         call flshfo(luprint)
+!         write(luprint,*) 'Reading t_j + dt_j from file, j = ', j 
+!         call flshfo(luprint)
          read(ludiis_t_dt,*) ((tdt1_j(a,i),a=1,n_vir),i=1,n_occ),(tdt2_j(p,1),p=1,n_ov_ov_packed) ! Reads the jth entry of the file
 !
 !        Add the contributions w_j * (t_j + dt_j) to the amplitudes 
 !
-         write(luprint,*) 'Adding prefactor',H(j,1)
+!         write(luprint,*) 'Adding prefactor',H(j,1)
 !
          call daxpy(n_ov,H(j,1),tdt1_j,1,t1am,1)
          call daxpy(n_ov_ov_packed,H(j,1),tdt2_j,1,t2am,1)

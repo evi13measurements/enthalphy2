@@ -21,82 +21,73 @@ contains
 !
       implicit none
 !
-      integer :: memory_lef = 0
+      integer     :: memory_lef = 0
+      real(dp)    :: start = zero
+      real(dp)    :: end = zero   
+      real(dp)    :: omega_start = zero  
+      real(dp)    :: omega_end= zero   
+      logical     :: timings = .true.
 !
 !     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
+!     
+      call cpu_time(omega_start)
+      if (timings) call cpu_time(start)
+      call mlcc_omega_a1 ! This is the G term in the old code. -1.4259234603561466E-003 (ours) -1.4259246117271341E-003 (old). Error : 1.15 * 10^(-9)
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time A1:',end-start
 !
-         memory_lef = get_available()
-         write(luprint,*) 'Memory 1:',memory_lef
-         call flshfo(luprint)
-     write(luprint,*) 'Entering omega1 A'
-      call flshfo(luprint)
-      call mlcc_omega_a1 ! This is the G term in the old code. -1.4259234603561466E-003 (ours) -1.4259246117271341E-003 (old)
-   !                                                            Error : 1.15 * 10^(-9)
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 2:',memory_lef
-         call flshfo(luprint)
-           write(luprint,*) 'Entering omega1 B'
-      call flshfo(luprint)
+!
+!
+      if (timings) call cpu_time(start)
       call mlcc_omega_b1 ! This is the H term in the old code. 2.0521348553625856E-003 (ours) 2.0521147588601551E-003 (old)
-   !                                                           Error: 2.00 * 10^(-8) 
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 3:',memory_lef
-         call flshfo(luprint)
-           write(luprint,*) 'Entering omega1 C'
-      call flshfo(luprint)
-      call mlcc_omega_c1
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 4:',memory_lef
-         call flshfo(luprint)
-           write(luprint,*) 'Entering omega1 D'
-      call flshfo(luprint)
-      call mlcc_omega_d1 
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 5:',memory_lef
-         call flshfo(luprint)
-           write(luprint,*) 'Exiting omega1'
-      call flshfo(luprint)
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time B1:',end-start
 !
-      write(luprint,*) 'Omega(a,i):'
-      call vec_print(omega1,n_vir,n_occ)   
+      if (timings) call cpu_time(start)
+      call mlcc_omega_c1
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time C1:',end-start
+!
+      if (timings) call cpu_time(start)
+      call mlcc_omega_d1
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time D1:',end-start 
+              
+!
+!       write(luprint,*) 'Omega(ai):'
+!       call vec_print(omega1,n_vir,n_occ)   
 !
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
-      write(luprint,*) 'Entering Omega2 E'
-      call flshfo(luprint)
+      if (timings) call cpu_time(start)
       call mlcc_omega_e2
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 6:',memory_lef
-         call flshfo(luprint)
-      write(luprint,*) 'Entering Omega2 D'
-      call flshfo(luprint)
-      call mlcc_omega_d2 ! Something is not deallocated here!! This should now be fixed...!
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 7:',memory_lef
-         call flshfo(luprint)
-      write(luprint,*) 'Entering Omega2 C'
-      call flshfo(luprint)
-      call mlcc_omega_c2  ! Something is not deallocated here!! This should now be fixed...! NB this is very memory intensive, as it is now 
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 8:',memory_lef
-         call flshfo(luprint)
-      write(luprint,*) 'Entering Omega2 A'
-      call flshfo(luprint)
-      call mlcc_omega_a2
-               memory_lef = get_available()
-      write(luprint,*) 'Entering Omega2 B'
-      call flshfo(luprint)
-      write(luprint,*) 'heiiheii5'
-      call flshfo(luprint)
-      call mlcc_omega_b2
-               memory_lef = get_available()
-         write(luprint,*) 'Memory 10:',memory_lef
-         call flshfo(luprint)
-            write(luprint,*) 'Exiting Omega2'
-      call flshfo(luprint)
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time E2:',end-start
 !
-      write(luprint,*) 'Omega(aibj,1):'
-      call vec_print_packed(omega2,n_ov_ov_packed)
+      if (timings) call cpu_time(start)
+      call mlcc_omega_d2
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time D2:',end-start 
+!
+      if (timings) call cpu_time(start)
+      call mlcc_omega_c2
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time C2:',end-start   
+!
+      if (timings) call cpu_time(start)
+      call mlcc_omega_a2
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time A2:',end-start  
+!
+      if (timings) call cpu_time(start)
+      call mlcc_omega_b2
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time B2:',end-start 
+!
+      call cpu_time(omega_end)
+      write(luprint,*)'Time in omega:', omega_end-omega_start
+!      write(luprint,*) 'Omega(aibj,1):'
+!      call vec_print_packed(omega2,n_ov_ov_packed)
 !
    end subroutine mlcc_omega_calc
 !
@@ -119,6 +110,7 @@ contains
       integer :: ad=0,ad_dim=0,c=0,ci=0,cidk=0,ck=0,ckd=0,ckdi=0,di=0,dk=0,k=0,kc=0,d=0,da=0
 !
       logical :: debug = .false.
+      real(dp)::start_alloc=0,end_alloc=0,start_reorder=0,end_reorder=0,start_dgemm=0,end_dgemm=0
 !
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_da_J  => null()   ! L_ad^J; a is being batched over
@@ -128,7 +120,10 @@ contains
 !
 !     Allocate Cholesky vector L_kc_J
 !
+      call cpu_time(start_alloc)
       call allocator(L_kc_J,n_ov,n_J)
+      call cpu_time(end_alloc)
+      write(luprint,*)'Time to allocate L_kc_J: ',end_alloc-start_alloc
 !
 !     Set L_kc_J to zero
 !
@@ -145,6 +140,7 @@ contains
 !
 !     Calculate u_ckd_i
 !
+      call cpu_time(start_reorder)
       do c=1,n_vir
          do k=1,n_occ
             do d=1,n_vir
@@ -168,6 +164,8 @@ contains
             enddo
          enddo
       enddo
+      call cpu_time(end_reorder)
+      write(luprint,*)'Time to reorder:',end_reorder-start_reorder
 !
 !     Calculate the batching parameters over a = 1,2,...,n_vir,
 !     for which we need to have enough room to store L_ad_J and g_ad_kc, and, later on in the same loop, 
@@ -177,8 +175,8 @@ contains
       available       = get_available()
       batch_dimension = n_vir ! Batch over the virtual index a
 !
-      write(luprint,*) 'Required',required
-      write(luprint,*) 'Available',available
+!      write(luprint,*) 'Required',required
+!      write(luprint,*) 'Available',available
 !
       max_batch_length = 0 ! Initilization of unset variables 
       n_batch = 0
@@ -210,9 +208,12 @@ contains
 !
 !        Calculate g_da_kc = sum_J L_da_J L_kc_J^T = sum_J L_ad^J L_kc^J = g_adkc 
 !     
+         call cpu_time(start_dgemm)
          call dgemm('N','T',ad_dim,n_ov,n_J,&
                      one,L_da_J,ad_dim,L_kc_J,n_ov,&
-                     zero,g_da_kc,ad_dim) 
+                     zero,g_da_kc,ad_dim)
+         call cpu_time(end_dgemm)
+         write(luprint,*)'Time for dgemm:', end_dgemm-start_dgemm  
 !
 !        Deallocate the reordered Cholesky vector L_da_J
 !
@@ -225,10 +226,11 @@ contains
 !
 !        Reorder the integrals to g_a_ckd
 !
+         call cpu_time(start_reorder)
          do a=1,batch_length
-            do d=1,n_vir
+            do c=1,n_vir
                do k=1,n_occ
-                  do c=1,n_vir
+                  do d=1,n_vir
 !
 !                    Calculate the necessary indices
 !
@@ -244,6 +246,8 @@ contains
                enddo
             enddo
          enddo
+         call cpu_time(end_reorder)
+         write(luprint,*)'Time to reorder:',end_reorder-start_reorder
 !
 !        Deallocate reordered integrals g_da_kc
 !
@@ -251,9 +255,12 @@ contains
 !
 !        Calculate the A1 term (sum_ckd g_a,ckd * u_ckd,i) & add to the omega vector
 !
+         call cpu_time(start_dgemm)
          call dgemm('N','N',batch_length,n_occ,n_ovv,&
                      one,g_a_ckd,batch_length,u_ckd_i,n_ovv,&
                      one,omega1(a_begin,1),n_vir)
+         call cpu_time(end_dgemm)
+         write(luprint,*)'Time for dgemm:', end_dgemm-start_dgemm 
 !
       enddo ! End of batches of the index a 
 !
@@ -363,10 +370,11 @@ contains
 !
 !     Determine u_a_ckl = u_kl^ac
 !
-      do c = 1,n_vir
-         do k = 1,n_occ
-            do l = 1,n_occ
-               do a = 1,n_vir
+      do a = 1,n_vir
+         do c = 1,n_vir
+            do k = 1,n_occ
+               do l = 1,n_occ
+               
 !
 !                 Calculate necessary indices
 !
@@ -446,8 +454,8 @@ contains
 !        MO Fock matrix
 !
          F_ck(ck,1) = F_i_a(k,c)
-         do i = 1,n_occ
-            do a = 1,n_vir
+         do a = 1,n_vir
+            do i = 1,n_occ
 !
 !              Necessary indices
 !
@@ -474,12 +482,12 @@ contains
 !
 !     Add to omega1
 !
-       do i = 1,n_occ
-            do a = 1,n_vir
+      do a = 1,n_vir
+         do i = 1,n_occ
                ai=index_two(a,i,n_vir)
                omega1(a,i)=omega1(a,i)+omega1_ai(ai,1)
-            enddo
          enddo
+      enddo
 !
 !  Deallocation
 !
@@ -583,8 +591,6 @@ contains
 !
 !     Determine u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
 !
-            write(luprint,*) 'Lalala 1.2'
-      call flshfo(luprint)
       do c = 1,n_vir ! Use as though "b" for u_b_kdl term 
          do k = 1,n_occ
             do d = 1,n_vir
@@ -613,8 +619,6 @@ contains
             enddo
          enddo
       enddo
-                  write(luprint,*) 'Lalala 1.3'
-      call flshfo(luprint)
 !
 !     Deallocate the unordered integrals g_ld_kc = g_ldkc
 !
@@ -627,8 +631,6 @@ contains
 !
 !     Allocate the intermediate X_b_c = F_bc - sum_dkl g_ldkc u_kl^bd and set to zero
 !
-            write(luprint,*) 'Lalala 1.4'
-      call flshfo(luprint)
       call allocator(X_b_c,n_vir,n_vir)
       X_b_c = zero 
 !
@@ -641,8 +643,6 @@ contains
       call dgemm('N','N',n_vir,n_vir,n_oov,&
                   -one,u_b_kdl,n_vir,g_kdl_c,n_oov,&
                   one,X_b_c,n_vir)
-                  write(luprint,*) 'Lalala 1.5'
-      call flshfo(luprint)
 !
 !     Deallocate u_b_kdl and g_kdl_c
 !
@@ -656,8 +656,6 @@ contains
 !
 !     Determine t_c_jai = t_ij^ac 
 !
-            write(luprint,*) 'Lalala 1.6'
-      call flshfo(luprint)
       do c = 1,n_vir
          do j = 1,n_occ
             do a = 1,n_vir
@@ -678,8 +676,6 @@ contains
             enddo
          enddo
       enddo
-                  write(luprint,*) 'Lalala 1.7'
-      call flshfo(luprint)
 !
 !     Allocate the E2.1 term and set it to zero
 !
@@ -694,8 +690,6 @@ contains
 !
 !     Add the E2.1 term to the omega vector 
 !
-            write(luprint,*) 'Lalala 1.8'
-      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -721,8 +715,6 @@ contains
             enddo
          enddo
       enddo
-                  write(luprint,*) 'Lalala 1.9'
-      call flshfo(luprint)
 !
 !     Deallocate the E2.1 term, the X intermediate, and the reordered amplitudes 
 !
@@ -775,8 +767,6 @@ contains
 !
 !     Determine g_k_dlc = g_ldkc and u_dlc_j = u_lj^dc 
 !
-            write(luprint,*) 'Lalala 2.0'
-      call flshfo(luprint)
       do k = 1,n_occ ! Use as though "j" for u_dlc_j term 
          do d = 1,n_vir
             do l = 1,n_occ
@@ -805,8 +795,6 @@ contains
             enddo
          enddo
       enddo
-                  write(luprint,*) 'Lalala 2.1'
-      call flshfo(luprint)
 !
 !     Deallocate the integrals g_ld_kc = g_ldkc 
 !
@@ -840,8 +828,6 @@ contains
 !
 !     Determine t_aib_k = t_ik^ab 
 !
-            write(luprint,*) 'Lalala 2.2'
-      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -862,8 +848,6 @@ contains
             enddo
          enddo
       enddo
-                  write(luprint,*) 'Lalala 2.3'
-      call flshfo(luprint)
 !
 !     Allocate the E2.2 term and set to zero 
 !
@@ -876,8 +860,6 @@ contains
                   -one,t_aib_k,n_ovv,Y_k_j,n_occ,&
                   zero,omega2_aib_j,n_ovv)
 !
-      write(luprint,*)'Dgemm in E2 done'
-      call flshfo(luprint)
 !     Deallocate t_aib_k and Y_k_j 
 !
       call deallocator(t_aib_k,n_ovv,n_occ)
@@ -885,8 +867,6 @@ contains
 !
 !     Add the E2.2 term to the omega vector 
 !
-            write(luprint,*) 'Lalala 2.4'
-      call flshfo(luprint)
       do a = 1,n_vir
          do i = 1,n_occ
             do b = 1,n_vir
@@ -912,8 +892,6 @@ contains
             enddo
          enddo
       enddo
-                  write(luprint,*) 'Lalala 2.5'
-      call flshfo(luprint)
 !
 !     Deallocate the E2.2 term 
 !

@@ -17,8 +17,10 @@ contains
 !
       integer :: lucho_ia 
       integer :: i=0,j=0,idummy=0
+      real(dp) :: start = 0, end = 0
+      logical  :: timings = .true.
 !
-      write(luprint,*)'read cholesky ia'
+      if (timings) call cpu_time(start)
       lucho_ia = -1
       call gpopen(lucho_ia,'CHOLESKY_IA','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ia)
@@ -27,7 +29,9 @@ contains
          read(lucho_ia) (L_ia_J(i,j), i=1,n_ov)
       enddo
 !
-      call gpclose(lucho_ia,'KEEP')      
+      call gpclose(lucho_ia,'KEEP')
+      if (timings) call cpu_time(end)
+      if (timings) write(luprint,*)'CPU time to read and transform L_ab^J:',end-start    
 !
    end subroutine read_cholesky_ia
 !
@@ -47,7 +51,6 @@ contains
 !
 !     Allocation
 !
-      write(luprint,*)'read cholesky ai'
       call allocator_n(L_ia_J,n_ov,n_J)
       L_ia_J=zero
 !     
@@ -89,7 +92,6 @@ contains
       integer :: lucho_ij
       integer :: i=0,j=0,idummy=0
 !
-      write(luprint,*)'read cholesky ij'
       lucho_ij = -1
       call gpopen(lucho_ij,'CHOLESKY_IJ','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
       rewind(lucho_ij)
@@ -123,7 +125,6 @@ contains
 !
    batch_length = b_end-b_start+1
 !
-   write(luprint,*)'read cholesky ab'
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
    rewind(lucho_ab)
@@ -177,7 +178,6 @@ contains
 !
    batch_length = a_end-a_start+1
 !
-   write(luprint,*)'read cholesky ab reordered'
    lucho_ab = -1
    call gpopen(lucho_ab,'CHOLESKY_AB','UNKNOWN','SEQUENTIAL','UNFORMATTED',idummy,.false.)
    rewind(lucho_ab)
@@ -212,7 +212,6 @@ contains
       implicit none
 !
       real(dp) :: L_ia_J(n_ov,n_J)
-      write(luprint,*)'get cholesky ia'
 !
       call read_cholesky_ia(L_ia_J)
 !
@@ -245,11 +244,6 @@ contains
       real(dp),dimension(:,:),allocatable  :: L_kJ_i
       real(dp),dimension(:,:),allocatable  :: L_kb_J
 !
-         ! memory_lef = get_available()
-         ! write(luprint,*) 'Memory AI start:',memory_lef
-         ! call flshfo(luprint)
-!
-      write(luprint,*)'get cholesky ai'
       call read_cholesky_ai(L_ai_J)
 !
 !
@@ -512,9 +506,6 @@ contains
       call deallocator_n(L_a_iJ,n_vir,n_occ*n_J)
       call deallocator_n(L_k_iJ,n_occ,n_occ*n_J)
 !
-         ! memory_lef = get_available()
-         ! write(luprint,*) 'Memory AI end:',memory_lef
-         ! call flshfo(luprint)
 !
   end subroutine get_cholesky_ai
 !
@@ -537,14 +528,8 @@ contains
       real(dp),dimension(:,:),allocatable     :: L_iJ_k
       integer                                 :: i=0,J=0,a=0,ij=0,ia=0,ik=0,k=0
 !
-         ! memory_lef = get_available()
-         ! write(luprint,*) 'Memory IJ begin:',memory_lef
-         ! call flshfo(luprint)
-!
 !     Allocation
 !    
-      write(luprint,*)'get cholesky ij'
-      call flshfo(luprint)
 !
       call allocator_n(L_ia_J,n_ov,n_J)
       call allocator_n(L_iJ_a,n_occ*n_J,n_vir)
@@ -637,7 +622,6 @@ contains
       real(dp) :: L_ab_J(ab_dim,n_J)
       batch_length = end-start+1
 !
-      write(luprint,*)'get cholesky ab'
 !
 !     Testing which index is batched
 !
