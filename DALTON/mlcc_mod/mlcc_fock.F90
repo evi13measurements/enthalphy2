@@ -37,7 +37,11 @@ contains
       integer                                    :: batch_end=0,batch_length=0,g_off=0
       integer                                    :: b_batch = 0
       logical                                    :: debug = .false.
+      logical                                    :: time_integrals = .true.
+      real(dp)                                   :: int_start=0,int_end=0,time_fock=0,start_fock=0,end_fock=0
 !
+   call cpu_time(start_fock)
+   if (time_integrals) int_time_fock=0
    call allocator_n(mo_fock_mat,n_orbitals,n_orbitals)
    call allocator_n(h1mo,n_orbitals,n_orbitals)
    mo_fock_mat = zero
@@ -111,9 +115,12 @@ contains
 !
 !  g_ij_kl = sum_J(L_ij_J*L_J_kl)
 !
+   if (time_integrals) call cpu_time(int_start)
    call dgemm('N','T',n_oo,n_oo,n_J &
       ,one,L_ij_J,n_oo,L_ij_J,n_oo &
       ,zero,g_ij_kl,n_oo)
+   if (time_integrals) call cpu_time(int_end)
+   if (time_integrals) int_time_fock=int_time_fock+(int_end-int_start)
 !
 !  Add two-electron contributions to occupied-occupied block
 !
@@ -147,7 +154,10 @@ contains
 !
 !     g_ia_jk
 !
+      if (time_integrals) call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_oo,n_J,one,L_ia_J,n_ov,L_ij_J,n_oo,zero,g_ia_jk,n_ov)
+      if (time_integrals) call cpu_time(int_end)
+      if (time_integrals) int_time_fock=int_time_fock+(int_end-int_start)
       call deallocator_n(L_ia_J,n_ov,n_J)
 !
 !     Allocation for g_ai_jk 
@@ -161,7 +171,10 @@ contains
 !
 !     g_ai_jk
 !
+      if (time_integrals) call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_oo,n_J,one,L_ai_J,n_ov,L_ij_J,n_oo,zero,g_ai_jk,n_ov)
+      if (time_integrals) call cpu_time(int_end)
+      if (time_integrals) int_time_fock=int_time_fock+(int_end-int_start)
       call deallocator_n(L_ai_J,n_ov,n_J)
 !
 !     Adding terms to Fock matrix
@@ -230,9 +243,12 @@ contains
 !
          g_off = index_two(1,batch_start,n_vir)
 !
+         if (time_integrals) call cpu_time(int_start)
          call dgemm('N','T',n_vir*batch_length,n_oo,n_J &
             ,one,L_ab_J,n_vir*batch_length,L_ij_J,n_oo &
             ,one,g_ab_ij(g_off,1),n_vv)
+         if (time_integrals) call cpu_time(int_end)
+         if (time_integrals) int_time_fock=int_time_fock+(int_end-int_start)
 !
 !        Deallocation of L_ab_J
 !
@@ -255,7 +271,11 @@ contains
 !
       call get_cholesky_ia(L_ia_J)
       call get_cholesky_ai(L_ai_J)
+!
+      if (time_integrals) call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J,one,L_ai_J,n_ov,L_ia_J,n_ov,zero,g_ai_jb,n_ov)
+      if (time_integrals) call cpu_time(int_end)
+      if (time_integrals) int_time_fock=int_time_fock+(int_end-int_start)
 !
 !     Deallocate L_ia_J
 !
@@ -279,10 +299,6 @@ contains
       enddo
      call deallocator_n(g_ab_ij,n_vv,n_oo)
      call deallocator_n(g_ai_jb,n_ov,n_ov)
-!
-!    Clean-up of Fock matrix
-!
-     call mlcc_cleanup(mo_fock_mat,n_orbitals,n_orbitals)
 !
 !     Prints
 !
@@ -327,7 +343,9 @@ contains
          enddo
       enddo
 !
-
+   call cpu_time(end_fock)
+   write(luprint,*)'Time in fock:',end_fock-start_fock
+   write(luprint,*)'Time on integrals in fock:',int_time_fock
    call deallocator_n(mo_fock_mat,n_orbitals,n_orbitals)
 !
    end subroutine mlcc_get_fock

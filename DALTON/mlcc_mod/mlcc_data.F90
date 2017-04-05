@@ -59,6 +59,8 @@ module mlcc_data
 !
    integer                          :: luprint !general output unit
    integer                          :: mem = 10000000000
+   real(dp)                         :: int_time_fock = 0
+   real(dp)                         :: int_time_omega = 0
 end module mlcc_data
 
 module mlcc_input_data

@@ -60,7 +60,7 @@ contains
          prev_energy = energy 
 !
          call mlcc_ccsd_energy(energy) !  Fixed memory leak (Eirik,15 Mar 2017)
-!         write(luprint,*) 'THE ENERGY:::',energy
+         write(luprint,*) 'THE ENERGY:::',energy
 !
 !        Reset the omega vector and re-calculate it
 !  
@@ -410,10 +410,10 @@ contains
       enddo
       H(dim_G+1,1) = -one
 !
-!      write(luprint,*) 'The G matrix'
-!      write(luprint,*) G 
-!      write(luprint,*) 'The H vector'
-!      write(luprint,*) H
+      write(luprint,*) 'The G matrix'
+      write(luprint,*) G 
+      write(luprint,*) 'The H vector'
+      write(luprint,*) H
 !
 !     Solve the eigenvalue problem G * w = H 
 !
@@ -421,7 +421,8 @@ contains
       lu_error = -1
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
-!
+      write(luprint,*)'lu_ints',lu_integers
+      write(luprint,*)'lu_ints',lu_integers
 !      if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
       lu_error = -1
@@ -432,8 +433,8 @@ contains
 !      write(luprint,*) 'The integers',lu_integers
   !    if (current_index .eq. 1) H = 1 ! This is the only solution for this case (hack)
 !
-!      write(luprint,*) 'The H vector (ie, the solution)'
-!      write(luprint,*) H
+      write(luprint,*) 'The H vector (ie, the solution)'
+      write(luprint,*) H
 !
 !     Deallocate the temporary dt vector
 !

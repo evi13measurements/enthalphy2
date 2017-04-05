@@ -30,6 +30,11 @@ contains
 !
 !     Add the singles contributions to < mu | exp(-T) H exp(T) | R >
 !     
+!
+!     Timing integrals
+!
+      int_time_omega=0
+!
       call cpu_time(omega_start)
       if (timings) call cpu_time(start)
       call mlcc_omega_a1 ! This is the G term in the old code. -1.4259234603561466E-003 (ours) -1.4259246117271341E-003 (old). Error : 1.15 * 10^(-9)
@@ -89,6 +94,7 @@ contains
 !      write(luprint,*) 'Omega(aibj,1):'
 !      call vec_print_packed(omega2,n_ov_ov_packed)
 !
+      write(luprint,*)'Time on integrals in omega', int_time_omega
    end subroutine mlcc_omega_calc
 !
    subroutine mlcc_omega_a1
@@ -111,6 +117,7 @@ contains
 !
       logical :: debug = .false.
       real(dp)::start_alloc=0,end_alloc=0,start_reorder=0,end_reorder=0,start_dgemm=0,end_dgemm=0
+      real(dp):: int_start=0,int_end=0
 !
       real(dp), dimension(:,:), pointer :: L_kc_J  => null()
       real(dp), dimension(:,:), pointer :: L_da_J  => null()   ! L_ad^J; a is being batched over
@@ -208,12 +215,12 @@ contains
 !
 !        Calculate g_da_kc = sum_J L_da_J L_kc_J^T = sum_J L_ad^J L_kc^J = g_adkc 
 !     
-         call cpu_time(start_dgemm)
+         call cpu_time(int_start)
          call dgemm('N','T',ad_dim,n_ov,n_J,&
                      one,L_da_J,ad_dim,L_kc_J,n_ov,&
                      zero,g_da_kc,ad_dim)
-         call cpu_time(end_dgemm)
-         write(luprint,*)'Time for dgemm:', end_dgemm-start_dgemm  
+         call cpu_time(int_end)
+         int_time_omega=int_time_omega+(int_end-int_start)
 !
 !        Deallocate the reordered Cholesky vector L_da_J
 !
@@ -254,14 +261,13 @@ contains
          call deallocator(g_da_kc,ad_dim,n_ov)
 !
 !        Calculate the A1 term (sum_ckd g_a,ckd * u_ckd,i) & add to the omega vector
-!
-         call cpu_time(start_dgemm)
+! 
+         call cpu_time(int_start)
          call dgemm('N','N',batch_length,n_occ,n_ovv,&
                      one,g_a_ckd,batch_length,u_ckd_i,n_ovv,&
                      one,omega1(a_begin,1),n_vir)
-         call cpu_time(end_dgemm)
-         write(luprint,*)'Time for dgemm:', end_dgemm-start_dgemm 
-!
+         call cpu_time(int_end)
+         int_time_omega=int_time_omega+(int_end-int_start)!
       enddo ! End of batches of the index a 
 !
 !     Print the omega vector 
@@ -302,6 +308,7 @@ contains
       real(dp), dimension(:,:), pointer :: g_ki_lc => null() ! g_kilc 
       real(dp), dimension(:,:), pointer :: g_ckl_i => null() ! g_kilc 
       real(dp), dimension(:,:), pointer :: u_a_ckl => null() ! u_kl^ac = 2 t_kl^ac - t_lk^ac
+      real(dp):: int_start=0,int_end=0
 !
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
@@ -324,9 +331,12 @@ contains
 !
 !     Calculate g_ki_lc = sum_J L_ki_J L_lc_J^T 
 ! 
+      call cpu_time(int_start)
       call dgemm('N','T',n_oo,n_ov,n_J,&
                   one,L_ki_J,n_oo,L_lc_J,n_ov,&
-                  zero,g_ki_lc,n_oo) 
+                  zero,g_ki_lc,n_oo)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)! 
 !
 !     Deallocate the Cholesky vectors L_ki_J and L_lc_J
 !
@@ -434,6 +444,7 @@ contains
    integer                          :: i=0,k=0,c=0,a=0
    integer                          :: ck=0,ai=0,ak=0,ci=0,aick=0,akci=0
    logical                          :: debug = .false.
+   real(dp):: int_start=0,int_end=0
 !
 !
 !  Allocation
@@ -554,6 +565,7 @@ contains
       real(dp), dimension(:,:), pointer :: omega2_aib_j => null() ! For storing the E2.2 term temporarily
       real(dp), dimension(:,:), pointer :: Y_k_j        => null() ! An intermediate, see below for definition 
       real(dp), dimension(:,:), pointer :: t_aib_k      => null() ! t_ik^ab 
+      real(dp):: int_start=0,int_end=0
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -571,9 +583,12 @@ contains
 !
 !     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
 !
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_kc_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ld_kc,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
 !     Deallocate the Cholesky vector L_kc_J
 !
@@ -747,9 +762,12 @@ contains
 !
 !     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
 !
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_kc_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ld_kc,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
 !     Deallocate the Cholesky vector L_kc_J
 !
@@ -962,6 +980,7 @@ contains
       real(dp), dimension(:,:), pointer :: L_ca_J       => null() ! L_ac^J; a is batched over 
       real(dp), dimension(:,:), pointer :: L_ki_J       => null() ! L_ki^J 
       real(dp), dimension(:,:), pointer :: u_ck_bj      => null() ! u_jk^bc
+      real(dp):: int_start=0,int_end=0
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -979,9 +998,12 @@ contains
 !
 !     Calculate g_ld_kc = g_ldkc = sum_J L_ld^J L_kc^J
 !
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_kc_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ld_kc,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
 !     Allocate L_ld_kc = L_ldkc and set to zero    
 !
@@ -1156,9 +1178,12 @@ contains
 !
 !     Form the g_ai_kc integrals from L_ai_J and L_kc_J
 !  
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J,&
                   one,L_ai_J,n_ov,L_kc_J,n_ov,&
                   zero,g_ai_kc,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
 !     Deallocate the Cholesky vectors L_ai_J and L_kc_J
 !
@@ -1305,9 +1330,12 @@ contains
 !
 !        Calculate g_ca_ki = g_acki from L_ca_J = L_ac^J and L_ki_J = L_ki^J
 !
+         call cpu_time(int_start)
          call dgemm('N','T',ac_dim,n_oo,n_J,&
                      one,L_ca_J,ac_dim,L_ki_J,n_oo,&
                      one,g_ca_ki,ac_dim)
+         call cpu_time(int_end)
+         int_time_omega=int_time_omega+(int_end-int_start)
 !
 !        Reorder the integrals g_ca_ki (reduced a) = g_acki = g_ai_ck (full a)
 !
@@ -1452,6 +1480,7 @@ contains
       integer                                :: required=0,available=0,n_batch=0,max_batch_length=0,a_start=0
       integer                                :: a_end=0,a_batch=0,a_length=0
       logical                                :: debug = .false.
+      real(dp):: int_start=0,int_end=0
 !
 !     Allocate L_ia_J
 !
@@ -1467,9 +1496,12 @@ contains
       call allocator(g_kd_lc,n_ov,n_ov)
       g_kd_lc=zero
 !
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J &
          ,one,L_ia_J,n_ov,L_ia_J,n_ov &
          ,zero,g_kd_lc,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
 !     Deallocate
 !
@@ -1571,9 +1603,12 @@ contains
 !
 !        g_ki_ca = sum_J L_ki_J*L_ca_J
 !
+         call cpu_time(int_start)
          call dgemm('N','T',n_oo,n_vir*a_length,n_J &
             ,one,L_ki_J,n_oo,L_ca_J,n_vir*a_length &
             ,one,g_ki_ca(1,index_two(1,a_start,n_vir)),n_oo)
+         call cpu_time(int_end)
+         int_time_omega=int_time_omega+(int_end-int_start)
 !
 !        Deallocate L_ca_J
 !
@@ -1729,6 +1764,7 @@ contains
       integer                             :: a_n_batch=0,b_n_batch=0,a_start=0,a_end=0,b_start=0,b_end=0,a_length=0,b_length=0
       integer                             :: required=0,available=0,a_max_length=0,b_max_length=0,a_batch=0,b_batch=0
       logical                             :: debug = .false.
+      real(dp):: int_start=0,int_end=0
 !
 !!!   A2.1 term   !!!
 !
@@ -1741,10 +1777,13 @@ contains
       call get_cholesky_ai(L_ai_J)
 !
 !     g_ai_bj=sum_J L_ai_J*L_bj_J
-!
+!     
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J &
          ,one, L_ai_J,n_ov,L_ai_J,n_ov &
          ,zero,g_ai_bj,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
       call deallocator(L_ai_J,n_ov,n_J)
 !
@@ -1833,9 +1872,12 @@ contains
 !
             call allocator(g_ca_db,n_vv,n_vv)
 !
+            call cpu_time(int_start)
             call dgemm('N','T',n_vv,n_vv,n_J &
                ,one,L_ca_J,n_vv,L_ca_J,n_vv &
                ,zero,g_ca_db,n_vv)
+            call cpu_time(int_end)
+            int_time_omega=int_time_omega+(int_end-int_start)
 !
 !           Allocate for reordered g_ca_db(g_ab_cd) and t_ci_dj (t_cd_ij)
 !
@@ -1947,10 +1989,13 @@ contains
                call allocator(g_ca_db,n_vir*a_length,n_vir*b_length)
 !
 !              g_ca_db = sum_J L_ca_J*L_db_J
-!
+!  
+               call cpu_time(int_start)
                call dgemm('N','T',n_vir*a_length,n_vir*b_length,n_J &
                   ,one,L_ca_J,n_vir*a_length,L_db_J,n_vir*b_length &
                   ,zero,g_ca_db,n_vir*a_length)
+               call cpu_time(int_end)
+               int_time_omega=int_time_omega+(int_end-int_start)
 !
                call deallocator(L_db_J,n_vir*b_length,n_J)
 !
@@ -2086,6 +2131,7 @@ contains
       integer                             :: c=0,d=0,k=0,l=0,i=0,j=0,kl=0,ij=0,ci=0,dj=0,kc=0,ld=0,cidj=0,cd=0,ki=0
       integer                             :: lj=0,ak=0,bl=0,akbl=0,ab=0,b=0,a=0,ai=0,bj=0,aibj=0
       logical                             :: debug = .false.
+      real(dp):: int_start=0,int_end=0
 !
 !     Read cholesky vector of type L_ij_J
 !
@@ -2099,9 +2145,12 @@ contains
       call allocator(g_ki_lj,n_oo,n_oo)
       g_ki_lj = zero ! Eirik: debug 
 !
+      call cpu_time(int_start)
       call dgemm('N','T',n_oo,n_oo,n_J &
          ,one,L_ij_J,n_oo,L_ij_J,n_oo &
          ,zero,g_ki_lj,n_oo)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
       call deallocator(L_ij_J,n_oo,n_J)
 !
@@ -2140,10 +2189,13 @@ contains
 !     Create g_ck_ld = sum_(J) L_kc_J*L_ld_J
 !
       call allocator(g_kc_ld,n_ov,n_ov)
-!
+!  
+      call cpu_time(int_start)
       call dgemm('N','T',n_ov,n_ov,n_J &
          ,one,L_kc_J,n_ov,L_kc_J,n_ov &
          ,zero,g_kc_ld,n_ov)
+      call cpu_time(int_end)
+      int_time_omega=int_time_omega+(int_end-int_start)
 !
 !     Deallocate cholesky vectors L_ck_J
 !
