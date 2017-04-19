@@ -531,6 +531,8 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_oo_mod/hf_class.F90
     DALTON/mlcc_oo_mod/mlcc_oo_drv.F90
     DALTON/mlcc_oo_mod/printing.F90
+    DALTON/mlcc_oo_mod/io.F90
+    DALTON/mlcc_oo_mod/dalton_interface.F90
     DALTON/pdpack/arhpack.F
     DALTON/pdpack/eispack.F
     DALTON/pdpack/jacobi.F
