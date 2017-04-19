@@ -16,6 +16,7 @@ contains
     implicit none
 !
         class(shape), intent(inout) :: this
+        this%area=0.0d0
         write(*,*)'Area is:',this%area
 !
     end subroutine shape_area
@@ -51,6 +52,8 @@ contains
 !
         write(*,*)'Area is:',this%area
 !
+        call shape_area(this)
+!   
     end subroutine  triangle_area
 end module class_triangle
 

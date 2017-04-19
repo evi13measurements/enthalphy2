@@ -366,7 +366,7 @@ contains
 !        Allocate the G matrix 
 !
 !         call allocator(G,maxdiis+1,maxdiis+1) ! Sarai: I think we should always allocate and deallocate in same routine.
-!                                               !        Moved this to driver, outsidel loop.
+!                                               !        Moved this to driver, outside loop.
 !
 !        Set the G matrix and the LU integers array 
 !
@@ -421,8 +421,6 @@ contains
       lu_error = -1
       lu_integers = 0
       call dgetrf(maxdiis+1,maxdiis+1,copy_of_G,maxdiis+1,lu_integers,lu_error)
-      write(luprint,*)'lu_ints',lu_integers
-      write(luprint,*)'lu_ints',lu_integers
 !      if (lu_error .eq. 0) write(luprint,*) 'Successful LU factorization'
 !
       lu_error = -1

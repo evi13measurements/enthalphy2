@@ -19,9 +19,6 @@ contains
       integer                          :: lucho_ia=0,idum=0
       integer                          :: i=0,j=0,a=0,b=0,ai=0,bj=0,aibj=0,ia=0,jb=0
    !
-   !
-   !
-   !
    ! Allocations
    !
       call allocator(cholesky_ia,n_ov,n_J)
