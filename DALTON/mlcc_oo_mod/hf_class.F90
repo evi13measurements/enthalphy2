@@ -1,7 +1,6 @@
 module hf_class
 !
    use cholesky_integrals_class
-   use printing
 !
    implicit none
 !
@@ -20,6 +19,8 @@ contains
       implicit none
 !
       class(hartree_fock) :: hf
+!
+      call hf % cholesky % init()
 !
    end subroutine init_hartree_fock
 !

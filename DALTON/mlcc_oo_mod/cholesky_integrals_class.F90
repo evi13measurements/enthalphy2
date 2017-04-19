@@ -25,7 +25,7 @@ contains
 !
       if (cholesky % integral_program .eq. 'DALTON    ') then
 !
-         call dalton_inteface_drv(cholesky)
+         call dalton_interface_driver()
 !
       endif
 !

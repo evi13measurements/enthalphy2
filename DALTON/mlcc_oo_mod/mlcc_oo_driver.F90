@@ -1,7 +1,9 @@
 subroutine mlcc_oo_driver
 !  
    use hf_class
-   use printing
+   use input_output
+!
+   implicit none
 !
    type(hartree_fock) :: hf
 !

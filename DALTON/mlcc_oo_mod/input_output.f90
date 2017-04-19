@@ -1,0 +1,32 @@
+module input_output
+!  
+   implicit none
+!
+   integer,public :: unit_output = 0 
+   integer,private  :: n_files = 0
+!
+contains
+!
+   subroutine generate_unit_identifier(unit_identifier)
+!
+      implicit none
+!
+      integer :: unit_identifier
+!
+      n_files = n_files + 1
+      unit_identifier = n_files
+!
+   end subroutine generate_unit_identifier
+!
+   subroutine init_output_file
+!
+      implicit none
+!
+      call  generate_unit_identifier(unit_output)
+!
+      open(unit=unit_output,file='mlcc.out',status='new',form='formatted')
+      close(unit=unit_output)
+!
+   end subroutine init_output_file
+!
+end module input_output
