@@ -31,7 +31,7 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    luprint = lupri 
 !
-   call mlcc_oo_drv
+   call mlcc_oo_driver
 !
 !  Initialize memory variables
 !

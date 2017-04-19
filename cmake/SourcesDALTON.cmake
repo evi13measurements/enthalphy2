@@ -529,7 +529,7 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_mod/mlcc_energy.F90
     DALTON/mlcc_oo_mod/cholesky_integrals_class.F90
     DALTON/mlcc_oo_mod/hf_class.F90
-    DALTON/mlcc_oo_mod/mlcc_oo_drv.F90
+    DALTON/mlcc_oo_mod/mlcc_oo_driver.F90
     DALTON/mlcc_oo_mod/printing.F90
     DALTON/mlcc_oo_mod/io.F90
     DALTON/mlcc_oo_mod/dalton_interface.F90
