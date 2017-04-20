@@ -13,6 +13,7 @@ module workspace
    integer, private :: work_length  = 0
    integer, private :: work_remains = 0
    integer, private :: work_used    = 0
+   integer          :: mem          = 10000000000 ! Sarai: This should be set from user input
 !
 contains
 !
