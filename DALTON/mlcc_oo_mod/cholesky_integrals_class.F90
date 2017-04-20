@@ -15,7 +15,6 @@ contains
 !
    subroutine init_cholesky_integrals(cholesky)
 !
-      use dalton_interface
 !
       implicit none
 !
