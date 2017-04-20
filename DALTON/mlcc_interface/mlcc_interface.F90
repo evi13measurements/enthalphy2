@@ -138,7 +138,7 @@ subroutine mlcc_get_cholesky
 !
 ! Read number (n_J) and length (n_reduced) of Cholesky vectors
 !
-   read(lumlch,*)n_reduced,n_J
+   read(lumlch,*)n_J
 !
 ! Read reduced index array
 !
