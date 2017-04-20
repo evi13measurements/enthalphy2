@@ -3,6 +3,9 @@ module mlcc_oo_utilities
 !   MLCC Utilities 
 !   Written by Sarai D. Folkstad and Eirik F. Kjønstad, 28 Feb 2017
 !
+   use input_output
+   use mlcc_types
+!
 contains
    integer function index_packed(i,j)
 !
@@ -22,7 +25,7 @@ contains
 !   
       implicit none
 !
-      integer, intent(in) :: N
+      integer(i15), intent(in) :: N
 !
       packed_size = N*(N+1)/2
 !
@@ -94,7 +97,7 @@ contains
    end function index_two
 !
 !
-   subroutine n_batch(required,available,max_batch_length,n_batch,batch_dimension)
+   subroutine num_batch(required,available,max_batch_length,n_batch,batch_dimension)
 !  Purpose: Calculate number of batches
 !
 !  required          =  required memory (words)
@@ -133,7 +136,7 @@ contains
          n_batch = n_batch+1
       endif
 !
-   end subroutine n_batch
+   end subroutine num_batch
 !
 !
    subroutine batch_limits(first,last,batch_number,max_batch_length,batch_dimension)
@@ -168,38 +171,10 @@ contains
 !
       do q = 1,dim_2
          do p = 1,dim_1
-            write(luprint,*) p,q,vec(p,q)
+            write(unit_output,*) p,q,vec(p,q)
          enddo
       enddo
 !
    end subroutine vec_print
-!
-   subroutine vec_print_packed(vec,dim)
-!
-!     Purpose: prints a vector with (aibj) indices, for t2am and omega2 in particular (replace by cleverer routine later...)
-!
-      implicit none
-!
-      integer :: a=0,i=0,b=0,j=0,ai=0,bj=0,aibj=0
-!
-      integer, intent(in)  :: dim
-      real(dp), intent(in) :: vec(dim,1)
-!
-      do i = 1,n_occ
-         do a = 1,n_vir
-            do j = 1,n_occ
-               do b = 1,n_vir
-!
-                  ai = index_two(a,i,n_vir)
-                  bj = index_two(b,j,n_vir)
-                  aibj = index_packed(ai,bj)
-                  write(luprint,*) aibj,1,vec(aibj,1)
-!
-               enddo
-            enddo
-         enddo
-      enddo
-!
-   end subroutine vec_print_packed
 !
 end module mlcc_oo_utilities
