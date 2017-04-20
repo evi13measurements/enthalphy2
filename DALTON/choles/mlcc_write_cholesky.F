@@ -28,7 +28,7 @@ C     ((1) - because no symmetry)
 #include "ccsdsym.h"
 #include "choio.h"
 C
-      dimension work(lwork),indred(nreduc(1))
+      double precision work(lwork),indred(nreduc(1))
 C
       chovec = 1
       koff1 = chovec + nnbst(1)     
