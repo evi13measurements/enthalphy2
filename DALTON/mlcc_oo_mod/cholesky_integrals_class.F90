@@ -51,7 +51,13 @@ contains
       integer                   :: unit_cholesky_mo_ia = -1
       integer                   :: unit_cholesky_mo_ab = -1
 !
-      integer                   :: n_ao_sq_packed = 0
+      integer                   :: n_ao_sq_packed      = 0
+!
+      real(dp), dimension(:,:), allocatable :: cholesky_ao
+      real(dp), dimension(:,:), allocatable :: cholesky_ao_sq
+      real(dp), dimension(:,:), allocatable :: cholesky_mo_sq
+!
+      real(dp), dimension(:,:), allocatable :: X
 !
 !     Getting identifier for AO integrals file    
 !
@@ -66,8 +72,8 @@ contains
 !
 !     Read the number of Cholesky vectors, n_J
 !
-      read(unit_cholesky_ao,*) cholesky % n_J
-      write(unit_output,*) 'The number of Cholesky vectors:', cholesky % n_J
+      read(unit_cholesky_ao,*) cholesky%n_J
+      write(unit_output,*) 'The number of Cholesky vectors:', cholesky%n_J
 !
 !     Open files for MO Cholesky vectors 
 !
@@ -90,6 +96,21 @@ contains
       call allocator(cholesky_ao,n_ao_sq_packed,1)
       call allocator(cholesky_ao_sq,cholesky%n_ao,cholesky%n_ao)
       call allocator(cholesky_mo_sq,cholesky%n_mo,cholesky%n_mo)
+!
+      cholesky_ao    = zero
+      cholesky_ao_sq = zero
+      cholesky_mo_sq = zero
+!
+!     Allocate an intermediate, X
+!
+      call allocator(X,cholesky%n_ao,cholesky%n_mo)
+!
+      X = zero
+!
+!     Loop over the number of Cholesky vectors,
+!     reading them one by one 
+!
+! .... TODO
 !
 ! !
 ! !========================================
