@@ -43,7 +43,7 @@ C     Write nreduc(1),numcho(1) to file
       write(lumlch,*)numcho(1) 
 C
 C     Write reduced index array
-      write(lumlch,*)(indred(i),i=1,nreduc(1))
+C     write(lumlch,*)(indred(i),i=1,nreduc(1))
 C  
       do j=1,numcho(1)
 C
