@@ -1,11 +1,16 @@
 module cholesky_integrals_class
 !
+!  Cholesky integrals class
+!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, 21 Apr 2017
+!
+   use input_output
    use mlcc_types
 !
    type cholesky_integrals
-      integer(i15) :: n_J  = 0
-      integer(i15) :: n_ao = 0
-      integer(i15) :: n_mo = 0
+!
+      integer(i15) :: n_J  = 0 ! Number of Cholesky vectors 
+      integer(i15) :: n_ao = 0 ! Number of atomic orbitals
+!
    contains
 !	
       procedure :: init => init_cholesky_integrals
@@ -23,6 +28,8 @@ contains
       real(dp), dimension(chol%n_mo,chol%n_mo) :: mo_coef
 !
       integer(i15) :: n_occ, n_vir 
+!
+      write(unit_output,*) 'Initializing Cholesky integrals'
 !
 !     Read the Cholesky vectors from file (in the AO basis),
 !     transform them to the MO basis, and save to file
