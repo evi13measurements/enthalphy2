@@ -145,7 +145,7 @@ subroutine mlcc_get_cholesky
    call allocator_int(index_reduced,n_reduced,1)
    index_reduced=0
 !
-   read(lumlch,*)(index_reduced(i,1),i=1,n_reduced)
+!   read(lumlch,*)(index_reduced(i,1),i=1,n_reduced)
 !
 !========================================
 !
@@ -219,8 +219,6 @@ end subroutine mlcc_get_cholesky
 !
 subroutine hf_reader
 
-   use mlcc_data
-   use mlcc_workspace
 
 !
 !  Hartree-Fock reader routine

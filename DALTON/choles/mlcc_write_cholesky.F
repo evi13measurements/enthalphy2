@@ -27,6 +27,7 @@ C     ((1) - because no symmetry)
 #include "ccdeco.h"
 #include "ccsdsym.h"
 #include "choio.h"
+#include "ccorb.h"
 C
       integer lwork
       integer chovec,koff1
@@ -36,13 +37,14 @@ C
       koff1 = chovec + nnbst(1)     
       lumlch = -2
 C
+C     write(*,*)'NBAST',NBAST
       call gpopen(lumlch,'MLCC_CHOLESKY','UNKNOWN','SEQUENTIAL',
      &        'FORMATTED',idummy,.false.)
       rewind(lumlch)
 C
 C     
 C     Write nreduc(1),numcho(1) to file
-      write(lumlch,*)numcho(1) 
+      write(lumlch,*)nbast,numcho(1) 
 C
 C     Write reduced index array
 C     write(lumlch,*)(indred(i),i=1,nreduc(1))

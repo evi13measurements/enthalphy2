@@ -1,10 +1,9 @@
 module input_output
-!
    use mlcc_types
 !
    implicit none
 !
-   integer,public :: unit_output = 0 
+   integer(i15),public :: unit_output = 0 
    integer,private  :: n_files = 0
 !
 contains
