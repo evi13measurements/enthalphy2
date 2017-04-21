@@ -29,7 +29,7 @@
 !
       real(dp), dimension(:,:), allocatable :: X
 !
-      integer(i15) :: j       
+      integer(i15) :: i,j       
 !
 !     Open Dalton file MLCC_CHOLESKY (see mlcc_write_cholesky.F)
 ! 
@@ -79,7 +79,11 @@
 !     Loop over the number of Cholesky vectors,
 !     reading them one by one 
 !
-! .... TODO
+      do j = 1,(cholesky % n_J)
+!
+         read(unit_cholesky_ao,*) (cholesky_ao(i,1),i=1,n_ao_sq_packed)
+!
+      enddo
 !
 ! !
 ! !========================================
