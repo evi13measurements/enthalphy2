@@ -16,12 +16,12 @@
 !
       class(cholesky_integrals) :: cholesky
 !
-      integer                   :: unit_cholesky_ao    = -1
-      integer                   :: unit_cholesky_mo_ij = -1
-      integer                   :: unit_cholesky_mo_ia = -1
-      integer                   :: unit_cholesky_mo_ab = -1
+      integer(i15) :: unit_cholesky_ao    = -1
+      integer(i15) :: unit_cholesky_mo_ij = -1
+      integer(i15) :: unit_cholesky_mo_ia = -1
+      integer(i15) :: unit_cholesky_mo_ab = -1
 !
-      integer                   :: n_ao_sq_packed      = 0
+      integer(i15) :: n_ao_sq_packed      = 0
 !
       real(dp), dimension(:,:), allocatable :: cholesky_ao
       real(dp), dimension(:,:), allocatable :: cholesky_ao_sq
@@ -29,14 +29,11 @@
 !
       real(dp), dimension(:,:), allocatable :: X
 !
-!     Getting identifier for AO integrals file    
-!
-      call generate_unit_identifier(unit_cholesky_ao)
-!
-      n_ao_sq_packed = packed_size(cholesky%n_ao)
+      integer(i15) :: j       
 !
 !     Open Dalton file MLCC_CHOLESKY (see mlcc_write_cholesky.F)
 ! 
+      call generate_unit_identifier(unit_cholesky_ao)
       open(unit=unit_cholesky_ao,file='mlcc_cholesky',status='old',form='formatted')
       rewind(unit_cholesky_ao)
 !
@@ -62,6 +59,8 @@
 !
 !     Allocate packed and unpacked Cholesky AO, and 
 !     unpacked Cholesky MO vectors
+!
+      n_ao_sq_packed = packed_size(cholesky%n_ao)
 !
       call allocator(cholesky_ao,n_ao_sq_packed,1)
       call allocator(cholesky_ao_sq,cholesky%n_ao,cholesky%n_ao)
