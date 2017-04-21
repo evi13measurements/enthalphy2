@@ -1,5 +1,7 @@
 module input_output
-!  
+!
+   use mlcc_types
+!
    implicit none
 !
    integer,public :: unit_output = 0 
@@ -11,7 +13,7 @@ contains
 !
       implicit none
 !
-      integer :: unit_identifier
+      integer(i15) :: unit_identifier
 !
       n_files = n_files + 1
       unit_identifier = n_files
