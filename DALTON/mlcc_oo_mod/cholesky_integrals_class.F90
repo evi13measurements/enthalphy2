@@ -25,16 +25,15 @@ contains
 !
       class(cholesky_integrals) :: chol
 !
-      real(dp), dimension(chol%n_mo,chol%n_mo) :: mo_coef
-!
-      integer(i15) :: n_occ, n_vir 
+      integer(i15) :: n_occ,n_vir 
+      real(dp), dimension(n_occ+n_vir,n_occ+n_vir) :: mo_coef
 !
       write(unit_output,*) 'Initializing Cholesky integrals'
 !
 !     Read the Cholesky vectors from file (in the AO basis),
 !     transform them to the MO basis, and save to file
 !
-      call get_cholesky_vectors(chol,mo_coef,n_occ,n_vir)
+      call read_and_transform_cholesky_vectors(chol,mo_coef,n_occ,n_vir)
 !
    end subroutine init_cholesky_integrals
 !
