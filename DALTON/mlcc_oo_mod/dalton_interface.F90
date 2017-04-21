@@ -16,10 +16,10 @@
 !
       class(cholesky_integrals) :: cholesky
 !
-      integer(i15) :: unit_cholesky_ao    = -1
-      integer(i15) :: unit_cholesky_mo_ij = -1
-      integer(i15) :: unit_cholesky_mo_ia = -1
-      integer(i15) :: unit_cholesky_mo_ab = -1
+      integer :: unit_cholesky_ao    = -1
+      integer :: unit_cholesky_mo_ij = -1
+      integer :: unit_cholesky_mo_ia = -1
+      integer :: unit_cholesky_mo_ab = -1
 !
       integer(i15) :: n_ao_sq_packed      = 0
 !
