@@ -1,17 +1,20 @@
 module hf_class
 !
+   use workspace
    use cholesky_integrals_class
    use input_output
 !
    implicit none
 !
    type hartree_fock
-      integer                  :: n_occ
-      integer                  :: n_vir
-      type(cholesky_integrals) :: cholesky
-      character(len=10)        :: hf_interface_program
+      integer(i15)                          :: n_occ
+      integer(i15)                          :: n_vir
+      integer(i15)                          :: n_mo 
+      real(dp), dimension(:,:), allocatable :: mo_coef
+      type(cholesky_integrals)              :: cholesky
+      character(len=10)                     :: hf_interface_program
    contains
-      procedure                :: init => init_hartree_fock
+      procedure                             :: init => init_hartree_fock
    end type hartree_fock
 !
 !  Private submodules and functions
@@ -32,7 +35,12 @@ contains
 !
       endif
 !
-      call hf % cholesky % init()
+!     Allocate the MO coefficients (move this to read_sirius)
+!
+      call allocator(hf % mo_coef, hf % n_mo, hf % n_mo) 
+      hf % mo_coef = zero
+!
+      call hf % cholesky % init (hf % mo_coef, hf % n_occ, hf % n_vir)
 !
    end subroutine init_hartree_fock
 !
