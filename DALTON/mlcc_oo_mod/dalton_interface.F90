@@ -55,13 +55,13 @@
       call generate_unit_identifier(unit_chol_mo_ia)
       call generate_unit_identifier(unit_chol_mo_ab)
 !
-      open(unit_chol_mo_ij,file='cholesky_ij',status='new',form='unformatted')
+      open(unit_chol_mo_ij,file='cholesky_ij',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ij)
 !
-      open(unit_chol_mo_ia,file='cholesky_ia',status='new',form='unformatted')
+      open(unit_chol_mo_ia,file='cholesky_ia',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ia)
 !
-      open(unit_chol_mo_ab,file='cholesky_ab',status='new',form='unformatted')
+      open(unit_chol_mo_ab,file='cholesky_ab',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ab)
 !
 !     Allocate packed and unpacked Cholesky AO, and 
