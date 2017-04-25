@@ -7,15 +7,22 @@ module hf_class
    implicit none
 !
    type hartree_fock
+!
       integer(i15)                          :: n_occ
       integer(i15)                          :: n_vir
       integer(i15)                          :: n_mo 
+!
       real(dp), dimension(:,:), allocatable :: mo_coef
       real(dp), dimension(:,:), allocatable :: fock_diagonal
+      real(dp), dimension(:,:), allocatable :: fock_matrix
+!
       real(dp)                              :: nuclear_potential, scf_energy
       type(cholesky_integrals)              :: cholesky
+!
    contains
+!
       procedure                             :: init => init_hartree_fock
+!
    end type hartree_fock
 !
 !  Private submodules and functions
@@ -26,23 +33,40 @@ contains
 !
    subroutine init_hartree_fock(wavefn)
 !
+!!  Initialization of hartree-fock object
+!
+!   Calls read_hf_info - reads MLCC_HF_INFO
+!   Initializes Cholesky vectors  
+!   Allocates Fock matrix and sets it to 0. Fock matrix is constructed in derived types.
+!  
       implicit none
 !
       class(hartree_fock) :: wavefn
 !
-
+!     Initializing HF variables
 !      
       write(unit_output,*) 'Initializing HF...'
       call read_hf_info(wavefn)          
 !
+!     Initializing integral and Cholesky variables
+!  
       write(unit_output,*) 'Initializing Cholesky...'
       call wavefn % cholesky % init (wavefn % mo_coef, wavefn % n_occ, wavefn % n_vir)
+!
+!     Allocate Fock matrix and set to 0
+!
+      call allocator(wavefn % fock_matrix, wavefn % n_mo, wavefn % n_mo)
+      wavefn % fock_matrix = zero
 !
    end subroutine init_hartree_fock
 
    subroutine read_hf_info(wavefn)
 !
+!  Reads MLCC_HF_INFO and initializes HF variables n_occ, n_vir, n_mo, orbital_coef, fock_diagonal
 !
+!  MLCC_HF_INFO is written in the mlcc_write_sirifc subroutine 
+!  and called from wr_sirifc subroutine in siropt module.
+!  
       use workspace
 !
       implicit none
@@ -62,7 +86,7 @@ contains
 !     Read mlcc_hf_info
 !     ---------------------
 !
-      read(unit_identifier_hf,*)  wavefn % n_mo, wavefn % n_occ, n_lambda, wavefn % nuclear_potential, wavefn % scf_energy
+      read(unit_identifier_hf,*) wavefn % n_mo, wavefn % n_occ, n_lambda, wavefn % nuclear_potential, wavefn % scf_energy
 !
 !     Setting n_vir
 !
@@ -85,5 +109,7 @@ contains
 !     ------------------
 !    
       close(unit_identifier_hf)
+!
    end subroutine read_hf_info
+!
 end module hf_class
