@@ -24,33 +24,34 @@ module hf_class
 !
 contains 
 !
-   subroutine init_hartree_fock(hf)
+   subroutine init_hartree_fock(wavefn)
 !
       implicit none
 !
-      class(hartree_fock) :: hf
+      class(hartree_fock) :: wavefn
 !
+
+!      
+      write(unit_output,*) 'Initializing HF...'
+      call read_hf_info(wavefn)          
 !
-      call read_hf_info(hf)        
-!
-      call hf % cholesky % init (hf % mo_coef, hf % n_occ, hf % n_vir)
+      write(unit_output,*) 'Initializing Cholesky...'
+      call wavefn % cholesky % init (wavefn % mo_coef, wavefn % n_occ, wavefn % n_vir)
 !
    end subroutine init_hartree_fock
-!
-   subroutine read_hf_info(hf)
-!
+
+   subroutine read_hf_info(wavefn)
 !
 !
       use workspace
 !
       implicit none
 !
-      class(hartree_fock) :: hf
+      class(hartree_fock) :: wavefn
       integer(i15)        :: unit_identifier_hf = -1 
       integer(i15)        :: n_lambda
       integer(i15)        :: i,j
-!      
-!     
+!
 !     Open mlcc_hf_info
 !     ---------------------
 !
@@ -61,29 +62,28 @@ contains
 !     Read mlcc_hf_info
 !     ---------------------
 !
-      read(unit_identifier_hf,*)  hf % n_mo, hf % n_occ, n_lambda, hf % nuclear_potential, hf % scf_energy
+      read(unit_identifier_hf,*)  wavefn % n_mo, wavefn % n_occ, n_lambda, wavefn % nuclear_potential, wavefn % scf_energy
 !
 !     Setting n_vir
 !
-      hf % n_vir          = hf % n_mo - hf % n_occ
+      wavefn % n_vir = wavefn % n_mo - wavefn % n_occ
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
-      call allocator(hf % fock_diagonal,hf % n_mo,1)
-      hf % fock_diagonal = zero
+      call allocator(wavefn % fock_diagonal, wavefn % n_mo,1)
+      wavefn % fock_diagonal = zero
 !      
-      call allocator(hf % mo_coef,n_lambda,1)
-      hf % mo_coef = zero
+      call allocator(wavefn % mo_coef,n_lambda,1)
+      wavefn % mo_coef = zero
 !
 !     Read in Fock diagonal and coefficients
 !
-      read(unit_identifier_hf,*) (hf % fock_diagonal(i,1),i=1,hf % n_mo)
-      read(unit_identifier_hf,*) (hf % mo_coef(i,1),i=1,n_lambda) 
+      read(unit_identifier_hf,*) (wavefn % fock_diagonal(i,1),i=1,wavefn % n_mo)
+      read(unit_identifier_hf,*) (wavefn % mo_coef(i,1),i=1,n_lambda) 
 !
 !     Done with file
 !     ------------------
 !    
       close(unit_identifier_hf)
-!
    end subroutine read_hf_info
 end module hf_class
