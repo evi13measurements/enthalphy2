@@ -7,19 +7,19 @@ module mlcc_oo_utilities
    use mlcc_types
 !
 contains
-   integer function index_packed(i,j)
+   integer(i15) function index_packed(i,j)
 !
 !     Purpose: Returns packed index (ij) for symmetric arrays
 ! 
       implicit none
 !
-      integer, intent(in) :: i,j
+      integer(i15), intent(in) :: i,j
 !
       index_packed = (max(i,j)*(max(i,j)-3)/2) + i + j
 !
    end function index_packed
 !
-   integer function packed_size(N)
+   integer(i15) function packed_size(N)
 !
 !     Purpose: Returns size of packed vectors alpha >= beta
 !   
@@ -40,8 +40,8 @@ contains
 !
       real(dp),dimension(:,:),intent(in)     :: packed
       real(dp),dimension(:,:)                :: unpacked
-      integer, intent(in)                    :: N
-      integer                                :: i=0,j=0
+      integer(i15), intent(in)               :: N
+      integer(i15)                           :: i=0,j=0
 !
       do i=1,N
          do j=1,N
@@ -61,8 +61,8 @@ contains
 !
       real(dp),dimension(:,:)              :: packed
       real(dp),dimension(:,:),intent(in)   :: unpacked
-      integer                              :: i=0,j=0
-      integer, intent(in)                  :: N
+      integer(i15)                         :: i=0,j=0
+      integer(i15), intent(in)             :: N
 !
       do i = 1,N
          do j = 1,N
@@ -72,25 +72,25 @@ contains
 !
    end subroutine
 !
-   integer function index_three(p,q,r,dim_p,dim_q)
+   integer(i15) function index_three(p,q,r,dim_p,dim_q)
 !
 !     Purpose: Returns the compound index (pqr)
 !
       implicit none
 !
-      integer, intent(in) :: p,q,r,dim_p,dim_q
+      integer(i15), intent(in) :: p,q,r,dim_p,dim_q
 !
       index_three = dim_p*(dim_q*(r-1)+q-1)+p
 !
    end function index_three
 !
-   integer function index_two(p,q,dim_p)
+   integer(i15) function index_two(p,q,dim_p)
 !
 !     Purpose: Returns the compound index (pq)
 !
       implicit none
 !
-      integer, intent(in) :: p,q,dim_p
+      integer(i15), intent(in) :: p,q,dim_p
 !
       index_two = dim_p*(q-1)+p
 !
@@ -113,8 +113,8 @@ contains
       implicit none
 !
 !     
-      integer, intent(in)           :: required, available, batch_dimension
-      integer                       :: max_batch_length,n_batch
+      integer(i15), intent(in)           :: required, available, batch_dimension
+      integer(i15)                       :: max_batch_length,n_batch
 !
       if (required .lt. available) then
          n_batch = 1
@@ -149,8 +149,8 @@ contains
 !
       implicit none 
 !
-      integer :: first,last
-      integer, intent(in) :: batch_number,max_batch_length,batch_dimension
+      integer(i15) :: first,last
+      integer(i15), intent(in) :: batch_number,max_batch_length,batch_dimension
 !
       first = 1 + (batch_number-1)*max_batch_length
       last  = min(max_batch_length+(batch_number-1)*max_batch_length,batch_dimension)
@@ -164,9 +164,9 @@ contains
 !
       implicit none
 !
-      integer :: p=0,q=0,pq=0
+      integer(i15) :: p=0,q=0,pq=0
 !
-      integer, intent(in)  :: dim_1,dim_2
+      integer(i15), intent(in)  :: dim_1,dim_2
       real(dp), intent(in) :: vec(dim_1,dim_2)
 !
       do q = 1,dim_2

@@ -25,7 +25,7 @@ contains
 !
       call  generate_unit_identifier(unit_output)
 !
-      open(unit=unit_output,file='mlcc.out',status='new',form='formatted')
+      open(unit=unit_output,file='mlcc.out',status='unknown',form='formatted')
       close(unit=unit_output)
 !
    end subroutine init_output_file

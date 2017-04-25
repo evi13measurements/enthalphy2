@@ -103,6 +103,7 @@ C
 C------------------------
 #include "dfterg.h"
 #include "dftcom.h"
+#include "mlcc_mod.h"
 C ---
 C
 C *** local:
@@ -1206,7 +1207,7 @@ C        ... note: GORB will in a normal macro iteration be
 C                  overwritten in SIRNEO or SIRNR, but none of
 C                  these routines have been called after GRAD
 C                  when the wave function is converged.
-C
+C     
       END IF
 C
 C     Transform integrals for abacus or response or
@@ -2610,6 +2611,7 @@ C
 #include "r12int.h"
 #include "qmmm.h"
 #include "gnrinf.h"
+#include "mlcc_mod.h"
 C
       LOGICAL     FNDLAB, ORBHES, LGLOCAL, EXP1VL, TOFILE
 C
@@ -3189,6 +3191,16 @@ C *** end of subroutine WR_SIRIFC
 C
       WRITE (LUSIFC) LAB123,LABEOD
       CALL GPCLOSE(LUSIFC,'KEEP')
+C
+C     MLCC
+C
+      write(lupri,*)'Entering mlcc_rewr_sirifc', MLCCCH
+      if (MLCCCH) then
+         call mlcc_rewr_sirifc(wrk,lfree)
+      endif
+C
+C
+C
       CALL QEXIT('WR_SIRIFC')
       RETURN
       END
