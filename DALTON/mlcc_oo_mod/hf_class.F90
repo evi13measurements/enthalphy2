@@ -23,51 +23,45 @@ module hf_class
 !
 contains 
 !
-   subroutine init_hartree_fock(hf)
+   subroutine init_hartree_fock(wavefn)
 !
       implicit none
 !
-      class(hartree_fock) :: hf
+      class(hartree_fock) :: wavefn
 !
-      if (hf % hf_interface_program .eq. 'DALTON    ') then
+      write(unit_output,*) 'Initializing HF...'
 !
-         call read_sirius(hf)        
-!
-      endif
+      wavefn % hf_interface_program = 'DALTON    '
+      if (wavefn % hf_interface_program .eq. 'DALTON    ') call read_sirius(wavefn)        
 !
 !     Allocate the MO coefficients (move this to read_sirius)
 !
-      call allocator(hf % mo_coef, hf % n_mo, hf % n_mo) 
-      hf % mo_coef = zero
+      call allocator(wavefn % mo_coef, wavefn % n_mo, wavefn % n_mo) 
+      wavefn % mo_coef = zero
 !
-      call hf % cholesky % init (hf % mo_coef, hf % n_occ, hf % n_vir)
+      write(unit_output,*) 'Initializing Cholesky...'
+      call wavefn % cholesky % init (wavefn % mo_coef, wavefn % n_occ, wavefn % n_vir)
 !
    end subroutine init_hartree_fock
 !
-   subroutine read_sirius(hf)
-!
-!
+   subroutine read_sirius(wavefn)
 !
       use workspace
 !
       implicit none
 !
-      class(hartree_fock) :: hf
+      class(hartree_fock) :: wavefn
       integer(i15)        :: unit_identifier_sirius = -1 
       integer(i15)        :: idummy = 0
       integer(i15)        :: n_symmetries, n_basis_sym, n_orbitals_sym
       integer(i15)        :: i,j
-!      
 !     
-!     Open Sirius Fock file
-!     ---------------------
-!
+!     Open SIRIUS file
+!     
+      call generate_unit_identifier(unit_identifier_sirius)
 
       open(unit=unit_identifier_sirius,file='mlcc_sirius',status='old',form='unformatted')
       rewind(unit_identifier_sirius)
-
-     
-      call generate_unit_identifier(unit_identifier_sirius)
 !
    end subroutine read_sirius
 end module hf_class
