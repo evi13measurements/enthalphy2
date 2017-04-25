@@ -1,12 +1,12 @@
 subroutine mlcc_oo_driver
 !  
-   use ccs_class
+   use ccsd_class
    use workspace
    use input_output
 !
    implicit none
 !
-   type(cc_singles) :: ccs
+   type(cc_singles_doubles) :: ccsd
 !
 !  Set up workspace controller
 !
@@ -19,7 +19,7 @@ subroutine mlcc_oo_driver
 !
 !  Run the calculation
 !
-   call ccs % init
-   call ccs % drv
+   call ccsd % init
+   call ccsd % drv
 !
 end subroutine mlcc_oo_driver
