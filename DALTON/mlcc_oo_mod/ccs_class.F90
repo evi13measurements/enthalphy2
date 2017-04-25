@@ -25,16 +25,14 @@ contains
 !
       class(cc_singles) :: wavefn
 !
-      write(unit_output,*) 'Initializing CCS...'
+      write(unit_output,*) 'In init_cc_singles'
 !
 !     Initialize the Hartree-Fock-specific quantities
 !
-      write(unit_output,*) '- Calling HF initializer'
       call init_hartree_fock(wavefn)
 !
 !     Calculate the number of singles amplitudes
 !
-      write(unit_output,*) '- Initializing singles amplitudes'
       wavefn % n_t1am = (wavefn % n_occ)*(wavefn % n_vir) 
 !
 !     Allocate the singles amplitudes and set to zero
@@ -50,7 +48,7 @@ contains
 !
       class(cc_singles) :: wavefn
 !
-      write(unit_output,*) 'CCS driver has begun...'
+      write(unit_output,*) 'In drv_cc_singles'
 !
    end subroutine drv_cc_singles
 !

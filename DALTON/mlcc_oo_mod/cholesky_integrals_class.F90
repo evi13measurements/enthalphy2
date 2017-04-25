@@ -28,7 +28,8 @@ contains
       integer(i15) :: n_occ,n_vir 
       real(dp), dimension(n_occ+n_vir,n_occ+n_vir) :: mo_coef
 !
-      write(unit_output,*) 'Initializing Cholesky integrals'
+      write(unit_output,*) 'In init_cholesky_integrals'
+      call flshfo(unit_output)
 !
 !     Read the Cholesky vectors from file (in the AO basis),
 !     transform them to the MO basis, and save to file
