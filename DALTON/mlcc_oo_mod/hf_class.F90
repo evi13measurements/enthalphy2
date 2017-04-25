@@ -17,7 +17,10 @@ module hf_class
 !
       real(dp), dimension(:,:), allocatable :: mo_coef
       real(dp), dimension(:,:), allocatable :: fock_diagonal
-      real(dp), dimension(:,:), allocatable :: fock_matrix
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ij
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ia
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ai
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ab
 !
       real(dp)                              :: nuclear_potential, scf_energy
       type(cholesky_integrals)              :: cholesky
@@ -59,9 +62,17 @@ contains
 !
 !     Allocate Fock matrix and set to 0
 !
-      write(unit_output,*) 'Allocate Fock matrix...'
-      call allocator(wavefn % fock_matrix, wavefn % n_mo, wavefn % n_mo)
-      wavefn % fock_matrix = zero
+      write(unit_output,*) 'Allocate Fock matrix blocks...'
+      call allocator(wavefn % fock_matrix_ij, wavefn % n_occ, wavefn % n_occ)
+      call allocator(wavefn % fock_matrix_ia, wavefn % n_occ, wavefn % n_vir)
+      call allocator(wavefn % fock_matrix_ai, wavefn % n_vir, wavefn % n_occ)
+      call allocator(wavefn % fock_matrix_ab, wavefn % n_vir, wavefn % n_vir)
+
+!
+      wavefn % fock_matrix_ij = zero
+      wavefn % fock_matrix_ia = zero
+      wavefn % fock_matrix_ai = zero
+      wavefn % fock_matrix_ab = zero
 !
    end subroutine init_hartree_fock
 
@@ -94,7 +105,6 @@ contains
 !     Read mlcc_hf_info
 !     ---------------------
 !  
-!
       read(unit_identifier_hf,*) wavefn % n_mo, wavefn % n_occ, n_lambda, wavefn % nuclear_potential, wavefn % scf_energy
 !
 !     Setting n_vir
