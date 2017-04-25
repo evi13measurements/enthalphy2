@@ -1,11 +1,16 @@
 subroutine mlcc_oo_driver
 !  
    use ccs_class
+   use workspace
    use input_output
 !
    implicit none
 !
    type(cc_singles) :: ccs
+!
+!  Set up workspace controller
+!
+   call work_init
 !
 !  Create & open the main output file, used throughout the program
 !
