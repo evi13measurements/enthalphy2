@@ -1,5 +1,11 @@
       subroutine mlcc_rewr_sirifc(work,lwork)
 C
+C     Writing info for mlcc calculation to MLCC_HF_INFO
+C  
+C     Date:    April 2017
+C     Authors: Henrik Koch, Rolf H. Myhre, 
+C              Sarai D. Folkestad, Eirik F. Kjønstad
+C
 #include "implicit.h"
 #include "priunit.h"
 C
@@ -35,12 +41,6 @@ C
 C      
       if (n_symmetries /= 1)
      &  call quit('error in mlcc: not implemented with symmetry')
-C
-C     Test prints
-C
-C     write(*,*)n_symmetries, n_orbitals, n_basis, n_lambda, n_occ,
-C    &            n_orbitals_sym, n_basis_sym, 
-C    &            nuclear_potential, scf_energy
 C     
 C     Memmory handling
 C

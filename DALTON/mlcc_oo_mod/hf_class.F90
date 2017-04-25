@@ -1,5 +1,7 @@
 module hf_class
 !
+!  Date:    April 2017
+!  Authors: Sarai D. Folkestad and Eirik F. Kjønstad
    use workspace
    use cholesky_integrals_class
    use input_output
@@ -33,11 +35,11 @@ contains
 !
    subroutine init_hartree_fock(wavefn)
 !
-!!  Initialization of hartree-fock object
+!  Initialization of Hartree-Fock object
 !
-!   Calls read_hf_info - reads MLCC_HF_INFO
-!   Initializes Cholesky vectors  
-!   Allocates Fock matrix and sets it to 0. Fock matrix is constructed in derived types.
+!  Calls read_hf_info - reads MLCC_HF_INFO
+!  Initializes Cholesky vectors  
+!  Allocates Fock matrix and sets it to 0. Fock matrix is constructed in derived types.
 !  
       implicit none
 !
@@ -55,12 +57,16 @@ contains
 !
 !     Allocate Fock matrix and set to 0
 !
+      write(unit_output,*) 'Allocate Fock matrix...'
       call allocator(wavefn % fock_matrix, wavefn % n_mo, wavefn % n_mo)
       wavefn % fock_matrix = zero
 !
    end subroutine init_hartree_fock
 
    subroutine read_hf_info(wavefn)
+!
+!  Date:    April 2017
+!  Authors: Sarai D. Folkestad and Eirik F. Kjønstad
 !
 !  Reads MLCC_HF_INFO and initializes HF variables n_occ, n_vir, n_mo, orbital_coef, fock_diagonal
 !
@@ -80,7 +86,7 @@ contains
 !     ---------------------
 !
       call generate_unit_identifier(unit_identifier_hf)
-      open(unit=unit_identifier_hf,file='mlcc_hf_info',status='old',form='unformatted')
+      open(unit=unit_identifier_hf,file='mlcc_hf_info',status='old',form='formatted')
       rewind(unit_identifier_hf)
 !
 !     Read mlcc_hf_info
@@ -90,7 +96,7 @@ contains
 !
 !     Setting n_vir
 !
-      wavefn % n_vir = wavefn % n_mo - wavefn % n_occ
+      wavefn % n_vir = (wavefn % n_mo) - (wavefn % n_occ)
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
