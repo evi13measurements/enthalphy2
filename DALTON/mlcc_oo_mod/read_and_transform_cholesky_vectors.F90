@@ -47,9 +47,6 @@
 !
       read(unit_chol_ao,*) chol%n_ao, chol%n_J
 !
-      write(unit_output,*) 'Number of atomic orbitals: ', chol%n_ao
-      write(unit_output,*) 'Number of Cholesky vectors:', chol%n_J
-!
 !     Open files for MO Cholesky vectors 
 ! 
       call generate_unit_identifier(unit_chol_mo_ij)

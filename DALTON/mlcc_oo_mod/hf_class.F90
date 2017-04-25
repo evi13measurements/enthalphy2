@@ -4,6 +4,7 @@ module hf_class
 !  Authors: Sarai D. Folkestad and Eirik F. Kjønstad
    use workspace
    use cholesky_integrals_class
+   use mlcc_types
    use input_output
 !
    implicit none
@@ -45,14 +46,15 @@ contains
 !
       class(hartree_fock) :: wavefn
 !
+      write(unit_output,*) 'In init_hartree_fock'
+      call flshfo(unit_output)
+!
 !     Initializing HF variables
-!      
-      write(unit_output,*) 'Initializing HF...'
-      call read_hf_info(wavefn)          
+!
+      call read_hf_info(wavefn)        
 !
 !     Initializing integral and Cholesky variables
 !  
-      write(unit_output,*) 'Initializing Cholesky...'
       call wavefn % cholesky % init (wavefn % mo_coef, wavefn % n_occ, wavefn % n_vir)
 !
 !     Allocate Fock matrix and set to 0
@@ -91,25 +93,27 @@ contains
 !
 !     Read mlcc_hf_info
 !     ---------------------
+!  
 !
       read(unit_identifier_hf,*) wavefn % n_mo, wavefn % n_occ, n_lambda, wavefn % nuclear_potential, wavefn % scf_energy
 !
 !     Setting n_vir
 !
       wavefn % n_vir = (wavefn % n_mo) - (wavefn % n_occ)
+
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
       call allocator(wavefn % fock_diagonal, wavefn % n_mo,1)
       wavefn % fock_diagonal = zero
-!      
+!
       call allocator(wavefn % mo_coef,n_lambda,1)
       wavefn % mo_coef = zero
 !
 !     Read in Fock diagonal and coefficients
 !
       read(unit_identifier_hf,*) (wavefn % fock_diagonal(i,1),i=1,wavefn % n_mo)
-      read(unit_identifier_hf,*) (wavefn % mo_coef(i,1),i=1,n_lambda) 
+      read(unit_identifier_hf,*) (wavefn % mo_coef(i,1),i=1,n_lambda)   
 !
 !     Done with file
 !     ------------------

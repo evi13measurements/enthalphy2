@@ -17,7 +17,7 @@ module workspace
 !
 contains
 !
-   subroutine work_init(mem)
+   subroutine work_init
 !
 !     Work initilization 
 !     Written by Henrik Koch, Rolf H. Myhre, Eirik Kjønstad and Sarai Folkestad, Jan 2017
@@ -25,8 +25,6 @@ contains
 !     Sets up memory management
 !
       implicit none
-!  
-      integer, intent(in) :: mem
 !  
       work_length  = mem
       work_remains = mem
