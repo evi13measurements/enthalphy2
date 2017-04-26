@@ -15,6 +15,7 @@ module ccs_class
       procedure :: init             => init_cc_singles
       procedure :: drv              => drv_cc_singles
       procedure :: fock_constructor => fock_constructor_cc_singles
+      procedure :: get_cholesky_ia  => get_cholesky_ia
 !
    end type cc_singles
 !
@@ -189,7 +190,7 @@ contains
 !
 !     Read cholesky vectors
 !
-      call get_cholesky_ij(L_ij_J)
+!      call get_cholesky_ij(L_ij_J)
 !
       call dgemm('N','T',                  &
                   n_oo,                    &
@@ -234,7 +235,7 @@ contains
 !
 !     Reading Cholesky vector L_ia_J
 !
-      call get_cholesky_ia(L_ia_J)
+!      call get_cholesky_ia(L_ia_J)
 !
 !     g_ia_jk
 !
@@ -263,7 +264,7 @@ contains
 !
 !     Reading Cholesky vector L_ai_J
 !
-      call get_cholesky_ai(L_ai_J)
+!      call get_cholesky_ai(L_ai_J)
 !
 !     g_ai_jk
 !
@@ -345,7 +346,7 @@ contains
 !
 !        Read Cholesky vectors
 !
-         call get_cholesky_ab(L_ab_J,batch_start,batch_end,(wavefn%n_vir)*batch_length,.false.)
+!         call get_cholesky_ab(L_ab_J,batch_start,batch_end,(wavefn%n_vir)*batch_length,.false.)
 !
 !        g_ab_ij=sum_J L_ab_J* L_ij_J
 !
@@ -384,8 +385,8 @@ contains
 !
 !     Reading Cholesky vector L_ia_J and L_ai_J
 !
-      call get_cholesky_ia(L_ia_J)
-      call get_cholesky_ai(L_ai_J)
+      call wavefn % get_cholesky_ia(L_ia_J,n_ov,wavefn%cholesky%n_J) ! GAH!
+!      call get_cholesky_ai(L_ai_J)
 !
       call dgemm('N','T',              &
                   n_ov,                &
@@ -529,5 +530,17 @@ contains
    call deallocator(x,n_orbitals,n_orbitals)
 !
    end subroutine h1mo_T1
+!
+   subroutine get_cholesky_ia(wavefn,L_ia_J,n_ov,n_J)
+! 
+      implicit none 
+!
+      class(cc_singles) :: wavefn
+!
+      integer(i15) :: n_ov,n_J
+!
+      real(dp), dimension(n_ov,n_J) :: L_ia_J 
+!
+   end subroutine get_cholesky_ia
 !
 end module ccs_class

@@ -535,7 +535,6 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_oo_mod/input_output.F90
     DALTON/mlcc_oo_mod/mlcc_oo_utilities.F90
     DALTON/mlcc_oo_mod/workspace.F90
-    DALTON/mlcc_oo_mod/read_and_transform_cholesky_vectors.F90
     DALTON/pdpack/arhpack.F
     DALTON/pdpack/eispack.F
     DALTON/pdpack/jacobi.F

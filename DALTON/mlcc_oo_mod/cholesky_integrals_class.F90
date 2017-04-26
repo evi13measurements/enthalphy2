@@ -14,7 +14,7 @@ module cholesky_integrals_class
    contains
 !	
       procedure :: init => init_cholesky_integrals
-      procedure :: get_ia => get_ia_cholesky_integrals
+      procedure :: read_ia => read_ia_cholesky_integrals
 !
    end type cholesky_integrals
 !
@@ -43,18 +43,22 @@ contains
 !
    end subroutine init_cholesky_integrals
 !
-   subroutine get_ia_cholesky_integrals(chol)
+   subroutine read_ia_cholesky_integrals(chol,L_ia_J,n_ov)
 !
-!     Get IA Cholesky Integrals 
+!     Read IA Cholesky Integrals 
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 25 Apr 2017
 !
-!     Returns the (change to read!! ... Read belongs to Cholesky; get_t1 belongs to ccs!!)
+!     Reads the Cholesky vector L_ia^J from file
+!     and places it in the incoming vector L_ia_J
 !
       implicit none 
 !
       class(cholesky_integrals) :: chol 
 !
-   end subroutine get_ia_cholesky_integrals
+      integer(i15) :: n_ov ! n_occ * n_vir
+      real(dp), dimension(n_ov,chol%n_J) :: L_ia_J
+!
+   end subroutine read_ia_cholesky_integrals
 !
    subroutine read_and_transform_cholesky_vectors(chol,mo_coef,n_occ,n_vir)
 !
@@ -65,7 +69,6 @@ contains
 !     to the MO basis, and saves the MO vectors to file
 !
       use input_output
-!      use cholesky_integrals_class
       use workspace
       use mlcc_oo_utilities
 !

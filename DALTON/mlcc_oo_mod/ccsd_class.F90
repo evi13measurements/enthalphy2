@@ -32,7 +32,8 @@ contains
 !
       call init_cc_singles(wavefn)
 !
-! Stuff...  
+! Stuff... First: set the perturbative MP2 amplitudes 
+!      ... Then:  calculate the MP2 energy  
 !
    end subroutine init_cc_singles_doubles
 !
