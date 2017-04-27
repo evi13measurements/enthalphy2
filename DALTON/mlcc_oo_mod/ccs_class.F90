@@ -7,15 +7,17 @@ module ccs_class
 !
    type, extends(hartree_fock) :: cc_singles
 !
-      integer(i15) :: n_t1am = 0
-      real(dp), dimension(:,:), allocatable :: t1am ! Singles amplitudes
+      integer(i15), private                          :: n_t1am = 0 ! Number of singles amplitudes
+      real(dp), dimension(:,:), allocatable, private :: t1am       ! Singles amplitudes
 !
    contains 
 !
-      procedure :: init             => init_cc_singles
-      procedure :: drv              => drv_cc_singles
-      procedure :: fock_constructor => fock_constructor_cc_singles
-      procedure :: get_cholesky_ia  => get_cholesky_ia
+      procedure, public  :: init               => init_cc_singles
+      procedure, public  :: drv                => drv_cc_singles
+!
+      procedure, private :: fock_constructor   => fock_constructor_cc_singles
+      procedure, private :: get_cholesky_ia    => get_cholesky_ia
+      procedure, private :: initialize_singles => initialize_singles_cc_singles
 !
    end type cc_singles
 !
@@ -33,18 +35,17 @@ contains
 !
       write(unit_output,*) 'In init_cc_singles'
 !
-!     Initialize the Hartree-Fock-specific quantities
+!     Read Hartree-Fock info from SIRIUS
 !
-      call init_hartree_fock(wavefn)
+      wavefn % read_hf_info
 !
-!     Calculate the number of singles amplitudes
+!     Read Cholesky AO integrals and transform to MO basis
 !
-      wavefn % n_t1am = (wavefn % n_occ)*(wavefn % n_vir) 
+      wavefn % read_transform_cholesky
 !
-!     Allocate the singles amplitudes and set to zero
+!     Initialize singles amplitudes and associated attributes
 !
-      call allocator ( wavefn % t1am, wavefn % n_t1am, 1)
-      wavefn % t1am = zero
+      wavefn % initialize_singles
 !
    end subroutine init_cc_singles
 !
@@ -57,6 +58,23 @@ contains
       write(unit_output,*) 'In drv_cc_singles'
 !
    end subroutine drv_cc_singles
+!
+   subroutine initialize_singles_cc_singles(wavefn)
+!
+      implicit none 
+!
+      class(cc_singles) :: wavefn
+!
+!     Calculate the number of singles amplitudes
+!
+      wavefn % n_t1am = (wavefn % n_occ)*(wavefn % n_vir) 
+!
+!     Allocate the singles amplitudes and set to zero
+!
+      call allocator ( wavefn % t1am, wavefn % n_t1am, 1)
+      wavefn % t1am = zero
+!
+   subroutine initialize_singles_cc_singles
 !
    subroutine fock_constructor_cc_singles(wavefn)
 !
