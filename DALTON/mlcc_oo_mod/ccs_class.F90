@@ -78,7 +78,6 @@ contains
 !
    subroutine fock_constructor_cc_singles(wavefn)
 !
-      use cholesky_integrals_class
       use mlcc_oo_utilities
       use workspace
 !
@@ -111,8 +110,8 @@ contains
 !
 !     Allocate one-electron integrals in MO basis
 !
-      call allocator(h1mo,wavefn % n_mo,wavefn % n_mo)
-      call allocatable(fock_matrix,wavefn % n_mo,wavefn % n_mo)
+      call allocator(h1mo, wavefn % n_mo, wavefn % n_mo)
+      call allocator(fock_matrix, wavefn % n_mo, wavefn % n_mo)
       h1mo = zero
 !
 !
@@ -122,7 +121,7 @@ contains
 !
 !     Allocate for one-electron ao integrals
 !
-      n_ao_sq_packed = packed_size(wavefn % cholesky % n_ao)
+      n_ao_sq_packed = packed_size(wavefn % n_ao)
       call allocator(ao_int,n_ao_sq_packed,1)
 !
 !     Open mlcc_aoint
@@ -141,8 +140,8 @@ contains
 !
 !     Allocate ao fock matrix, add one-electron contributions
 !
-      call allocator(fock_ao, wavefn % cholesky % n_ao, wavefn % cholesky % n_ao)
-      call squareup(ao_int,fock_ao,wavefn % cholesky % n_ao)   
+      call allocator(fock_ao, wavefn % n_ao, wavefn % n_ao)
+      call squareup(ao_int,fock_ao,wavefn % n_ao)   
 !
 !     Deallocation of ao integrals
 !   
@@ -150,32 +149,32 @@ contains
 !
 !     Transform to one-electron part to mo and add to fock_matrix 
 !
-      call allocator(X, wavefn % cholesky % n_ao, wavefn % n_mo)
+      call allocator(X, wavefn % n_ao, wavefn % n_mo)
 !
-      call dgemm('N','N',               &
-                  wavefn%cholesky%n_ao, &
-                  wavefn%n_mo,          &
-                  wavefn%cholesky%n_ao, &
-                  one,                  &
-                  fock_ao,              &
-                  wavefn%cholesky%n_ao, &
-                  wavefn%mo_coef,       &
-                  wavefn%cholesky%n_ao, &
-                  zero,                 &
-                  X,                    &
-                  wavefn%cholesky%n_ao)
+      call dgemm('N','N',         &
+                  wavefn%n_ao,    &
+                  wavefn%n_mo,    &
+                  wavefn%n_ao,    &
+                  one,            &
+                  fock_ao,        &
+                  wavefn%n_ao,    &
+                  wavefn%mo_coef, &
+                  wavefn%n_ao,    &
+                  zero,           &
+                  X,              &
+                  wavefn%n_ao)
 !
-      call dgemm('T','N',               &        
-                  wavefn%n_mo,          &
-                  wavefn%n_mo,          &
-                  wavefn%cholesky%n_ao, &
-                  one,                  &
-                  wavefn%mo_coef,       &
-                  wavefn%cholesky%n_ao, &
-                  X,                    &
-                  wavefn%cholesky%n_ao, &
-                  zero,                 &
-                  h1mo,                 &
+      call dgemm('T','N',         &        
+                  wavefn%n_mo,    &
+                  wavefn%n_mo,    &
+                  wavefn%n_ao,    &
+                  one,            &
+                  wavefn%mo_coef, &
+                  wavefn%n_ao,    &
+                  X,              &
+                  wavefn%n_ao,    &
+                  zero,           &
+                  h1mo,           &
                   wavefn%n_mo)
 ! 
 !     T1-transformation of one-electron integrals in mo basis
@@ -185,8 +184,8 @@ contains
 !
 !     Deallocate intermediate X and fock_ao
 !
-      call deallocator(X,wavefn % cholesky % n_ao, wavefn % n_mo)
-      call deallocator(fock_ao, wavefn % cholesky % n_ao , wavefn % cholesky % n_ao)
+      call deallocator(X,wavefn % n_ao, wavefn % n_mo)
+      call deallocator(fock_ao, wavefn % n_ao , wavefn % n_ao)
 !
 !
 !
@@ -201,7 +200,7 @@ contains
 ! 
       n_oo = (wavefn % n_occ) * (wavefn % n_occ)
 !
-      call allocator(L_ij_J,n_oo, wavefn % cholesky % n_J)
+      call allocator(L_ij_J,n_oo, wavefn % n_J)
       call allocator(g_ij_kl,n_oo,n_oo)
       L_ij_J=zero
       g_ij_kl=zero
@@ -210,17 +209,17 @@ contains
 !
 !      call get_cholesky_ij(L_ij_J)
 !
-      call dgemm('N','T',                  &
-                  n_oo,                    &
-                  n_oo,                    &
-                  wavefn % cholesky % n_J, &
-                  one,                     &
-                  L_ij_J,                  &
-                  n_oo,                    &
-                  L_ij_J,                  &
-                  n_oo,                    &
-                  zero,                    &
-                  g_ij_kl,                 &
+      call dgemm('N','T',     &
+                  n_oo,       &
+                  n_oo,       &
+                  wavefn%n_J, &
+                  one,        &
+                  L_ij_J,     &
+                  n_oo,       &
+                  L_ij_J,     &
+                  n_oo,       &
+                  zero,       &
+                  g_ij_kl,    &
                   n_oo)
 !
 !     Add two-electron contributions to occupied-occupied block
@@ -248,7 +247,7 @@ contains
 !
       n_ov = (wavefn % n_occ) * (wavefn % n_vir)
 !
-      call allocator(L_ia_J,n_ov, wavefn % cholesky % n_J)
+      call allocator(L_ia_J,n_ov, wavefn % n_J)
       call allocator(g_ia_jk,n_ov,n_oo)
 !
 !     Reading Cholesky vector L_ia_J
@@ -257,27 +256,27 @@ contains
 !
 !     g_ia_jk
 !
-      call dgemm('N','T',                  &
-                  n_ov,                    &
-                  n_oo,                    &
-                  wavefn % cholesky % n_J, &
-                  one,                     &
-                  L_ia_J,                  &
-                  n_ov,                    &
-                  L_ij_J,                  &
-                  n_oo,                    &
-                  zero,                    &
-                  g_ia_jk,                 &
+      call dgemm('N','T',     &
+                  n_ov,       &
+                  n_oo,       &
+                  wavefn%n_J, &
+                  one,        &
+                  L_ia_J,     &
+                  n_ov,       &
+                  L_ij_J,     &
+                  n_oo,       &
+                  zero,       &
+                  g_ia_jk,    &
                   n_ov)
 !
 !     Dealllocate L_ia_J
 !
-      call deallocator(L_ia_J,n_ov, wavefn % cholesky % n_J)
+      call deallocator(L_ia_J,n_ov, wavefn % n_J)
 !
 !
 !     Allocation for g_ai_jk 
 !
-      call allocator(L_ai_J,n_ov, wavefn % cholesky % n_J)
+      call allocator(L_ai_J,n_ov, wavefn  % n_J)
       call allocator(g_ai_jk,n_ov,n_oo)
 !
 !     Reading Cholesky vector L_ai_J
@@ -286,22 +285,22 @@ contains
 !
 !     g_ai_jk
 !
-      call dgemm('N','T',              &
-                  n_ov,                &
-                  n_oo,                &
-                  wavefn%cholesky%n_J, &
-                  one,                 &  
-                  L_ai_J,              &
-                  n_ov,                &
-                  L_ij_J,              &
-                  n_oo,                &
-                  zero,                &
-                  g_ai_jk,             &
+      call dgemm('N','T',     &
+                  n_ov,       &
+                  n_oo,       &
+                  wavefn%n_J, &
+                  one,        &  
+                  L_ai_J,     &
+                  n_ov,       &
+                  L_ij_J,     &
+                  n_oo,       &
+                  zero,       &
+                  g_ai_jk,    &
                   n_ov)
 !
 !     Deallocate L_ai_J
 !
-      call deallocator(L_ai_J,n_ov, wavefn % cholesky % n_J)
+      call deallocator(L_ai_J,n_ov, wavefn % n_J)
 !
 !     Adding terms to Fock matrix
 !
@@ -326,8 +325,8 @@ contains
             enddo
          enddo
       enddo
-      call deallocator_n(g_ia_jk,n_ov,n_oo)
-      call deallocator_n(g_ai_jk,n_ov,n_oo)
+      call deallocator(g_ia_jk,n_ov,n_oo)
+      call deallocator(g_ai_jk,n_ov,n_oo)
 !
 !!    Vacant-vacant block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) !!
 !
@@ -341,7 +340,7 @@ contains
 !     Setup of variables needed for batching
 !
       available = get_available()
-      required = 2*(wavefn%n_vir)*(wavefn%n_vir)*(wavefn%cholesky%n_J)*4 + 2*(wavefn%n_vir)*(wavefn%n_occ)*(wavefn%cholesky%n_J)*4
+      required = 2*(wavefn%n_vir)*(wavefn%n_vir)*(wavefn%n_J)*4 + 2*(wavefn%n_vir)*(wavefn%n_occ)*(wavefn%n_J)*4
       call num_batch(required,available,max_batch_length,n_batches,wavefn%n_vir)
 !
       batch_start=1
@@ -359,7 +358,7 @@ contains
 !
 !        Allocation of L_ab_J
 !
-         call allocator(L_ab_J,wavefn%n_vir*batch_length,wavefn%cholesky%n_J)
+         call allocator(L_ab_J,wavefn%n_vir*batch_length,wavefn%n_J)
          L_ab_J=zero
 !
 !        Read Cholesky vectors
@@ -373,10 +372,10 @@ contains
          call dgemm('N','T',                      &
                      (wavefn%n_vir)*batch_length, &
                      n_oo,                        &
-                     wavefn%cholesky%n_J,         &
+                     wavefn%n_J,                  &
                      one,                         &
                      L_ab_J,                      &
-                     wavefn%n_vir*batch_length,   &
+                     (wavefn%n_vir)*batch_length, &
                      L_ij_J,                      &
                      n_oo,                        &
                      one,                         &
@@ -386,43 +385,42 @@ contains
 !
 !        Deallocation of L_ab_J
 !
-         call deallocator(L_ab_J,batch_length*(wavefn%n_vir),wavefn%cholesky%n_J)
+         call deallocator(L_ab_J,batch_length*(wavefn%n_vir),wavefn%n_J)
 !
       enddo ! batching done
 !
 !     Deallocation of L_ij_J
 !
-      call deallocator(L_ij_J,n_oo,wavefn%cholesky%n_J)
+      call deallocator(L_ij_J,n_oo,wavefn%n_J)
 !
 !     Allocate for g_ai_jb
 !
-      call allocator_n(g_ai_jb,n_ov,n_ov)
-      call allocator_n(L_ai_J,n_ov,wavefn%cholesky%n_J)
-      call allocator_n(L_ia_J,n_ov,wavefn%cholesky%n_J)
+      call allocator(g_ai_jb,n_ov,n_ov)
+      call allocator(L_ai_J,n_ov,wavefn%n_J)
+      call allocator(L_ia_J,n_ov,wavefn%n_J)
 !
 !
 !     Reading Cholesky vector L_ia_J and L_ai_J
 !
-      call wavefn % get_cholesky_ia(L_ia_J,n_ov,wavefn%cholesky%n_J) ! GAH!
 !      call get_cholesky_ai(L_ai_J)
 !
-      call dgemm('N','T',              &
-                  n_ov,                &
-                  n_ov,                &
-                  wavefn%cholesky%n_J, &
-                  one,                 &
-                  L_ai_J,              &
-                  n_ov,                &
-                  L_ia_J,              &
-                  n_ov,                &
-                  zero,                &
-                  g_ai_jb,             &
+      call dgemm('N','T',     &
+                  n_ov,       &
+                  n_ov,       &
+                  wavefn%n_J, &
+                  one,        &
+                  L_ai_J,     &
+                  n_ov,       &
+                  L_ia_J,     &
+                  n_ov,       &
+                  zero,       &
+                  g_ai_jb,    &
                   n_ov)
 !
 !     Deallocate L_ia_J
 !
-     call deallocator(L_ia_J,n_ov,wavefn%cholesky%n_J)
-     call deallocator(L_ai_J,n_ov,wavefn%cholesky%n_J)
+     call deallocator(L_ia_J,n_ov,wavefn%n_J)
+     call deallocator(L_ai_J,n_ov,wavefn%n_J)
 !
 !     Calculation of two-electron terms for virtual-virtual blocks
 !
@@ -440,8 +438,8 @@ contains
             enddo
          enddo 
       enddo
-     call deallocator_n(g_ab_ij,n_vv,n_oo)
-     call deallocator_n(g_ai_jb,n_ov,n_ov)
+     call deallocator(g_ab_ij,n_vv,n_oo)
+     call deallocator(g_ai_jb,n_ov,n_ov)
 !
 !     Save the blocks of the Fock matrix in memory (ij,ia,ai,ab)
 !
@@ -548,17 +546,5 @@ contains
    call deallocator(x,n_orbitals,n_orbitals)
 !
    end subroutine h1mo_T1
-!
-   subroutine get_cholesky_ia(wavefn,L_ia_J,n_ov,n_J)
-! 
-      implicit none 
-!
-      class(cc_singles) :: wavefn
-!
-      integer(i15) :: n_ov,n_J
-!
-      real(dp), dimension(n_ov,n_J) :: L_ia_J 
-!
-   end subroutine get_cholesky_ia
 !
 end module ccs_class
