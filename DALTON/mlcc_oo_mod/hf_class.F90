@@ -10,45 +10,55 @@ module hf_class
 !
    type hartree_fock
 !
-      integer(i15) :: n_occ
-      integer(i15) :: n_vir
-      integer(i15) :: n_mo 
-      integer(i15) :: n_J
-      integer(i15) :: n_ao
+      integer(i15), private :: n_occ
+      integer(i15), private :: n_vir
+      integer(i15), private :: n_mo 
+      integer(i15), private :: n_J
+      integer(i15), private :: n_ao
 !
-      real(dp), dimension(:,:), allocatable :: mo_coef
-      real(dp), dimension(:,:), allocatable :: fock_diagonal
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ij
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ia
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ai
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ab
+      real(dp), private, dimension(:,:), allocatable :: mo_coef
+      real(dp), private, dimension(:,:), allocatable :: fock_diagonal
 !
-      real(dp) :: nuclear_potential
-      real(dp) :: scf_energy
+      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ij
+      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ia
+      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ai
+      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ab
+!
+      real(dp), private :: nuclear_potential
+      real(dp), private :: scf_energy
 !
    contains
 !
-      procedure  :: init => init_hartree_fock
+!     Public routines
 !
-      procedure  :: read_cholesky_ij => read_cholesky_ij_hartree_fock
-      procedure  :: read_cholesky_ia => read_cholesky_ia_hartree_fock
-      procedure  :: read_cholesky_ai => read_cholesky_ai_hartree_fock
-      procedure  :: read_cholesky_ab => read_cholesky_ab_hartree_fock
+      procedure, public   :: init => init_hartree_fock
+!
+!     Private routines
+!
+      procedure, private  :: read_cholesky_ij => read_cholesky_ij_hartree_fock
+      procedure, private  :: read_cholesky_ia => read_cholesky_ia_hartree_fock
+      procedure, private  :: read_cholesky_ai => read_cholesky_ai_hartree_fock
+      procedure, private  :: read_cholesky_ab => read_cholesky_ab_hartree_fock
+!
+      procedure, private :: read_hf_info              => read_hf_info_hartree_fock
+      procedure, private :: read_transform_cholesky   => read_transform_cholesky_hartree_fock 
+      procedure, private :: allocate_fock_matrix      => allocate_fock_matrix_hartree_fock
 !
    end type hartree_fock
 !
 !  Private submodules and functions
 !
-   private :: read_hf_info
    private :: read_and_transform_to_mo_cholesky_vectors
 !
 contains 
 !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
-!!!                                   !!!
-!!!  Class subroutines and functions  !!!
-!!!                                   !!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
+!!!!                                          !!!!
+!!!!  Public class subroutines and functions  !!!!
+!!!!                                          !!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
    subroutine init_hartree_fock(wavefn)
 !
@@ -65,35 +75,34 @@ contains
       write(unit_output,*) 'In init_hartree_fock'
       call flshfo(unit_output)
 !
-!     Initializing HF variables
+!     Initializing HF variables by reading MLCC_HF_INFO
 !
-      call read_hf_info(wavefn)        
+      write(unit_output,*) 'Read and HF info...'
+      call flshfo(unit_output)
+      call wavefn % read_hf_info()        
 !
 !     Initializing integral and Cholesky variables
-!  
-      call read_and_transform_to_mo_cholesky_vectors(wavefn)
+!     
+      write(unit_output,*) 'Read and transform Cholesky vectors...'
+      call flshfo(unit_output)      
+      call wavefn % read_and_transform_cholesky()
 !
 !     Allocate Fock matrix and set to 0
 !
       write(unit_output,*) 'Allocate Fock matrix blocks...'
-      call allocator(wavefn % fock_matrix_ij, wavefn % n_occ, wavefn % n_occ)
-      call allocator(wavefn % fock_matrix_ia, wavefn % n_occ, wavefn % n_vir)
-      call allocator(wavefn % fock_matrix_ai, wavefn % n_vir, wavefn % n_occ)
-      call allocator(wavefn % fock_matrix_ab, wavefn % n_vir, wavefn % n_vir)
+      call flshfo(unit_output)
+      call wavefn % allocate_fock_matrix
+      
 
-!
-      wavefn % fock_matrix_ij = zero
-      wavefn % fock_matrix_ia = zero
-      wavefn % fock_matrix_ai = zero
-      wavefn % fock_matrix_ab = zero
-!
    end subroutine init_hartree_fock
 !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
-!!!                                    !!!
-!!!  Private subroutines and functions !!!
-!!!                                    !!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
+!!!!                                           !!!!
+!!!!  Private class subroutines and functions  !!!!
+!!!!                                           !!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 !
    subroutine read_hf_info(wavefn)
 !
@@ -151,7 +160,7 @@ contains
 !
    end subroutine read_hf_info
 !
-  subroutine read_and_transform_to_mo_cholesky_vectors(wavefn)
+  subroutine read_and_transform_cholesky(wavefn)
 !
 !     Read and Transform Cholesky Vectors
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 20 Apr 2017
@@ -282,5 +291,27 @@ contains
       close(unit_chol_mo_ia)
       close(unit_chol_mo_ab)
 !  
-   end subroutine read_and_transform_to_mo_cholesky_vectors
+   end subroutine read_and_transform_cholesky
+!
+   subroutine allocate_fock_matrix_hartree_fock(wavefn)
+!
+      use workspace
+!
+      implicit none
+!  
+      class(hartree_fock) :: wavefn   
+!
+      call allocator(wavefn % fock_matrix_ij, wavefn % n_occ, wavefn % n_occ)
+      call allocator(wavefn % fock_matrix_ia, wavefn % n_occ, wavefn % n_vir)
+      call allocator(wavefn % fock_matrix_ai, wavefn % n_vir, wavefn % n_occ)
+      call allocator(wavefn % fock_matrix_ab, wavefn % n_vir, wavefn % n_vir)
+
+!
+      wavefn % fock_matrix_ij = zero
+      wavefn % fock_matrix_ia = zero
+      wavefn % fock_matrix_ai = zero
+      wavefn % fock_matrix_ab = zero
+!
+   end subroutine allocate_fock_matrix_hartree_fock
+!
 end module hf_class
