@@ -376,17 +376,17 @@ contains
 !
          g_off = index_two(1,batch_start,wfn%n_vir)
 !
-         call dgemm('N','T',                      &
+         call dgemm('N','T',                   &
                      (wfn%n_vir)*batch_length, &
-                     n_oo,                        &
+                     n_oo,                     &
                      wfn%n_J,                  &
-                     one,                         &
-                     L_ab_J,                      &
+                     one,                      &
+                     L_ab_J,                   &
                      (wfn%n_vir)*batch_length, &
-                     L_ij_J,                      &
-                     n_oo,                        &
-                     one,                         &
-                     g_ab_ij(g_off,1),            &
+                     L_ij_J,                   &
+                     n_oo,                     &
+                     one,                      &
+                     g_ab_ij(g_off,1),         &
                      n_vv)
 !
 !
@@ -502,11 +502,11 @@ contains
 !
 !  Create t1, x, and y
 !
-   call allocator(t1, wfn % n_mo, wfn % n_mo)
+   call allocator(t1, wfn%n_mo, wfn%n_mo)
    t1 = zero
 !
-   call allocator(y, wfn % n_mo, wfn % n_mo)
-   call allocator(x, wfn % n_mo, wfn % n_mo)
+   call allocator(y, wfn%n_mo, wfn%n_mo)
+   call allocator(x, wfn%n_mo, wfn%n_mo)
 !
    x = zero
    y = zero
@@ -542,27 +542,27 @@ contains
 !  h1_T1 = x*h1*y^T = x*Z
 !
    call dgemm('N','T',        &
-               wfn % n_mo, &
-               wfn % n_mo, &
-               wfn % n_mo, &
+               wfn % n_mo,    &
+               wfn % n_mo,    &
+               wfn % n_mo,    &
                one,           &
                h1,            &
-               wfn % n_mo, &
+               wfn % n_mo,    &
                y,             &
-               wfn % n_mo, &
+               wfn % n_mo,    &
                zero,          &
                Z,             &
                wfn % n_mo)
 !
    call dgemm('N','N',        &
-               wfn % n_mo, &
-               wfn % n_mo, &
-               wfn % n_mo, &
+               wfn % n_mo,    &
+               wfn % n_mo,    &
+               wfn % n_mo,    &
                one,           &
                x,             &
-               wfn % n_mo, &
+               wfn % n_mo,    &
                Z,             &
-               wfn % n_mo, &
+               wfn % n_mo,    &
                zero,          &
                h1_T1,         &
                wfn % n_mo)
@@ -576,6 +576,13 @@ contains
    end subroutine ham_one_electron_mo_t1_cc_singles
 !
    subroutine get_cholesky_ij_cc_singles(wfn,L_ij_J)
+!
+!  Purpose: Read and T1-transform ia cholesky vectors
+!           L_ij_J_T1 = L_ij_J + sum_a t_aj*L_ia_J
+!
+!  Needed memory for routine: (n_occ*n_vir*n_J*2)
+!
+      use mlcc_oo_utilities
 !
       implicit none 
 !
@@ -599,25 +606,216 @@ contains
 !
       call allocator(L_ia_J,n_ov,wfn%n_J)
       call allocator(L_iJ_a,(wfn%n_occ)*(wfn%n_J),wfn%n_vir)
-
+!
+      L_ia_J = zero
+      L_iJ_a = zero
+!
+!     Read the untransformed Cholesky vectors 
+!
+      call wfn % read_cholesky_ij(L_ij_J)
+      call wfn % read_cholesky_ia(L_ia_J)
+!
+!     Reorder L_ia_J to L_iJ_a 
+!
+      do i = 1,wfn%n_occ
+         do J = 1,wfn%n_J
+            do a = 1,wfn%n_vir
+!              
+!              Needed indices
+!
+               iJ = index_two(i,J,wfn%n_occ)
+               ia = index_two(i,a,wfn%n_occ)
+!
+               L_iJ_a(iJ,a) = L_ia_J(ia,J)
+!
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate L_ia_J
+!
+      call deallocator(L_ia_J,n_ov,wfn%n_J)
+!
+!     Allocate L_iJ_k
+!
+      call allocator(L_iJ_k,(wfn%n_occ)*(wfn%n_J),wfn%n_occ)
+      L_iJ_k=zero
+!
+!     T1-transformation
+!
+      call dgemm('N','N',&
+                  wfn%n_occ*wfn%n_J,&
+                  wfn%n_occ,&
+                  wfn%n_vir,&
+                  one,&
+                  L_iJ_a,&
+                  wfn%n_occ*wfn%n_J,&
+                  wfn%t1am,&
+                  wfn%n_vir,&
+                  zero,&
+                  L_iJ_k,&
+                  wfn%n_occ*wfn%n_J)
+!
+!     Place terms from L_iJ_k into L_ij_J
+!
+      do i = 1,wfn%n_occ
+         do k = 1,wfn%n_occ
+            do J = 1,wfn%n_J
+!              
+!              Needed indices
+!
+               iJ = index_two(i,J,wfn%n_occ)
+               ik = index_two(i,k,wfn%n_occ)
+!
+               L_ij_J(ik,J) = L_ij_J(ik,J)+L_iJ_k(iJ,k)
+!
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate L_iJ_k and L_iJ_a
+!
+      call deallocator(L_iJ_k,wfn%n_occ*wfn%n_J,wfn%n_occ)
+      call deallocator(L_iJ_a,wfn%n_occ*wfn%n_J,wfn%n_vir)
+!    
    end subroutine get_cholesky_ij_cc_singles
 !
    subroutine get_cholesky_ia_cc_singles(wfn,L_ia_J)
 !
+!  Purpose: Read and T1-transform ia cholesky vectors
+!           L_ia_J_T1 = L_ia_J => only reading
+!
       implicit none 
 !
       class(cc_singles) :: wfn
 !
-      real(dp), dimension((wfn % n_occ)*(wfn % n_vir), wfn % n_J) :: L_ia_J
+      real(dp), dimension((wfn%n_occ)*(wfn%n_vir), wfn%n_J) :: L_ia_J
+!
+      call wfn % read_cholesky_ia(L_ia_J)
 !
    end subroutine get_cholesky_ia_cc_singles
 !
-   subroutine get_cholesky_ai_cc_singles(wfn)
+   subroutine get_cholesky_ai_cc_singles(wfn,L_ai_J)
+!
+!  Purpose: Read and T1-transform cholesky_ai vectors
+!           L_ai_J_T1 = L_ia_J - sum_j t_aj*L_ji_J + sum_b t_bi*L_ab_J
+!                       - sum_(bj)t_aj*t_bi*L_jb_J
+!
+!  Required memory: 2*n_vir*n_J*batch_length + n_vir*n_occ*n_J
 !
       implicit none 
 !
       class(cc_singles) :: wfn
 !
+      real(dp), dimension((wfn%n_vir)*(wfn%n_occ),wfn%n_J) :: L_ai_J 
+!
+      logical :: reorder ! Reorder or not, when reading Cholesky AB 
+!
+      integer(i15) :: required=0,available=0,max_batch_length=0,n_batch=0,L_off=0
+      integer(i15) :: a_batch=0,batch_start=0,batch_end=0,batch_length=0
+      integer(i15) :: a=0,b=0,J=0,i=0,ai=0,Ja=0,ba=0,k=0,ik=0,iJ=0,kb=0,kJ=0
+!
+      real(dp), dimension(:,:), allocatable  :: L_ba_J
+      real(dp), dimension(:,:), allocatable  :: L_Ja_b
+      real(dp), dimension(:,:), allocatable  :: L_Ja_i
+      real(dp), dimension(:,:), allocatable  :: L_ik_J
+      real(dp), dimension(:,:), allocatable  :: L_k_iJ
+      real(dp), dimension(:,:), allocatable  :: L_a_iJ
+      real(dp), dimension(:,:), allocatable  :: L_kJ_b
+      real(dp), dimension(:,:), allocatable  :: L_kJ_i
+      real(dp), dimension(:,:), allocatable  :: L_kb_J
+!
+!     Read L_ai^J from file 
+!
+      call wfn % read_cholesky_ai(L_ai_J)
+!
+!!                         !!
+!!    L_ab_J contributions !!
+!!                         !!
+!
+!
+!     Allocate L_Ja_i
+!
+      call allocator(L_Ja_i,(wfn%n_J)*(wfn%n_vir),wfn%n_occ)
+      L_Ja_i=zero
+!
+!     Set batching variables 
+!
+      required = 2*(wfn%n_vir)**2*(wfn%n_J)*4
+      available = get_available()
+      max_batch_length = 0
+      n_batch = 0
+      a_batch = 0
+      batch_length = 0
+      batch_start = 0
+      batch_end = 0
+!
+!     Calculate the number of batches 
+!
+      call num_batch(required,available,max_batch_length,n_batch,wfn%n_vir)
+!
+      do a_batch = 1,n_batch
+!
+!        Get start, end and length of batch
+!
+         call batch_limits(batch_start,batch_end,a_batch,max_batch_length,wfn%n_vir)
+         batch_length = batch_end-batch_start + 1
+!
+!        Allocate L_ab_J and L_Ja_b
+!
+         call allocator(L_ba_J,(wfn%n_vir)*batch_length,wfn%n_J) ! L_ab^J = L_ba_J(ba,J)
+         call allocator(L_Ja_b,batch_length*(wfn%n_J),wfn%n_vir)
+!
+         L_ba_J = zero
+         L_Ja_b = zero 
+!
+!        Read ab Cholesky vectors, batching over a
+! 
+         reorder = .true.
+         call wfn % read_cholesky_ab(L_ba_J,batch_start,batch_end,&
+                                     (wfn%n_vir)*batch_length,reorder)
+!
+!        Reorder
+!
+         do a = 1,batch_length
+            do b = 1,wfn%n_vir
+               do J = 1,wfn%n_J
+!
+!                 Needed indices
+!
+                  ba=index_two(b,a,wfn%n_vir)
+                  Ja=index_two(J,a,wfn%n_J)
+!
+                  L_Ja_b(Ja,b)=L_ba_J(ba,J) ! L_ab^J
+!
+               enddo
+            enddo
+         enddo         
+!
+!        sum_b L_Ja_b*t_b_i = L_Ja_i 
+!        
+         L_off=index_two(1,batch_start,wfn%n_J)
+!
+         call dgemm('N','N',                 &
+                     batch_length*wfn%n_J,   &
+                     wfn%n_occ,              &
+                     wfn%n_vir,              &
+                     one,                    &
+                     L_Ja_b,                 &
+                     batch_length*(wfn%n_J), &
+                     wfn%t1am,               &
+                     wfn%n_vir,              &
+                     one,                    &
+                     L_Ja_i(L_off,1),        &
+                     (wfn%n_vir)*(wfn%n_J))
+!
+!        Deallocate L_ab_J and L_Ja_b
+!
+         call deallocator(L_ba_J,(wfn%n_vir)*batch_length,wfn%n_J)
+         call deallocator(L_Ja_b,batch_length*(wfn%n_J),wfn%n_vir)
+!
+      enddo ! batching over a 
+! NOT DONE!!
    end subroutine get_cholesky_ai_cc_singles
 !
    subroutine get_cholesky_ab_cc_singles(wfn)
