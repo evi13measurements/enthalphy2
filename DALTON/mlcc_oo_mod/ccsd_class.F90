@@ -22,37 +22,37 @@ module ccsd_class
 !
 contains
 !
-   subroutine init_cc_singles_doubles(wavefn)
+   subroutine init_cc_singles_doubles(wfn)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wavefn
+      class(cc_singles_doubles) :: wfn
 !
       write(unit_output,*) 'In init_cc_singles_doubles'
 !
 !     Read Hartree-Fock info from SIRIUS
 !
-      call wavefn % read_hf_info
+      call wfn % read_hf_info
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
-      call wavefn % read_transform_cholesky 
+      call wfn % read_transform_cholesky 
 !
 !     Initialize singles amplitudes
 !
-      call wavefn % initialize_singles 
+      call wfn % initialize_singles 
 !
 !     Initialize doubles amplitudes 
 !
-      call wavefn % initialize_doubles
+      call wfn % initialize_doubles
 !
    end subroutine init_cc_singles_doubles
 !
-   subroutine drv_cc_singles_doubles(wavefn)
+   subroutine drv_cc_singles_doubles(wfn)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wavefn
+      class(cc_singles_doubles) :: wfn
 !
       write(unit_output,*) 'In drv_cc_singles_doubles'
 !
@@ -61,24 +61,24 @@ contains
 !        This driver handles calculations that are not specific
 !        to CCSD, such as the amplitude equations
 !
-      call drv_cc_singles(wavefn)
+      call drv_cc_singles(wfn)
 !
    end subroutine drv_cc_singles_doubles
 !
-   subroutine initialize_doubles_cc_singles_doubles(wavefn)
+   subroutine initialize_doubles_cc_singles_doubles(wfn)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wavefn
+      class(cc_singles_doubles) :: wfn
 !
 !     Calculate the number of singles amplitudes
 !
-      wavefn % n_t2am = (wavefn % n_t1am)*(wavefn % n_t1am + 1)/2
+      wfn % n_t2am = (wfn % n_t1am)*(wfn % n_t1am + 1)/2
 !
 !     Allocate the singles amplitudes and set to zero
 !
-      call allocator ( wavefn % t2am, wavefn % n_t2am, 1)
-      wavefn % t2am = zero
+      call allocator ( wfn % t2am, wfn % n_t2am, 1)
+      wfn % t2am = zero
 !
    end subroutine initialize_doubles_cc_singles_doubles
 !
