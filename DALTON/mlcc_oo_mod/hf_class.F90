@@ -57,7 +57,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !
-   subroutine init_hartree_fock(wavefn)
+   subroutine init_hartree_fock(wfn)
 !
 !  Initialization of Hartree-Fock object
 !
@@ -67,7 +67,7 @@ contains
 !  
       implicit none
 !
-      class(hartree_fock) :: wavefn
+      class(hartree_fock) :: wfn
 !
       write(unit_output,*) 'In init_hartree_fock'
       call flshfo(unit_output)
@@ -76,19 +76,19 @@ contains
 !
       write(unit_output,*) 'Read and HF info...'
       call flshfo(unit_output)
-      call wavefn % read_hf_info        
+      call wfn % read_hf_info        
 !
 !     Initializing integral and Cholesky variables
 !     
       write(unit_output,*) 'Read and transform Cholesky vectors...'
       call flshfo(unit_output)      
-      call wavefn % read_transform_cholesky
+      call wfn % read_transform_cholesky
 !
 !     Allocate Fock matrix and set to 0
 !
       write(unit_output,*) 'Allocate Fock matrix blocks...'
       call flshfo(unit_output)
-      call wavefn % allocate_fock_matrix
+      call wfn % allocate_fock_matrix
       
 
    end subroutine init_hartree_fock
@@ -101,7 +101,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 !
-   subroutine read_hf_info_hartree_fock(wavefn)
+   subroutine read_hf_info_hartree_fock(wfn)
 !
 !  Date:    April 2017
 !  Authors: Sarai D. Folkestad and Eirik F. Kjønstad
@@ -115,7 +115,7 @@ contains
 !
       implicit none
 !
-      class(hartree_fock) :: wavefn
+      class(hartree_fock) :: wfn
 !
       integer(i15)        :: unit_identifier_hf = -1 
       integer(i15)        :: n_lambda
@@ -131,25 +131,25 @@ contains
 !     Read mlcc_hf_info
 !     ---------------------
 !  
-      read(unit_identifier_hf,*) wavefn % n_mo, wavefn % n_occ, n_lambda, wavefn % nuclear_potential, wavefn % scf_energy
+      read(unit_identifier_hf,*) wfn % n_mo, wfn % n_occ, n_lambda, wfn % nuclear_potential, wfn % scf_energy
 !
 !     Setting n_vir
 !
-      wavefn % n_vir = (wavefn % n_mo) - (wavefn % n_occ)
+      wfn % n_vir = (wfn % n_mo) - (wfn % n_occ)
 
 !      
 !     Allocate space for Fock diagonal and coefficients.
 !
-      call allocator(wavefn % fock_diagonal, wavefn % n_mo,1)
-      wavefn % fock_diagonal = zero
+      call allocator(wfn % fock_diagonal, wfn % n_mo,1)
+      wfn % fock_diagonal = zero
 !
-      call allocator(wavefn % mo_coef,n_lambda,1)
-      wavefn % mo_coef = zero
+      call allocator(wfn % mo_coef,n_lambda,1)
+      wfn % mo_coef = zero
 !
 !     Read in Fock diagonal and coefficients
 !
-      read(unit_identifier_hf,*) (wavefn % fock_diagonal(i,1),i=1,wavefn % n_mo)
-      read(unit_identifier_hf,*) (wavefn % mo_coef(i,1),i=1,n_lambda)   
+      read(unit_identifier_hf,*) (wfn % fock_diagonal(i,1),i=1,wfn % n_mo)
+      read(unit_identifier_hf,*) (wfn % mo_coef(i,1),i=1,n_lambda)   
 !
 !     Done with file
 !     ------------------
@@ -158,7 +158,7 @@ contains
 !
    end subroutine read_hf_info_hartree_fock
 !
-  subroutine read_transform_cholesky_hartree_fock(wavefn)
+  subroutine read_transform_cholesky_hartree_fock(wfn)
 !
 !     Read and Transform Cholesky Vectors
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 20 Apr 2017
@@ -172,7 +172,7 @@ contains
 !
       implicit none
 !
-      class(hartree_fock) :: wavefn
+      class(hartree_fock) :: wfn
 !
       integer(i15) :: unit_chol_ao    = -1
       integer(i15) :: unit_chol_mo_ij = -1
@@ -198,7 +198,7 @@ contains
 !     Read the number of Cholesky vectors (n_J) and 
 !     the number of atomic orbitals (n_ao)
 !
-      read(unit_chol_ao,*) wavefn%n_ao, wavefn%n_J
+      read(unit_chol_ao,*) wfn%n_ao, wfn%n_J
 !
 !     Open files for MO Cholesky vectors 
 ! 
@@ -218,11 +218,11 @@ contains
 !     Allocate packed and unpacked Cholesky AO, and 
 !     unpacked Cholesky MO vectors
 !
-      n_ao_sq_packed = packed_size(wavefn%n_ao)
+      n_ao_sq_packed = packed_size(wfn%n_ao)
 !
       call allocator(chol_ao,n_ao_sq_packed,1)
-      call allocator(chol_ao_sq,wavefn%n_ao,wavefn%n_ao) 
-      call allocator(chol_mo_sq,wavefn%n_mo,wavefn%n_mo)
+      call allocator(chol_ao_sq,wfn%n_ao,wfn%n_ao) 
+      call allocator(chol_mo_sq,wfn%n_mo,wfn%n_mo)
 !
       chol_ao    = zero
       chol_ao_sq = zero
@@ -230,14 +230,14 @@ contains
 !
 !     Allocate an intermediate, X
 !
-      call allocator(X,wavefn%n_ao,wavefn%n_mo)
+      call allocator(X,wfn%n_ao,wfn%n_mo)
 !
       X = zero
 !
 !     Loop over the number of Cholesky vectors,
 !     reading them one by one 
 !
-      do j = 1,wavefn%n_J
+      do j = 1,wfn%n_J
 !
 !        Read Cholesky AO vector
 !
@@ -245,41 +245,41 @@ contains
 !
 !        Unpack/square up AO vector 
 !
-         call squareup(chol_ao,chol_ao_sq,wavefn%n_ao)
+         call squareup(chol_ao,chol_ao_sq,wfn%n_ao)
 !
 !        Transform the AO vectors to form the Cholesky MO vectors
 !
          call dgemm('N','N',         &
-                     wavefn%n_ao,    &
-                     wavefn%n_mo,    &
-                     wavefn%n_ao,    &
+                     wfn%n_ao,    &
+                     wfn%n_mo,    &
+                     wfn%n_ao,    &
                      one,            &
                      chol_ao_sq,     &
-                     wavefn%n_ao,    &
-                     wavefn%mo_coef, &
-                     wavefn%n_ao,    &
+                     wfn%n_ao,    &
+                     wfn%mo_coef, &
+                     wfn%n_ao,    &
                      zero,           &
                      X,              &
-                     wavefn%n_ao)
+                     wfn%n_ao)
 !
          call dgemm('T','N',         &
-                     wavefn%n_mo,    &
-                     wavefn%n_mo,    &
-                     wavefn%n_ao,    &
+                     wfn%n_mo,    &
+                     wfn%n_mo,    &
+                     wfn%n_ao,    &
                      one,            &
-                     wavefn%mo_coef, &
-                     wavefn%n_ao,    &
+                     wfn%mo_coef, &
+                     wfn%n_ao,    &
                      X,              &
-                     wavefn%n_ao,    &
+                     wfn%n_ao,    &
                      zero,           &
                      chol_mo_sq,     &
-                     wavefn%n_mo)
+                     wfn%n_mo)
 !
 !        Write the MO vectors to files in blocks
 !
-         write(unit_chol_mo_ij) ((chol_mo_sq(i,j),i=1,wavefn%n_occ),k=1,wavefn%n_occ)
-         write(unit_chol_mo_ia) ((chol_mo_sq(i,a),i=1,wavefn%n_occ),a=wavefn%n_occ+1,wavefn%n_mo)
-         write(unit_chol_mo_ab) ((chol_mo_sq(a,b),a=wavefn%n_occ+1,wavefn%n_mo),b=wavefn%n_occ+1,wavefn%n_mo)
+         write(unit_chol_mo_ij) ((chol_mo_sq(i,j),i=1,wfn%n_occ),k=1,wfn%n_occ)
+         write(unit_chol_mo_ia) ((chol_mo_sq(i,a),i=1,wfn%n_occ),a=wfn%n_occ+1,wfn%n_mo)
+         write(unit_chol_mo_ab) ((chol_mo_sq(a,b),a=wfn%n_occ+1,wfn%n_mo),b=wfn%n_occ+1,wfn%n_mo)
 !
       enddo
 !
@@ -291,46 +291,47 @@ contains
 !  
    end subroutine read_transform_cholesky_hartree_fock
 !
-   subroutine allocate_fock_matrix_hartree_fock(wavefn)
+   subroutine allocate_fock_matrix_hartree_fock(wfn)
 !
       use workspace
 !
       implicit none
 !  
-      class(hartree_fock) :: wavefn   
+      class(hartree_fock) :: wfn   
 !
-      call allocator(wavefn % fock_matrix_ij, wavefn % n_occ, wavefn % n_occ)
-      call allocator(wavefn % fock_matrix_ia, wavefn % n_occ, wavefn % n_vir)
-      call allocator(wavefn % fock_matrix_ai, wavefn % n_vir, wavefn % n_occ)
-      call allocator(wavefn % fock_matrix_ab, wavefn % n_vir, wavefn % n_vir)
+      call allocator(wfn % fock_matrix_ij, wfn % n_occ, wfn % n_occ)
+      call allocator(wfn % fock_matrix_ia, wfn % n_occ, wfn % n_vir)
+      call allocator(wfn % fock_matrix_ai, wfn % n_vir, wfn % n_occ)
+      call allocator(wfn % fock_matrix_ab, wfn % n_vir, wfn % n_vir)
 
 !
-      wavefn % fock_matrix_ij = zero
-      wavefn % fock_matrix_ia = zero
-      wavefn % fock_matrix_ai = zero
-      wavefn % fock_matrix_ab = zero
+      wfn % fock_matrix_ij = zero
+      wfn % fock_matrix_ia = zero
+      wfn % fock_matrix_ai = zero
+      wfn % fock_matrix_ab = zero
 !
    end subroutine allocate_fock_matrix_hartree_fock
 !
 !
-   subroutine read_cholesky_ij_hartree_fock(wavefn,L_ij_J)
+   subroutine read_cholesky_ij_hartree_fock(wfn,L_ij_J)
 !
       implicit none
 !
-      class(hartree_fock)   :: wavefn
+      class(hartree_fock)   :: wfn
       real(dp), dimension(:,:) :: L_ij_J
 !
       integer(i15) :: unit_chol_mo_ij =-1
       integer(i15) :: i=0,j=0
       integer(i15) :: n_oo
 !
-      n_oo = (wavefn % n_occ)*(wavefn % n_occ)
+      n_oo = (wfn % n_occ)*(wfn % n_occ)
+!
       call generate_unit_identifier(unit_chol_mo_ij)
       
       open(unit=unit_chol_mo_ij,file='cholesky_ij',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ij)
 !
-      do j = 1,wavefn % n_J
+      do j = 1,wfn % n_J
          read(unit_chol_mo_ij) (L_ij_J(i,j), i=1,n_oo)
       enddo
 !
@@ -339,24 +340,24 @@ contains
    end subroutine read_cholesky_ij_hartree_fock
 !
 !
-   subroutine read_cholesky_ia_hartree_fock(wavefn,L_ia_J)
+   subroutine read_cholesky_ia_hartree_fock(wfn,L_ia_J)
 !
       implicit none
 !
-      class(hartree_fock)  :: wavefn
+      class(hartree_fock)  :: wfn
       real(dp), dimension(:,:) :: L_ia_J
 !
       integer(i15) :: unit_chol_mo_ia =-1
       integer(i15) :: i=0,j=0
       integer(i15) :: n_ov
 !
-      n_ov = (wavefn % n_occ)*(wavefn % n_vir)
+      n_ov = (wfn % n_occ)*(wfn % n_vir)
       call generate_unit_identifier(unit_chol_mo_ia)
       
       open(unit=unit_chol_mo_ia,file='cholesky_ia',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ia)
 !
-      do j = 1,wavefn % n_J
+      do j = 1,wfn % n_J
          read(unit_chol_mo_ia) (L_ia_J(i,j), i=1,n_ov)
       enddo
 !
@@ -365,24 +366,24 @@ contains
    end subroutine read_cholesky_ia_hartree_fock
 !
 !
-   subroutine read_cholesky_ai_hartree_fock(wavefn,L_ai_J)
+   subroutine read_cholesky_ai_hartree_fock(wfn,L_ai_J)
 !
       implicit none
 !
-      class(hartree_fock)  :: wavefn
+      class(hartree_fock)  :: wfn
       real(dp), dimension(:,:) :: L_ai_J
 !
       integer(i15) :: unit_chol_mo_ai =-1
       integer(i15) :: i=0,j=0
       integer(i15) :: n_ov
 !
-      n_ov = (wavefn % n_occ)*(wavefn % n_vir)
+      n_ov = (wfn % n_occ)*(wfn % n_vir)
       call generate_unit_identifier(unit_chol_mo_ai)
       
       open(unit=unit_chol_mo_ai,file='cholesky_ai',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ai)
 !
-      do j = 1,wavefn % n_J
+      do j = 1,wfn % n_J
          read(unit_chol_mo_ai) (L_ai_J(i,j), i=1,n_ov)
       enddo
 !
@@ -391,11 +392,11 @@ contains
    end subroutine read_cholesky_ai_hartree_fock
 !   
 !
-   subroutine read_cholesky_ab_hartree_fock(wavefn,L_ab_J,start,end,ab_dim, reorder)
+   subroutine read_cholesky_ab_hartree_fock(wfn,L_ab_J,start,end,ab_dim, reorder)
 !
       implicit none
 !
-      class(hartree_fock)      :: wavefn
+      class(hartree_fock)      :: wfn
       real(dp), dimension(:,:) :: L_ab_J
 !
       integer(i15) :: unit_chol_mo_ab=-1
@@ -421,11 +422,11 @@ contains
 !  
 !           Calculate index of last element to throw away
 !  
-            throw_away_index=index_two(wavefn%n_vir,start-1,wavefn%n_vir)
+            throw_away_index=index_two(wfn%n_vir,start-1,wfn%n_vir)
 !  
 !           Read from batch start
 !  
-            do j = 1,wavefn%n_J
+            do j = 1,wfn%n_J
               read(unit_chol_mo_ab) (throw_away,i=1,throw_away_index),(L_ab_J(a,j),a=1,ab_dim)
             enddo
 !
@@ -433,7 +434,7 @@ contains
 !  
 !           Read from start
 !  
-            do j = 1,wavefn%n_J
+            do j = 1,wfn%n_J
               read(unit_chol_mo_ab)(L_ab_J(a,j),a=1,ab_dim)
             enddo
 !
@@ -441,14 +442,14 @@ contains
 !
       else
 !
-         throw_away_index = index_two(wavefn%n_vir,start-1,wavefn%n_vir)
+         throw_away_index = index_two(wfn%n_vir,start-1,wfn%n_vir)
 !
-         do j = 1,wavefn%n_J
+         do j = 1,wfn%n_J
             if (start .eq. 1) then 
-               read(unit_chol_mo_ab)((L_ab_J(index_two(b,a,wavefn%n_vir),j),b=1,wavefn%n_vir),a=1,batch_length)
+               read(unit_chol_mo_ab)((L_ab_J(index_two(b,a,wfn%n_vir),j),b=1,wfn%n_vir),a=1,batch_length)
             else
                read(unit_chol_mo_ab)(throw_away,i=1,throw_away_index), &
-                                    ((L_ab_J(index_two(b,a,wavefn%n_vir),j),b=1,wavefn%n_vir),a=1,batch_length)
+                                    ((L_ab_J(index_two(b,a,wfn%n_vir),j),b=1,wfn%n_vir),a=1,batch_length)
             endif
       !
          enddo     
