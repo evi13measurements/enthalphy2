@@ -205,13 +205,13 @@ contains
       call generate_unit_identifier(unit_chol_mo_ia)
       call generate_unit_identifier(unit_chol_mo_ab)
 !
-      open(unit_chol_mo_ij,file='cholesky_ij',status='new',form='unformatted')
+      open(unit_chol_mo_ij,file='cholesky_ij',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ij)
 !
-      open(unit_chol_mo_ia,file='cholesky_ia',status='new',form='unformatted')
+      open(unit_chol_mo_ia,file='cholesky_ia',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ia)
 !
-      open(unit_chol_mo_ab,file='cholesky_ab',status='new',form='unformatted')
+      open(unit_chol_mo_ab,file='cholesky_ab',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ab)
 !
 !     Allocate packed and unpacked Cholesky AO, and 
@@ -310,5 +310,148 @@ contains
       wavefn % fock_matrix_ab = zero
 !
    end subroutine allocate_fock_matrix_hartree_fock
+!
+!
+   subroutine read_cholesky_ij_hartree_fock(wavefn,L_ij_J)
+!
+      use workspace
+      use mlcc_types
+      use input_output
+!
+      implicit none
+!
+      class(hartree_fock)   :: wavefn
+      real(dp), dimension(:,:) :: L_ij_J
+!
+      integer(i15) :: unit_chol_mo_ij =-1
+      integer(i15) :: i=0,j=0
+      integer(i15) :: n_oo
+!
+      n_oo = (wavefn % n_occ)*(wavefn % n_occ)
+      call generate_unit_identifier(unit_chol_mo_ij)
+      
+      open(unit=unit_chol_mo_ij,'cholesky_ij',status='unknown',form='unformatted')
+      rewind(unit_chol_mo_ij)
+!
+      do j = 1,wavefn % n_J
+         read(unit_chol_mo_ij) (L_ij_J(i,j), i=1,n_oo)
+      enddo
+!
+      close(unit_chol_mo_ij)    
+!   
+   end subroutine read_cholesky_ij_hartree_fock
+!
+!
+   subroutine read_cholesky_ia_hartree_fock(wavefn,L_ia_J)
+!
+      use workspace
+      use mlcc_types
+!
+      implicit none
+!
+      class(hartree_fock)  :: wavefn
+      real(dp), dimension(:,:) :: L_ia_J
+!
+      integer(i15) :: unit_chol_mo_ia =-1
+      integer(i15) :: i=0,j=0
+      integer(i15) :: n_ov
+!
+      n_oo = (wavefn % n_occ)*(wavefn % n_vir)
+      call generate_unit_identifier(unit_chol_mo_ia)
+      
+      open(unit=unit_chol_mo_ia,'cholesky_ia',status='unknown',form='unformatted')
+      rewind(unit_chol_mo_ia)
+!
+      do j = 1,wavefn % n_J
+         read(unit_chol_mo_ia) (L_ia_J(i,j), i=1,n_ov)
+      enddo
+!
+      close(unit_chol_mo_ia)    
+!   
+   end subroutine read_cholesky_ia_hartree_fock
+!
+!
+   subroutine read_cholesky_ai_hartree_fock(wavefn,L_ai_J)
+!
+      use workspace
+      use mlcc_types
+!
+      implicit none
+!
+      class(hartree_fock)  :: wavefn
+      real(dp), dimension(:,:) :: L_ai_J
+!
+      integer(i15) :: unit_chol_mo_ai =-1
+      integer(i15) :: i=0,j=0
+      integer(i15) :: n_ov
+!
+      n_oo = (wavefn % n_occ)*(wavefn % n_vir)
+      call generate_unit_identifier(unit_chol_mo_ai)
+      
+      open(unit=unit_chol_mo_ai,'cholesky_ai',status='unknown',form='unformatted')
+      rewind(unit_chol_mo_ai)
+!
+      do j = 1,wavefn % n_J
+         read(unit_chol_mo_ai) (L_ai_J(i,j), i=1,n_ov)
+      enddo
+!
+      close(unit_chol_mo_ai)    
+!
+   end subroutine read_cholesky_ij_hartree_fock
+!   
+!
+   subroutine read_cholesky_ab_hartree_fock(wavefn,L_ab_J,b_start,b_end,ab_dim, reorder)
+!
+      use workspace
+      use mlcc_types
+!
+      implicit none
+!
+      class(hartree_fock)      :: wavefn
+      real(dp), dimension(:,:) :: L_ab_J
+!
+      integer(i15) :: unit_chol_mo_ab=-1
+      integer(i15) :: ab_dim
+      integer(i15) :: a=0,b=0,j=0,i=0
+      integer(i15) :: b_start,b_end
+      integer(i15) :: batch_length=0
+!
+      logical :: reorder
+!  
+      call generate_unit_identifier(unit_chol_mo_ab)
+      open(unit=unit_chol_mo_ab,'cholesky_ab',status='unknown',form='unformatted')
+      rewind(unit_chol_mo_ab)
+!
+      if (.not. reorder) then
+         batch_length = b_end-b_start+1
+!
+!  
+         if (b_start .ne. 1) then
+!  
+!           Calculate index of last element to throw away
+!  
+            idummy=index_two(n_vir,b_start-1,n_vir)
+!  
+!           Read from a_start
+!  
+            do j = 1,n_J
+              read(lucho_ab)(dummy,i=1,idummy),(L_ab_J(a,j),a=1,ab_dim)
+            enddo
+!
+         else
+!  
+!           Read from start
+!  
+            do j = 1,n_J
+              read(lucho_ab)(L_ab_J(a,j),a=1,ab_dim)
+            enddo
+!
+         endif
+!          
+      endif  
+!     
+      close(unit_chol_mo_ab)
+   end subroutine read_cholesky_ab_hartree_fock
+!
 !
 end module hf_class
