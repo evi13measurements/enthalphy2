@@ -32,19 +32,19 @@ contains
 !
 !     Read Hartree-Fock info from SIRIUS
 !
-      wavefn % read_hf_info
+      call wavefn % read_hf_info
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
-      wavefn % read_transform_cholesky 
+      call wavefn % read_transform_cholesky 
 !
 !     Initialize singles amplitudes
 !
-      wavefn % initialize_singles 
+      call wavefn % initialize_singles 
 !
 !     Initialize doubles amplitudes 
 !
-      wavefn % initialize_doubles
+      call wavefn % initialize_doubles
 !
    end subroutine init_cc_singles_doubles
 !

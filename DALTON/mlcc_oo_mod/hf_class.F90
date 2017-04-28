@@ -10,45 +10,41 @@ module hf_class
 !
    type hartree_fock
 !
-      integer(i15), private :: n_occ
-      integer(i15), private :: n_vir
-      integer(i15), private :: n_mo 
-      integer(i15), private :: n_J
-      integer(i15), private :: n_ao
+      integer(i15) :: n_occ
+      integer(i15) :: n_vir
+      integer(i15) :: n_mo 
+      integer(i15) :: n_J
+      integer(i15) :: n_ao
 !
-      real(dp), private, dimension(:,:), allocatable :: mo_coef
-      real(dp), private, dimension(:,:), allocatable :: fock_diagonal
+      real(dp), dimension(:,:), allocatable :: mo_coef
+      real(dp), dimension(:,:), allocatable :: fock_diagonal
 !
-      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ij
-      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ia
-      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ai
-      real(dp), private, dimension(:,:), allocatable :: fock_matrix_ab
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ij
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ia
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ai
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ab
 !
-      real(dp), private :: nuclear_potential
-      real(dp), private :: scf_energy
+      real(dp) :: nuclear_potential
+      real(dp) :: scf_energy
 !
    contains
 !
 !     Public routines
 !
-      procedure, public   :: init => init_hartree_fock
+      procedure   :: init => init_hartree_fock
 !
 !     Private routines
 !
-      procedure, private  :: read_cholesky_ij => read_cholesky_ij_hartree_fock
-      procedure, private  :: read_cholesky_ia => read_cholesky_ia_hartree_fock
-      procedure, private  :: read_cholesky_ai => read_cholesky_ai_hartree_fock
-      procedure, private  :: read_cholesky_ab => read_cholesky_ab_hartree_fock
+      procedure  :: read_cholesky_ij => read_cholesky_ij_hartree_fock
+      procedure  :: read_cholesky_ia => read_cholesky_ia_hartree_fock
+      procedure  :: read_cholesky_ai => read_cholesky_ai_hartree_fock
+      procedure  :: read_cholesky_ab => read_cholesky_ab_hartree_fock
 !
-      procedure, private :: read_hf_info              => read_hf_info_hartree_fock
-      procedure, private :: read_transform_cholesky   => read_transform_cholesky_hartree_fock 
-      procedure, private :: allocate_fock_matrix      => allocate_fock_matrix_hartree_fock
+      procedure :: read_hf_info              => read_hf_info_hartree_fock
+      procedure :: read_transform_cholesky   => read_transform_cholesky_hartree_fock 
+      procedure :: allocate_fock_matrix      => allocate_fock_matrix_hartree_fock
 !
    end type hartree_fock
-!
-!  Private submodules and functions
-!
-   private :: read_and_transform_to_mo_cholesky_vectors
 !
 contains 
 !
@@ -79,13 +75,13 @@ contains
 !
       write(unit_output,*) 'Read and HF info...'
       call flshfo(unit_output)
-      call wavefn % read_hf_info()        
+      call wavefn % read_hf_info        
 !
 !     Initializing integral and Cholesky variables
 !     
       write(unit_output,*) 'Read and transform Cholesky vectors...'
       call flshfo(unit_output)      
-      call wavefn % read_and_transform_cholesky()
+      call wavefn % read_transform_cholesky
 !
 !     Allocate Fock matrix and set to 0
 !
@@ -104,7 +100,7 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
 !
-   subroutine read_hf_info(wavefn)
+   subroutine read_hf_info_hartree_fock(wavefn)
 !
 !  Date:    April 2017
 !  Authors: Sarai D. Folkestad and Eirik F. Kjønstad
@@ -119,6 +115,7 @@ contains
       implicit none
 !
       class(hartree_fock) :: wavefn
+!
       integer(i15)        :: unit_identifier_hf = -1 
       integer(i15)        :: n_lambda
       integer(i15)        :: i,j
@@ -158,9 +155,9 @@ contains
 !    
       close(unit_identifier_hf)
 !
-   end subroutine read_hf_info
+   end subroutine read_hf_info_hartree_fock
 !
-  subroutine read_and_transform_cholesky(wavefn)
+  subroutine read_transform_cholesky_hartree_fock(wavefn)
 !
 !     Read and Transform Cholesky Vectors
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 20 Apr 2017
@@ -291,7 +288,7 @@ contains
       close(unit_chol_mo_ia)
       close(unit_chol_mo_ab)
 !  
-   end subroutine read_and_transform_cholesky
+   end subroutine read_transform_cholesky_hartree_fock
 !
    subroutine allocate_fock_matrix_hartree_fock(wavefn)
 !

@@ -7,17 +7,17 @@ module ccs_class
 !
    type, extends(hartree_fock) :: cc_singles
 !
-      integer(i15), private                          :: n_t1am = 0 ! Number of singles amplitudes
-      real(dp), dimension(:,:), allocatable, private :: t1am       ! Singles amplitudes
+      integer(i15)                          :: n_t1am = 0 ! Number of singles amplitudes
+      real(dp), dimension(:,:), allocatable :: t1am       ! Singles amplitudes
 !
    contains 
 !
       procedure, public  :: init               => init_cc_singles
       procedure, public  :: drv                => drv_cc_singles
 !
-      procedure, private :: fock_constructor   => fock_constructor_cc_singles
-      procedure, private :: get_cholesky_ia    => get_cholesky_ia
-      procedure, private :: initialize_singles => initialize_singles_cc_singles
+      procedure :: fock_constructor   => fock_constructor_cc_singles
+!      procedure, private :: get_cholesky_ia    => get_cholesky_ia
+      procedure :: initialize_singles => initialize_singles_cc_singles
 !
    end type cc_singles
 !
@@ -37,15 +37,15 @@ contains
 !
 !     Read Hartree-Fock info from SIRIUS
 !
-      wavefn % read_hf_info
+      call wavefn % read_hf_info
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
-      wavefn % read_transform_cholesky
+      call wavefn % read_transform_cholesky
 !
 !     Initialize singles amplitudes and associated attributes
 !
-      wavefn % initialize_singles
+      call wavefn % initialize_singles
 !
    end subroutine init_cc_singles
 !
@@ -74,7 +74,7 @@ contains
       call allocator ( wavefn % t1am, wavefn % n_t1am, 1)
       wavefn % t1am = zero
 !
-   subroutine initialize_singles_cc_singles
+   end subroutine initialize_singles_cc_singles
 !
    subroutine fock_constructor_cc_singles(wavefn)
 !
