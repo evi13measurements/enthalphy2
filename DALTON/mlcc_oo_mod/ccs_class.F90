@@ -185,7 +185,7 @@ contains
 ! 
 !     T1-transformation of one-electron integrals in mo basis
 !
-      call wfn % ham_one_electron_mo_t1
+      call wfn % h_one_electron_mo_t1(h1mo)
  !     call h1mo_T1(h1mo,fock_matrix, wfn % n_occ, wfn % n_vir, wfn % n_mo, wfn % t1am, wfn % n_t1am)
       call deallocator(h1mo,wfn % n_mo,wfn % n_mo)
 !
@@ -474,7 +474,7 @@ contains
 !
    end subroutine fock_constructor_cc_singles
 !
-   subroutine ham_one_electron_mo_t1_cc_singles(wfn,h1,h1_T1)
+   subroutine ham_one_electron_mo_t1_cc_singles(wfn,h1)
 !
 !  Purpose: T1-transform of one-electron mo integrals (h1mo)
 !
@@ -490,8 +490,9 @@ contains
 !
    class(cc_singles) :: wfn
 !
-   double precision h1(wfn % n_mo, wfn % n_mo)
-   double precision h1_T1(wfn % n_mo, wfn % n_mo)
+   real(dp), dimension(wfn % n_mo, wfn % n_mo) :: h1
+!
+   real(dp), dimension(:,:), allocatable :: h1_T1
 !
    real(dp), dimension(:,:), allocatable     :: x 
    real(dp), dimension(:,:), allocatable     :: y 
@@ -512,14 +513,14 @@ contains
 !
 !  t1_p_q = t1am_p_q for p virtual and q occupied, 0 otherwize
 !
-   do a = 1,n_vir
-      do i = 1,n_occ
-         t1(n_occ+a,i)=t1am(a,i)
+   do a = 1,wfn%n_vir
+      do i = 1,wfn%n_occ
+         t1(wfn%n_occ+a,i)=wfn%t1am(a,i)
       enddo
    enddo
 !
-   do p = 1,n_orbitals
-      do q = 1,n_orbitals
+   do p = 1,wfn%n_mo
+      do q = 1,wfn%n_mo
          if (p .eq. q) then
             x(p,q) = 1
             y(p,q) = 1
@@ -597,7 +598,7 @@ contains
 !     Allocate
 !
       call allocator(L_ia_J,n_ov,wfn%n_J)
-      call allocator(L_iJ_a,(wfn%n_occ)*(wfn%n_J),wfn%n_vir))
+      call allocator(L_iJ_a,(wfn%n_occ)*(wfn%n_J),wfn%n_vir)
 
    end subroutine get_cholesky_ij_cc_singles
 !
