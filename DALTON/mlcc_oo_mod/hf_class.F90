@@ -315,6 +315,8 @@ contains
 !
    subroutine read_cholesky_ij_hartree_fock(wfn,L_ij_J)
 !
+!     Read mo ij cholesky vectors from file and places them in L_ij_J array
+!
       implicit none
 !
       class(hartree_fock)   :: wfn
@@ -322,44 +324,52 @@ contains
 !
       integer(i15) :: unit_chol_mo_ij =-1
       integer(i15) :: i=0,j=0
-      integer(i15) :: n_oo
 !
-      n_oo = (wfn % n_occ)*(wfn % n_occ)
+!     Prepare for reading. Generate unit idientifier, open file and rewind.
 !
       call generate_unit_identifier(unit_chol_mo_ij)
       
       open(unit=unit_chol_mo_ij,file='cholesky_ij',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ij)
 !
+!     Read vectors
+!
       do j = 1,wfn % n_J
-         read(unit_chol_mo_ij) (L_ij_J(i,j), i=1,n_oo)
+         read(unit_chol_mo_ij) (L_ij_J(i,j), i=1,(wfn % n_occ)*(wfn % n_occ))
       enddo
+!
+!     Close file
 !
       close(unit_chol_mo_ij)    
 !   
    end subroutine read_cholesky_ij_hartree_fock
 !
-!
    subroutine read_cholesky_ia_hartree_fock(wfn,L_ia_J)
+!
+!     Read mo ia cholesky vectors from file and places them in L_ia_J array
 !
       implicit none
 !
-      class(hartree_fock)  :: wfn
+      class(hartree_fock)      :: wfn
       real(dp), dimension(:,:) :: L_ia_J
 !
       integer(i15) :: unit_chol_mo_ia =-1
       integer(i15) :: i=0,j=0
-      integer(i15) :: n_ov
 !
-      n_ov = (wfn % n_occ)*(wfn % n_vir)
+!     Prepare for reading. Generate unit idientifier, open and rewind file.
+!
       call generate_unit_identifier(unit_chol_mo_ia)
       
       open(unit=unit_chol_mo_ia,file='cholesky_ia',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ia)
 !
+!     Read vectors
+!
       do j = 1,wfn % n_J
-         read(unit_chol_mo_ia) (L_ia_J(i,j), i=1,n_ov)
+         read(unit_chol_mo_ia) (L_ia_J(i,j), i=1,(wfn % n_occ)*(wfn % n_vir))
       enddo
+!
+!     Close file
 !
       close(unit_chol_mo_ia)    
 !   
@@ -368,24 +378,28 @@ contains
 !
    subroutine read_cholesky_ai_hartree_fock(wfn,L_ai_J)
 !
+!     Read mo ai cholesky vectors from file and places them in L_ai_J array
+!
       implicit none
 !
-      class(hartree_fock)  :: wfn
+      class(hartree_fock)      :: wfn
       real(dp), dimension(:,:) :: L_ai_J
 !
       integer(i15) :: unit_chol_mo_ai =-1
       integer(i15) :: i=0,j=0
-      integer(i15) :: n_ov
 !
-      n_ov = (wfn % n_occ)*(wfn % n_vir)
+!     Prepare for reading. Generate unit idientifier, open and rewind file.
+!
       call generate_unit_identifier(unit_chol_mo_ai)
       
       open(unit=unit_chol_mo_ai,file='cholesky_ai',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ai)
 !
       do j = 1,wfn % n_J
-         read(unit_chol_mo_ai) (L_ai_J(i,j), i=1,n_ov)
+         read(unit_chol_mo_ai) (L_ai_J(i,j), i=1,(wfn % n_occ)*(wfn % n_vir))
       enddo
+!
+!     Close file.
 !
       close(unit_chol_mo_ai)    
 !
@@ -393,6 +407,12 @@ contains
 !   
 !
    subroutine read_cholesky_ab_hartree_fock(wfn,L_ab_J,start,end,ab_dim, reorder)
+!
+!     Read mo ab cholesky vectors, with batching if needed. 
+!
+!        If reorder = .true. L_ba_J is returned with batching over a,
+!                      otherwize L_ab_J is returned with batching over b.
+!
 !
       implicit none
 !
@@ -408,10 +428,14 @@ contains
       real(dp)     :: throw_away
 !
       logical :: reorder
+!
+!     Prepare for reading. Generate unit identifier, open and rewind file
 !  
       call generate_unit_identifier(unit_chol_mo_ab)
       open(unit=unit_chol_mo_ab,file='cholesky_ab',status='unknown',form='unformatted')
       rewind(unit_chol_mo_ab)
+!
+!     Calculating batch length
 !
       batch_length = end-start+1
 !
@@ -424,7 +448,7 @@ contains
 !  
             throw_away_index=index_two(wfn%n_vir,start-1,wfn%n_vir)
 !  
-!           Read from batch start
+!           Throw away all elements from 1 to throw_away_index, then read from batch start.
 !  
             do j = 1,wfn%n_J
               read(unit_chol_mo_ab) (throw_away,i=1,throw_away_index),(L_ab_J(a,j),a=1,ab_dim)
@@ -440,22 +464,29 @@ contains
 !
          endif
 !
-      else
+      else ! Reorder L_ab_J is L_ba_J
 !
          throw_away_index = index_two(wfn%n_vir,start-1,wfn%n_vir)
 !
+!        Reading vectors
+!
          do j = 1,wfn%n_J
+!
             if (start .eq. 1) then 
                read(unit_chol_mo_ab)((L_ab_J(index_two(b,a,wfn%n_vir),j),b=1,wfn%n_vir),a=1,batch_length)
             else
                read(unit_chol_mo_ab)(throw_away,i=1,throw_away_index), &
                                     ((L_ab_J(index_two(b,a,wfn%n_vir),j),b=1,wfn%n_vir),a=1,batch_length)
             endif
-      !
-         enddo     
-      endif  
+!
+         enddo
 !     
+      endif  ! Reorder
+! 
+!     Close file
+!    
       close(unit_chol_mo_ab)
+!
    end subroutine read_cholesky_ab_hartree_fock
 !
 !
