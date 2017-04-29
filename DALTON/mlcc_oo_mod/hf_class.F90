@@ -7,6 +7,9 @@ module hf_class
 !                                                                 
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
+!             -::- Modules used by the class -::-
+!
+!
 !  Use general tools
 !
    use types
@@ -16,8 +19,10 @@ module hf_class
 !
    implicit none
 !
-!  Definition of the HF class 
 !
+!            -::- Definition of the HF class -::- 
+!
+!   
    type :: hartree_fock
 !
 !     Orbital information attributes

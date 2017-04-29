@@ -7,20 +7,22 @@ module ccs_class
 !                                                                 
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
-!  Use general tools
+!             -::- Modules used by the class -::-
+!
+!  General tools
 !
    use types
    use utils
    use workspace
    use input_output
 !
-!  Use the ancestor class module (HF)
+!  The ancestor class module (HF)
 !
    use hf_class
 !
    implicit none 
 !
-!  Definition of the CCS class 
+!            -::- Definition of the CCS class -::- 
 !
    type, extends(hartree_fock) :: cc_singles
 !

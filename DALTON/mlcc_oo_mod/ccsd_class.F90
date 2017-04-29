@@ -1,26 +1,32 @@
 module ccsd_class
 !
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !                                                                 
 !      Coupled cluster singles and doubles (CCSD) class module                                 
 !   Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
 !                                                                 
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
-!  Use general tools 
+!
+!            -::- Modules used by the class -::-
+!
+!
+!  General tools
 !
    use types
    use utils
    use workspace
    use input_output
 !
-!  Use ancestor class module (CCS)
+!  Ancestor class module (CCS)
 !
    use ccs_class
 !
    implicit none 
 !
-!  -::- Definition of the CCSD class -::- 
+!
+!            -::- Definition of the CCSD class -::- 
+!
 !
    type, extends(cc_singles) :: cc_singles_doubles
 !
@@ -42,7 +48,7 @@ module ccsd_class
 !
 !     Routine to calculate the energy from the current amplitudes
 !
-      procedure :: get_energy => get_energy_cc_singles_doubles 
+      procedure :: calc_energy => calc_energy_cc_singles_doubles 
 !
 !     Routine to set a number of orbital shorthands (see below)
 !
@@ -50,22 +56,24 @@ module ccsd_class
 !
    end type cc_singles_doubles
 !
-!  -::- Module variables and routines not belonging to the class -::-
+!
+!           -::- Module variables not belonging to the class -::-
+!
 !
 !  Shorthands for orbital information used extensively in the
 !  matrix multiplications of coupled cluster theory 
 !
-   integer(i15) :: n_o            ! n_occ
-   integer(i15) :: n_v            ! n_vir
-   integer(i15) :: n_ov           ! n_occ * n_vir
-   integer(i15) :: n_oo           ! n_occ^2 
-   integer(i15) :: n_vv           ! n_vir^2 
-   integer(i15) :: n_oo_packed    ! n_occ * (n_occ + 1) / 2
-   integer(i15) :: n_vv_packed    ! n_vir * (n_vir + 1) / 2
-   integer(i15) :: n_oov          ! n_occ^2 * n_vir 
-   integer(i15) :: n_ovv          ! n_occ * n_vir^2 
-   integer(i15) :: n_ooo          ! n_occ^3 
-   integer(i15) :: n_ov_ov_packed ! n_ov * (n_ov + 1) / 2
+   integer(i15) :: n_o = 0            ! n_occ
+   integer(i15) :: n_v = 0            ! n_vir
+   integer(i15) :: n_ov = 0           ! n_occ * n_vir
+   integer(i15) :: n_oo = 0           ! n_occ^2 
+   integer(i15) :: n_vv = 0           ! n_vir^2 
+   integer(i15) :: n_oo_packed = 0    ! n_occ * (n_occ + 1) / 2
+   integer(i15) :: n_vv_packed = 0    ! n_vir * (n_vir + 1) / 2
+   integer(i15) :: n_oov = 0          ! n_occ^2 * n_vir 
+   integer(i15) :: n_ovv = 0          ! n_occ * n_vir^2 
+   integer(i15) :: n_ooo = 0          ! n_occ^3 
+   integer(i15) :: n_ov_ov_packed = 0 ! n_ov * (n_ov + 1) / 2
 !
 !
 contains
@@ -85,11 +93,13 @@ contains
 !
 !     Performs the following tasks:
 !
-!     1. Sets HF orbital and energy information by reading from file (read_hf_info)
-!     2. Transforms AO Cholesky vectors to MO basis and saves to file (read_transform_cholesky)
-!     3. Allocates the Fock matrix and sets it to zero
-!     4. Sets orbital shorthands (n_o, n_oo, n_ov, etc.)
-!     5. Initializes the amplitudes (sets their initial values and associated variables)
+!        1. Sets HF orbital and energy information by reading from file (read_hf_info)
+!        2. Transforms AO Cholesky vectors to MO basis and saves to file (read_transform_cholesky)
+!        3. Allocates the Fock matrix and sets it to zero
+!        4. Sets orbital shorthands (n_o, n_oo, n_ov, etc.)
+!        5. Initializes the amplitudes (sets their initial values and associated variables)
+!        6. Sets the initial energy based on the initial amplitudes (in particular, the MP2
+!           estimate of the doubles amplitude)
 !
       implicit none 
 !
@@ -111,6 +121,10 @@ contains
 !     Initialize (singles and doubles) amplitudes
 !
       call wfn % initialize_amplitudes
+!
+!     Set the initial value of the energy from the initial amplitudes 
+!
+      call wfn % calc_energy
 !
    end subroutine init_cc_singles_doubles
 !
@@ -221,9 +235,9 @@ contains
    end subroutine initialize_amplitudes_cc_singles_doubles
 !
 !
-   subroutine get_energy_cc_singles_doubles(wfn)
+   subroutine calc_energy_cc_singles_doubles(wfn)
 !
-!     Get Energy (CCSD)
+!     Calculate Energy (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
 !
 !     Calculates the CCSD energy
@@ -310,7 +324,7 @@ contains
 !
       call deallocator(g_ia_jb, n_ov, n_ov)
 !
-   end subroutine get_energy_cc_singles_doubles
+   end subroutine calc_energy_cc_singles_doubles
 !
 !
    subroutine set_orbital_shorthands_cc_singles_doubles(wfn)
