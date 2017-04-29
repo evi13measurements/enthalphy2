@@ -5,8 +5,7 @@ module workspace
 !
 !  A collection of subroutines for memory management and monitoring
 !
-   use mlcc_types
-!   use mlcc_data
+   use types
 !   
    implicit none
 !

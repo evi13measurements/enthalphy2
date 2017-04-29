@@ -1,10 +1,10 @@
-module mlcc_oo_utilities
+module utils
 !
-!   MLCC Utilities 
+!   Utilities module 
 !   Written by Sarai D. Folkstad and Eirik F. Kjønstad, 28 Feb 2017
 !
    use input_output
-   use mlcc_types
+   use types
 !
 contains
    integer(i15) function index_packed(i,j)
@@ -34,7 +34,7 @@ contains
    subroutine squareup(packed,unpacked,N)
 !
 !     Purpose: Squares up to full dimension (N x N) of packed vectors.
-      use mlcc_types
+      use types
 !
       implicit none
 !
@@ -55,7 +55,7 @@ contains
 !
 !     Purpose: Pack down full square matrix of dimension (N x N).
 !
-      use mlcc_types
+      use types
 !
       implicit none
 !
@@ -177,4 +177,4 @@ contains
 !
    end subroutine vec_print
 !
-end module mlcc_oo_utilities
+end module utils
