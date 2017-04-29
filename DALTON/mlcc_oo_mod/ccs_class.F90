@@ -45,19 +45,19 @@ module ccs_class
 !     A Fock constructor to calculate the T1-transformed Fock  matrix for the current singles 
 !     amplitudes (see the HF class for the Fock matrix itself)
 !
-      procedure :: fock_constructor => fock_constructor_cc_singles
+      procedure, non_overridable :: fock_constructor => fock_constructor_cc_singles
 !
 !     get Cholesky routines to calculate the occ/vir-occ/vir
 !     blocks of the T1-transformed Cholesky vectors
 !
-      procedure :: get_cholesky_ij => get_cholesky_ij_cc_singles ! occ-occ
-      procedure :: get_cholesky_ia => get_cholesky_ia_cc_singles ! occ-vir
-      procedure :: get_cholesky_ai => get_cholesky_ai_cc_singles ! vir-occ
-      procedure :: get_cholesky_ab => get_cholesky_ab_cc_singles ! vir-vir
+      procedure, non_overridable :: get_cholesky_ij => get_cholesky_ij_cc_singles ! occ-occ
+      procedure, non_overridable :: get_cholesky_ia => get_cholesky_ia_cc_singles ! occ-vir
+      procedure, non_overridable :: get_cholesky_ai => get_cholesky_ai_cc_singles ! vir-occ
+      procedure, non_overridable :: get_cholesky_ab => get_cholesky_ab_cc_singles ! vir-vir
 !
 !     T1-transformator of the one-electron integrals h_pq
 !
-      procedure :: one_electron_t1 => one_electron_t1_cc_singles
+      procedure, non_overridable :: one_electron_t1 => one_electron_t1_cc_singles
 !
    end type cc_singles
 !

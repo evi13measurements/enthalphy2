@@ -59,10 +59,10 @@ module hf_class
 !
 !     Routines to read MO Cholesky vectors from file
 !
-      procedure  :: read_cholesky_ij => read_cholesky_ij_hartree_fock ! occ-occ
-      procedure  :: read_cholesky_ia => read_cholesky_ia_hartree_fock ! occ-vir
-      procedure  :: read_cholesky_ai => read_cholesky_ai_hartree_fock ! vir-occ
-      procedure  :: read_cholesky_ab => read_cholesky_ab_hartree_fock ! vir-vir
+      procedure, non_overridable :: read_cholesky_ij => read_cholesky_ij_hartree_fock ! occ-occ
+      procedure, non_overridable :: read_cholesky_ia => read_cholesky_ia_hartree_fock ! occ-vir
+      procedure, non_overridable :: read_cholesky_ai => read_cholesky_ai_hartree_fock ! vir-occ
+      procedure, non_overridable :: read_cholesky_ab => read_cholesky_ab_hartree_fock ! vir-vir
 !
 !     Routines needed to initialize HF     
 !
@@ -70,10 +70,13 @@ module hf_class
 !        read_transform_cholesky: reads AO Cholesky vectors, transforms to MO basis, and
 !                                 saves the MO vectors to file
 !
-      procedure :: read_hf_info            => read_hf_info_hartree_fock
-      procedure :: read_transform_cholesky => read_transform_cholesky_hartree_fock 
+      procedure, non_overridable :: read_hf_info            => read_hf_info_hartree_fock
+      procedure, non_overridable :: read_transform_cholesky => read_transform_cholesky_hartree_fock 
 !
 !     Allocation of the Fock matrix (note: it is constructed in descendant classes)
+!
+!     (E: should we make an initialize_fock_matrix & overwrite it in CCS instead?
+!         similar to initialize_amplitudes routine in this way)
 !
       procedure :: allocate_fock_matrix => allocate_fock_matrix_hartree_fock
 !
