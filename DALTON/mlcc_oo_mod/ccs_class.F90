@@ -170,9 +170,9 @@ contains
       real(dp), dimension(:,:), allocatable :: fock_ao
       real(dp), dimension(:,:), allocatable :: fock_matrix
 !
-      real(dp), dimension(:,:), allocatable      :: h1ao ! AO basis matrix h_αβ
-      real(dp), dimension(:,:), allocatable      :: h1mo ! MO basis matrix h_pq  
-      real(dp), dimension(:,:), allocatable      :: X    ! An intermediate
+      real(dp), dimension(:,:), allocatable :: h1ao ! AO basis matrix h_αβ
+      real(dp), dimension(:,:), allocatable :: h1mo ! MO basis matrix h_pq  
+      real(dp), dimension(:,:), allocatable :: X    ! An intermediate
 !      
       integer(i15) :: unit_identifier_ao_integrals = -1 ! Unit identifier for file mlcc_aoint
 !
@@ -211,8 +211,9 @@ contains
 !     Allocate one-electron MO integrals
 !
       call allocator(h1mo, wfn % n_mo, wfn % n_mo)
-      call allocator(fock_matrix, wfn % n_mo, wfn % n_mo)
       h1mo = zero
+!
+      call allocator(fock_matrix, wfn % n_mo, wfn % n_mo)
 !
 !
 !     -::- One-electron contribution -::-
