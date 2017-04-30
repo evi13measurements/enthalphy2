@@ -1,14 +1,15 @@
 module hf_class
 !
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-!                                                                 
-!                Hartree-Fock (HF) class module                                 
-!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
-!                                                                 
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
-!             -::- Modules used by the class -::-
 !
+!                      Hartree-Fock (HF) class module                                 
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017         
+!                                                                           
+!
+!
+!  :::::::::::::::::::::::::::::::::::
+!  -::- Modules used by the class -::-
+!  :::::::::::::::::::::::::::::::::::
 !
 !  Use general tools
 !
@@ -19,9 +20,9 @@ module hf_class
 !
    implicit none
 !
-!
-!            -::- Definition of the HF class -::- 
-!
+!  ::::::::::::::::::::::::::::::::::::
+!  -::- Definition of the HF class -::-
+!  ::::::::::::::::::::::::::::::::::::
 !   
    type :: hartree_fock
 !
@@ -81,11 +82,9 @@ module hf_class
 !
 contains 
 !
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-!
-!             Initialization and driver routines
-!
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!  ::::::::::::::::::::::::::::::::::::::::::::
+!  -::- Initialization and driver routines -::-
+!  ::::::::::::::::::::::::::::::::::::::::::::
 ! 
    subroutine init_hartree_fock(wf)
 !
@@ -136,11 +135,9 @@ contains
 !
    end subroutine drv_hartree_fock
 !
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-!
-!                Class subroutines and functions 
-!
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!  :::::::::::::::::::::::::::::::::::::::::
+!  -::- Class subroutines and functions -::-
+!  :::::::::::::::::::::::::::::::::::::::::
 !
    subroutine read_hf_info_hartree_fock(wf)
 !

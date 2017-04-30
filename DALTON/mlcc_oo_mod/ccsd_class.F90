@@ -1,15 +1,14 @@
 module ccsd_class
 !
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-!                                                                 
-!      Coupled cluster singles and doubles (CCSD) class module                                 
-!   Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
-!                                                                 
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
 !
-!            -::- Modules used by the class -::-
+!           Coupled cluster singles and doubles (CCSD) class module                                 
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017         
+!                                                                           
 !
+!  :::::::::::::::::::::::::::::::::::
+!  -::- Modules used by the class -::-
+!  :::::::::::::::::::::::::::::::::::
 !
 !  General tools
 !
@@ -24,9 +23,9 @@ module ccsd_class
 !
    implicit none 
 !
-!
-!            -::- Definition of the CCSD class -::- 
-!
+!  ::::::::::::::::::::::::::::::::::::::
+!  -::- Definition of the CCSD class -::-
+!  ::::::::::::::::::::::::::::::::::::::
 !
    type, extends(cc_singles) :: cc_singles_doubles
 !
@@ -55,13 +54,9 @@ module ccsd_class
 !
 contains
 !
-!
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-!
-!              Initialization and driver routines
-!
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-!
+!  ::::::::::::::::::::::::::::::::::::::::::::
+!  -::- Initialization and driver routines -::-
+!  ::::::::::::::::::::::::::::::::::::::::::::
 !
    subroutine init_cc_singles_doubles(wf)
 !
@@ -117,6 +112,9 @@ contains
 !
    end subroutine drv_cc_singles_doubles
 !
+!  :::::::::::::::::::::::::::::::::::::::::
+!  -::- Class subroutines and functions -::- 
+!  :::::::::::::::::::::::::::::::::::::::::
 !
    subroutine initialize_amplitudes_cc_singles_doubles(wf)
 !
