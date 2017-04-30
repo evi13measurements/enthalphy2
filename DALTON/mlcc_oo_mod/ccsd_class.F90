@@ -80,7 +80,7 @@ contains
       implicit none 
 !
       class(cc_singles_doubles) :: wf
-
+!
 !     Read Hartree-Fock info from SIRIUS
 !
       call wf % read_hf_info
@@ -89,15 +89,15 @@ contains
 !
       call wf % read_transform_cholesky 
 !
-!     Allocate Fock matrix and set to zero
-!
-      call wf % initialize_fock_matrix
-!
 !     Initialize (singles and doubles) amplitudes
 !
       call wf % initialize_amplitudes
 !
-!     Set the initial value of the energy from the initial amplitudes 
+!     Initialize the Fock matrix (allocate and construct given the initial amplitudes)
+!
+      call wf % initialize_fock_matrix
+!
+!     Set the initial value of the energy (given the initial amplitudes) 
 !
       call wf % calc_energy
 !
@@ -110,7 +110,10 @@ contains
 !
       class(cc_singles_doubles) :: wf
 !
-! To do...
+!     Print the energy    
+!
+      write(unit_output,*) 'The SCF energy:', wf % scf_energy
+      write(unit_output,*) 'The MP2 energy:', wf % energy
 !
    end subroutine drv_cc_singles_doubles
 !
@@ -141,12 +144,12 @@ contains
 !
 !     Allocate the singles amplitudes and set to zero
 !
-      call allocator(wf % t1am, wf % n_t1am, 1)
+      call allocator(wf % t1am, wf % n_v, wf % n_o)
       wf % t1am = zero
 !
 !     Allocate the doubles amplitudes and set to zero
 !
-      call allocator (wf % t2am, wf % n_t2am, 1)
+      call allocator(wf % t2am, wf % n_t2am, 1)
       wf % t2am = zero
 !
 !
@@ -160,6 +163,10 @@ contains
 !
       L_ia_J = zero
       g_ia_jb = zero
+!
+!     Get the Cholesky IA vector 
+!
+      call wf % get_cholesky_ia(L_ia_J)
 !
 !     Calculate g_ia_jb = g_iajb
 !
@@ -211,7 +218,7 @@ contains
 !     Deallocations
 !
       call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), (wf % n_J))
-      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))     
+      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v)) 
 !
    end subroutine initialize_amplitudes_cc_singles_doubles
 !

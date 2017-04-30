@@ -2,8 +2,7 @@ module ccs_class
 !
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !                                                                 
-!           Coupled cluster singles (CCS) class module                                 
-!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
+!           Coupled cluster singles (CCS) class module                                !  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
 !                                                                 
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
@@ -42,7 +41,11 @@ module ccs_class
 !      
       procedure :: initialize_amplitudes => initialize_amplitudes_cc_singles
 !
-!     A Fock constructor to calculate the T1-transformed Fock  matrix for the current singles 
+!     Initialization routine for the Fock matrix
+!
+      procedure :: initialize_fock_matrix => initialize_fock_matrix_cc_singles
+!
+!     A Fock constructor to calculate the T1-transformed Fock matrix for the current singles 
 !     amplitudes (see the HF class for the Fock matrix itself)
 !
       procedure, non_overridable :: fock_constructor => fock_constructor_cc_singles
@@ -88,21 +91,36 @@ contains
 !
       class(cc_singles) :: wf
 !
+      write(unit_output,*) 'In init_cc_singles'
+      call flshfo(unit_output)
+!
 !     Read Hartree-Fock info from SIRIUS
 !
       call wf % read_hf_info
+!
+      write(unit_output,*) 'In init_cc_singles: read hf info '
+      call flshfo(unit_output)
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
       call wf % read_transform_cholesky
 !
-!     Allocate Fock matrix and set to zero
-!
-      call wf % initialize_fock_matrix
+      write(unit_output,*) 'In init_cc_singles: transformed cholesky '
+      call flshfo(unit_output)
 !
 !     Initialize amplitudes and associated attributes
 !
       call wf % initialize_amplitudes
+!
+      write(unit_output,*) 'In init_cc_singles: initialized ampl '
+      call flshfo(unit_output)
+!
+!     Allocate Fock matrix and set to zero
+!
+      call wf % initialize_fock_matrix
+!
+      write(unit_output,*) 'In init_cc_singles: initialized fock '
+      call flshfo(unit_output)
 !
    end subroutine init_cc_singles
 !
@@ -120,7 +138,8 @@ contains
       class(cc_singles) :: wf
 !
       write(unit_output,*) 'ERROR: There is no driver for the CCS class.'
-      call exit
+      call flshfo(unit_output)
+!      call exit
 !
    end subroutine drv_cc_singles
 !
@@ -150,7 +169,7 @@ contains
 !
 !     Allocate the singles amplitudes and set to zero
 !
-      call allocator(wf % t1am, wf % n_t1am, 1)
+      call allocator(wf % t1am, wf % n_v, wf % n_o)
       wf % t1am = zero
 !
    end subroutine initialize_amplitudes_cc_singles
@@ -186,8 +205,7 @@ contains
 !
 !     Useful orbital information
 !      
-      integer(i15) :: n_oo = 0, n_ov = 0, n_vv = 0 ! n_o*n_o, n_o*n_v, n_v*n_v
-      integer(i15) :: n_ao_sq_packed = 0           ! Dimension of packed (n_ao x n_ao) matrix
+      integer(i15) :: n_ao_sq_packed = 0 ! Dimension of packed (n_ao x n_ao) matrix
 !
 !     Two electron integrals
 !
@@ -216,6 +234,7 @@ contains
       h1mo = zero
 !
       call allocator(fock_matrix, wf % n_mo, wf % n_mo)
+      fock_matrix = zero
 !
 !
 !     -::- One-electron contribution -::-
@@ -230,6 +249,7 @@ contains
 !
 !     Open mlcc_aoint file
 !
+      call generate_unit_identifier(unit_identifier_ao_integrals)
       open(unit=unit_identifier_ao_integrals,file='mlcc_aoint',status='old',form='formatted')
       rewind(unit_identifier_ao_integrals)
 !
@@ -244,7 +264,9 @@ contains
 !     Allocate the AO Fock matrix and add the one-electron contributions
 !
       call allocator(fock_ao, wf % n_ao, wf % n_ao)
-      call squareup(h1ao, fock_ao, wf % n_ao)   
+      fock_ao = zero
+!
+      call squareup(h1ao, fock_ao, wf % n_ao)  
 !
 !     Deallocation of one-electron AO integrals
 !   
@@ -255,35 +277,35 @@ contains
 !
       call allocator(X, wf % n_ao, wf % n_mo)
 !
-      call dgemm('N','N',        &
+      call dgemm('N','N',       &
                   wf % n_ao,    &
                   wf % n_mo,    &
                   wf % n_ao,    &
-                  one,           &
-                  fock_ao,       &
+                  one,          &
+                  fock_ao,      &
                   wf % n_ao,    &
                   wf % mo_coef, &
                   wf % n_ao,    &
-                  zero,          &
-                  X,             &
+                  zero,         &
+                  X,            &
                   wf % n_ao)
 !
-      call dgemm('T','N',        &        
+      call dgemm('T','N',       &        
                   wf % n_mo,    &
                   wf % n_mo,    &
                   wf % n_ao,    &
-                  one,           &
+                  one,          &
                   wf % mo_coef, &
                   wf % n_ao,    &
-                  X,             &
+                  X,            &
                   wf % n_ao,    &
-                  zero,          &
-                  h1mo,          &
+                  zero,         &
+                  h1mo,         &
                   wf % n_mo)
 ! 
 !     T1-transformation of one-electron integrals in MO basis
 !
-      call wf % one_electron_t1(h1mo)
+      call wf % one_electron_t1(h1mo,fock_matrix)
       call deallocator(h1mo, wf % n_mo, wf % n_mo)
 !
 !     Deallocate intermediate X and fock_ao
@@ -300,10 +322,8 @@ contains
 !
 !     Allocation for L_ij_J
 ! 
-      n_oo = (wf % n_o) * (wf % n_o)
-!
-      call allocator(L_ij_J, n_oo, wf % n_J)
-      call allocator(g_ij_kl, n_oo, n_oo)
+      call allocator(L_ij_J, (wf % n_o)**2, wf % n_J)
+      call allocator(g_ij_kl, (wf % n_o)**2, (wf % n_o)**2)
 !
       L_ij_J  = zero
       g_ij_kl = zero
@@ -314,18 +334,18 @@ contains
 !
 !     Calculate g_ij_kl
 ! 
-      call dgemm('N','T',    &
-                  n_oo,      &
-                  n_oo,      &
-                  wf % n_J, &
-                  one,       &
-                  L_ij_J,    &
-                  n_oo,      &
-                  L_ij_J,    &
-                  n_oo,      &
-                  zero,      &
-                  g_ij_kl,   &
-                  n_oo)
+      call dgemm('N','T',        &
+                  (wf % n_o)**2, &
+                  (wf % n_o)**2, &
+                  wf % n_J,      &
+                  one,           &
+                  L_ij_J,        &
+                  (wf % n_o)**2, &
+                  L_ij_J,        &
+                  (wf % n_o)**2, &
+                  zero,          &
+                  g_ij_kl,       &
+                  (wf % n_o)**2)
 !
 !     Add two-electron contributions to occupied-occupied block
 !
@@ -336,9 +356,9 @@ contains
 !
             do k = 1, wf % n_o
 !
-               kk = index_two(k,k, wf % n_o)
-               ik = index_two(i,k, wf % n_o)
-               kj = index_two(k,j, wf % n_o)
+               kk = index_two(k, k, wf % n_o)
+               ik = index_two(i, k, wf % n_o)
+               kj = index_two(k, j, wf % n_o)
 !
                fock_matrix(i,j) = fock_matrix(i,j) + two*g_ij_kl(ij,kk) - g_ij_kl(ik,kj)
 !
@@ -350,7 +370,7 @@ contains
 !
 !     Deallocate g_ij_kl
 ! 
-      call deallocator(g_ij_kl, n_oo, n_oo)
+      call deallocator(g_ij_kl, (wf % n_o)**2, (wf % n_o)**2)
 !
 !
 !    :: Occupied-virtual blocks ::
@@ -358,10 +378,8 @@ contains
 !
 !     Allocation for g_ia_jk 
 !
-      n_ov = (wf % n_o) * (wf % n_v)
-!
-      call allocator(L_ia_J, n_ov, wf % n_J)
-      call allocator(g_ia_jk, n_ov, n_oo)
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      call allocator(g_ia_jk, (wf % n_o)*(wf % n_v), (wf % n_o)**2)
 !
 !     Read Cholesky vector L_ia_J
 !
@@ -369,28 +387,27 @@ contains
 !
 !     Calculate g_ia_jk
 !
-      call dgemm('N','T',    &
-                  n_ov,      &
-                  n_oo,      &
-                  wf % n_J, &
-                  one,       &
-                  L_ia_J,    &
-                  n_ov,      &
-                  L_ij_J,    &
-                  n_oo,      &
-                  zero,      &
-                  g_ia_jk,   &
-                  n_ov)
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), &
+                  (wf % n_o)**2,         &
+                  wf % n_J,              &
+                  one,                   &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ij_J,                &
+                  (wf % n_o)**2,         & 
+                  zero,                  &
+                  g_ia_jk,               &
+                  (wf % n_o)*(wf % n_v))
 !
 !     Dealllocate L_ia_J
 !
-      call deallocator(L_ia_J, n_ov, wf % n_J)
-!
+      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
 !     Allocation for g_ai_jk 
 !
-      call allocator(L_ai_J, n_ov, wf % n_J)
-      call allocator(g_ai_jk, n_ov, n_oo)
+      call allocator(L_ai_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      call allocator(g_ai_jk, (wf % n_o)*(wf % n_v), (wf % n_o)**2)
 !
 !     Get Cholesky AI vector
 !
@@ -398,22 +415,22 @@ contains
 !
 !     Calculate g_ai_jk
 !
-      call dgemm('N','T',    &
-                  n_ov,      &
-                  n_oo,      &
-                  wf % n_J, &
-                  one,       &  
-                  L_ai_J,    &
-                  n_ov,      &
-                  L_ij_J,    &
-                  n_oo,      &
-                  zero,      &
-                  g_ai_jk,   &
-                  n_ov)
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), &
+                  (wf % n_o)**2,         &
+                  wf % n_J,              &
+                  one,                   &  
+                  L_ai_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ij_J,                &
+                  (wf % n_o)**2,         &
+                  zero,                  &
+                  g_ai_jk,               &
+                  (wf % n_o)*(wf % n_v))
 !
 !     Deallocate L_ai_J
 !
-      call deallocator(L_ai_J, n_ov, wf % n_J)
+      call deallocator(L_ai_J, (wf % n_v)*(wf % n_o), wf % n_J)
 !
 !     Add terms to Fock matrix
 !
@@ -435,7 +452,7 @@ contains
 ! 
 !              Set the blocks of the Fock matrix
 !
-               fock_matrix(i, a + wf % n_o) = fock_matrix(i,a + wf%n_o) + & 
+               fock_matrix(i, a + wf % n_o) = fock_matrix(i, a + wf % n_o) + & 
                                                  two*g_ia_jk(ia,jj) - g_ia_jk(ja,ij) ! g_ia_jk(ja,ij) = g_jaij = g_ijja
 !
                fock_matrix(a + wf % n_o, i) = fock_matrix(a + wf % n_o, i) + & 
@@ -445,16 +462,14 @@ contains
          enddo
       enddo
 !
-      call deallocator(g_ia_jk,n_ov,n_oo)
-      call deallocator(g_ai_jk,n_ov,n_oo)
+      call deallocator(g_ia_jk, (wf % n_o)*(wf % n_v), (wf % n_o)**2)
+      call deallocator(g_ai_jk, (wf % n_v)*(wf % n_o), (wf % n_o)**2)
 !
 !
 !     :: Virtual-virtual block F_ab = h_ab + sum_k (2*g_abkk - g_akkb) ::
 !
 !
-      n_vv = (wf % n_v)*(wf % n_v)
-!
-      call allocator(g_ab_ij, n_vv, n_oo)
+      call allocator(g_ab_ij, (wf % n_v)**2, (wf % n_o)**2)
       g_ab_ij = zero
 !
 !     Batch over index a
@@ -492,18 +507,18 @@ contains
 !
          g_off = index_two(1, batch_start, wf % n_v)
 !
-         call dgemm('N','T',                     &
+         call dgemm('N','T',                  &
                      (wf % n_v)*batch_length, &
-                     n_oo,                       &
-                     wf % n_J,                  &
-                     one,                        &
-                     L_ab_J,                     &
+                     (wf % n_o)**2,           &
+                     wf % n_J,                &
+                     one,                     &
+                     L_ab_J,                  &
                      (wf % n_v)*batch_length, &
-                     L_ij_J,                     &
-                     n_oo,                       &
-                     one,                        &
-                     g_ab_ij(g_off,1),           &
-                     n_vv)
+                     L_ij_J,                  &
+                     (wf % n_o)**2,           &
+                     one,                     &
+                     g_ab_ij(g_off,1),        &
+                     (wf % n_v)**2)
 !
 !        Deallocate L_ab_J
 !
@@ -513,42 +528,43 @@ contains
 !
 !     Deallocate L_ij_J
 !
-      call deallocator(L_ij_J, n_oo, wf % n_J)
+      call deallocator(L_ij_J, (wf % n_o)**2, wf % n_J)
 !
 !     Allocate for g_ai_jb
 !
-      call allocator(g_ai_jb, n_ov, n_ov)
-      call allocator(L_ai_J, n_ov, wf % n_J)
-      call allocator(L_ia_J, n_ov, wf % n_J)
+      call allocator(g_ai_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+!
+      call allocator(L_ai_J, (wf % n_v)*(wf % n_o), wf % n_J)
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
 !     Read Cholesky vectors L_ia_J and L_ai_J
 !
       call wf % get_cholesky_ai(L_ai_J)
 !
-      call dgemm('N','T',    &
-                  n_ov,      &
-                  n_ov,      &
-                  wf % n_J, &
-                  one,       &
-                  L_ai_J,    &
-                  n_ov,      &
-                  L_ia_J,    &
-                  n_ov,      &
-                  zero,      &
-                  g_ai_jb,   &
-                  n_ov)
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), &
+                  (wf % n_o)*(wf % n_v), &
+                  wf % n_J,              &
+                  one,                   &
+                  L_ai_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  zero,                  &
+                  g_ai_jb,               &
+                  (wf % n_o)*(wf % n_v))
 !
 !     Deallocate L_ia_J
 !
-     call deallocator(L_ia_J, n_ov, wf % n_J)
-     call deallocator(L_ai_J, n_ov, wf % n_J)
+     call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+     call deallocator(L_ai_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
 !     Calculate two-electron terms for virtual-virtual blocks
 !
       do a = 1, wf % n_v
          do b = 1, wf % n_v
 !
-            ab = index_two(a, b, wf%n_v)
+            ab = index_two(a, b, wf % n_v)
 !
             do i = 1, wf % n_o
 !
@@ -559,15 +575,16 @@ contains
                ib = index_two(i, b, wf % n_o)
 !
                fock_matrix(wf % n_o + a, wf % n_o + b) = fock_matrix(wf % n_o + a, wf % n_o + b) &
-                                                             + two*g_ab_ij(ab,ii) - g_ai_jb(ai,ib)
+                                                       + two*g_ab_ij(ab,ii) &
+                                                       - g_ai_jb(ai,ib)
 !
             enddo
 !
          enddo 
       enddo
 !
-     call deallocator(g_ab_ij, n_vv, n_oo)
-     call deallocator(g_ai_jb, n_ov, n_ov)
+     call deallocator(g_ab_ij, (wf % n_v)**2, (wf % n_o)**2)
+     call deallocator(g_ai_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
 !
 !     Save the blocks of the Fock matrix in memory (ij,ia,ai,ab)
 !
@@ -601,7 +618,7 @@ contains
    end subroutine fock_constructor_cc_singles
 !
 !
-   subroutine one_electron_t1_cc_singles(wf,h1)
+   subroutine one_electron_t1_cc_singles(wf,h1,h1_T1)
 !
 !     One-electron T1 
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -618,7 +635,7 @@ contains
       class(cc_singles) :: wf
 !
       real(dp), dimension(wf % n_mo, wf % n_mo) :: h1
-      real(dp), dimension(:,:), allocatable       :: h1_T1
+      real(dp), dimension(wf % n_mo, wf % n_mo) :: h1_T1
 !
       real(dp), dimension(:,:), allocatable :: x 
       real(dp), dimension(:,:), allocatable :: y 
@@ -737,15 +754,9 @@ contains
 !
       integer(i15) :: i = 0, J = 0, a = 0, ij = 0, ia = 0, ik = 0, k = 0
 !
-      integer(i15) :: n_ov = 0
-!
-!     Calculate n_o * n_v = n_ov
-!
-      n_ov = (wf % n_o)*(wf % n_v)
-!
 !     Allocate
 !
-      call allocator(L_ia_J, n_ov, wf % n_J)
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
       call allocator(L_iJ_a, (wf % n_o)*(wf % n_J), wf % n_v)
 !
       L_ia_J = zero
@@ -775,7 +786,7 @@ contains
 !
 !     Deallocate L_ia_J
 !
-      call deallocator(L_ia_J, n_ov, wf % n_J)
+      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
 !     Allocate L_iJ_k
 !
@@ -784,17 +795,17 @@ contains
 !
 !     T1-transformation
 !
-      call dgemm('N','N',                    &
+      call dgemm('N','N',                &
                   (wf % n_o)*(wf % n_J), &
-                  wf % n_o,               &
-                  wf % n_v,               &
-                  one,                       &
-                  L_iJ_a,                    &
+                  wf % n_o,              &
+                  wf % n_v,              &
+                  one,                   &
+                  L_iJ_a,                &
                   (wf % n_o)*(wf % n_J), &
-                  wf % t1am,                &
-                  wf % n_v,               &
-                  zero,                      &
-                  L_iJ_k,                    &
+                  wf % t1am,             &
+                  wf % n_v,              &
+                  zero,                  &
+                  L_iJ_k,                &
                   (wf % n_o)*(wf % n_J))
 !
 !     Place terms from L_iJ_k into L_ij_J
@@ -820,6 +831,7 @@ contains
       call deallocator(L_iJ_a, (wf % n_o)*(wf % n_J), wf % n_v)
 !    
    end subroutine get_cholesky_ij_cc_singles
+!
 !
    subroutine get_cholesky_ia_cc_singles(wf,L_ia_J)
 !
@@ -933,8 +945,7 @@ contains
 !        Read Cholesky AB vectors, batching over a
 ! 
          reorder = .true.
-         call wf % read_cholesky_ab(L_ba_J, batch_start, batch_end,&
-                                     (wf % n_v)*batch_length, reorder)
+         call wf % read_cholesky_ab(L_ba_J, batch_start, batch_end, (wf % n_v)*batch_length, reorder)
 !
 !        Reorder the Cholesky array L_ba_J
 !
@@ -951,23 +962,23 @@ contains
 !
                enddo
             enddo
-         enddo         
+         enddo        
 !
 !        Calculate sum_b L_Ja_b*t_b_i = L_Ja_i 
 !        
          L_off = index_two(1, batch_start, wf % n_J)
 !
-         call dgemm('N','N',                   &
+         call dgemm('N','N',                  &
                      batch_length*(wf % n_J), &
-                     wf % n_o,              &
-                     wf % n_v,              &
-                     one,                      &
-                     L_Ja_b,                   &
+                     wf % n_o,                &
+                     wf % n_v,                &
+                     one,                     &
+                     L_Ja_b,                  &
                      batch_length*(wf % n_J), &
                      wf % t1am,               &
-                     wf % n_v,              &
-                     one,                      &
-                     L_Ja_i(L_off, 1),         &
+                     wf % n_v,                &
+                     one,                     &
+                     L_Ja_i(L_off, 1),        &
                      (wf % n_v)*(wf % n_J))
 !
 !        Deallocate L_ab_J and L_Ja_b
@@ -981,7 +992,7 @@ contains
 !
       do i = 1, wf % n_o
          do a = 1, wf % n_v
-            do J=1, wf % n_J
+            do J = 1, wf % n_J
 !
 !              Needed indices
 !
@@ -1005,12 +1016,14 @@ contains
 !     Allocate L_a_iJ, L_ik_J, L_k_iJ
 !
       call allocator(L_a_iJ, wf % n_v, (wf % n_J)*(wf % n_o))
-      call allocator(L_ik_J, (wf % n_o)**2, wf % n_J)
       call allocator(L_k_iJ, wf % n_o, (wf % n_o)*(wf % n_J))
 !
+      call allocator(L_ik_J, (wf % n_o)**2, wf % n_J)
+!
       L_a_iJ = zero   
-      L_ik_J = zero 
       L_k_iJ = zero
+!
+      L_ik_J = zero 
 !  
 !     Read Cholesky IJ vectors
 !
@@ -1035,17 +1048,17 @@ contains
 !
 !     Calculate -sum_k t_a_k*L_k_iJ = L_a_iJ  ! Here we assume L_ik^J = L_ki^J - this is safe, right?
 !
-      call dgemm('N','N',                    &
-                  wf % n_v,               &
+      call dgemm('N','N',                &
+                  wf % n_v,              &
                   (wf % n_o)*(wf % n_J), &
-                  wf % n_o                &
-                  -one,                      &
-                  wf % t1am,                &
-                  wf % n_v,               &
-                  L_k_iJ,                    &
-                  wf % n_o,               &
-                  zero,                      &
-                  L_a_iJ,                    &
+                  wf % n_o,              &
+                  -one,                  &
+                  wf % t1am,             &
+                  wf % n_v,              &
+                  L_k_iJ,                &
+                  wf % n_o,              &
+                  zero,                  &
+                  L_a_iJ,                &
                   wf % n_v)
 !
 !     Add terms to T1-transformation of L_ai_J
@@ -1068,8 +1081,9 @@ contains
 !     Deallocate L_a_iJ, L_ik_J, L_k_iJ
 !
       call deallocator(L_a_iJ, wf % n_v, (wf % n_J)*(wf % n_o))      
-      call deallocator(L_ik_J, (wf % n_o)**2, wf % n_J)
       call deallocator(L_k_iJ, wf % n_o, (wf % n_o)*(wf % n_J))
+!
+      call deallocator(L_ik_J, (wf % n_o)**2, wf % n_J)
 !
 !
 !     -::- L_jb_J contributions -::-    
@@ -1110,17 +1124,17 @@ contains
 !
 !     Calculate sum_b L_kJ_b*t_b_i = L_kJ_i
 !
-      call dgemm('N','N',                    &
+      call dgemm('N','N',                &
                   (wf % n_o)*(wf % n_J), &
-                  wf % n_o,               &
-                  wf % n_v,               &
-                  one,                       &
-                  L_kJ_b,                    &
+                  wf % n_o,              &
+                  wf % n_v,              &
+                  one,                   &
+                  L_kJ_b,                &
                   (wf % n_o)*(wf % n_J), &
-                  wf % t1am,                &
-                  wf % n_v,               &
-                  zero,                      &
-                  L_kJ_i,                    &
+                  wf % t1am,             &
+                  wf % n_v,              &
+                  zero,                  &
+                  L_kJ_i,                &
                   (wf % n_o)*(wf % n_J))
 !
 !     Deallocate L_kJ_b
@@ -1160,17 +1174,17 @@ contains
 !      
 !     Calculate sum_k t_a_k*L_k_iJ = L_a_iJ
 !
-      call dgemm('N','N',                    &
-                  wf % n_v,               &
+      call dgemm('N','N',                &
+                  wf % n_v,              &
                   (wf % n_o)*(wf % n_J), &
-                  wf % n_o,               &
-                  -one,                      &
-                  wf % t1am,                &
-                  wf % n_v,               &
-                  L_k_iJ,                    &
-                  wf % n_o,               &
-                  zero,                      &
-                  L_a_iJ,                    &
+                  wf % n_o,              &
+                  -one,                  &
+                  wf % t1am,             &
+                  wf % n_v,              &
+                  L_k_iJ,                &
+                  wf % n_o,              &
+                  zero,                  &
+                  L_a_iJ,                &
                   wf % n_v)
 !
 !     Add contribution to L ai_J
@@ -1256,7 +1270,7 @@ contains
 !
 !        Read L_ab_J for batch of a
 !
-         call wf % read_cholesky_ab(L_ab_J, first, last, ab_dim, reorder) ! Eirik: L_ab_J(ba) = L_ab^J 
+         call wf % read_cholesky_ab(L_ab_J, first, last, ab_dim, reorder) ! L_ab_J(ba) = L_ab^J 
 !
 !        Allocate L_i,Jb
 !
@@ -1274,7 +1288,7 @@ contains
                   ib = index_two(i, b, wf % n_o)
                   Jb = index_two(J, b, wf % n_J)
 !
-                  L_i_Jb(i, Jb)=L_ib_J(ib, J)
+                  L_i_Jb(i, Jb) = L_ib_J(ib, J)
 !
                enddo
             enddo
@@ -1290,17 +1304,17 @@ contains
 !
 !        Calculate  -t1_a_i * L_i_Jb = L_a_Jb
 !
-         call dgemm('N','N',                    &
-                     batch_length,              &
+         call dgemm('N','N',                &
+                     batch_length,          &
                      (wf % n_v)*(wf % n_J), &
-                     wf % n_o,               &
-                     -one,                      &
-                     wf % t1am(first,1),       &
-                     wf % n_v,               &
-                     L_i_Jb,                    &
-                     wf % n_o,               &
-                     zero,                      &
-                     L_a_Jb,                    &
+                     wf % n_o,              &
+                     -one,                  &
+                     wf % t1am(first,1),    &
+                     wf % n_v,              &
+                     L_i_Jb,                &
+                     wf % n_o,              &
+                     zero,                  &
+                     L_a_Jb,                &
                      batch_length)
 !
 !        Add terms of L_a_Jb to L_ab_J
@@ -1323,7 +1337,7 @@ contains
 !        Dellocate L_i_Jb and L_a_Jb for batch of a
 !
          call deallocator(L_a_Jb, batch_length, (wf % n_J)*(wf % n_v))
-         call deallocator(L_i_Jb, (wf % n_J)*(wf % n_v),(wf % n_o))
+         call deallocator(L_i_Jb, (wf % n_J)*(wf % n_v), (wf % n_o))
 !
       else  !! Batching over b !!
 !
@@ -1373,17 +1387,17 @@ contains
 !
 !        T1-transformation
 !
-         call dgemm('N','T',&
+         call dgemm('N','T',                  &
                      (wf % n_J)*batch_length, &
-                     wf % n_v,              &
-                     wf % n_o,              &
-                     -one,                     &
-                     L_Jb_i,                   &
+                     wf % n_v,                &
+                     wf % n_o,                &
+                     -one,                    &
+                     L_Jb_i,                  &
                      (wf % n_J)*batch_length, &
                      wf % t1am,               &
-                     wf % n_v,              &
-                     zero,                     &
-                     L_Jb_a,                   &
+                     wf % n_v,                &
+                     zero,                    &
+                     L_Jb_a,                  &
                      batch_length*(wf % n_J))
 !
 !        Add terms of L_Jb_a to L_ab_J
@@ -1411,6 +1425,33 @@ contains
       endif
 !
    end subroutine get_cholesky_ab_cc_singles
+!
+!   
+   subroutine initialize_fock_matrix_cc_singles(wf)
+!
+!     Initialize Fock Matrix (CCS)
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!
+!     Allocates and constructs the Fock matrix 
+!
+      implicit none
+!  
+      class(cc_singles) :: wf   
+!
+      call allocator(wf % fock_matrix_ij, wf % n_o, wf % n_o)
+      call allocator(wf % fock_matrix_ia, wf % n_o, wf % n_v)
+      call allocator(wf % fock_matrix_ai, wf % n_v, wf % n_o)
+      call allocator(wf % fock_matrix_ab, wf % n_v, wf % n_v)
+
+!
+      wf % fock_matrix_ij = zero
+      wf % fock_matrix_ia = zero
+      wf % fock_matrix_ai = zero
+      wf % fock_matrix_ab = zero
+!
+      call wf % fock_constructor
+!
+   end subroutine initialize_fock_matrix_cc_singles
 !
 !
 end module ccs_class

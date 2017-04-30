@@ -160,7 +160,7 @@ contains
 !
       integer(i15) :: unit_identifier_hf = -1 ! Unit identifier for mlcc_hf_info file
 !
-      integer(i15) :: n_lambda = 0            ! n_ao * n_mo, read but discarded
+      integer(i15) :: n_lambda = 0 ! n_ao * n_mo, read but discarded
       integer(i15) :: i = 0, j = 0
 !
 !     Open the file mlcc_hf_info
@@ -192,7 +192,7 @@ contains
 !     Read in the Fock diagonal and MO coefficients
 !
       read(unit_identifier_hf,*) (wf % fock_diagonal(i,1), i = 1, wf % n_mo)
-      read(unit_identifier_hf,*) (wf % mo_coef(i,1), i = 1, n_lambda)   
+      read(unit_identifier_hf,*) (wf % mo_coef(i,1), i = 1, n_lambda) 
 !
 !     Close the mlcc_hf_info file
 !    
@@ -324,6 +324,7 @@ contains
 !
 !     Close files 
 !
+      close(unit_chol_ao)
       close(unit_chol_mo_ij)
       close(unit_chol_mo_ia)
       close(unit_chol_mo_ab)
@@ -402,9 +403,9 @@ contains
 !
       implicit none
 !
-      class(hartree_fock)      :: wf
+      class(hartree_fock) :: wf
 !
-      real(dp), dimension(:,:) :: L_ia_J ! L_ia^J
+      real(dp), dimension((wf % n_o)*(wf % n_v), wf % n_J) :: L_ia_J ! L_ia^J
 !
       integer(i15) :: unit_chol_mo_ia = -1 ! Unit identifier for cholesky_ia file
       integer(i15) :: i=0,j=0
@@ -440,7 +441,7 @@ contains
 !
       class(hartree_fock) :: wf
 !
-      real(dp), dimension((wf % n_v)*(wf % n_v), wf % n_J) :: L_ai_J ! L_ai^J
+      real(dp), dimension((wf % n_v)*(wf % n_o), wf % n_J) :: L_ai_J ! L_ai^J
 !
       integer(i15) :: unit_chol_mo_ai = -1 ! Unit identifier for cholesky_ai file
       integer(i15) :: i = 0, j = 0
@@ -448,7 +449,7 @@ contains
 !     Prepare for reading: generate unit idientifier, open, and rewind file
 !
       call generate_unit_identifier(unit_chol_mo_ai)
-      open(unit=unit_chol_mo_ai,file='cholesky_ai',status='unknown',form='unformatted')
+      open(unit=unit_chol_mo_ai,file='cholesky_ia',status='unknown',form='unformatted') ! E: changed ai to ia; ok?
       rewind(unit_chol_mo_ai)
 !
 !     Read Cholesky vectors into the L_ai_J matrix
@@ -492,8 +493,8 @@ contains
       integer(i15) :: a = 0, b = 0, j = 0, i = 0
       integer(i15) :: batch_length = 0
 !
-      integer(i15) :: throw_away_index
-      real(dp)     :: throw_away
+      integer(i15) :: throw_away_index = 0
+      real(dp)     :: throw_away = 0
 !
 !     Prepare for reading: generate unit identifier, open, and rewind file
 !  

@@ -6,18 +6,23 @@ C     Date:    April 2017
 C     Authors: Henrik Koch, Rolf H. Myhre, 
 C              Sarai D. Folkestad, Eirik F. Kjønstad
 C
-#include "implicit.h"
+      implicit none 
+C
 #include "priunit.h"
 C
-      integer           :: lu_sir   = -1 
-      integer           :: lu_mlcc  = -1 
-      integer           :: idummy   = 0
-      integer           :: n_symmetries, n_basis_sym, n_orbitals_sym, n_lambda
-      integer           :: n_occ, n_orbitals, n_basis
-      double precision  :: nuclear_potential, scf_energy          
-      integer           :: i,j
-      integer           :: lwork
-      integer           :: fock_diagonal, orbital_coeffs 
+      integer lu_sir 
+      integer lu_mlcc 
+      integer idummy 
+      integer n_symmetries, n_basis_sym, n_orbitals_sym 
+      integer n_lambda
+      integer n_occ, n_orbitals, n_basis        
+      integer i,j
+      integer lwork
+      integer fock_diagonal, orbital_coeffs 
+      integer lend 
+      integer lfree
+
+      double precision nuclear_potential, scf_energy  
       double precision, dimension(lwork) :: work
 C     
 C     Open Sirius Fock file
@@ -39,7 +44,7 @@ C
      &            nuclear_potential, scf_energy
 C
 C      
-      if (n_symmetries /= 1)
+      if (n_symmetries .ne. 1)
      &  call quit('error in mlcc: not implemented with symmetry')
 C     
 C     Memmory handling
@@ -66,8 +71,11 @@ C
      &        'FORMATTED',idummy,.false.)
       rewind(lu_mlcc)
 C
-      write(lu_mlcc,*) n_orbitals,n_occ,n_lambda,nuclear_potential,scf_energy
+      write(lu_mlcc,*) n_orbitals, n_occ, n_lambda,
+     &                 nuclear_potential, scf_energy
+C
       write(lu_mlcc,*) (work(fock_diagonal+i-1),i=1,n_orbitals)
+C
       write(lu_mlcc,*) (work(orbital_coeffs+i-1),i=1,n_lambda)
 C
       call gpclose(lu_mlcc,'KEEP')
