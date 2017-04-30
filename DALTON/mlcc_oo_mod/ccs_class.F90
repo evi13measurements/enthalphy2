@@ -563,18 +563,18 @@ contains
 !
 !     Calculate two-electron terms for virtual-virtual blocks
 !
-      call dgemm('N','T',  &
-                  n_ov,    &
-                  n_ov,    &
-                  wf%n_J, &
-                  one,     &
-                  L_ai_J,  &
-                  n_ov,    &
-                  L_ia_J,  &
-                  n_ov,    &
-                  zero,    &
-                  g_ai_jb, &
-                  n_ov)
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), &
+                  (wf % n_o)*(wf % n_v), &
+                  wf%n_J,                &
+                  one,                   &
+                  L_ai_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  zero,                  &
+                  g_ai_jb,               &
+                  (wf % n_o)*(wf % n_v))
 !
       do a = 1, wf % n_v
          do b = 1, wf % n_v

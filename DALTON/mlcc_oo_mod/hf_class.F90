@@ -117,12 +117,8 @@ contains
 !
    end subroutine init_hartree_fock
 !
-<<<<<<< HEAD
-   subroutine read_hf_info_hartree_fock(wfn)
-=======
 !
    subroutine drv_hartree_fock(wf)
->>>>>>> a0cbfd03cdea99298a50056b4500ab668081cb07
 !
 !     HF Driver
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -292,33 +288,6 @@ contains
 !
 !        Transform the AO vectors to form the Cholesky MO vectors
 !
-<<<<<<< HEAD
-         call dgemm('N','N',      &
-                     wfn%n_ao,    &
-                     wfn%n_mo,    &
-                     wfn%n_ao,    &
-                     one,         &
-                     chol_ao_sq,  &
-                     wfn%n_ao,    &
-                     wfn%mo_coef, &
-                     wfn%n_ao,    &
-                     zero,        &
-                     X,           &
-                     wfn%n_ao)
-!
-         call dgemm('T','N',      &
-                     wfn%n_mo,    &
-                     wfn%n_mo,    &
-                     wfn%n_ao,    &
-                     one,         &
-                     wfn%mo_coef, &
-                     wfn%n_ao,    &
-                     X,           &
-                     wfn%n_ao,    &
-                     zero,        &
-                     chol_mo_sq,  &
-                     wfn%n_mo)
-=======
          call dgemm('N','N',       &
                      wf % n_ao,    &
                      wf % n_mo,    &
@@ -344,7 +313,6 @@ contains
                      zero,         &
                      chol_mo_sq,   &
                      wf % n_mo)
->>>>>>> a0cbfd03cdea99298a50056b4500ab668081cb07
 !
 !        Write the MO vectors to files in blocks
 !
