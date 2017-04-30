@@ -131,7 +131,7 @@ contains
 !
       class(hartree_fock) :: wf
 !
-      write(unit_output,*) 'ERROR: There is no driver for the Hartree-Fock class.'
+      write(unit_output,*) 'ERROR: There is no driver for the Hartree-Fock class'
       call exit
 !
    end subroutine drv_hartree_fock
@@ -563,5 +563,6 @@ contains
       close(unit_chol_mo_ab)
 !
    end subroutine read_cholesky_ab_hartree_fock
+!
 !
 end module hf_class

@@ -92,36 +92,21 @@ contains
 !
       class(cc_singles) :: wf
 !
-      write(unit_output,*) 'In init_cc_singles'
-      call flshfo(unit_output)
-!
 !     Read Hartree-Fock info from SIRIUS
 !
       call wf % read_hf_info
-!
-      write(unit_output,*) 'In init_cc_singles: read hf info '
-      call flshfo(unit_output)
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
       call wf % read_transform_cholesky
 !
-      write(unit_output,*) 'In init_cc_singles: transformed cholesky '
-      call flshfo(unit_output)
-!
 !     Initialize amplitudes and associated attributes
 !
       call wf % initialize_amplitudes
 !
-      write(unit_output,*) 'In init_cc_singles: initialized ampl '
-      call flshfo(unit_output)
-!
 !     Allocate Fock matrix and set to zero
 !
       call wf % initialize_fock_matrix
-!
-      write(unit_output,*) 'In init_cc_singles: initialized fock '
-      call flshfo(unit_output)
 !
    end subroutine init_cc_singles
 !
@@ -131,16 +116,15 @@ contains
 !     CCS Driver
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
 !
-!     Lets the user know there is no driver for CCS and exits
-!     the program if called.
+!     If called, the routine lets the user know there is no driver 
+!     for CCS, then exits the program.
 !
       implicit none 
 !
       class(cc_singles) :: wf
 !
-      write(unit_output,*) 'ERROR: There is no driver for the CCS class.'
-      call flshfo(unit_output)
-!      call exit
+      write(unit_output,*) 'ERROR: There is no driver for the CCS class'
+      call exit
 !
    end subroutine drv_cc_singles
 !
@@ -232,7 +216,6 @@ contains
 !     Allocate one-electron MO integrals
 !
       call allocator(h1mo, wf % n_mo, wf % n_mo)
-!
       h1mo = zero
 !
       call allocator(fock_matrix, wf % n_mo, wf % n_mo)
@@ -556,17 +539,12 @@ contains
                   g_ai_jb,               &
                   (wf % n_o)*(wf % n_v))
 !
-!     Deallocate L_ia_J
-!
-     call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
-     call deallocator(L_ai_J, (wf % n_o)*(wf % n_v), wf % n_J)
-!
 !     Calculate two-electron terms for virtual-virtual blocks
 !
       call dgemm('N','T',                &
                   (wf % n_o)*(wf % n_v), &
                   (wf % n_o)*(wf % n_v), &
-                  wf%n_J,                &
+                  wf % n_J,              &
                   one,                   &
                   L_ai_J,                &
                   (wf % n_o)*(wf % n_v), &
@@ -575,6 +553,11 @@ contains
                   zero,                  &
                   g_ai_jb,               &
                   (wf % n_o)*(wf % n_v))
+!
+!    Deallocate L_ia_J
+!
+     call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+     call deallocator(L_ai_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
       do a = 1, wf % n_v
          do b = 1, wf % n_v
