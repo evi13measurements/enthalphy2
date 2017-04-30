@@ -1,85 +1,311 @@
 module ccsd_class
 !
-!  Coupled cluster singles and doubles (CCSD) 
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!                                                                 
+!      Coupled cluster singles and doubles (CCSD) class module                                 
+!   Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
+!                                                                 
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!
+!
+!            -::- Modules used by the class -::-
+!
+!
+!  General tools
+!
+   use types
+   use utils
+   use workspace
+   use input_output
+!
+!  Ancestor class module (CCS)
 !
    use ccs_class
 !
    implicit none 
 !
+!
+!            -::- Definition of the CCSD class -::- 
+!
+!
    type, extends(cc_singles) :: cc_singles_doubles
 !
-      integer(i15), private                          :: n_t2am = 0
-      real(dp), dimension(:,:), allocatable, private :: t2am
+!     Amplitude attributes
+!
+      integer(i15) :: n_t2am = 0                    ! Number of doubles amplitudes
+      real(dp), dimension(:,:), allocatable :: t2am ! Doubles amplitude vector
 !
    contains
 !
-      procedure, public :: init => init_cc_singles_doubles
-      procedure, public :: drv  => drv_cc_singles_doubles
+!     Initialization and driver routines
 !
-      procedure, private :: initialize_doubles => initialize_doubles_cc_singles_doubles
+      procedure :: init => init_cc_singles_doubles
+      procedure :: drv  => drv_cc_singles_doubles
+!
+!     Initialization routine for the (singles, doubles) amplitudes
+!
+      procedure :: initialize_amplitudes => initialize_amplitudes_cc_singles_doubles
+!
+!     Routine to calculate the energy from the current amplitudes
+!
+      procedure :: calc_energy => calc_energy_cc_singles_doubles 
 !
    end type cc_singles_doubles
 !
+!
 contains
 !
-   subroutine init_cc_singles_doubles(wfn)
+!
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!
+!              Initialization and driver routines
+!
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+!
+!
+   subroutine init_cc_singles_doubles(wf)
+!
+!     Initialize CCSD object
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!
+!     Performs the following tasks:
+!
+!        1. Sets HF orbital and energy information by reading from file (read_hf_info)
+!        2. Transforms AO Cholesky vectors to MO basis and saves to file (read_transform_cholesky)
+!        3. Allocates the Fock matrix and sets it to zero
+!        4. Initializes the amplitudes (sets their initial values and associated variables)
+!        5. Sets the initial energy based on the initial amplitudes (in particular, the MP2
+!           estimate of the doubles amplitude)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn
-!
-      write(unit_output,*) 'In init_cc_singles_doubles'
-!
+      class(cc_singles_doubles) :: wf
+
 !     Read Hartree-Fock info from SIRIUS
 !
-      call wfn % read_hf_info
+      call wf % read_hf_info
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
-      call wfn % read_transform_cholesky 
+      call wf % read_transform_cholesky 
 !
-!     Initialize singles amplitudes
+!     Allocate Fock matrix and set to zero
 !
-      call wfn % initialize_singles 
+      call wf % initialize_fock_matrix
 !
-!     Initialize doubles amplitudes 
+!     Initialize (singles and doubles) amplitudes
 !
-      call wfn % initialize_doubles
+      call wf % initialize_amplitudes
+!
+!     Set the initial value of the energy from the initial amplitudes 
+!
+      call wf % calc_energy
 !
    end subroutine init_cc_singles_doubles
 !
-   subroutine drv_cc_singles_doubles(wfn)
+!
+   subroutine drv_cc_singles_doubles(wf)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn
+      class(cc_singles_doubles) :: wf
 !
-      write(unit_output,*) 'In drv_cc_singles_doubles'
-!
-!     Call the CCS driver
-!
-!        This driver handles calculations that are not specific
-!        to CCSD, such as the amplitude equations
-!
-      call drv_cc_singles(wfn)
+! To do...
 !
    end subroutine drv_cc_singles_doubles
 !
-   subroutine initialize_doubles_cc_singles_doubles(wfn)
+!
+   subroutine initialize_amplitudes_cc_singles_doubles(wf)
+!
+!     Initialize Amplitudes (CCSD)
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!
+!     Allocates the amplitudes, sets them to zero, calculates
+!     the number of amplitudes, and sets the doubles amplitudes
+!     to the perturbative MP2 estimate.
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn
+      class(cc_singles_doubles) :: wf
 !
-!     Calculate the number of singles amplitudes
+      real(dp), dimension(:,:), allocatable :: L_ia_J
+      real(dp), dimension(:,:), allocatable :: g_ia_jb
 !
-      wfn % n_t2am = (wfn % n_t1am)*(wfn % n_t1am + 1)/2
+      integer(i15) :: i = 0, j = 0, a = 0, b = 0
+      integer(i15) :: ai = 0, bj = 0, ia = 0, jb = 0, aibj = 0
+!
+!     Calculate the number of singles and doubles amplitudes
+!
+      wf % n_t1am = (wf % n_o) * (wf % n_v) 
+      wf % n_t2am = (wf % n_t1am) * (wf % n_t1am + 1)/2
 !
 !     Allocate the singles amplitudes and set to zero
 !
-      call allocator ( wfn % t2am, wfn % n_t2am, 1)
-      wfn % t2am = zero
+      call allocator(wf % t1am, wf % n_t1am, 1)
+      wf % t1am = zero
 !
-   end subroutine initialize_doubles_cc_singles_doubles
+!     Allocate the doubles amplitudes and set to zero
+!
+      call allocator (wf % t2am, wf % n_t2am, 1)
+      wf % t2am = zero
+!
+!
+!     -::- Initialize the doubles amplitudes to the MP2 estimate -::-
+!
+!
+!     Allocate L_ia_J and g_ia_jb
+!
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      call allocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+!
+      L_ia_J = zero
+      g_ia_jb = zero
+!
+!     Calculate g_ia_jb = g_iajb
+!
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), & 
+                  (wf % n_o)*(wf % n_v), &
+                  wf % n_J,              &
+                  one,                   &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  zero,                  &
+                  g_ia_jb,               &
+                  (wf % n_o)*(wf % n_v))
+!
+!     Set the doubles amplitudes
+!
+      do a = 1, wf % n_v
+         do b = 1, wf % n_v
+            do i = 1, wf % n_o
+               do j = 1, wf % n_o
+!
+!                 Get necessary indices
+!
+                  ai = index_two(a, i, wf % n_v)
+                  bj = index_two(b, j, wf % n_v)
+                  ia = index_two(i, a, wf % n_o)
+                  jb = index_two(j, b, wf % n_o)
+!
+!                 Set the doubles indices
+!
+                  if (ai .le. bj) then ! To avoid setting the same element twice
+!
+                     aibj = index_packed(ai,bj)
+!
+                     wf % t2am(aibj, 1) = - g_ia_jb(ia,jb)/(wf % fock_diagonal(wf % n_o + a, 1) + &
+                                                            wf % fock_diagonal(wf % n_o + b, 1) - &
+                                                            wf % fock_diagonal(i, 1) -            &
+                                                            wf % fock_diagonal(j, 1))
+!
+                  endif
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocations
+!
+      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), (wf % n_J))
+      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))     
+!
+   end subroutine initialize_amplitudes_cc_singles_doubles
+!
+!
+   subroutine calc_energy_cc_singles_doubles(wf)
+!
+!     Calculate Energy (CCSD)
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!
+!     Calculates the CCSD energy
+!
+      implicit none 
+!
+      class(cc_singles_doubles) :: wf 
+!
+      real(dp), dimension(:,:), allocatable :: L_ia_J  ! L_ia^J
+      real(dp), dimension(:,:), allocatable :: g_ia_jb ! g_iajb
+!
+      integer(i15) :: a = 0, i = 0, b = 0, j = 0, ai = 0
+      integer(i15) :: bj = 0, aibj = 0, ia = 0, jb = 0, ib = 0, ja = 0
+!
+!     Allocate the Cholesky vector L_ia_J = L_ia^J and set to zero 
+!
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      L_ia_J = zero
+!
+!     Get the Cholesky vector L_ia_J 
+!
+      call wf % get_cholesky_ia(L_ia_J)
+!
+!     Allocate g_ia_jb = g_iajb and set it to zero
+!
+      call allocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+      g_ia_jb = zero
+!
+!     Calculate the integrals g_ia_jb from the Cholesky vector L_ia_J 
+!
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), &
+                  (wf % n_o)*(wf % n_v), &
+                  wf % n_J,              &
+                  one,                   &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  zero,                  &
+                  g_ia_jb,               &
+                  (wf % n_o)*(wf % n_v))
+!
+!     Deallocate the Cholesky vector L_ia_J 
+!
+      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+!
+!     Set the initial value of the energy 
+!
+      wf % energy = wf % scf_energy
+!
+!     Add the correlation energy E = E + sum_aibj (t_ij^ab + t_i^a t_j^b) L_iajb
+!
+      do i = 1, wf % n_o
+         do a = 1, wf % n_v
+            do j = 1, wf % n_o
+               do b = 1, wf % n_v
+!
+!                 Calculate the necessary indices 
+!
+                  ai   = index_two(a, i, wf % n_v)
+                  bj   = index_two(b, j, wf % n_v)
+!
+                  aibj = index_packed(ai, bj)
+!
+                  ia   = index_two(i, a, wf % n_o)
+                  jb   = index_two(j, b, wf % n_o)
+!
+                  ib   = index_two(i, b, wf % n_o)
+                  ja   = index_two(j, a, wf % n_o)
+!
+!                 Add the correlation energy 
+!
+                  wf % energy = wf % energy + & 
+                                 (wf % t2am(aibj,1) + (wf % t1am(a,i))*(wf % t1am(b,j)))*&
+                                 (two*g_ia_jb(ia,jb) - g_ia_jb(ib,ja))
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate g_ia_jb
+!
+      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+!
+   end subroutine calc_energy_cc_singles_doubles
+!
 !
 end module ccsd_class

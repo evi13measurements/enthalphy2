@@ -527,14 +527,14 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_mod/mlcc_cholesky.F90
     DALTON/mlcc_mod/mlcc_fock.F90
     DALTON/mlcc_mod/mlcc_energy.F90
-    DALTON/mlcc_oo_mod/cholesky_integrals_class.F90
     DALTON/mlcc_oo_mod/hf_class.F90
     DALTON/mlcc_oo_mod/ccs_class.F90
     DALTON/mlcc_oo_mod/ccsd_class.F90
     DALTON/mlcc_oo_mod/mlcc_oo_driver.F90
     DALTON/mlcc_oo_mod/input_output.F90
-    DALTON/mlcc_oo_mod/mlcc_oo_utilities.F90
+    DALTON/mlcc_oo_mod/utils.F90
     DALTON/mlcc_oo_mod/workspace.F90
+    DALTON/mlcc_oo_mod/types.F90
     DALTON/pdpack/arhpack.F
     DALTON/pdpack/eispack.F
     DALTON/pdpack/jacobi.F
