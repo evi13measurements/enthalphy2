@@ -93,14 +93,6 @@ contains
 
    end subroutine init_hartree_fock
 !
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   
-!!!!                                           !!!!
-!!!!  Private class subroutines and functions  !!!!
-!!!!                                           !!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! 
-!
    subroutine read_hf_info_hartree_fock(wfn)
 !
 !  Date:    April 2017
@@ -249,30 +241,30 @@ contains
 !
 !        Transform the AO vectors to form the Cholesky MO vectors
 !
-         call dgemm('N','N',         &
+         call dgemm('N','N',      &
                      wfn%n_ao,    &
                      wfn%n_mo,    &
                      wfn%n_ao,    &
-                     one,            &
-                     chol_ao_sq,     &
+                     one,         &
+                     chol_ao_sq,  &
                      wfn%n_ao,    &
                      wfn%mo_coef, &
                      wfn%n_ao,    &
-                     zero,           &
-                     X,              &
+                     zero,        &
+                     X,           &
                      wfn%n_ao)
 !
-         call dgemm('T','N',         &
+         call dgemm('T','N',      &
                      wfn%n_mo,    &
                      wfn%n_mo,    &
                      wfn%n_ao,    &
-                     one,            &
+                     one,         &
                      wfn%mo_coef, &
                      wfn%n_ao,    &
-                     X,              &
+                     X,           &
                      wfn%n_ao,    &
-                     zero,           &
-                     chol_mo_sq,     &
+                     zero,        &
+                     chol_mo_sq,  &
                      wfn%n_mo)
 !
 !        Write the MO vectors to files in blocks
@@ -319,7 +311,7 @@ contains
 !
       implicit none
 !
-      class(hartree_fock)   :: wfn
+      class(hartree_fock)      :: wfn
       real(dp), dimension(:,:) :: L_ij_J
 !
       integer(i15) :: unit_chol_mo_ij =-1
@@ -406,7 +398,7 @@ contains
    end subroutine read_cholesky_ai_hartree_fock
 !   
 !
-   subroutine read_cholesky_ab_hartree_fock(wfn,L_ab_J,start,end,ab_dim, reorder)
+   subroutine read_cholesky_ab_hartree_fock(wfn,L_ab_J,start,end,ab_dim,reorder)
 !
 !     Read mo ab cholesky vectors, with batching if needed. 
 !
@@ -488,6 +480,5 @@ contains
       close(unit_chol_mo_ab)
 !
    end subroutine read_cholesky_ab_hartree_fock
-!
 !
 end module hf_class

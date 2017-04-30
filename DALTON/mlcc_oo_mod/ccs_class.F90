@@ -95,12 +95,12 @@ contains
       real(dp), dimension(:,:), allocatable      :: fock_matrix
       real(dp), dimension(:,:), allocatable      :: ao_int 
       real(dp), dimension(:,:), allocatable      :: h1mo 
-      integer                                    :: n_ao_sq_packed  
+      integer(i15)                               :: n_ao_sq_packed  
       real(dp), dimension(:,:), allocatable      :: X      
-      integer                                    :: unit_identifier_ao_integrals = -1
-      integer                                    :: i=0,j=0,k=0,a=0,b=0,ij=0,kk=0,ik=0,kj=0,ii=0,jj=0
-      integer                                    :: ji=0,ai=0,ib=0,bi=0,ia=0,aj=0,ja=0,ab=0
-      integer                                    :: n_oo, n_ov, n_vv
+      integer(i15)                               :: unit_identifier_ao_integrals = -1
+      integer(i15)                               :: i=0,j=0,k=0,a=0,b=0,ij=0,kk=0,ik=0,kj=0,ii=0,jj=0
+      integer(i15)                               :: ji=0,ai=0,ib=0,bi=0,ia=0,aj=0,ja=0,ab=0
+      integer(i15)                               :: n_oo, n_ov, n_vv
       real(dp), dimension(:,:), allocatable      :: g_ij_kl
       real(dp), dimension(:,:), allocatable      :: g_ab_ij
       real(dp), dimension(:,:), allocatable      :: g_ai_jb
@@ -110,9 +110,9 @@ contains
       real(dp), dimension(:,:), allocatable      :: L_ia_J 
       real(dp), dimension(:,:), allocatable      :: L_ai_J 
       real(dp), dimension(:,:), allocatable      :: L_ab_J 
-      integer                                    :: available=0,required=0,max_batch_length=0,n_batches=0,batch_start=0
-      integer                                    :: batch_end=0,batch_length=0,g_off=0
-      integer                                    :: b_batch = 0
+      integer(i15)                               :: available=0,required=0,max_batch_length=0,n_batches=0,batch_start=0
+      integer(i15)                               :: batch_end=0,batch_length=0,g_off=0
+      integer(i15)                               :: b_batch = 0
 !
 !     Allocate one-electron integrals in MO basis
 !
@@ -157,30 +157,30 @@ contains
 !
       call allocator(X, wfn % n_ao, wfn % n_mo)
 !
-      call dgemm('N','N',         &
+      call dgemm('N','N',      &
                   wfn%n_ao,    &
                   wfn%n_mo,    &
                   wfn%n_ao,    &
-                  one,            &
-                  fock_ao,        &
+                  one,         &
+                  fock_ao,     &
                   wfn%n_ao,    &
                   wfn%mo_coef, &
                   wfn%n_ao,    &
-                  zero,           &
-                  X,              &
+                  zero,        &
+                  X,           &
                   wfn%n_ao)
 !
-      call dgemm('T','N',         &        
+      call dgemm('T','N',      &        
                   wfn%n_mo,    &
                   wfn%n_mo,    &
                   wfn%n_ao,    &
-                  one,            &
+                  one,         &
                   wfn%mo_coef, &
                   wfn%n_ao,    &
-                  X,              &
+                  X,           &
                   wfn%n_ao,    &
-                  zero,           &
-                  h1mo,           &
+                  zero,        &
+                  h1mo,        &
                   wfn%n_mo)
 ! 
 !     T1-transformation of one-electron integrals in mo basis
@@ -216,17 +216,17 @@ contains
 !
 !      call get_cholesky_ij(L_ij_J)
 !
-      call dgemm('N','T',     &
-                  n_oo,       &
-                  n_oo,       &
+      call dgemm('N','T',  &
+                  n_oo,    &
+                  n_oo,    &
                   wfn%n_J, &
-                  one,        &
-                  L_ij_J,     &
-                  n_oo,       &
-                  L_ij_J,     &
-                  n_oo,       &
-                  zero,       &
-                  g_ij_kl,    &
+                  one,     &
+                  L_ij_J,  &
+                  n_oo,    &
+                  L_ij_J,  &
+                  n_oo,    &
+                  zero,    &
+                  g_ij_kl, &
                   n_oo)
 !
 !     Add two-electron contributions to occupied-occupied block
@@ -263,17 +263,17 @@ contains
 !
 !     g_ia_jk
 !
-      call dgemm('N','T',     &
-                  n_ov,       &
-                  n_oo,       &
+      call dgemm('N','T',  &
+                  n_ov,    &
+                  n_oo,    &
                   wfn%n_J, &
-                  one,        &
-                  L_ia_J,     &
-                  n_ov,       &
-                  L_ij_J,     &
-                  n_oo,       &
-                  zero,       &
-                  g_ia_jk,    &
+                  one,     &
+                  L_ia_J,  &
+                  n_ov,    &
+                  L_ij_J,  &
+                  n_oo,    &
+                  zero,    &
+                  g_ia_jk, &
                   n_ov)
 !
 !     Dealllocate L_ia_J
@@ -292,17 +292,17 @@ contains
 !
 !     g_ai_jk
 !
-      call dgemm('N','T',     &
-                  n_ov,       &
-                  n_oo,       &
+      call dgemm('N','T',  &
+                  n_ov,    &
+                  n_oo,    &
                   wfn%n_J, &
-                  one,        &  
-                  L_ai_J,     &
-                  n_ov,       &
-                  L_ij_J,     &
-                  n_oo,       &
-                  zero,       &
-                  g_ai_jk,    &
+                  one,     &  
+                  L_ai_J,  &
+                  n_ov,    &
+                  L_ij_J,  &
+                  n_oo,    &
+                  zero,    &
+                  g_ai_jk, &
                   n_ov)
 !
 !     Deallocate L_ai_J
@@ -376,17 +376,17 @@ contains
 !
          g_off = index_two(1,batch_start,wfn%n_vir)
 !
-         call dgemm('N','T',                      &
+         call dgemm('N','T',                   &
                      (wfn%n_vir)*batch_length, &
-                     n_oo,                        &
+                     n_oo,                     &
                      wfn%n_J,                  &
-                     one,                         &
-                     L_ab_J,                      &
+                     one,                      &
+                     L_ab_J,                   &
                      (wfn%n_vir)*batch_length, &
-                     L_ij_J,                      &
-                     n_oo,                        &
-                     one,                         &
-                     g_ab_ij(g_off,1),            &
+                     L_ij_J,                   &
+                     n_oo,                     &
+                     one,                      &
+                     g_ab_ij(g_off,1),         &
                      n_vv)
 !
 !
@@ -411,17 +411,17 @@ contains
 !
 !      call get_cholesky_ai(L_ai_J)
 !
-      call dgemm('N','T',     &
-                  n_ov,       &
-                  n_ov,       &
+      call dgemm('N','T',  &
+                  n_ov,    &
+                  n_ov,    &
                   wfn%n_J, &
-                  one,        &
-                  L_ai_J,     &
-                  n_ov,       &
-                  L_ia_J,     &
-                  n_ov,       &
-                  zero,       &
-                  g_ai_jb,    &
+                  one,     &
+                  L_ai_J,  &
+                  n_ov,    &
+                  L_ia_J,  &
+                  n_ov,    &
+                  zero,    &
+                  g_ai_jb, &
                   n_ov)
 !
 !     Deallocate L_ia_J
@@ -541,30 +541,30 @@ contains
 !
 !  h1_T1 = x*h1*y^T = x*Z
 !
-   call dgemm('N','T',        &
+   call dgemm('N','T',     &
                wfn % n_mo, &
                wfn % n_mo, &
                wfn % n_mo, &
-               one,           &
-               h1,            &
+               one,        &
+               h1,         &
                wfn % n_mo, &
-               y,             &
+               y,          &
                wfn % n_mo, &
-               zero,          &
-               Z,             &
+               zero,       &
+               Z,          &
                wfn % n_mo)
 !
-   call dgemm('N','N',        &
+   call dgemm('N','N',     &
                wfn % n_mo, &
                wfn % n_mo, &
                wfn % n_mo, &
-               one,           &
-               x,             &
+               one,        &
+               x,          &
                wfn % n_mo, &
-               Z,             &
+               Z,          &
                wfn % n_mo, &
-               zero,          &
-               h1_T1,         &
+               zero,       &
+               h1_T1,      &
                wfn % n_mo)
 !
 !  Deallocations
@@ -620,11 +620,217 @@ contains
 !
    end subroutine get_cholesky_ai_cc_singles
 !
-   subroutine get_cholesky_ab_cc_singles(wfn)
+   subroutine get_cholesky_ab_cc_singles(wfn,L_ab_J,start,end,ab_dim,reorder)
+!
+!  Purpose: Read and T1-transform ia cholesky vectors
+!           L_ab_J_T1 = L_ab_J - sum_i t_ai*L_ib_J
+!
+!   reorder = .true. => batch over first index
+!   Required memory: n_J*batch_length*n_vir + n_vir*n_occ*n_J*2
 !
       implicit none 
 !
       class(cc_singles) :: wfn
+!
+      integer(i15) :: memory_lef
+!
+      real(dp) :: L_ab_J(ab_dim,wfn%n_J)
+!
+      integer(i15) :: ba=0
+      integer(i15) :: lucho_ab,ab_dim
+      integer(i15) :: a=0,b=0,J=0,i=0,ia=0,aJ=0,ib=0,Jb=0,ab=0
+      integer(i15) :: n_ov
+      integer(i15) :: start,end
+      logical,intent(in) :: reorder
+!
+      real(dp),dimension(:,:),allocatable     :: L_ib_J
+      real(dp),dimension(:,:),allocatable     :: L_Jb_i
+      real(dp),dimension(:,:),allocatable     :: L_Jb_a
+      real(dp),dimension(:,:),allocatable     :: L_a_Jb
+      real(dp),dimension(:,:),allocatable     :: L_i_Jb
+!
+      integer(i15) :: batch_length=0
+
+!
+!     calculating length of batch
+!
+      batch_length = end-start+1
+!
+!     Usefull variables
+!
+      n_ov = (wfn%n_occ)*(wfn%n_vir)
+!
+!
+!     Testing which index is batched
+!
+!
+      if (reorder) then !! Batching over a !!
+!
+!        Allocate L_ib_J
+!     
+         call allocator(L_ib_J,n_ov,wfn%n_J)
+         L_ib_J=zero
+!
+!        Read L_ia_J
+!  
+         call read_cholesky_ia(L_ib_J) ! OBS: Using L_ia_J insted of L_ai_J to avoid two reorderings!
+                                       ! Possible because of symmetry L_ai_J(ai,J)==L_ia_J(ia,J)
+!
+!        Read L_ab_J for batch of a
+!
+         call wfn%read_cholesky_ab(L_ab_J,start,end,ab_dim,.true.) ! L_ab_J(ba) = L_ab^J 
+!
+!        Allocate L_i,Jb
+!
+         call allocator(L_i_Jb,wfn%n_occ,(wfn%n_J)*(wfn%n_vir))
+         L_i_Jb=zero
+!
+!        Reorder L_ib_J to L_i_Jb
+!
+         do i=1,wfn%n_occ
+            do b=1,wfn%n_vir
+               do J=1,wfn%n_J
+!
+!                 Needed indices
+!
+                  ib=index_two(i,b,wfn%n_occ)
+                  Jb=index_two(J,b,wfn%n_J)
+!
+                  L_i_Jb(i,Jb)=L_ib_J(ib,J)
+!
+               enddo
+            enddo
+         enddo
+!
+!        Dellocate L_ib_J
+!  
+         call deallocator_n(L_ib_J,n_ov,wfn%n_J)
+!
+!        Allocate L_a_Jb for batch of a
+!  
+         call allocator_n(L_a_Jb,batch_length,(wfn%n_vir)*(wfn%n_J))
+!
+!        - t1_a_i * L_i_Jb = L_a_Jb
+!
+         call dgemm('N','N',       &
+                     batch_length,          &
+                     (wfn%n_vir)*(wfn%n_J), &
+                     wfn%n_occ,             &
+                     -one,                  &
+                     wfn%t1am(start,1),     &
+                     wfn%n_vir,             &
+                     L_i_Jb,                &
+                     wfn%n_occ,             &
+                     zero,                  &
+                     L_a_Jb,                &
+                     batch_length)
+!
+!        Add terms of L_a_Jb to L_ab_J
+!
+         do a=1,batch_length
+            do b=1,wfn%n_vir
+               do J=1,wfn%n_J
+!
+!                 Needed indices
+!
+                  Jb=index_two(J,b,wfn%n_J)
+!
+                  ba = index_two(b,a,wfn%n_vir)
+                  L_ab_J(ba,J) = L_ab_J(ba,J) + L_a_Jb(a,Jb) 
+!
+               enddo
+            enddo
+         enddo
+!
+!        Dellocate L_i_Jb and L_a_Jb for batch of a
+!
+         call deallocator_n(L_a_Jb,batch_length,(wfn%n_J)*(wfn%n_vir))
+         call deallocator_n(L_i_Jb,(wfn%n_J)*(wfn%n_vir),(wfn%n_occ))
+!
+      else  !! Batching over b !!
+!
+!        Allocate L_ib_J
+!     
+         call allocator_n(L_ib_J,n_ov,(wfn%n_J))
+         L_ib_J=zero
+!
+!        Read L_ia_J
+!  
+         call read_cholesky_ia(L_ib_J) ! OBS: Using L_ia_J insted of L_ai_J to avoid two reorderings!
+                                       ! Possible because of symmetry L_ai_J(ai,J)==L_ia_J(ia,J)
+!
+!        Read L_ab_J for batch of b
+!
+         call read_cholesky_ab(L_ab_J,start,end,ab_dim)
+!
+!        Allocate L_Jb,i for batch of b
+!
+         call allocator_n(L_Jb_i,(wfn%n_J)*batch_length,(wfn%n_occ))
+         L_Jb_i=zero
+!
+!        Reorder L_ib_J to L_Jb_i
+!
+         do i=1,wfn%n_occ
+            do b=1,batch_length
+               do J=1,wfn%n_J
+!
+!                 Needed indices
+!
+                  ib=index_two(i,b+start-1,(wfn%n_occ)) ! OBS: in L_ib_J we have all b, not the case for L_Jb_i
+                  Jb=index_two(J,b,wfn%n_J)
+!
+                  L_Jb_i(Jb,i)=L_ib_J(ib,J) ! The quantity on the right is the entire L_ib^J matrix; the left the batched. OK
+!
+               enddo
+            enddo
+         enddo
+!
+!        Dellocate L_ib_J
+!  
+         call deallocator_n(L_ib_J,n_ov,wfn%n_J)
+!
+!        Allocate L_Jb_a for batch of b
+!  
+         call allocator_n(L_Jb_a,wfn%n_J*batch_length,wfn%n_vir)
+!
+!        T1-transformation
+!
+         call dgemm('N','T',&
+                     wfn%n_J*batch_length, &
+                     wfn%n_vir,            &
+                     wfn%n_occ,            &
+                     -one,                 &
+                     L_Jb_i,               &
+                     wfn%n_J*batch_length, &
+                     wfn%t1am,             &
+                     wfn%n_vir,            &
+                     zero,                 &
+                     L_Jb_a,               &
+                     batch_length*wfn%n_J)
+!
+!        Add terms of L_Jb_a to L_ab_J
+!
+         do a=1,wfn%n_vir
+            do b=1,batch_length
+               do J=1,wfn%n_J
+!
+!                 Needed indices
+!
+                  Jb=index_two(J,b,wfn%n_J)
+                  ab=index_two(a,b,wfn%n_vir)
+!
+                  L_ab_J(ab,J)=L_ab_J(ab,J)+L_Jb_a(Jb,a)
+               enddo
+            enddo
+         enddo
+!
+!        Dellocate L_Jb,i and L_Jb_a for batch of b
+!
+         call deallocator_n(L_Jb_a,wfn%n_J*batch_length,wfn%n_vir)
+         call deallocator_n(L_Jb_i,wfn%n_J*batch_length,wfn%n_occ)
+!
+!
+      endif
 !
    end subroutine get_cholesky_ab_cc_singles
 !
