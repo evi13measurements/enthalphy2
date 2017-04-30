@@ -2,7 +2,8 @@ module ccs_class
 !
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !                                                                 
-!           Coupled cluster singles (CCS) class module                                !  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
+!           Coupled cluster singles (CCS) class module                                
+!  Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017  
 !                                                                 
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
@@ -231,6 +232,7 @@ contains
 !     Allocate one-electron MO integrals
 !
       call allocator(h1mo, wf % n_mo, wf % n_mo)
+!
       h1mo = zero
 !
       call allocator(fock_matrix, wf % n_mo, wf % n_mo)
@@ -560,6 +562,19 @@ contains
      call deallocator(L_ai_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
 !     Calculate two-electron terms for virtual-virtual blocks
+!
+      call dgemm('N','T',  &
+                  n_ov,    &
+                  n_ov,    &
+                  wf%n_J, &
+                  one,     &
+                  L_ai_J,  &
+                  n_ov,    &
+                  L_ia_J,  &
+                  n_ov,    &
+                  zero,    &
+                  g_ai_jb, &
+                  n_ov)
 !
       do a = 1, wf % n_v
          do b = 1, wf % n_v
@@ -1266,7 +1281,7 @@ contains
 !        Read L_ia_J
 !  
          call wf % read_cholesky_ia(L_ib_J) ! Note: using L_ia_J instead of L_ai_J, here, to avoid two reorderings.
-                                             ! This is possible because of the symmetry L_ai_J(ai,J) == L_ia_J(ia,J).
+                                          ! This is possible because of the symmetry L_ai_J(ai,J) == L_ia_J(ia,J).
 !
 !        Read L_ab_J for batch of a
 !
