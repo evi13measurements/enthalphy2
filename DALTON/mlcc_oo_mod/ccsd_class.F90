@@ -50,30 +50,7 @@ module ccsd_class
 !
       procedure :: calc_energy => calc_energy_cc_singles_doubles 
 !
-!     Routine to set a number of orbital shorthands (see below)
-!
-      procedure :: set_orbital_shorthands => set_orbital_shorthands_cc_singles_doubles
-!
    end type cc_singles_doubles
-!
-!
-!           -::- Module variables not belonging to the class -::-
-!
-!
-!  Shorthands for orbital information used extensively in the
-!  matrix multiplications of coupled cluster theory 
-!
-   integer(i15) :: n_o = 0            ! n_occ
-   integer(i15) :: n_v = 0            ! n_vir
-   integer(i15) :: n_ov = 0           ! n_occ * n_vir
-   integer(i15) :: n_oo = 0           ! n_occ^2 
-   integer(i15) :: n_vv = 0           ! n_vir^2 
-   integer(i15) :: n_oo_packed = 0    ! n_occ * (n_occ + 1) / 2
-   integer(i15) :: n_vv_packed = 0    ! n_vir * (n_vir + 1) / 2
-   integer(i15) :: n_oov = 0          ! n_occ^2 * n_vir 
-   integer(i15) :: n_ovv = 0          ! n_occ * n_vir^2 
-   integer(i15) :: n_ooo = 0          ! n_occ^3 
-   integer(i15) :: n_ov_ov_packed = 0 ! n_ov * (n_ov + 1) / 2
 !
 !
 contains
@@ -86,7 +63,7 @@ contains
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
 !
-   subroutine init_cc_singles_doubles(wfn)
+   subroutine init_cc_singles_doubles(wf)
 !
 !     Initialize CCSD object
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -96,51 +73,49 @@ contains
 !        1. Sets HF orbital and energy information by reading from file (read_hf_info)
 !        2. Transforms AO Cholesky vectors to MO basis and saves to file (read_transform_cholesky)
 !        3. Allocates the Fock matrix and sets it to zero
-!        4. Sets orbital shorthands (n_o, n_oo, n_ov, etc.)
-!        5. Initializes the amplitudes (sets their initial values and associated variables)
-!        6. Sets the initial energy based on the initial amplitudes (in particular, the MP2
+!        4. Initializes the amplitudes (sets their initial values and associated variables)
+!        5. Sets the initial energy based on the initial amplitudes (in particular, the MP2
 !           estimate of the doubles amplitude)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn
+      class(cc_singles_doubles) :: wf
 
 !     Read Hartree-Fock info from SIRIUS
 !
-      call wfn % read_hf_info
+      call wf % read_hf_info
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
-      call wfn % read_transform_cholesky 
+      call wf % read_transform_cholesky 
 !
-!     Set orbital shorthands (n_o, n_oo, n_ov, etc.) that are 
-!     members of the module (not the class)
+!     Allocate Fock matrix and set to zero
 !
-      call wfn % set_orbital_shorthands
+      call wf % initialize_fock_matrix
 !
 !     Initialize (singles and doubles) amplitudes
 !
-      call wfn % initialize_amplitudes
+      call wf % initialize_amplitudes
 !
 !     Set the initial value of the energy from the initial amplitudes 
 !
-      call wfn % calc_energy
+      call wf % calc_energy
 !
    end subroutine init_cc_singles_doubles
 !
 !
-   subroutine drv_cc_singles_doubles(wfn)
+   subroutine drv_cc_singles_doubles(wf)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn
+      class(cc_singles_doubles) :: wf
 !
 ! To do...
 !
    end subroutine drv_cc_singles_doubles
 !
 !
-   subroutine initialize_amplitudes_cc_singles_doubles(wfn)
+   subroutine initialize_amplitudes_cc_singles_doubles(wf)
 !
 !     Initialize Amplitudes (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -151,7 +126,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn
+      class(cc_singles_doubles) :: wf
 !
       real(dp), dimension(:,:), allocatable :: L_ia_J
       real(dp), dimension(:,:), allocatable :: g_ia_jb
@@ -161,18 +136,18 @@ contains
 !
 !     Calculate the number of singles and doubles amplitudes
 !
-      wfn % n_t1am = (wfn % n_occ)*(wfn % n_vir) 
-      wfn % n_t2am = (wfn % n_t1am)*(wfn % n_t1am + 1)/2
+      wf % n_t1am = (wf % n_o) * (wf % n_v) 
+      wf % n_t2am = (wf % n_t1am) * (wf % n_t1am + 1)/2
 !
 !     Allocate the singles amplitudes and set to zero
 !
-      call allocator(wfn % t1am, wfn % n_t1am, 1)
-      wfn % t1am = zero
+      call allocator(wf % t1am, wf % n_t1am, 1)
+      wf % t1am = zero
 !
 !     Allocate the doubles amplitudes and set to zero
 !
-      call allocator (wfn % t2am, wfn % n_t2am, 1)
-      wfn % t2am = zero
+      call allocator (wf % t2am, wf % n_t2am, 1)
+      wf % t2am = zero
 !
 !
 !     -::- Initialize the doubles amplitudes to the MP2 estimate -::-
@@ -180,50 +155,51 @@ contains
 !
 !     Allocate L_ia_J and g_ia_jb
 !
-      call allocator(L_ia_J, n_ov, wfn % n_J)
-      L_ia_J = zero
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      call allocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
 !
-      call allocator(g_ia_jb, n_ov, n_ov)
+      L_ia_J = zero
       g_ia_jb = zero
 !
 !     Calculate g_ia_jb = g_iajb
 !
-      call dgemm('N','T',    &
-                  n_ov,      &
-                  n_ov,      &
-                  wfn % n_J, &
-                  one,       &
-                  L_ia_J,    &
-                  n_ov,      &
-                  L_ia_J,    &
-                  n_ov,      &
-                  zero,      &
-                  g_ia_jb,   &
-                  n_ov)
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), & 
+                  (wf % n_o)*(wf % n_v), &
+                  wf % n_J,              &
+                  one,                   &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  zero,                  &
+                  g_ia_jb,               &
+                  (wf % n_o)*(wf % n_v))
 !
 !     Set the doubles amplitudes
 !
-      do a = 1, wfn % n_vir
-         do b = 1, wfn % n_vir
-            do i = 1, wfn % n_occ
-               do j = 1, wfn % n_occ
+      do a = 1, wf % n_v
+         do b = 1, wf % n_v
+            do i = 1, wf % n_o
+               do j = 1, wf % n_o
 !
 !                 Get necessary indices
 !
-                  ai = index_two(a, i, wfn % n_vir)
-                  bj = index_two(b, j, wfn % n_vir)
-                  ia = index_two(i, a, wfn % n_occ)
-                  jb = index_two(j, b, wfn % n_occ)
+                  ai = index_two(a, i, wf % n_v)
+                  bj = index_two(b, j, wf % n_v)
+                  ia = index_two(i, a, wf % n_o)
+                  jb = index_two(j, b, wf % n_o)
 !
 !                 Set the doubles indices
 !
-                  if (ai .le. bj) then
+                  if (ai .le. bj) then ! To avoid setting the same element twice
 !
                      aibj = index_packed(ai,bj)
-                     wfn % t2am(aibj, 1) = - g_ia_jb(ia,jb)/(wfn % fock_diagonal(wfn % n_occ + a, 1) + &
-                                                             wfn % fock_diagonal(wfn % n_occ + b, 1) - &
-                                                             wfn % fock_diagonal(i, 1) - &
-                                                             wfn % fock_diagonal(j, 1))
+!
+                     wf % t2am(aibj, 1) = - g_ia_jb(ia,jb)/(wf % fock_diagonal(wf % n_o + a, 1) + &
+                                                            wf % fock_diagonal(wf % n_o + b, 1) - &
+                                                            wf % fock_diagonal(i, 1) -            &
+                                                            wf % fock_diagonal(j, 1))
 !
                   endif
 !
@@ -232,10 +208,15 @@ contains
          enddo
       enddo
 !
+!     Deallocations
+!
+      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), (wf % n_J))
+      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))     
+!
    end subroutine initialize_amplitudes_cc_singles_doubles
 !
 !
-   subroutine calc_energy_cc_singles_doubles(wfn)
+   subroutine calc_energy_cc_singles_doubles(wf)
 !
 !     Calculate Energy (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -244,7 +225,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wfn 
+      class(cc_singles_doubles) :: wf 
 !
       real(dp), dimension(:,:), allocatable :: L_ia_J  ! L_ia^J
       real(dp), dimension(:,:), allocatable :: g_ia_jb ! g_iajb
@@ -254,65 +235,65 @@ contains
 !
 !     Allocate the Cholesky vector L_ia_J = L_ia^J and set to zero 
 !
-      call allocator(L_ia_J, (wfn % n_occ)*(wfn % n_vir), wfn % n_J)
+      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
       L_ia_J = zero
 !
 !     Get the Cholesky vector L_ia_J 
 !
-      call wfn % get_cholesky_ia(L_ia_J)
+      call wf % get_cholesky_ia(L_ia_J)
 !
 !     Allocate g_ia_jb = g_iajb and set it to zero
 !
-      call allocator(g_ia_jb, n_ov, n_ov)
+      call allocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
       g_ia_jb = zero
 !
 !     Calculate the integrals g_ia_jb from the Cholesky vector L_ia_J 
 !
-      call dgemm('N','T',    &
-                  n_ov,      &
-                  n_ov,      &
-                  wfn % n_J, &
-                  one,       &
-                  L_ia_J,    &
-                  n_ov,      &
-                  L_ia_J,    &
-                  n_ov,      &
-                  zero,      &
-                  g_ia_jb,   &
-                  n_ov)
+      call dgemm('N','T',                &
+                  (wf % n_o)*(wf % n_v), &
+                  (wf % n_o)*(wf % n_v), &
+                  wf % n_J,              &
+                  one,                   &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  L_ia_J,                &
+                  (wf % n_o)*(wf % n_v), &
+                  zero,                  &
+                  g_ia_jb,               &
+                  (wf % n_o)*(wf % n_v))
 !
 !     Deallocate the Cholesky vector L_ia_J 
 !
-      call deallocator(L_ia_J, n_ov, wfn % n_J)
+      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
 !
 !     Set the initial value of the energy 
 !
-      wfn % energy = wfn % scf_energy
+      wf % energy = wf % scf_energy
 !
 !     Add the correlation energy E = E + sum_aibj (t_ij^ab + t_i^a t_j^b) L_iajb
 !
-      do i = 1, wfn % n_occ
-         do a = 1, wfn % n_vir
-            do j = 1, wfn % n_occ
-               do b = 1, wfn % n_vir
+      do i = 1, wf % n_o
+         do a = 1, wf % n_v
+            do j = 1, wf % n_o
+               do b = 1, wf % n_v
 !
 !                 Calculate the necessary indices 
 !
-                  ai   = index_two(a, i, wfn % n_vir)
-                  bj   = index_two(b, j, wfn % n_vir)
+                  ai   = index_two(a, i, wf % n_v)
+                  bj   = index_two(b, j, wf % n_v)
 !
                   aibj = index_packed(ai, bj)
 !
-                  ia   = index_two(i, a, wfn % n_occ)
-                  jb   = index_two(j, b, wfn % n_occ)
+                  ia   = index_two(i, a, wf % n_o)
+                  jb   = index_two(j, b, wf % n_o)
 !
-                  ib   = index_two(i, b, wfn % n_occ)
-                  ja   = index_two(j, a, wfn % n_occ)
+                  ib   = index_two(i, b, wf % n_o)
+                  ja   = index_two(j, a, wf % n_o)
 !
 !                 Add the correlation energy 
 !
-                  wfn % energy = wfn % energy + & 
-                                 (wfn % t2am(aibj,1) + (wfn % t1am(a,i))*(wfn % t1am(b,j)))*&
+                  wf % energy = wf % energy + & 
+                                 (wf % t2am(aibj,1) + (wf % t1am(a,i))*(wf % t1am(b,j)))*&
                                  (two*g_ia_jb(ia,jb) - g_ia_jb(ib,ja))
 !
                enddo
@@ -322,40 +303,9 @@ contains
 !
 !     Deallocate g_ia_jb
 !
-      call deallocator(g_ia_jb, n_ov, n_ov)
+      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
 !
    end subroutine calc_energy_cc_singles_doubles
-!
-!
-   subroutine set_orbital_shorthands_cc_singles_doubles(wfn)
-!
-!     Set Orbital Shorthands (CCSD)
-!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017   
-!
-!     Sets orbital shorthands useful for matrix multiplications in the
-!     coupled cluster code 
-!
-      implicit none 
-!
-      class(cc_singles_doubles), intent(in) :: wfn
-!
-      n_o = wfn % n_occ
-      n_v = wfn % n_vir 
-!
-      n_ov = n_o*n_v
-      n_oo = n_o*n_o 
-      n_vv = n_v*n_v 
-!
-      n_oo_packed = n_o*(n_o+1)/2
-      n_vv_packed = n_v*(n_v+1)/2
-!
-      n_oov = n_o*n_o*n_v 
-      n_ovv = n_o*n_v*n_v 
-      n_ooo = n_o*n_o*n_o
-!
-      n_ov_ov_packed = n_ov*(n_ov+1)/2
-!
-   end subroutine set_orbital_shorthands_cc_singles_doubles
 !
 !
 end module ccsd_class
