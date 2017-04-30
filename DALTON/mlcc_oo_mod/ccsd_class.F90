@@ -83,23 +83,23 @@ contains
 !
 !     Read Hartree-Fock info from SIRIUS
 !
-      call wf % read_hf_info
+      call wf%read_hf_info
 !
 !     Read Cholesky AO integrals and transform to MO basis
 !
-      call wf % read_transform_cholesky 
+      call wf%read_transform_cholesky 
 !
 !     Initialize (singles and doubles) amplitudes
 !
-      call wf % initialize_amplitudes
+      call wf%initialize_amplitudes
 !
 !     Initialize the Fock matrix (allocate and construct given the initial amplitudes)
 !
-      call wf % initialize_fock_matrix
+      call wf%initialize_fock_matrix
 !
 !     Set the initial value of the energy (given the initial amplitudes) 
 !
-      call wf % calc_energy
+      call wf%calc_energy
 !
    end subroutine init_cc_singles_doubles
 !
@@ -112,8 +112,8 @@ contains
 !
 !     Print the energy    
 !
-      write(unit_output,*) 'The SCF energy:', wf % scf_energy
-      write(unit_output,*) 'The MP2 energy:', wf % energy
+      write(unit_output,*) 'The SCF energy:', wf%scf_energy
+      write(unit_output,*) 'The MP2 energy:', wf%energy
 !
    end subroutine drv_cc_singles_doubles
 !
@@ -139,18 +139,18 @@ contains
 !
 !     Calculate the number of singles and doubles amplitudes
 !
-      wf % n_t1am = (wf % n_o) * (wf % n_v) 
-      wf % n_t2am = (wf % n_t1am) * (wf % n_t1am + 1)/2
+      wf%n_t1am = (wf%n_o) * (wf%n_v) 
+      wf%n_t2am = (wf%n_t1am) * (wf%n_t1am + 1)/2
 !
 !     Allocate the singles amplitudes and set to zero
 !
-      call allocator(wf % t1am, wf % n_v, wf % n_o)
-      wf % t1am = zero
+      call allocator(wf%t1am, wf%n_v, wf%n_o)
+      wf%t1am = zero
 !
 !     Allocate the doubles amplitudes and set to zero
 !
-      call allocator(wf % t2am, wf % n_t2am, 1)
-      wf % t2am = zero
+      call allocator(wf%t2am, wf%n_t2am, 1)
+      wf%t2am = zero
 !
 !
 !     -::- Initialize the doubles amplitudes to the MP2 estimate -::-
@@ -158,44 +158,44 @@ contains
 !
 !     Allocate L_ia_J and g_ia_jb
 !
-      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
-      call allocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+      call allocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
+      call allocator(g_ia_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
       L_ia_J = zero
       g_ia_jb = zero
 !
 !     Get the Cholesky IA vector 
 !
-      call wf % get_cholesky_ia(L_ia_J)
+      call wf%get_cholesky_ia(L_ia_J)
 !
 !     Calculate g_ia_jb = g_iajb
 !
-      call dgemm('N','T',                &
-                  (wf % n_o)*(wf % n_v), & 
-                  (wf % n_o)*(wf % n_v), &
-                  wf % n_J,              &
-                  one,                   &
-                  L_ia_J,                &
-                  (wf % n_o)*(wf % n_v), &
-                  L_ia_J,                &
-                  (wf % n_o)*(wf % n_v), &
-                  zero,                  &
-                  g_ia_jb,               &
-                  (wf % n_o)*(wf % n_v))
+      call dgemm('N','T',            &
+                  (wf%n_o)*(wf%n_v), & 
+                  (wf%n_o)*(wf%n_v), &
+                  wf%n_J,            &
+                  one,               &
+                  L_ia_J,            &
+                  (wf%n_o)*(wf%n_v), &
+                  L_ia_J,            &
+                  (wf%n_o)*(wf%n_v), &
+                  zero,              &
+                  g_ia_jb,           &
+                  (wf%n_o)*(wf%n_v))
 !
 !     Set the doubles amplitudes
 !
-      do a = 1, wf % n_v
-         do b = 1, wf % n_v
-            do i = 1, wf % n_o
-               do j = 1, wf % n_o
+      do a = 1, wf%n_v
+         do b = 1, wf%n_v
+            do i = 1, wf%n_o
+               do j = 1, wf%n_o
 !
 !                 Get necessary indices
 !
-                  ai = index_two(a, i, wf % n_v)
-                  bj = index_two(b, j, wf % n_v)
-                  ia = index_two(i, a, wf % n_o)
-                  jb = index_two(j, b, wf % n_o)
+                  ai = index_two(a, i, wf%n_v)
+                  bj = index_two(b, j, wf%n_v)
+                  ia = index_two(i, a, wf%n_o)
+                  jb = index_two(j, b, wf%n_o)
 !
 !                 Set the doubles indices
 !
@@ -203,10 +203,10 @@ contains
 !
                      aibj = index_packed(ai,bj)
 !
-                     wf % t2am(aibj, 1) = - g_ia_jb(ia,jb)/(wf % fock_diagonal(wf % n_o + a, 1) + &
-                                                            wf % fock_diagonal(wf % n_o + b, 1) - &
-                                                            wf % fock_diagonal(i, 1) -            &
-                                                            wf % fock_diagonal(j, 1))
+                     wf%t2am(aibj, 1) = - g_ia_jb(ia,jb)/(wf%fock_diagonal(wf%n_o + a, 1) + &
+                                                            wf%fock_diagonal(wf%n_o + b, 1) - &
+                                                            wf%fock_diagonal(i, 1) - &
+                                                            wf%fock_diagonal(j, 1))
 !
                   endif
 !
@@ -217,8 +217,8 @@ contains
 !
 !     Deallocations
 !
-      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), (wf % n_J))
-      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v)) 
+      call deallocator(L_ia_J, (wf%n_o)*(wf%n_v), (wf%n_J))
+      call deallocator(g_ia_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v)) 
 !
    end subroutine initialize_amplitudes_cc_singles_doubles
 !
@@ -242,65 +242,65 @@ contains
 !
 !     Allocate the Cholesky vector L_ia_J = L_ia^J and set to zero 
 !
-      call allocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      call allocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
       L_ia_J = zero
 !
 !     Get the Cholesky vector L_ia_J 
 !
-      call wf % get_cholesky_ia(L_ia_J)
+      call wf%get_cholesky_ia(L_ia_J)
 !
 !     Allocate g_ia_jb = g_iajb and set it to zero
 !
-      call allocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+      call allocator(g_ia_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
       g_ia_jb = zero
 !
 !     Calculate the integrals g_ia_jb from the Cholesky vector L_ia_J 
 !
-      call dgemm('N','T',                &
-                  (wf % n_o)*(wf % n_v), &
-                  (wf % n_o)*(wf % n_v), &
-                  wf % n_J,              &
-                  one,                   &
-                  L_ia_J,                &
-                  (wf % n_o)*(wf % n_v), &
-                  L_ia_J,                &
-                  (wf % n_o)*(wf % n_v), &
-                  zero,                  &
-                  g_ia_jb,               &
-                  (wf % n_o)*(wf % n_v))
+      call dgemm('N','T',            &
+                  (wf%n_o)*(wf%n_v), &
+                  (wf%n_o)*(wf%n_v), &
+                  wf%n_J,            &
+                  one,               &
+                  L_ia_J,            &
+                  (wf%n_o)*(wf%n_v), &
+                  L_ia_J,            &
+                  (wf%n_o)*(wf%n_v), &
+                  zero,              &
+                  g_ia_jb,           &
+                  (wf%n_o)*(wf%n_v))
 !
 !     Deallocate the Cholesky vector L_ia_J 
 !
-      call deallocator(L_ia_J, (wf % n_o)*(wf % n_v), wf % n_J)
+      call deallocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
 !
 !     Set the initial value of the energy 
 !
-      wf % energy = wf % scf_energy
+      wf%energy = wf%scf_energy
 !
 !     Add the correlation energy E = E + sum_aibj (t_ij^ab + t_i^a t_j^b) L_iajb
 !
-      do i = 1, wf % n_o
-         do a = 1, wf % n_v
-            do j = 1, wf % n_o
-               do b = 1, wf % n_v
+      do i = 1, wf%n_o
+         do a = 1, wf%n_v
+            do j = 1, wf%n_o
+               do b = 1, wf%n_v
 !
 !                 Calculate the necessary indices 
 !
-                  ai   = index_two(a, i, wf % n_v)
-                  bj   = index_two(b, j, wf % n_v)
+                  ai   = index_two(a, i, wf%n_v)
+                  bj   = index_two(b, j, wf%n_v)
 !
                   aibj = index_packed(ai, bj)
 !
-                  ia   = index_two(i, a, wf % n_o)
-                  jb   = index_two(j, b, wf % n_o)
+                  ia   = index_two(i, a, wf%n_o)
+                  jb   = index_two(j, b, wf%n_o)
 !
-                  ib   = index_two(i, b, wf % n_o)
-                  ja   = index_two(j, a, wf % n_o)
+                  ib   = index_two(i, b, wf%n_o)
+                  ja   = index_two(j, a, wf%n_o)
 !
 !                 Add the correlation energy 
 !
-                  wf % energy = wf % energy + & 
-                                 (wf % t2am(aibj,1) + (wf % t1am(a,i))*(wf % t1am(b,j)))*&
+                  wf%energy = wf%energy + & 
+                                 (wf%t2am(aibj,1) + (wf%t1am(a,i))*(wf%t1am(b,j)))*&
                                  (two*g_ia_jb(ia,jb) - g_ia_jb(ib,ja))
 !
                enddo
@@ -310,7 +310,7 @@ contains
 !
 !     Deallocate g_ia_jb
 !
-      call deallocator(g_ia_jb, (wf % n_o)*(wf % n_v), (wf % n_o)*(wf % n_v))
+      call deallocator(g_ia_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
    end subroutine calc_energy_cc_singles_doubles
 !
