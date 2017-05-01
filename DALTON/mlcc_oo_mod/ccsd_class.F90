@@ -38,8 +38,8 @@ module ccsd_class
 ! 
 !        < mu | exp(-T) H exp(T) | R >
 !
-      real(dp), dimension(:,:), allocatable :: omeg1 ! Singles part
-      real(dp), dimension(:,:), allocatable :: omeg2 ! Doubles part
+      real(dp), dimension(:,:), allocatable :: omega1 ! Singles part
+      real(dp), dimension(:,:), allocatable :: omega2 ! Doubles part
 !
    contains
 !
@@ -62,7 +62,8 @@ module ccsd_class
 !
 !     Helper routines for construct_omega
 !
-      ! todo ...
+      procedure :: omega_a1 => omega_a1_cc_singles_doubles
+  !    procedure :: omega_b1 => omega_b1_cc_singles_doubles
 !
    end type cc_singles_doubles
 !
@@ -73,7 +74,7 @@ module ccsd_class
    interface
 !
 !
-      module subroutine construct_omega_cc_singles_doubles(wfn)
+      module subroutine construct_omega_cc_singles_doubles(wf)
 !
 !        Construct Omega 
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -81,9 +82,26 @@ module ccsd_class
 !        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
 !        for the current amplitudes of the object wfn 
 !
-         class(cc_singles_doubles) :: wfn 
+         class(cc_singles_doubles) :: wf 
 !
       end subroutine construct_omega_cc_singles_doubles
+!
+!
+      module subroutine omega_a1_cc_singles_doubles(wf)
+!
+!        Omega A1 term
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!  
+!        Calculates the A1 term, 
+!  
+!           sum_ckd g_adkc * u_ki^cd,
+!  
+!        and adds it to the singles projection vector (omeg1) of
+!        the wavefunction object wfn
+!
+         class(cc_singles_doubles) :: wf
+!
+      end subroutine omega_a1_cc_singles_doubles
 !
 !
    end interface
