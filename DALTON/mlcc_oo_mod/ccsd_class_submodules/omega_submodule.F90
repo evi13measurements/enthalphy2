@@ -32,7 +32,7 @@ submodule (ccsd_class) omega
 contains
 !
 !
-   subroutine initialize_omega_cc_singles_doubles(wf)
+   subroutine initialize_omega_ccsd(wf)
 !
 !     Initialize Omega (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
@@ -42,7 +42,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
       call allocator(wf%omega1, wf%n_v, wf%n_o)
       wf%omega1 = zero
@@ -50,10 +50,10 @@ contains
       call allocator(wf%omega2, wf%n_t2am, 1)
       wf%omega2 = zero
 !
-   end subroutine initialize_omega_cc_singles_doubles
+   end subroutine initialize_omega_ccsd
 !
 !
-   subroutine construct_omega_cc_singles_doubles(wf)
+   subroutine construct_omega_ccsd(wf)
 !
 !      Construct Omega (CCSD)
 !      Written by Eirik F. Kjønstad and Sarai Folkestad, Apr 2017
@@ -62,7 +62,7 @@ contains
 !
        implicit none 
 !
-       class(cc_singles_doubles) :: wf
+       class(ccsd) :: wf
 !
 !      Construct singles contributions 
 !
@@ -79,10 +79,10 @@ contains
        ! call wf%omega_d2
        ! call wf%omega_e2
 !
-   end subroutine construct_omega_cc_singles_doubles
+   end subroutine construct_omega_ccsd
 !
 !
-   subroutine omega_a1_cc_singles_doubles(wf)
+   subroutine omega_a1_ccsd(wf)
 !
 !     Omega A1 term
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -96,7 +96,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
 !     Batching variables 
 !
@@ -287,10 +287,10 @@ contains
       call deallocator(g_a_ckd, batch_length, (wf%n_o)*(wf%n_v)**2)
       call deallocator(L_kc_J, (wf%n_o)*(wf%n_v), wf%n_J)
 !
-   end subroutine omega_a1_cc_singles_doubles
+   end subroutine omega_a1_ccsd
 !
 !
-   subroutine omega_b1_cc_singles_doubles(wf)
+   subroutine omega_b1_ccsd(wf)
 !
 !     Omega B1
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -304,7 +304,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles_doubles) :: wf 
+      class(ccsd) :: wf 
 !
       logical :: debug = .false.
 !
@@ -455,10 +455,10 @@ contains
       call deallocator(u_a_ckl, wf%n_v, (wf%n_v)*(wf%n_o)**2)
       call deallocator(g_ckl_i, (wf%n_v)*(wf%n_o)**2, wf%n_o)
 !
-   end subroutine omega_b1_cc_singles_doubles
+   end subroutine omega_b1_ccsd
 !
 !
-   subroutine omega_c1_cc_singles_doubles(wf)        
+   subroutine omega_c1_ccsd(wf)        
 !
 !        
 !     C1 Omega 
@@ -477,7 +477,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles_doubles) :: wf 
+      class(ccsd) :: wf 
 !
       real(dp), dimension(:,:), allocatable :: F_ck     
       real(dp), dimension(:,:), allocatable :: u_ai_ck  
@@ -568,10 +568,10 @@ contains
       call deallocator(omega1_ai, (wf%n_o)*(wf%n_v), 1)
       call deallocator(u_ai_ck, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
-   end subroutine omega_c1_cc_singles_doubles
+   end subroutine omega_c1_ccsd
 !
 !
-   subroutine omega_d1_cc_singles_doubles(wf)
+   subroutine omega_d1_ccsd(wf)
 !
 !     D1 omega term: Omega_ai^D1=F_ai_T1
 !
@@ -579,16 +579,16 @@ contains
 !
       implicit none
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
 !     Add F_a_i to omega
 !
       call daxpy((wf%n_o)*(wf%n_v), one, wf%fock_ai, 1, wf%omega1, 1)
 !
-   end subroutine omega_d1_cc_singles_doubles
+   end subroutine omega_d1_ccsd
 !
 !
-   subroutine omega_a2_cc_singles_doubles(wf)
+   subroutine omega_a2_ccsd(wf)
 !
 !     MLCC Omega A2 term: Omega A2 = g_ai_bj + sum_(cd)g_ac_bd * t_ci_dj = A2.1 + A.2.2
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 10 Mar 2017
@@ -600,7 +600,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
 !     Integrals
 !
@@ -1039,11 +1039,11 @@ contains
          call vec_print_packed(wf%omega2,wf%n_t2am)
       endif
 !
-   end subroutine omega_a2_cc_singles_doubles
+   end subroutine omega_a2_ccsd
 !
 !
 !
-   subroutine omega_b2_cc_singles_doubles(wf)
+   subroutine omega_b2_ccsd(wf)
 !
 !     MLCC Omega B2 term
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, 11 Mar 2017
@@ -1056,7 +1056,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles_doubles) :: wf 
+      class(ccsd) :: wf 
 !
 !     Integrals
 !
@@ -1314,10 +1314,10 @@ contains
          call vec_print_packed(wf%omega2,wf%n_t2am)
       endif
 !
-   end subroutine omega_b2_cc_singles_doubles
+   end subroutine omega_b2_ccsd
 !
 !
-   subroutine omega_c2_cc_singles_doubles(wf)
+   subroutine omega_c2_ccsd(wf)
 !
 !     C2 omega term. Omega C2 = -1/2* sum_(ck)t_bk_cj*(g_ki_ac -1/2 sum_(dl)t_al_di * g_kd_lc)
 !                               - sum_(ck) t_bk_ci (g_kj_ac-sum_(dl)t_al_dj*g_kd_lc)
@@ -1327,7 +1327,7 @@ contains
 !     
       implicit none
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
 !     Integrals
 !
@@ -1662,10 +1662,10 @@ contains
          call vec_print_packed(wf%omega2, wf%n_t2am)
       endif 
 !
-   end subroutine omega_c2_cc_singles_doubles
+   end subroutine omega_c2_ccsd
 !
 !
-   subroutine omega_d2_cc_singles_doubles(wf)
+   subroutine omega_d2_ccsd(wf)
 !
 !     Omega D2 
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -1692,7 +1692,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf 
+      class(ccsd) :: wf 
 !
       logical :: debug = .false.
 !
@@ -2275,10 +2275,10 @@ contains
 !
       call deallocator(L_ki_J,(wf%n_o)**2, wf%n_J)
 !
-   end subroutine omega_d2_cc_singles_doubles
+   end subroutine omega_d2_ccsd
 !
 ! 
-   subroutine omega_e2_cc_singles_doubles(wf)
+   subroutine omega_e2_ccsd(wf)
 !
 !     Omega E2
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -2300,7 +2300,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf 
+      class(ccsd) :: wf 
 !
       logical :: debug = .false.
 !
@@ -2759,7 +2759,7 @@ contains
 !
       endif 
 !
-   end subroutine omega_e2_cc_singles_doubles
+   end subroutine omega_e2_ccsd
 !
 ! 
 end submodule omega

@@ -27,7 +27,7 @@ module ccsd_class
 !  -::- Definition of the CCSD class -::-
 !  ::::::::::::::::::::::::::::::::::::::
 !
-   type, extends(ccs) :: cc_singles_doubles
+   type, extends(ccs) :: ccsd
 !
 !     Amplitude attributes
 !
@@ -45,39 +45,39 @@ module ccsd_class
 !
 !     Initialization and driver routines
 !
-      procedure :: init => init_cc_singles_doubles
-      procedure :: drv  => drv_cc_singles_doubles
+      procedure :: init => init_ccsd
+      procedure :: drv  => drv_ccsd
 !
 !     Initialization routine for the (singles, doubles) amplitudes
 !
-      procedure :: initialize_amplitudes => initialize_amplitudes_cc_singles_doubles
+      procedure :: initialize_amplitudes => initialize_amplitudes_ccsd
 !
 !     Routine to calculate the energy from the current amplitudes
 !
-      procedure :: calc_energy => calc_energy_cc_singles_doubles 
+      procedure :: calc_energy => calc_energy_ccsd 
 !
 !     Routine to initialize omega (allocate and set to zero)
 !
-      procedure :: initialize_omega => initialize_omega_cc_singles_doubles
+      procedure :: initialize_omega => initialize_omega_ccsd
 !
 !     Routines to construct the projection vector (omega)
 !
-      procedure :: construct_omega => construct_omega_cc_singles_doubles
+      procedure :: construct_omega => construct_omega_ccsd
 !
 !     Helper routines for construct_omega
 !
-      procedure :: omega_a1 => omega_a1_cc_singles_doubles 
-      procedure :: omega_b1 => omega_b1_cc_singles_doubles 
-      procedure :: omega_c1 => omega_c1_cc_singles_doubles 
-      procedure :: omega_d1 => omega_d1_cc_singles_doubles
+      procedure :: omega_a1 => omega_a1_ccsd 
+      procedure :: omega_b1 => omega_b1_ccsd 
+      procedure :: omega_c1 => omega_c1_ccsd 
+      procedure :: omega_d1 => omega_d1_ccsd
 !
-      procedure :: omega_a2 => omega_a2_cc_singles_doubles 
-      procedure :: omega_b2 => omega_b2_cc_singles_doubles 
-      procedure :: omega_c2 => omega_c2_cc_singles_doubles 
-      procedure :: omega_d2 => omega_d2_cc_singles_doubles 
-      procedure :: omega_e2 => omega_b2_cc_singles_doubles       
+      procedure :: omega_a2 => omega_a2_ccsd 
+      procedure :: omega_b2 => omega_b2_ccsd 
+      procedure :: omega_c2 => omega_c2_ccsd 
+      procedure :: omega_d2 => omega_d2_ccsd 
+      procedure :: omega_e2 => omega_b2_ccsd       
 !
-   end type cc_singles_doubles
+   end type ccsd
 !
 !  :::::::::::::::::::::::::::::::::::::::::::::::::::::
 !  -::- Interface to the submodule routines of CCSD -::- 
@@ -86,7 +86,7 @@ module ccsd_class
    interface
 !
 !
-      module subroutine initialize_omega_cc_singles_doubles(wf)
+      module subroutine initialize_omega_ccsd(wf)
 !
 !        Initialize Omega (CCSD)
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
@@ -94,12 +94,12 @@ module ccsd_class
 !        Allocates the projection vector (omega1, omega2) and sets it
 !        to zero.
 !
-         class(cc_singles_doubles) :: wf
+         class(ccsd) :: wf
 !
-      end subroutine initialize_omega_cc_singles_doubles
+      end subroutine initialize_omega_ccsd
 !
 !
-      module subroutine construct_omega_cc_singles_doubles(wf)
+      module subroutine construct_omega_ccsd(wf)
 !
 !        Construct Omega 
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -107,12 +107,12 @@ module ccsd_class
 !        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
 !        for the current amplitudes of the object wfn 
 !
-         class(cc_singles_doubles) :: wf 
+         class(ccsd) :: wf 
 !
-      end subroutine construct_omega_cc_singles_doubles
+      end subroutine construct_omega_ccsd
 !
 !
-      module subroutine omega_a1_cc_singles_doubles(wf)
+      module subroutine omega_a1_ccsd(wf)
 !
 !        Omega A1 term
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -124,12 +124,12 @@ module ccsd_class
 !        and adds it to the singles projection vector (omeg1) of
 !        the wavefunction object wfn
 !
-         class(cc_singles_doubles) :: wf
+         class(ccsd) :: wf
 !
-      end subroutine omega_a1_cc_singles_doubles
+      end subroutine omega_a1_ccsd
 !
 !
-      module subroutine omega_b1_cc_singles_doubles(wf)
+      module subroutine omega_b1_ccsd(wf)
 !
 !        Omega B1
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -141,35 +141,35 @@ module ccsd_class
 !        and adds it to the singles projection vector (omeg1) of
 !        the wavefunction object wfn
 !
-         class(cc_singles_doubles) :: wf 
+         class(ccsd) :: wf 
 !
-      end subroutine omega_b1_cc_singles_doubles
+      end subroutine omega_b1_ccsd
 !
 !
-      module subroutine omega_c1_cc_singles_doubles(wf)
+      module subroutine omega_c1_ccsd(wf)
 !
 !        C1 omega term: Omega_ai^C1 = sum_ck F_kc*u_ai_ck,
 !                       u_ai_ck = 2*t_ck_ai-t_ci_ak
 !        
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, March 2017
 !
-         class(cc_singles_doubles) :: wf 
+         class(ccsd) :: wf 
 !
-      end subroutine omega_c1_cc_singles_doubles
+      end subroutine omega_c1_ccsd
 !
 !
-      module subroutine omega_d1_cc_singles_doubles(wf)
+      module subroutine omega_d1_ccsd(wf)
 !
 !        D1 omega term: Omega_ai^D1=F_ai_T1
 !
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, March 2017
 !
-            class(cc_singles_doubles) :: wf
+            class(ccsd) :: wf
 !
-      end subroutine omega_d1_cc_singles_doubles
+      end subroutine omega_d1_ccsd
 !
 !
-      module subroutine omega_a2_cc_singles_doubles(wf)
+      module subroutine omega_a2_ccsd(wf)
 !
 !        MLCC Omega A2 term: Omega A2 = g_ai_bj + sum_(cd)g_ac_bd * t_ci_dj = A2.1 + A.2.2
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, 10 Mar 2017
@@ -180,11 +180,11 @@ module ccsd_class
 !                   Omega contribution for A2.2 is ordered as Omega_ab_ij, and is reordered into the packed omega2 vector.          
 !
 !
-         class(cc_singles_doubles) :: wf
+         class(ccsd) :: wf
 !
-      end subroutine omega_a2_cc_singles_doubles
+      end subroutine omega_a2_ccsd
 !
-      module subroutine omega_b2_cc_singles_doubles(wf)
+      module subroutine omega_b2_ccsd(wf)
 !
 !        MLCC Omega B2 term.  Omega B2 = sum_(kl) t_ak_bl*(g_kilj + sum_(cd) t_ci_dj * g_kc_ld)
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, 11 Mar 2017
@@ -194,12 +194,12 @@ module ccsd_class
 !                   Then the contraction over cd is performed, and the results added to g_kl_ij.
 !                   t_ak_bl is then reordered as t_ab_kl and the contraction over kl is performed.
 !
-         class(cc_singles_doubles) :: wf
+         class(ccsd) :: wf
 !
-      end subroutine omega_b2_cc_singles_doubles
+      end subroutine omega_b2_ccsd
 !
 !
-      module subroutine omega_c2_cc_singles_doubles(wf)
+      module subroutine omega_c2_ccsd(wf)
 !
 !        C2 omega term. Omega C2 = -1/2* sum_(ck)t_bk_cj*(g_ki_ac -1/2 sum_(dl)t_al_di * g_kd_lc)
 !                                  - sum_(ck) t_bk_ci (g_kj_ac-sum_(dl)t_al_dj*g_kd_lc)
@@ -208,23 +208,23 @@ module ccsd_class
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Mar 2017
 !     
 !
-         class(cc_singles_doubles) :: wf
+         class(ccsd) :: wf
 !
-      end subroutine omega_c2_cc_singles_doubles
-!
-!
-      module subroutine omega_d2_cc_singles_doubles(wf)
-!
-         class(cc_singles_doubles) :: wf
-!
-      end subroutine omega_d2_cc_singles_doubles
+      end subroutine omega_c2_ccsd
 !
 !
-      module subroutine omega_e2_cc_singles_doubles(wf)
+      module subroutine omega_d2_ccsd(wf)
 !
-         class(cc_singles_doubles) :: wf
+         class(ccsd) :: wf
 !
-      end subroutine omega_e2_cc_singles_doubles
+      end subroutine omega_d2_ccsd
+!
+!
+      module subroutine omega_e2_ccsd(wf)
+!
+         class(ccsd) :: wf
+!
+      end subroutine omega_e2_ccsd
 !
 !
    end interface
@@ -236,7 +236,7 @@ contains
 !  -::- Initialization and driver routines -::-
 !  ::::::::::::::::::::::::::::::::::::::::::::
 !
-   subroutine init_cc_singles_doubles(wf)
+   subroutine init_ccsd(wf)
 !
 !     Initialize CCSD object
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -252,7 +252,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
 !     Read Hartree-Fock info from SIRIUS
 !
@@ -274,27 +274,27 @@ contains
 !
       call wf%calc_energy
 !
-   end subroutine init_cc_singles_doubles
+   end subroutine init_ccsd
 !
 !
-   subroutine drv_cc_singles_doubles(wf)
+   subroutine drv_ccsd(wf)
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
 !     Print the energy    
 !
       write(unit_output,*) 'The SCF energy:', wf%scf_energy
       write(unit_output,*) 'The MP2 energy:', wf%energy
 !
-   end subroutine drv_cc_singles_doubles
+   end subroutine drv_ccsd
 !
 !  :::::::::::::::::::::::::::::::::::::::::
 !  -::- Class subroutines and functions -::- 
 !  :::::::::::::::::::::::::::::::::::::::::
 !
-   subroutine initialize_amplitudes_cc_singles_doubles(wf)
+   subroutine initialize_amplitudes_ccsd(wf)
 !
 !     Initialize Amplitudes (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -305,7 +305,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf
+      class(ccsd) :: wf
 !
       real(dp), dimension(:,:), allocatable :: L_ia_J
       real(dp), dimension(:,:), allocatable :: g_ia_jb
@@ -396,10 +396,10 @@ contains
       call deallocator(L_ia_J, (wf%n_o)*(wf%n_v), (wf%n_J))
       call deallocator(g_ia_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v)) 
 !
-   end subroutine initialize_amplitudes_cc_singles_doubles
+   end subroutine initialize_amplitudes_ccsd
 !
 !
-   subroutine calc_energy_cc_singles_doubles(wf)
+   subroutine calc_energy_ccsd(wf)
 !
 !     Calculate Energy (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -408,7 +408,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles_doubles) :: wf 
+      class(ccsd) :: wf 
 !
       real(dp), dimension(:,:), allocatable :: L_ia_J  ! L_ia^J
       real(dp), dimension(:,:), allocatable :: g_ia_jb ! g_iajb
@@ -488,7 +488,7 @@ contains
 !
       call deallocator(g_ia_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
-   end subroutine calc_energy_cc_singles_doubles
+   end subroutine calc_energy_ccsd
 !
 !
 end module ccsd_class
