@@ -56,6 +56,10 @@ module ccsd_class
 !
       procedure :: calc_energy => calc_energy_cc_singles_doubles 
 !
+!     Routine to initialize omega (allocate and set to zero)
+!
+      procedure :: initialize_omega => initialize_omega_cc_singles_doubles
+!
 !     Routines to construct the projection vector (omega)
 !
       procedure :: construct_omega => construct_omega_cc_singles_doubles
@@ -80,6 +84,19 @@ module ccsd_class
 !  :::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
    interface
+!
+!
+      module subroutine initialize_omega_cc_singles_doubles(wf)
+!
+!        Initialize Omega (CCSD)
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
+!
+!        Allocates the projection vector (omega1, omega2) and sets it
+!        to zero.
+!
+         class(cc_singles_doubles) :: wf
+!
+      end subroutine initialize_omega_cc_singles_doubles
 !
 !
       module subroutine construct_omega_cc_singles_doubles(wf)

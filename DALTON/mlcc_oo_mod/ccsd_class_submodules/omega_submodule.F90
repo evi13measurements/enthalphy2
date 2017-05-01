@@ -29,6 +29,27 @@ submodule (ccsd_class) omega
 contains
 !
 !
+   subroutine initialize_omega_cc_singles_doubles(wf)
+!
+!     Initialize Omega (CCSD)
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
+!
+!     Allocates the projection vector (omega1, omega2) and sets it
+!     to zero.
+!
+      implicit none 
+!
+      class(cc_singles_doubles) :: wf
+!
+      call allocator(wf%omega1, wf%n_v, wf%n_o)
+      wf%omega1 = zero
+!
+      call allocator(wf%omega2, wf%n_t2am, 1)
+      wf%omega2 = zero
+!
+   end subroutine initialize_omega_cc_singles_doubles
+!
+!
    subroutine construct_omega_cc_singles_doubles(wf)
 !
 !      Construct Omega (CCSD)
