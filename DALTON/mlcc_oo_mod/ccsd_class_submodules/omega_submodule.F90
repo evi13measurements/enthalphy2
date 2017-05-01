@@ -7,20 +7,23 @@ submodule (ccsd_class) omega
 !
 !     Contains the following family of procedures of the CCSD class:
 !
-!        construct_omega: constructs the projection vector (omega1, omega2) 
-!                         for the current amplitudes (t1am, t2am) for the
-!                         wavefunction object wf.
+!        initialize_omega: allocates the projection vector (omega1, omega2)
+!                          and sets it to zero.
 !
-!        omega_a1:        adds A1 term to omega1
-!        omega_b1:        adds B1 term to omega1
-!        omega_c1:        adds C1 term to omega1
-!        omega_d1:        adds D1 term to omega1
+!        construct_omega:  constructs the projection vector (omega1, omega2) 
+!                          for the current amplitudes (t1am, t2am) for the
+!                          wavefunction object wf.
 !
-!        omega_a2:        adds A2 term to omega2
-!        omega_b2:        adds B2 term to omega2
-!        omega_c2:        adds C2 term to omega2
-!        omega_d2:        adds D2 term to omega2
-!        omega_e2:        adds E2 term to omega2
+!        omega_a1:         adds A1 term to omega1
+!        omega_b1:         adds B1 term to omega1
+!        omega_c1:         adds C1 term to omega1
+!        omega_d1:         adds D1 term to omega1
+!
+!        omega_a2:         adds A2 term to omega2
+!        omega_b2:         adds B2 term to omega2
+!        omega_c2:         adds C2 term to omega2
+!        omega_d2:         adds D2 term to omega2
+!        omega_e2:         adds E2 term to omega2
 !
 !     The routine assumes that omega1 and omega2 are allocated 
 !     (see wf % initialize_omega).

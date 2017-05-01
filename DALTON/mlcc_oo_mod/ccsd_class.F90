@@ -27,7 +27,7 @@ module ccsd_class
 !  -::- Definition of the CCSD class -::-
 !  ::::::::::::::::::::::::::::::::::::::
 !
-   type, extends(cc_singles) :: cc_singles_doubles
+   type, extends(ccs) :: cc_singles_doubles
 !
 !     Amplitude attributes
 !

@@ -20,7 +20,7 @@ submodule (ccs_class) cholesky
 contains
 !
 !
-   module subroutine get_cholesky_ij_cc_singles(wf, L_ij_J)
+   module subroutine get_cholesky_ij_ccs(wf, L_ij_J)
 !
 !     Get Cholesky IJ
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -33,7 +33,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       real(dp), dimension((wf%n_o)**2, wf%n_J) :: L_ij_J
 !
@@ -119,10 +119,10 @@ contains
       call deallocator(L_iJ_k, (wf%n_o)*(wf%n_J), wf%n_o)
       call deallocator(L_iJ_a, (wf%n_o)*(wf%n_J), wf%n_v)
 !    
-   end subroutine get_cholesky_ij_cc_singles
+   end subroutine get_cholesky_ij_ccs
 !
 !
-   module subroutine get_cholesky_ia_cc_singles(wf, L_ia_J)
+   module subroutine get_cholesky_ia_ccs(wf, L_ia_J)
 !
 !     Get Cholesky IA
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -133,16 +133,16 @@ contains
 !
       implicit none 
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       real(dp), dimension((wf%n_o)*(wf%n_v), wf%n_J) :: L_ia_J
 !
       call wf%read_cholesky_ia(L_ia_J)
 !
-   end subroutine get_cholesky_ia_cc_singles
+   end subroutine get_cholesky_ia_ccs
 !
 !
-   module subroutine get_cholesky_ai_cc_singles(wf, L_ai_J)
+   module subroutine get_cholesky_ai_ccs(wf, L_ai_J)
 !
 !     Get Cholesky AI
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -158,7 +158,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       real(dp), dimension((wf%n_v)*(wf%n_o), wf%n_J) :: L_ai_J 
 !
@@ -498,10 +498,10 @@ contains
       call deallocator(L_a_iJ, wf%n_v, (wf%n_o)*(wf%n_J))
       call deallocator(L_k_iJ, wf%n_o, (wf%n_o)*(wf%n_J))
 !
-   end subroutine get_cholesky_ai_cc_singles
+   end subroutine get_cholesky_ai_ccs
 !
 !
-   module subroutine get_cholesky_ab_cc_singles(wf, L_ab_J, first, last, ab_dim, reorder)
+   module subroutine get_cholesky_ab_ccs(wf, L_ab_J, first, last, ab_dim, reorder)
 !
 !     Get Cholesky AB
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -517,7 +517,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       integer(i15), intent(in) :: ab_dim
       integer(i15), intent(in) :: first
@@ -713,7 +713,7 @@ contains
 !
       endif
 !
-   end subroutine get_cholesky_ab_cc_singles
+   end subroutine get_cholesky_ab_ccs
 !
 !
 end submodule cholesky

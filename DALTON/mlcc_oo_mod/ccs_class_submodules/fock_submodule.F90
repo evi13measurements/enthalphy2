@@ -17,7 +17,7 @@ submodule (ccs_class) fock
 contains
 !
 !
-    subroutine initialize_fock_matrix_cc_singles(wf)
+    subroutine initialize_fock_matrix_ccs(wf)
 !
 !     Initialize Fock Matrix (CCS)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -26,7 +26,7 @@ contains
 !
       implicit none
 !  
-      class(cc_singles) :: wf   
+      class(ccs) :: wf   
 !
       call allocator(wf%fock_ij, wf%n_o, wf%n_o)
       call allocator(wf%fock_ia, wf%n_o, wf%n_v)
@@ -41,10 +41,10 @@ contains
 !
       call wf%fock_constructor
 !
-   end subroutine initialize_fock_matrix_cc_singles
+   end subroutine initialize_fock_matrix_ccs
 !
 !
-   subroutine fock_constructor_cc_singles(wf)
+   subroutine fock_constructor_ccs(wf)
 !
 !     Fock Constructor
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -55,7 +55,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       real(dp), dimension(:,:), allocatable :: fock_ao
       real(dp), dimension(:,:), allocatable :: fock_matrix
@@ -499,10 +499,10 @@ contains
 !
       call deallocator(fock_matrix, wf%n_mo, wf%n_mo)
 !
-   end subroutine fock_constructor_cc_singles
+   end subroutine fock_constructor_ccs
 !
 !
-   subroutine one_electron_t1_cc_singles(wf, h1 ,h1_T1)
+   subroutine one_electron_t1_ccs(wf, h1 ,h1_T1)
 !
 !     One-electron T1 
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -516,7 +516,7 @@ contains
 !
       implicit none
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       real(dp), dimension(wf%n_mo, wf%n_mo) :: h1
       real(dp), dimension(wf%n_mo, wf%n_mo) :: h1_T1
@@ -612,7 +612,7 @@ contains
       call deallocator(y, wf%n_mo, wf%n_mo)
       call deallocator(x, wf%n_mo, wf%n_mo)
 !
-   end subroutine one_electron_t1_cc_singles
+   end subroutine one_electron_t1_ccs
 !
 !
 end submodule

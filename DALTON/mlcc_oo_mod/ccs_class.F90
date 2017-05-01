@@ -29,7 +29,7 @@ module ccs_class
 !  -::- Definition of the CCS class -::-
 !  ::::::::::::::::::::::::::::::::::::: 
 !
-   type, extends(hartree_fock) :: cc_singles
+   type, extends(hartree_fock) :: ccs
 !
 !     Amplitude attributes
 !
@@ -46,30 +46,30 @@ module ccs_class
 !
 !     Initialization and driver routines
 !
-      procedure :: init => init_cc_singles
-      procedure :: drv  => drv_cc_singles
+      procedure :: init => init_ccs
+      procedure :: drv  => drv_ccs
 !
 !     Initialization routine for the (singles) amplitudes
 !      
-      procedure :: initialize_amplitudes => initialize_amplitudes_cc_singles
+      procedure :: initialize_amplitudes => initialize_amplitudes_ccs
 !
 !     Initialization routine for the Fock matrix, and a Fock matrix constructor
 !     (for the given T1 amplitudes)
 !
-      procedure                  :: initialize_fock_matrix => initialize_fock_matrix_cc_singles
-      procedure, non_overridable :: fock_constructor       => fock_constructor_cc_singles
+      procedure                  :: initialize_fock_matrix => initialize_fock_matrix_ccs
+      procedure, non_overridable :: fock_constructor       => fock_constructor_ccs
 !
-      procedure, non_overridable :: one_electron_t1        => one_electron_t1_cc_singles ! T1-transf. of h_pq
+      procedure, non_overridable :: one_electron_t1        => one_electron_t1_ccs ! T1-transf. of h_pq
 !
 !     get Cholesky routines to calculate the occ/vir-occ/vir
 !     blocks of the T1-transformed Cholesky vectors
 !
-      procedure, non_overridable :: get_cholesky_ij => get_cholesky_ij_cc_singles ! occ-occ
-      procedure, non_overridable :: get_cholesky_ia => get_cholesky_ia_cc_singles ! occ-vir
-      procedure, non_overridable :: get_cholesky_ai => get_cholesky_ai_cc_singles ! vir-occ
-      procedure, non_overridable :: get_cholesky_ab => get_cholesky_ab_cc_singles ! vir-vir
+      procedure, non_overridable :: get_cholesky_ij => get_cholesky_ij_ccs ! occ-occ
+      procedure, non_overridable :: get_cholesky_ia => get_cholesky_ia_ccs ! occ-vir
+      procedure, non_overridable :: get_cholesky_ai => get_cholesky_ai_ccs ! vir-occ
+      procedure, non_overridable :: get_cholesky_ab => get_cholesky_ab_ccs ! vir-vir
 !
-   end type cc_singles
+   end type ccs
 !
 !  ::::::::::::::::::::::::::::::::::::::::::::::::::::
 !  -::- Interface to the submodule routines of CCS -::- 
@@ -78,7 +78,7 @@ module ccs_class
    interface
 !
 !
-      module subroutine get_cholesky_ij_cc_singles(wf, L_ij_J)
+      module subroutine get_cholesky_ij_ccs(wf, L_ij_J)
 !
 !        Get Cholesky IJ
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -86,13 +86,13 @@ module ccs_class
 !        Calculates the T1-transformed Cholesky vector L_ij^J,
 !        and places it in L_ij_J
 !
-         class(cc_singles) :: wf
+         class(ccs) :: wf
          real(dp), dimension((wf%n_o)**2, wf%n_J) :: L_ij_J
 !
-      end subroutine get_cholesky_ij_cc_singles
+      end subroutine get_cholesky_ij_ccs
 !
 !
-      module subroutine get_cholesky_ia_cc_singles(wf, L_ia_J)
+      module subroutine get_cholesky_ia_ccs(wf, L_ia_J)
 !
 !        Get Cholesky IA
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -100,14 +100,14 @@ module ccs_class
 !        Calculates the T1-transformed Cholesky vector L_ia^J,
 !        and places it in L_ia_J
 !
-         class(cc_singles) :: wf
+         class(ccs) :: wf
 !
          real(dp), dimension((wf%n_o)*(wf%n_v), wf%n_J) :: L_ia_J
 !
-      end subroutine get_cholesky_ia_cc_singles
+      end subroutine get_cholesky_ia_ccs
 !
 !
-      module subroutine get_cholesky_ai_cc_singles(wf,L_ai_J)
+      module subroutine get_cholesky_ai_ccs(wf,L_ai_J)
 !
 !        Get Cholesky AI
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -115,14 +115,14 @@ module ccs_class
 !        Calculates the T1-transformed Cholesky vector L_ai^J,
 !        and places it in L_ai_J 
 !
-         class(cc_singles) :: wf
+         class(ccs) :: wf
 !
          real(dp), dimension((wf%n_o)*(wf%n_v), wf%n_J) :: L_ai_J
 !
-      end subroutine get_cholesky_ai_cc_singles
+      end subroutine get_cholesky_ai_ccs
 !
 !
-      module subroutine get_cholesky_ab_cc_singles(wf, L_ab_J, first, last, ab_dim, reorder)
+      module subroutine get_cholesky_ab_ccs(wf, L_ab_J, first, last, ab_dim, reorder)
 !
 !        Get Cholesky AB
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -130,7 +130,7 @@ module ccs_class
 !        Calculates the T1-transformed Cholesky vector L_ab^J,
 !        and places it in L_ab_J (with options for batching over a and b)
 !
-         class(cc_singles) :: wf
+         class(ccs) :: wf
 !
          integer(i15), intent(in) :: ab_dim
          integer(i15), intent(in) :: first
@@ -139,9 +139,9 @@ module ccs_class
 !
          real(dp), dimension(ab_dim, wf%n_J) :: L_ab_J
 !
-      end subroutine get_cholesky_ab_cc_singles
+      end subroutine get_cholesky_ab_ccs
 !
-      module subroutine initialize_fock_matrix_cc_singles(wf)
+      module subroutine initialize_fock_matrix_ccs(wf)
 !  
 !        Initialize Fock matrix
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -149,11 +149,11 @@ module ccs_class
 !        Allocates and sets Fock matrix blocks (ij, ia, ai, ab) to zero
 !        before calling the Fock matrix constructor
 !
-         class(cc_singles) :: wf
+         class(ccs) :: wf
 !     
-      end subroutine
+      end subroutine initialize_fock_matrix_ccs
 !
-      module subroutine fock_constructor_cc_singles(wf)
+      module subroutine fock_constructor_ccs(wf)
 !
 !        Fock Constructor
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -162,53 +162,11 @@ module ccs_class
 !        and saves the result in the class variables fock_matrix_pq (see the
 !        Hartree-Fock class for these variables)  
 !
-         implicit none
+         class(ccs) :: wf
 !
-         class(cc_singles) :: wf
-!
-         real(dp), dimension(:,:), allocatable :: fock_ao
-         real(dp), dimension(:,:), allocatable :: fock_matrix
-!
-         real(dp), dimension(:,:), allocatable :: h1ao ! AO basis matrix h_αβ
-         real(dp), dimension(:,:), allocatable :: h1mo ! MO basis matrix h_pq  
-         real(dp), dimension(:,:), allocatable :: X    ! An intermediate
-!         
-         integer(i15) :: unit_identifier_ao_integrals = -1 ! Unit identifier for file mlcc_aoint
-!
-!        Indices
-!
-         integer(i15) :: i = 0, j = 0, k = 0, a = 0, b = 0, ij = 0, kk = 0, ik = 0
-         integer(i15) :: kj = 0, ii = 0, jj = 0, ji = 0, ai = 0, ib = 0, bi = 0, ia = 0
-         integer(i15) :: aj = 0, ja = 0, ab = 0
-!
-!        Useful orbital information
-!         
-         integer(i15) :: n_ao_sq_packed = 0 ! Dimension of packed (n_ao x n_ao) matrix
-!
-!        Two electron integrals
-!
-         real(dp), dimension(:,:), allocatable :: g_ij_kl
-         real(dp), dimension(:,:), allocatable :: g_ab_ij
-         real(dp), dimension(:,:), allocatable :: g_ai_jb
-         real(dp), dimension(:,:), allocatable :: g_ia_jk
-         real(dp), dimension(:,:), allocatable :: g_ai_jk
-!
-!        Cholesky vectors
-!
-         real(dp), dimension(:,:), allocatable :: L_ij_J 
-         real(dp), dimension(:,:), allocatable :: L_ia_J 
-         real(dp), dimension(:,:), allocatable :: L_ai_J 
-         real(dp), dimension(:,:), allocatable :: L_ab_J 
-!
-!        Batch settings
-!
-         integer(i15) :: available = 0, required = 0, max_batch_length = 0
-         integer(i15) :: batch_end = 0, batch_length = 0, g_off = 0, n_batches = 0
-         integer(i15) :: b_batch = 0, batch_start = 0
-!
-      end subroutine
+      end subroutine fock_constructor_ccs
 
-      module subroutine one_electron_t1_cc_singles(wf, h1 ,h1_T1)
+      module subroutine one_electron_t1_ccs(wf, h1 ,h1_T1)
 !
 !        One-electron T1 
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -222,20 +180,12 @@ module ccs_class
 !
          implicit none
 !
-         class(cc_singles) :: wf
+         class(ccs) :: wf
 !
          real(dp), dimension(wf%n_mo, wf%n_mo) :: h1
          real(dp), dimension(wf%n_mo, wf%n_mo) :: h1_T1
-!
-         real(dp), dimension(:,:), allocatable :: x 
-         real(dp), dimension(:,:), allocatable :: y 
-         real(dp), dimension(:,:), allocatable :: t1
-!
-         real(dp), dimension(:,:), allocatable :: Z ! Intermediate for matrix multiplication
-!
-         integer(i15) :: p = 0, q = 0, a = 0, i = 0
 !  
-      end subroutine
+      end subroutine one_electron_t1_ccs
 !
    end interface 
 !
@@ -246,7 +196,7 @@ contains
 !  -::- Initialization and driver routines -::- 
 !  ::::::::::::::::::::::::::::::::::::::::::::
 !
-   subroutine init_cc_singles(wf)
+   subroutine init_ccs(wf)
 !
 !     Initialize CCS object
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -261,7 +211,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
 !     Read Hartree-Fock info from SIRIUS
 !
@@ -279,10 +229,10 @@ contains
 !
       call wf%initialize_fock_matrix
 !
-   end subroutine init_cc_singles
+   end subroutine init_ccs
 !
 !
-   subroutine drv_cc_singles(wf)
+   subroutine drv_ccs(wf)
 !
 !     CCS Driver
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -292,18 +242,18 @@ contains
 !
       implicit none 
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
       write(unit_output,*) 'ERROR: There is no driver for the CCS class'
       call exit
 !
-   end subroutine drv_cc_singles
+   end subroutine drv_ccs
 !
 !  :::::::::::::::::::::::::::::::::::::::::
 !  -::- Class subroutines and functions -::- 
 !  :::::::::::::::::::::::::::::::::::::::::
 !
-   subroutine initialize_amplitudes_cc_singles(wf)
+   subroutine initialize_amplitudes_ccs(wf)
 !
 !     Initialize Amplitudes (CCS)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -313,7 +263,7 @@ contains
 !
       implicit none 
 !
-      class(cc_singles) :: wf
+      class(ccs) :: wf
 !
 !     Calculate the number of singles amplitudes
 !
@@ -324,7 +274,7 @@ contains
       call allocator(wf%t1am, wf%n_v, wf%n_o)
       wf%t1am = zero
 !
-   end subroutine initialize_amplitudes_cc_singles
+   end subroutine initialize_amplitudes_ccs
 !
 !   
 end module ccs_class
