@@ -1628,7 +1628,7 @@ contains
    end subroutine omega_c1_cc_singles_doubles
 !
 !
-   subroutine mlcc_omega_d1_cc_singles_doubles(wf)
+   subroutine omega_d1_cc_singles_doubles(wf)
 !
 !     D1 omega term: Omega_ai^D1=F_ai_T1
 !
@@ -1642,7 +1642,7 @@ contains
 !
       call daxpy((wf%n_o)*(wf%n_v), one, wf%fock_ai, 1, wf%omega1, 1)
 !
-   end subroutine mlcc_omega_d1_cc_singles_doubles
+   end subroutine omega_d1_cc_singles_doubles
 !
 !
    subroutine omega_a2_cc_singles_doubles(wf)

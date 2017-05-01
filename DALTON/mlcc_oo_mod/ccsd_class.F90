@@ -82,6 +82,19 @@ module ccsd_class
    interface
 !
 !
+      module subroutine construct_omega_cc_singles_doubles(wf)
+!
+!        Construct Omega 
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!
+!        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
+!        for the current amplitudes of the object wfn 
+!
+         class(cc_singles_doubles) :: wf 
+!
+      end subroutine construct_omega_cc_singles_doubles
+!
+!
       module subroutine omega_a1_cc_singles_doubles(wf)
 !
 !        Omega A1 term
@@ -97,19 +110,6 @@ module ccsd_class
          class(cc_singles_doubles) :: wf
 !
       end subroutine omega_a1_cc_singles_doubles
-!
-!
-      module subroutine construct_omega_cc_singles_doubles(wf)
-!
-!        Construct Omega 
-!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
-!
-!        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
-!        for the current amplitudes of the object wfn 
-!
-         class(cc_singles_doubles) :: wf 
-!
-      end subroutine construct_omega_cc_singles_doubles
 !
 !
       module subroutine omega_b1_cc_singles_doubles(wf)
