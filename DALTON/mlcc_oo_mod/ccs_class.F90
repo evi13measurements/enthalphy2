@@ -36,6 +36,12 @@ module ccs_class
       integer(i15) :: n_t1am = 0                    ! Number of singles amplitudes
       real(dp), dimension(:,:), allocatable :: t1am ! Singles amplitude vector
 !
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ij ! occ-occ block
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ia ! occ-vir block
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ai ! vir-occ block
+      real(dp), dimension(:,:), allocatable :: fock_matrix_ab ! vir-vir block
+!
+!
    contains 
 !
 !     Initialization and driver routines
@@ -116,7 +122,7 @@ module ccs_class
       end subroutine get_cholesky_ai_cc_singles
 !
 !
-      module subroutine get_cholesky_ab_cc_singles(wf,L_ab_J,first,last,ab_dim,reorder)
+      module subroutine get_cholesky_ab_cc_singles(wf, L_ab_J, first, last, ab_dim, reorder)
 !
 !        Get Cholesky AB
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017

@@ -34,7 +34,6 @@ contains
    subroutine squareup(packed,unpacked,N)
 !
 !     Purpose: Squares up to full dimension (N x N) of packed vectors.
-      use types
 !
       implicit none
 !
@@ -55,7 +54,6 @@ contains
 !
 !     Purpose: Pack down full square matrix of dimension (N x N).
 !
-      use types
 !
       implicit none
 !
