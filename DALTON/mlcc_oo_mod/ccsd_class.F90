@@ -34,6 +34,13 @@ module ccsd_class
       integer(i15) :: n_t2am = 0                    ! Number of doubles amplitudes
       real(dp), dimension(:,:), allocatable :: t2am ! Doubles amplitude vector
 !
+!     Schrödinger equation projection attribbutes (the omega vector)
+! 
+!        < mu | exp(-T) H exp(T) | R >
+!
+      real(dp), dimension(:,:), allocatable :: omeg1 ! Singles part
+      real(dp), dimension(:,:), allocatable :: omeg2 ! Doubles part
+!
    contains
 !
 !     Initialization and driver routines
@@ -49,7 +56,37 @@ module ccsd_class
 !
       procedure :: calc_energy => calc_energy_cc_singles_doubles 
 !
+!     Routines to construct the projection vector (omega)
+!
+      procedure :: construct_omega => construct_omega_cc_singles_doubles
+!
+!     Helper routines for construct_omega
+!
+      ! todo ...
+!
    end type cc_singles_doubles
+!
+!  :::::::::::::::::::::::::::::::::::::::::::::::::::::
+!  -::- Interface to the submodule routines of CCSD -::- 
+!  :::::::::::::::::::::::::::::::::::::::::::::::::::::
+!
+   interface
+!
+!
+      module subroutine construct_omega_cc_singles_doubles(wfn)
+!
+!        Construct Omega 
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!
+!        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
+!        for the current amplitudes of the object wfn 
+!
+         class(cc_singles_doubles) :: wfn 
+!
+      end subroutine construct_omega_cc_singles_doubles
+!
+!
+   end interface
 !
 !
 contains

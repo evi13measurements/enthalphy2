@@ -1,10 +1,11 @@
 module input_output
+! Write doc!!
    use types
 !
    implicit none
 !
-   integer(i15),public :: unit_output = 0 
-   integer,private  :: n_files = 0
+   integer(i15) :: unit_output = 0 
+   integer, private :: n_files = 0
 !
 contains
 !
