@@ -28,16 +28,16 @@ contains
 !  
       class(cc_singles) :: wf   
 !
-      call allocator(wf%fock_matrix_ij, wf%n_o, wf%n_o)
-      call allocator(wf%fock_matrix_ia, wf%n_o, wf%n_v)
-      call allocator(wf%fock_matrix_ai, wf%n_v, wf%n_o)
-      call allocator(wf%fock_matrix_ab, wf%n_v, wf%n_v)
+      call allocator(wf%fock_ij, wf%n_o, wf%n_o)
+      call allocator(wf%fock_ia, wf%n_o, wf%n_v)
+      call allocator(wf%fock_ai, wf%n_v, wf%n_o)
+      call allocator(wf%fock_ab, wf%n_v, wf%n_v)
 
 !
-      wf%fock_matrix_ij = zero
-      wf%fock_matrix_ia = zero
-      wf%fock_matrix_ai = zero
-      wf%fock_matrix_ab = zero
+      wf%fock_ij = zero
+      wf%fock_ia = zero
+      wf%fock_ai = zero
+      wf%fock_ab = zero
 !
       call wf%fock_constructor
 !
@@ -475,7 +475,7 @@ contains
       do i = 1, wf%n_o
          do j = 1, wf%n_o
 !
-            wf%fock_matrix_ij(i,j) = fock_matrix(i,j)
+            wf%fock_ij(i,j) = fock_matrix(i,j)
 !
          enddo
       enddo
@@ -483,8 +483,8 @@ contains
       do i = 1, wf%n_o
          do a = 1, wf%n_v
 !
-            wf%fock_matrix_ia(i,a) = fock_matrix(i, wf%n_o + a)
-            wf%fock_matrix_ai(a,i) = fock_matrix(wf%n_o + a, i)
+            wf%fock_ia(i,a) = fock_matrix(i, wf%n_o + a)
+            wf%fock_ai(a,i) = fock_matrix(wf%n_o + a, i)
 !
          enddo
       enddo
@@ -492,7 +492,7 @@ contains
       do a = 1, wf%n_v
          do b = 1, wf%n_v
 !
-            wf%fock_matrix_ab(a,b) = fock_matrix(wf%n_o + a, wf%n_o + b)
+            wf%fock_ab(a,b) = fock_matrix(wf%n_o + a, wf%n_o + b)
 !
          enddo
       enddo
