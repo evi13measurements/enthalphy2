@@ -62,8 +62,16 @@ module ccsd_class
 !
 !     Helper routines for construct_omega
 !
-      procedure :: omega_a1 => omega_a1_cc_singles_doubles
-  !    procedure :: omega_b1 => omega_b1_cc_singles_doubles
+      procedure :: omega_a1 => omega_a1_cc_singles_doubles 
+      procedure :: omega_b1 => omega_b1_cc_singles_doubles 
+      procedure :: omega_c1 => omega_c1_cc_singles_doubles 
+      procedure :: omega_d1 => omega_d1_cc_singles_doubles
+!
+      procedure :: omega_a2 => omega_a2_cc_singles_doubles 
+      procedure :: omega_b2 => omega_b2_cc_singles_doubles 
+      procedure :: omega_c2 => omega_c2_cc_singles_doubles 
+      procedure :: omega_d2 => omega_d2_cc_singles_doubles 
+      procedure :: omega_e2 => omega_b2_cc_singles_doubles       
 !
    end type cc_singles_doubles
 !
@@ -86,6 +94,41 @@ module ccsd_class
 !
       end subroutine construct_omega_cc_singles_doubles
 !
+!     
+      module subroutine omega_a1_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_b1_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_c1_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_d1_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_a2_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_b2_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_c2_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_d2_cc_singles_doubles
+      end subroutine
+!
+!
+      module subroutine omega_e2_cc_singles_doubles
+      end subroutine
 !
       module subroutine omega_a1_cc_singles_doubles(wf)
 !
