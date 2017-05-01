@@ -529,7 +529,8 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_mod/mlcc_energy.F90
     DALTON/mlcc_oo_mod/hf_class.F90
     DALTON/mlcc_oo_mod/ccs_class.F90
-    DALTON/mlcc_oo_mod/ccs_class_submodule_cholesky.F90
+    DALTON/mlcc_oo_mod/ccs_class_submodules/cholesky_submodule.F90
+    DALTON/mlcc_oo_mod/ccs_class_submodules/fock_submodule.F90
     DALTON/mlcc_oo_mod/ccsd_class.F90
     DALTON/mlcc_oo_mod/mlcc_oo_driver.F90
     DALTON/mlcc_oo_mod/input_output.F90
