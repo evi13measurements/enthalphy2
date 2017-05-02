@@ -16,8 +16,6 @@ submodule (ccs_class) cholesky
 !
    implicit none 
 !
-   logical :: debug = .true.
-!
 !
 contains
 !
@@ -638,9 +636,11 @@ contains
          L_ib_J = zero
 !
 !        Read L_ia_J
+!
+!           Note: using L_ia_J instead of L_ai_J, here, to avoid two reorderings.
+!                 This is possible because of the symmetry L_ai_J(ai,J) == L_ia_J(ia,J).
 !  
-         call wf%read_cholesky_ia(L_ib_J) ! Note: using L_ia_J instead of L_ai_J, here, to avoid two reorderings.
-                                             ! This is possible because of the symmetry L_ai_J(ai,J) == L_ia_J(ia,J)
+         call wf%read_cholesky_ia(L_ib_J)
 !
 !        Read L_ab_J for batch of b
 !

@@ -7,8 +7,8 @@ submodule (ccs_class) fock
 !
 !     Contains the following family of procedures of the CCS class:
 !		
-!		initialize_fock_matrix_cc_singles(wf):		Allocates and sets Fock matrix to 0        
-!		fock_constructor_cc_singles(wf):			Constructs T1_transformed mo Fock matrix 
+!		initialize_fock_matrix_cc_singles(wf):		   Allocates and sets Fock matrix to 0        
+!		fock_constructor_cc_singles(wf):			      Constructs T1_transformed mo Fock matrix 
 ! 		one_electron_t1_cc_singles(wf, h1 ,h1_T1):	T1-transformation of one-electron mo integrals
 !
    implicit none 
@@ -180,7 +180,7 @@ contains
 !     Deallocate intermediate X and fock_ao
 !
       call deallocator(X,wf%n_ao, wf%n_mo)
-      call deallocator(fock_ao, wf%n_ao , wf%n_ao)
+      call deallocator(fock_ao, wf%n_ao, wf%n_ao)
 !
 !
 !     -::- Two-electron contribution -::-

@@ -12,7 +12,8 @@ submodule (ccsd_class) omega
 !
 !        construct_omega:  constructs the projection vector (omega1, omega2) 
 !                          for the current amplitudes (t1am, t2am) for the
-!                          wavefunction object wf.
+!                          wavefunction object wf. The routine assumes that
+!                          the projection vector is allocated.
 !
 !        omega_a1:         adds A1 term to omega1
 !        omega_b1:         adds B1 term to omega1
@@ -25,12 +26,10 @@ submodule (ccsd_class) omega
 !        omega_d2:         adds D2 term to omega2
 !        omega_e2:         adds E2 term to omega2
 !
-!     The routine assumes that omega1 and omega2 are allocated 
-!     (see wf % initialize_omega).
-!
    implicit none 
 !
-   logical :: debug = .true.
+   logical :: debug = .false.
+!
 !
 contains
 !
@@ -66,6 +65,11 @@ contains
       implicit none 
 !
       class(ccsd) :: wf
+!
+      real(dp) :: omega_start = zero
+      real(dp) :: omega_end = zero
+!
+      call cpu_time(omega_start)
 !
 !     Set the omega vector to zero 
 !
@@ -117,6 +121,12 @@ contains
       wf%omega2 = zero
 !
       call wf%omega_e2
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
+      call cpu_time(omega_end)
+      write(unit_output,*)'Time in omega:', omega_end-omega_start    
 !
    end subroutine construct_omega_ccsd
 !
@@ -204,7 +214,7 @@ contains
 !
       available = get_available()
       required  = max(((wf%n_v)**2)*(wf%n_J) + (wf%n_v**2)*(wf%n_o)*(wf%n_v), &
-                              2*((wf%n_v)**3)*(wf%n_o)) ! Eirik: I am not sure if this is an accurate estimate of the required memory
+                              2*((wf%n_v)**3)*(wf%n_o)) ! Eirik: redo this estimate !
 !
       batch_dimension  = wf%n_v ! Batch over the virtual index a
       max_batch_length = 0      ! Initilization of unset variables 
@@ -352,19 +362,6 @@ contains
       real(dp), dimension(:,:), allocatable :: g_ki_lc ! g_kilc 
       real(dp), dimension(:,:), allocatable :: g_ckl_i ! g_kilc 
       real(dp), dimension(:,:), allocatable :: u_a_ckl ! u_kl^ac = 2 t_kl^ac - t_lk^ac
-!
-!
-!     Print the omega vector 
-!
-      if (debug) then  
-!
-         write(unit_output,*) 
-         write(unit_output,*) 'Omega(a,i) before B1 term has been added:'
-         write(unit_output,*)
-!
-         call vec_print(wf%omega1, wf%n_v, wf%n_o)
-!
-      endif
 !
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
@@ -683,6 +680,11 @@ contains
 
       integer(i15) :: required = 0, available = 0
 !
+!     Logical for reordering in L_ab_J when batching over the last index
+!
+      logical :: reorder 
+!
+!
 !!!   A2.1 term   !!!
 !
 !
@@ -775,7 +777,8 @@ contains
 !
          call allocator(L_ca_J, (wf%n_v)*a_length, wf%n_J)
 !
-         call wf%get_cholesky_ab(L_ca_J, a_start, a_end, (wf%n_v)*a_length, .true.) 
+         reorder = .true.
+         call wf%get_cholesky_ab(L_ca_J, a_start, a_end, (wf%n_v)*a_length, reorder) 
 !        
 !        Prepare for batching over b
 !
@@ -935,7 +938,8 @@ contains
 !
                call allocator(L_db_J, (wf%n_v)*b_length, wf%n_J)
 !  
-               call wf%get_cholesky_ab(L_db_J, b_start, b_end, (wf%n_v)*b_length, .true.) 
+               reorder = .true.
+               call wf%get_cholesky_ab(L_db_J, b_start, b_end, (wf%n_v)*b_length, reorder) 
 !
 !              Allocate g_ac_bd for batches of a and b, ordered as g_ca_db
 !
@@ -1408,6 +1412,10 @@ contains
       integer(i15) :: n_batch = 0, max_batch_length = 0
       integer(i15) :: a_batch = 0, a_start = 0, a_end = 0, a_length = 0 
 !
+!     Logical for reordering L_ab_J when batching over last index 
+!
+      logical :: reorder 
+!
 !     Allocate L_ia_J
 !
       call allocator(L_ia_J,(wf%n_o)*(wf%n_v),(wf%n_J))
@@ -1542,7 +1550,8 @@ contains
 !
 !        Read Cholesky vectors
 !
-         call wf%get_cholesky_ab(L_ca_J, a_start, a_end, (wf%n_v)*a_length, .true.)
+         reorder = .true.
+         call wf%get_cholesky_ab(L_ca_J, a_start, a_end, (wf%n_v)*a_length, reorder)
 !
 !        g_ki_ca = sum_J L_ki_J*L_ca_J
 !
@@ -1763,6 +1772,10 @@ contains
       real(dp), dimension(:,:), allocatable :: L_ca_J  ! L_ac^J; a is batched over 
       real(dp), dimension(:,:), allocatable :: L_ki_J  ! L_ki^J 
       real(dp), dimension(:,:), allocatable :: u_ck_bj ! u_jk^bc
+!
+!     Logical for reordering L_ab_J when batching over the last index 
+!
+      logical :: reorder 
 !
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
@@ -2150,7 +2163,8 @@ contains
 !
 !        Read the Cholesky vector from file 
 !
-         call wf%get_cholesky_ab(L_ca_J, a_begin, a_end, ac_dim, .true.)
+         reorder = .true.
+         call wf%get_cholesky_ab(L_ca_J, a_begin, a_end, ac_dim, reorder)
 !
 !        Allocate the integral g_ca_ki = g_acki and set to zero 
 !
@@ -2452,8 +2466,6 @@ contains
 !     Copy the virtual-virtual Fock matrix into the intermediate 
 !
       call dcopy((wf%n_v)**2, wf%fock_ab, 1, X_b_c, 1) ! X_b_c = F_bc 
-!
-      write(unit_output,*) 'fock_ab', ((wf%fock_ab(i,j),i=1,wf%n_v),j=1,wf%n_v)
 !
 !     Add the second contribution, 
 !     - sum_dkl g_ldkc u_kl^bd = - sum_dkl u_b_kdl * g_kdl_c, to X_b_c
@@ -2767,7 +2779,7 @@ contains
                   if (ai .ge. bj) then
 !
                      wf%omega2(aibj, 1) = wf%omega2(aibj, 1) + omega2_aib_j(aib, j) & 
-                                                             + omega2_aib_j(bja, i)
+                                                               + omega2_aib_j(bja, i)
 !
                   endif
 !
