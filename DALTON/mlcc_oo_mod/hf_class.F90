@@ -313,7 +313,7 @@ contains
 !
 !        Write the MO vectors to files in blocks
 !
-         write(unit_chol_mo_ij) ((chol_mo_sq(i,j), i = 1, wf%n_o), k = 1, wf%n_o)
+         write(unit_chol_mo_ij) ((chol_mo_sq(i,k), i = 1, wf%n_o), k = 1, wf%n_o)
          write(unit_chol_mo_ia) ((chol_mo_sq(i,a), i = 1, wf%n_o), a = wf%n_o + 1, wf%n_mo)
          write(unit_chol_mo_ab) ((chol_mo_sq(a,b), a = wf%n_o + 1, wf%n_mo), b = wf%n_o + 1, wf%n_mo)
 !

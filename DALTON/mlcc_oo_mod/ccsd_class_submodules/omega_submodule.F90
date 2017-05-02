@@ -406,7 +406,7 @@ contains
 !
 !     Allocate reordered integrals g_ckl_i = g_kilc 
 !
-      call allocator(g_ckl_i, (wf%n_v)*(wf%n_o)**2, wf%n_o)
+      call allocator(g_ckl_i, (wf%n_v)*((wf%n_o)**2), wf%n_o)
       g_ckl_i = zero
 !
 !     Determine g_ckl_i = g_kilc 
@@ -473,17 +473,17 @@ contains
 !
 !     Calculate the B1 term, - sum_ckl u_a_ckl g_ckl_i
 !
-      call dgemm('N','N',               &
-                  wf%n_v,               &
-                  wf%n_o,               &
-                  (wf%n_v)*(wf%n_o)**2, &
-                  -one,                 &
-                  u_a_ckl,              &
-                  wf%n_v,               &
-                  g_ckl_i,              &
-                  (wf%n_v)*(wf%n_o)**2, &
-                  one,                  &
-                  wf%omega1,            &
+      call dgemm('N','N',                 &
+                  wf%n_v,                 &
+                  wf%n_o,                 &
+                  (wf%n_v)*((wf%n_o)**2), &
+                  -one,                   &
+                  u_a_ckl,                &
+                  wf%n_v,                 &
+                  g_ckl_i,                &
+                  (wf%n_v)*((wf%n_o)**2), &
+                  one,                    &
+                  wf%omega1,              &
                   wf%n_v) 
 !
 !     Print the omega vector 
@@ -500,8 +500,8 @@ contains
 !
 !     Deallocate remaining vectors 
 !
-      call deallocator(u_a_ckl, wf%n_v, (wf%n_v)*(wf%n_o)**2)
-      call deallocator(g_ckl_i, (wf%n_v)*(wf%n_o)**2, wf%n_o)
+      call deallocator(u_a_ckl, wf%n_v, (wf%n_v)*((wf%n_o)**2))
+      call deallocator(g_ckl_i, (wf%n_v)*((wf%n_o)**2), wf%n_o)
 !
    end subroutine omega_b1_ccsd
 !
