@@ -2395,12 +2395,12 @@ contains
 !
 !     Allocate u_b_kdl = u_kl^bd and set to zero
 !
-      call allocator(u_b_kdl, wf%n_v, (wf%n_v)*(wf%n_o)**2)
+      call allocator(u_b_kdl, wf%n_v, (wf%n_v)*((wf%n_o)**2))
       u_b_kdl = zero
 !
 !     Allocate g_kdl_c = g_ldkc and set to zero 
 !
-      call allocator(g_kdl_c, (wf%n_v)*(wf%n_o)**2, wf%n_v)
+      call allocator(g_kdl_c, (wf%n_v)*((wf%n_o)**2), wf%n_v)
       g_kdl_c = zero
 !
 !     Determine u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
@@ -2765,7 +2765,7 @@ contains
                   if (ai .ge. bj) then
 !
                      wf%omega2(aibj, 1) = wf%omega2(aibj, 1) + omega2_aib_j(aib, j) & 
-                                                               + omega2_aib_j(bja, i)
+                                                             + omega2_aib_j(bja, i)
 !
                   endif
 !
