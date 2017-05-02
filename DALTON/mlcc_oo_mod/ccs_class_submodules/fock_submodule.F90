@@ -68,8 +68,8 @@ contains
 !
 !     Indices
 !
-      integer(i15) :: i = 0, j = 0, k = 0, a = 0, b = 0, ij = 0, kk = 0, ik = 0
-      integer(i15) :: kj = 0, ii = 0, jj = 0, ji = 0, ai = 0, ib = 0, bi = 0, ia = 0
+      integer(i15) :: i = 0, j = 0, k = 0, a = 0, b = 0
+      integer(i15) :: kj = 0, ii = 0, ij = 0, kk = 0, ik = 0, jj = 0, ji = 0, ai = 0, ib = 0, bi = 0, ia = 0
       integer(i15) :: aj = 0, ja = 0, ab = 0
 !
 !     Useful orbital information
@@ -251,6 +251,8 @@ contains
 !
       call allocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
       call allocator(g_ia_jk, (wf%n_o)*(wf%n_v), (wf%n_o)**2)
+      L_ia_J  = zero
+      g_ia_jk = zero
 !
 !     Read Cholesky vector L_ia_J
 !
@@ -279,6 +281,8 @@ contains
 !
       call allocator(L_ai_J, (wf%n_o)*(wf%n_v), wf%n_J)
       call allocator(g_ai_jk, (wf%n_o)*(wf%n_v), (wf%n_o)**2)
+      L_ai_J  = zero
+      g_ai_jk = zero
 !
 !     Get Cholesky AI vector
 !
@@ -343,7 +347,7 @@ contains
       call allocator(g_ab_ij, (wf%n_v)**2, (wf%n_o)**2)
       g_ab_ij = zero
 !
-!     Batch over index a
+!     Batch over index b
 !
       available = get_available()
 !
@@ -358,7 +362,7 @@ contains
 !
 !     Loop over the batches
 !
-      do b_batch = 1, n_batches ! E: is this a batch over a or b?
+      do b_batch = 1, n_batches 
 !
 !        Get batch limits and length of batch
 !
@@ -404,12 +408,16 @@ contains
 !     Allocate for g_ai_jb
 !
       call allocator(g_ai_jb, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
+      g_ai_jb = 0
 !
       call allocator(L_ai_J, (wf%n_v)*(wf%n_o), wf%n_J)
       call allocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
+      L_ai_J = 0
+      L_ia_J = 0
 !
 !     Read Cholesky vectors L_ia_J and L_ai_J
 !
+      call wf%get_cholesky_ia(L_ia_J)
       call wf%get_cholesky_ai(L_ai_J)
 !
       call dgemm('N','T',            &
