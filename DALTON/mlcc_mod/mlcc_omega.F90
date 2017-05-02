@@ -115,7 +115,7 @@ contains
 !
       integer :: ad=0,ad_dim=0,c=0,ci=0,cidk=0,ck=0,ckd=0,ckdi=0,di=0,dk=0,k=0,kc=0,d=0,da=0
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
       real(dp)::start_alloc=0,end_alloc=0,start_reorder=0,end_reorder=0,start_dgemm=0,end_dgemm=0
       real(dp):: int_start=0,int_end=0
 !

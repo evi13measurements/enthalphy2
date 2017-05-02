@@ -7,6 +7,8 @@ module utils
    use types
 !
 contains
+!
+!
    integer(i15) function index_packed(i,j)
 !
 !     Purpose: Returns packed index (ij) for symmetric arrays
@@ -19,6 +21,7 @@ contains
 !
    end function index_packed
 !
+!
    integer(i15) function packed_size(N)
 !
 !     Purpose: Returns size of packed vectors alpha >= beta
@@ -30,6 +33,7 @@ contains
       packed_size = N*(N+1)/2
 !
    end function packed_size
+!
 !
    subroutine squareup(packed,unpacked,N)
 !
@@ -49,6 +53,7 @@ contains
       enddo
 !
    end subroutine
+!
 !
    subroutine packin(packed,unpacked,N)
 !
@@ -70,6 +75,7 @@ contains
 !
    end subroutine
 !
+!
    integer(i15) function index_three(p,q,r,dim_p,dim_q)
 !
 !     Purpose: Returns the compound index (pqr)
@@ -81,6 +87,7 @@ contains
       index_three = dim_p*(dim_q*(r-1)+q-1)+p
 !
    end function index_three
+!
 !
    integer(i15) function index_two(p,q,dim_p)
 !
@@ -155,6 +162,7 @@ contains
 !
    end subroutine batch_limits
 !
+!
    subroutine vec_print(vec,dim_1,dim_2)
 !
 !     Purpose: prints a vector with a compound index (p q) of dimension (dim_1 x dim_2)
@@ -162,17 +170,20 @@ contains
 !
       implicit none
 !
-      integer(i15) :: p=0,q=0,pq=0
+      integer(i15) :: p = 0, q = 0, pq = 0
 !
-      integer(i15), intent(in)  :: dim_1,dim_2
-      real(dp), intent(in) :: vec(dim_1,dim_2)
+      integer(i15), intent(in) :: dim_1,dim_2
+      real(dp), dimension(dim_1, dim_2), intent(in) :: vec
 !
-      do q = 1,dim_2
-         do p = 1,dim_1
-            write(unit_output,*) p,q,vec(p,q)
+      do q = 1, dim_2
+         do p = 1, dim_1
+!
+            write(unit_output,*) p, q, vec(p,q)
+!
          enddo
       enddo
 !
    end subroutine vec_print
+!
 !
 end module utils

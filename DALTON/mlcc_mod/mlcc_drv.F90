@@ -35,46 +35,46 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Initialize memory variables
 !
-!    call work_init(mem)
-! !
-! !  Read in Fock diagonal and MO coefficients from Dalton's 
-! !  Hartree-Fock routine
-! !
-!    call hf_reader
-! !
-! !
-! !  Allocate amplitudes and the omega vector 
-! !
-!    call allocator(omega1,n_vir,n_occ) ! Omega_a,i
-!    call allocator(omega2,n_ov_ov_packed,1)
-! !
-!    call allocator(t1am,n_vir,n_occ)
-!    call allocator(t2am,n_ov_ov_packed,1)
-! !
-!    omega1 = zero
-!    omega2 = zero
-! !
-!    t1am = zero
-!    t2am = zero
-! !
-! !  Read in Cholesky vectors in AO basis, transform them to MO basis,
-! !  and save the MO Cholesky vectors to file (IJ,AB,IA,AI)
-! !
-!    call mlcc_get_cholesky
-! !
-! !  Set initial guess for the doubles amplitudes 
-! !
-!    call allocator(F_i_j,n_occ,n_occ)
-!    call allocator(F_i_a,n_occ,n_vir)
-!    call allocator(F_a_i,n_vir,n_occ)
-!    call allocator(F_a_b,n_vir,n_vir)
-!    call mlcc_get_fock
-!    call t2_init
-! !
-! !  Calculate the omega vector 
-! !
-!  !  call mlcc_omega_calc
-! !
+   call work_init(mem)
+!
+!  Read in Fock diagonal and MO coefficients from Dalton's 
+!  Hartree-Fock routine
+!
+   call hf_reader
+!
+!
+!  Allocate amplitudes and the omega vector 
+!
+   call allocator(omega1,n_vir,n_occ) ! Omega_a,i
+   call allocator(omega2,n_ov_ov_packed,1)
+!
+   call allocator(t1am,n_vir,n_occ)
+   call allocator(t2am,n_ov_ov_packed,1)
+!
+   omega1 = zero
+   omega2 = zero
+!
+   t1am = zero
+   t2am = zero
+!
+!  Read in Cholesky vectors in AO basis, transform them to MO basis,
+!  and save the MO Cholesky vectors to file (IJ,AB,IA,AI)
+!
+   call mlcc_get_cholesky
+!
+!  Set initial guess for the doubles amplitudes 
+!
+   call allocator(F_i_j,n_occ,n_occ)
+   call allocator(F_i_a,n_occ,n_vir)
+   call allocator(F_a_i,n_vir,n_occ)
+   call allocator(F_a_b,n_vir,n_vir)
+   call mlcc_get_fock
+   call t2_init
+!
+!  Calculate the omega vector 
+!
+   call mlcc_omega_calc
+!
 ! !
 ! !  Start the coupled cluster solver for the ground state energy
 ! !

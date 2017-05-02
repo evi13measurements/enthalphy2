@@ -34,7 +34,7 @@ module ccsd_class
       integer(i15) :: n_t2am = 0                    ! Number of doubles amplitudes
       real(dp), dimension(:,:), allocatable :: t2am ! Doubles amplitude vector
 !
-!     Schrödinger equation projection attribbutes (the omega vector)
+!     Schrödinger equation projection attributes (the omega vector)
 ! 
 !        < mu | exp(-T) H exp(T) | R >
 !
@@ -184,6 +184,7 @@ module ccsd_class
 !
       end subroutine omega_a2_ccsd
 !
+!
       module subroutine omega_b2_ccsd(wf)
 !
 !        MLCC Omega B2 term.  Omega B2 = sum_(kl) t_ak_bl*(g_kilj + sum_(cd) t_ci_dj * g_kc_ld)
@@ -273,6 +274,14 @@ contains
 !     Set the initial value of the energy (given the initial amplitudes) 
 !
       call wf%calc_energy
+!
+!     Initialize the projection vector (omega)
+!
+      call wf%initialize_omega
+!
+!     Calculate the omega vector (remove, eventually)
+!
+      call wf%construct_omega
 !
    end subroutine init_ccsd
 !
@@ -475,8 +484,8 @@ contains
 !
 !                 Add the correlation energy 
 !
-                  wf%energy = wf%energy + & 
-                                 (wf%t2am(aibj,1) + (wf%t1am(a,i))*(wf%t1am(b,j)))*&
+                  wf%energy = wf%energy +                                           & 
+                                 (wf%t2am(aibj,1) + (wf%t1am(a,i))*(wf%t1am(b,j)))* &
                                  (two*g_ia_jb(ia,jb) - g_ia_jb(ib,ja))
 !
                enddo

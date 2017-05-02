@@ -55,29 +55,34 @@ contains
 !
    subroutine construct_omega_ccsd(wf)
 !
-!      Construct Omega (CCSD)
-!      Written by Eirik F. Kjønstad and Sarai Folkestad, Apr 2017
+!     Construct Omega (CCSD)
+!     Written by Eirik F. Kjønstad and Sarai Folkestad, Apr 2017
 !
-!      Directs the calculation of the omega vector
+!     Directs the calculation of the omega vector
 !
-       implicit none 
+      implicit none 
 !
-       class(ccsd) :: wf
+      class(ccsd) :: wf
 !
-!      Construct singles contributions 
+!     Set the omega vector to zero 
 !
-       ! call wf%omega_a1
-       ! call wf%omega_b1
-       ! call wf%omega_c1
-       ! call wf%omega_d1
+      wf%omega1 = zero
+      wf%omega2 = zero
 !
-!      Construct doubles contributions 
+!     Construct singles contributions 
 !
-       ! call wf%omega_a2
-       ! call wf%omega_b2
-       ! call wf%omega_c2
-       ! call wf%omega_d2
-       ! call wf%omega_e2
+      call wf%omega_a1
+      call wf%omega_b1
+      call wf%omega_c1
+      call wf%omega_d1
+!
+!     Construct doubles contributions 
+!
+      call wf%omega_a2
+      call wf%omega_b2
+      call wf%omega_c2
+      call wf%omega_d2
+      call wf%omega_e2
 !
    end subroutine construct_omega_ccsd
 !
@@ -109,7 +114,7 @@ contains
       integer(i15) :: ad = 0, ad_dim = 0, ci = 0, cidk = 0, ck = 0 
       integer(i15) :: ckd = 0, ckdi = 0, di = 0, dk = 0, kc = 0, da = 0
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
       real(dp), dimension(:,:), allocatable :: L_kc_J 
       real(dp), dimension(:,:), allocatable :: L_da_J  ! L_ad^J; a is being batched over
@@ -306,7 +311,7 @@ contains
 !
       class(ccsd) :: wf 
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
       integer(i15) :: a = 0, c = 0, k = 0, l = 0, ckl = 0, ki = 0
       integer(i15) :: ak = 0, akcl = 0, al = 0, alck = 0, ck = 0, ai = 0
@@ -359,6 +364,7 @@ contains
 !     Allocate reordered integrals g_ckl_i = g_kilc 
 !
       call allocator(g_ckl_i, (wf%n_v)*(wf%n_o)**2, wf%n_o)
+      g_ckl_i = zero
 !
 !     Determine g_ckl_i = g_kilc 
 !
@@ -486,7 +492,7 @@ contains
       integer(i15) :: i = 0, k = 0, c = 0, a = 0
       integer(i15) :: ck = 0, ai = 0, ak = 0, ci = 0, aick = 0, akci = 0
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
 !     Allocation of F_ck, u_ai_ck and omega1_ai
 !
@@ -639,7 +645,7 @@ contains
 !
 !     Debug 
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
 !!!   A2.1 term   !!!
 !
@@ -1036,7 +1042,7 @@ contains
          write(unit_output,*) 
          write(unit_output,*) 'Omega(aibj,1) after A2 term has been added:'
          write(unit_output,*)
-         call vec_print_packed(wf%omega2,wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
       endif
 !
    end subroutine omega_a2_ccsd
@@ -1092,7 +1098,7 @@ contains
 !
       integer(i15) :: aibj = 0, akbl = 0, cidj = 0 
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
 !     Read cholesky vector of type L_ij_J
 !
@@ -1311,7 +1317,7 @@ contains
          write(unit_output,*) 
          write(unit_output,*) 'Omega(aibj,1) after B2 term has been added:'
          write(unit_output,*)
-         call vec_print_packed(wf%omega2,wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
       endif
 !
    end subroutine omega_b2_ccsd
@@ -1370,7 +1376,7 @@ contains
 !
 !     Debug
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
 !
 !     Allocate L_ia_J
@@ -1659,7 +1665,7 @@ contains
          write(unit_output,*) 
          write(unit_output,*) 'Omega(aibj,1) after C2 term has been added:'
          write(unit_output,*)
-         call vec_print_packed(wf%omega2, wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
       endif 
 !
    end subroutine omega_c2_ccsd
@@ -1694,7 +1700,7 @@ contains
 !
       class(ccsd) :: wf 
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
 !     Batching variables 
 !
@@ -1926,7 +1932,7 @@ contains
          write(unit_output,*) 'Omega(aibj,1) after D2.3 term has been added:'
          write(unit_output,*)
 !
-         call vec_print_packed(wf%omega2, wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
 !
       endif                
 !
@@ -2065,7 +2071,7 @@ contains
          write(unit_output,*) 
          write(unit_output,*) 'Omega(aibj,1) after D2.1 term has been added:'
          write(unit_output,*)
-         call vec_print_packed(wf%omega2, wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
 !
       endif 
 !
@@ -2262,7 +2268,7 @@ contains
          write(unit_output,*) 'Omega(aibj,1) after D2.2 term has been added:'
          write(unit_output,*)
 !
-         call vec_print_packed(wf%omega2, wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
 !
       endif 
 !
@@ -2302,7 +2308,7 @@ contains
 !
       class(ccsd) :: wf 
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
 !     Indices 
 !
@@ -2539,7 +2545,7 @@ contains
          write(unit_output,*) 'Omega(aibj,1) after E2.1 term has been added:'
          write(unit_output,*)
 !
-         call vec_print_packed(wf%omega2, wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
 !
       endif 
 !
@@ -2755,7 +2761,7 @@ contains
          write(unit_output,*) 'Omega(aibj,1) after E2.2 term has been added:'
          write(unit_output,*)
 !
-         call vec_print_packed(wf%omega2, wf%n_t2am)
+         call vec_print(wf%omega2, wf%n_t2am, 1)
 !
       endif 
 !

@@ -36,7 +36,7 @@ contains
       logical :: converged_energy    = .false.
       logical :: converged_solution  = .false.
 !
-      integer :: max_iterations = 50
+      integer :: max_iterations = 1
       integer :: iteration = 1
 !
       integer :: memory_lef

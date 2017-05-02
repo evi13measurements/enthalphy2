@@ -141,6 +141,7 @@ module ccs_class
 !
       end subroutine get_cholesky_ab_ccs
 !
+!
       module subroutine initialize_fock_matrix_ccs(wf)
 !  
 !        Initialize Fock matrix
@@ -152,6 +153,7 @@ module ccs_class
          class(ccs) :: wf
 !     
       end subroutine initialize_fock_matrix_ccs
+!
 !
       module subroutine fock_constructor_ccs(wf)
 !
@@ -165,7 +167,8 @@ module ccs_class
          class(ccs) :: wf
 !
       end subroutine fock_constructor_ccs
-
+!
+!
       module subroutine one_electron_t1_ccs(wf, h1 ,h1_T1)
 !
 !        One-electron T1 
