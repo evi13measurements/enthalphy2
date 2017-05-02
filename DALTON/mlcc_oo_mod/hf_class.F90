@@ -38,10 +38,6 @@ module hf_class
 !
 !     Fock matrix attributes
 !
-      real(dp), dimension(:,:), allocatable :: fock_ij ! occ-occ block
-      real(dp), dimension(:,:), allocatable :: fock_ia ! occ-vir block
-      real(dp), dimension(:,:), allocatable :: fock_ai ! vir-occ block
-      real(dp), dimension(:,:), allocatable :: fock_ab ! vir-vir block
       real(dp), dimension(:,:), allocatable :: fock_diagonal  ! diagonal vector
 !
 !     Energy attributes
@@ -74,10 +70,6 @@ module hf_class
       procedure, non_overridable :: read_hf_info            => read_hf_info_hartree_fock
       procedure, non_overridable :: read_transform_cholesky => read_transform_cholesky_hartree_fock 
 !
-!     Allocation of the Fock matrix (note: it is constructed in descendant classes)
-!
-      procedure :: initialize_fock_matrix => initialize_fock_matrix_hartree_fock
-!
    end type hartree_fock
 !
 contains 
@@ -109,10 +101,6 @@ contains
 !     Initialize Cholesky vectors
 !     
       call wf%read_transform_cholesky
-!
-!     Allocate Fock matrix and set to zero
-!
-      call wf%initialize_fock_matrix
 !
    end subroutine init_hartree_fock
 !
@@ -327,31 +315,6 @@ contains
       close(unit_chol_mo_ab)
 !  
    end subroutine read_transform_cholesky_hartree_fock
-!
-!
-   subroutine initialize_fock_matrix_hartree_fock(wf)
-!
-!     Initialize Fock Matrix (HF)
-!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
-!
-!     Allocates and sets the Fock matrix to zero 
-!
-      implicit none
-!  
-      class(hartree_fock) :: wf   
-!
-      call allocator(wf%fock_ij, wf%n_o, wf%n_o)
-      call allocator(wf%fock_ia, wf%n_o, wf%n_v)
-      call allocator(wf%fock_ai, wf%n_v, wf%n_o)
-      call allocator(wf%fock_ab, wf%n_v, wf%n_v)
-
-!
-      wf%fock_ij = zero
-      wf%fock_ia = zero
-      wf%fock_ai = zero
-      wf%fock_ab = zero
-!
-   end subroutine initialize_fock_matrix_hartree_fock
 !
 !
    subroutine read_cholesky_ij_hartree_fock(wf,L_ij_J)

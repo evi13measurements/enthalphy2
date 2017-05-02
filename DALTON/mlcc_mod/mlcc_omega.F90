@@ -41,12 +41,14 @@ contains
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time A1:',end-start
 !
-!
+      omega1 = zero
 !
       if (timings) call cpu_time(start)
       call mlcc_omega_b1 ! This is the H term in the old code. 2.0521348553625856E-003 (ours) 2.0521147588601551E-003 (old)
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time B1:',end-start
+!
+      omega1 = zero
 !
       if (timings) call cpu_time(start)
       call mlcc_omega_c1
@@ -64,30 +66,67 @@ contains
 !
 !     Add the doubles contributions to < mu | exp(-T) H exp(T) | R >
 !
+      omega2 = zero
+!
       if (timings) call cpu_time(start)
       call mlcc_omega_e2
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time E2:',end-start
+!
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after E2 term has been added:'
+         write(luprint,*)
+         call vec_print(omega2,n_ov_ov_packed,1)
+!
+      omega2 = zero
 !
       if (timings) call cpu_time(start)
       call mlcc_omega_d2
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time D2:',end-start 
 !
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after D2 term has been added:'
+         write(luprint,*)
+         call vec_print(omega2,n_ov_ov_packed,1)
+!
+      omega2 = zero
+!
       if (timings) call cpu_time(start)
       call mlcc_omega_c2
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time C2:',end-start   
+!
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after C2 term has been added:'
+         write(luprint,*)
+         call vec_print(omega2,n_ov_ov_packed,1)
+!
+      omega2 = zero
 !
       if (timings) call cpu_time(start)
       call mlcc_omega_a2
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time A2:',end-start  
 !
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after A2 term has been added:'
+         write(luprint,*)
+         call vec_print(omega2,n_ov_ov_packed,1)
+!
+      omega2 = zero
+!
       if (timings) call cpu_time(start)
       call mlcc_omega_b2
       if (timings) call cpu_time(end)
       if (timings) write(luprint,*)'CPU time B2:',end-start 
+!
+         write(luprint,*) 
+         write(luprint,*) 'Omega(aibj,1) after B2 term has been added:'
+         write(luprint,*)
+         call vec_print(omega2,n_ov_ov_packed,1)
+!
+      omega2 = zero
 !
       call cpu_time(omega_end)
       write(luprint,*)'Time in omega:', omega_end-omega_start
@@ -299,7 +338,7 @@ contains
 !
       implicit none
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
       integer :: a=0,c=0,k=0,l=0,ckl=0,ki=0,ak=0,akcl=0,al=0,alck=0,ck=0,ai=0,cl=0,lc=0,i=0,j=0
 !
@@ -547,7 +586,7 @@ contains
 !
       implicit none 
 !
-      logical :: debug = .false.
+      logical :: debug = .true.
 !
       integer :: b=0,c=0,k=0,d=0,ck=0,ckdl=0,cl=0,cldk=0,dk=0,dl=0,kc=0,kdl=0,l=0,ld=0
       integer :: a=0,ai=0,aibj=0,bj=0,aicj=0,cj=0,i=0,j=0,jai=0,dlc=0,dkcl=0,dlck=0,aib=0,aibk=0,bk=0,bja=0,ibj=0
@@ -652,6 +691,8 @@ contains
 !     Copy the virtual-virtual Fock matrix into the intermediate 
 !
       call dcopy(n_vv,F_a_b,1,X_b_c,1) ! X_b_c = F_bc 
+!
+      write(luprint,*) 'F_a_b', ((F_a_b(i,j),i=1,n_vir),j=1,n_vir)
 !
 !     Add the second contribution, - sum_dkl g_ldkc u_kl^bd = - sum_dkl u_b_kdl * g_kdl_c, to X_b_c
 !

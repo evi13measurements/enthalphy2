@@ -2453,6 +2453,8 @@ contains
 !
       call dcopy((wf%n_v)**2, wf%fock_ab, 1, X_b_c, 1) ! X_b_c = F_bc 
 !
+      write(unit_output,*) 'fock_ab', ((wf%fock_ab(i,j),i=1,wf%n_v),j=1,wf%n_v)
+!
 !     Add the second contribution, 
 !     - sum_dkl g_ldkc u_kl^bd = - sum_dkl u_b_kdl * g_kdl_c, to X_b_c
 !

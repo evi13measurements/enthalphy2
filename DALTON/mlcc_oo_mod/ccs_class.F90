@@ -36,10 +36,12 @@ module ccs_class
       integer(i15) :: n_t1am = 0                    ! Number of singles amplitudes
       real(dp), dimension(:,:), allocatable :: t1am ! Singles amplitude vector
 !
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ij ! occ-occ block
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ia ! occ-vir block
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ai ! vir-occ block
-      real(dp), dimension(:,:), allocatable :: fock_matrix_ab ! vir-vir block
+!     The T1-transformed Fock matrix (in vir-occ block form)
+!
+      real(dp), dimension(:,:), allocatable :: fock_ij ! occ-occ block
+      real(dp), dimension(:,:), allocatable :: fock_ia ! occ-vir block
+      real(dp), dimension(:,:), allocatable :: fock_ai ! vir-occ block
+      real(dp), dimension(:,:), allocatable :: fock_ab ! vir-vir block
 !
 !
    contains 
