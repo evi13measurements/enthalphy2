@@ -237,26 +237,36 @@ subroutine hf_reader
       integer  :: idummy = 0
       integer  :: n_symmetries, n_basis_sym, n_orbitals_sym
       integer  :: i,j
+!
+      integer :: unit_identifier_hf = -1 ! Unit identifier for mlcc_hf_info file
 !      
 !     
 !     Open Sirius Fock file
 !     ---------------------
 !
-      call gpopen(lusifc,'SIRIFC','OLD',' ','UNFORMATTED',idummy,'.FALSE.')
-      rewind(lusifc)
+      ! call gpopen(lusifc,'SIRIFC','OLD',' ','UNFORMATTED',idummy,'.FALSE.')
+      ! rewind(lusifc)
 !
 !     Read in various stuff from Sirius Fock file. Things depending on symmetry is mostly
 !     discarded at the end of the subroutine as we do not use symmetry. Information in 
 !     file should be in Cholesky orbital format. If Cholesky orbitals has been generated,
 !     SIRIFC will contain the data in the Cholesky basis
+! (DEBUGGING AGAINST NEW CODE:)
 !
-      call mollab('TRCCINT ',lusifc,luprint)
+      unit_identifier_hf = 1499
+      open(unit=unit_identifier_hf,file='mlcc_hf_info',status='old',form='formatted')
+      rewind(unit_identifier_hf)
+!  
+      read(unit_identifier_hf,*) n_orbitals, n_occ, n_lambda, nuclear_potential, scf_energy
+      n_basis = n_lambda/n_orbitals
+! (END DEBUGGING AGAINST NEW CODE)
+!      call mollab('TRCCINT ',lusifc,luprint)
 !      
-      read(lusifc) n_symmetries, n_orbitals, n_basis, n_lambda, n_occ, &
-      &            n_orbitals_sym, n_basis_sym, nuclear_potential, scf_energy
+!      read(lusifc) n_symmetries, n_orbitals, n_basis, n_lambda, n_occ, &
+!      &            n_orbitals_sym, n_basis_sym, nuclear_potential, scf_energy
 !
 !      
-      if (n_symmetries /= 1) call quit('error in mlcc_mod_init: not implemented with symmetry')
+!      if (n_symmetries /= 1) call quit('error in mlcc_mod_init: not implemented with symmetry')
 !      
 !      
 !     Calculate number of virtuals and amplitudes
@@ -283,12 +293,18 @@ subroutine hf_reader
 !
 !     Read in Fock diagonal and coefficients
 !
-      read(lusifc) (fock_diagonal(i,1),i=1,n_orbitals)
-      read(lusifc) (orb_coefficients(i,1),i=1,n_lambda) 
+  !    read(lusifc) (fock_diagonal(i,1),i=1,n_orbitals)
+  !    read(lusifc) (orb_coefficients(i,1),i=1,n_lambda) 
+! (DEBUGGING AGAINST NEW CODE)
+      read(unit_identifier_hf,*) (fock_diagonal(i,1), i = 1, n_orbitals)
+      read(unit_identifier_hf,*) (orb_coefficients(i,1), i = 1, n_lambda) 
+      close(unit_identifier_hf)
+! (END DEBUGGING AGAINST NEW CODE)
 !
 !     Done with file
 !
-      call gpclose(lusifc,'KEEP')
+     ! call gpclose(lusifc,'KEEP')
+
 !
 
    end subroutine hf_reader

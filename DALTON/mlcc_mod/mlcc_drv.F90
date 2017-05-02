@@ -31,7 +31,13 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
    luprint = lupri 
 !
+   write(luprint,*) 'Calling oo driver from old driver'
+   call flshfo(luprint)
+!
    call mlcc_oo_driver
+!
+   write(luprint,*) 'Beginning old driver'
+   call flshfo(luprint)
 !
 !  Initialize memory variables
 !
@@ -73,23 +79,23 @@ subroutine mlcc_drv(work,lwork,lupri)
 !
 !  Calculate the omega vector 
 !
-   call mlcc_omega_calc
+!   call mlcc_omega_calc
 !
 ! !
 ! !  Start the coupled cluster solver for the ground state energy
 ! !
-!    call mlcc_energy_drv
+    call mlcc_energy_drv
 ! !
-!    call deallocator(t2am,n_ov_ov_packed,1)
-!    call deallocator(t1am,n_vir,n_occ)
-!    call deallocator(fock_diagonal,n_orbitals,1)
-!    call deallocator(orb_coefficients,n_lambda,1)
-!    call deallocator(omega1,n_vir,n_occ) ! Omega_a,i
-!    call deallocator(omega2,n_ov_ov_packed,1)
-!    call deallocator(F_i_j,n_occ,n_occ)
-!    call deallocator(F_i_a,n_occ,n_vir)
-!    call deallocator(F_a_i,n_vir,n_occ)
-!    call deallocator(F_a_b,n_vir,n_vir)
+   call deallocator(t2am,n_ov_ov_packed,1)
+   call deallocator(t1am,n_vir,n_occ)
+   call deallocator(fock_diagonal,n_orbitals,1)
+   call deallocator(orb_coefficients,n_lambda,1)
+   call deallocator(omega1,n_vir,n_occ) ! Omega_a,i
+   call deallocator(omega2,n_ov_ov_packed,1)
+   call deallocator(F_i_j,n_occ,n_occ)
+   call deallocator(F_i_a,n_occ,n_vir)
+   call deallocator(F_a_i,n_vir,n_occ)
+   call deallocator(F_a_b,n_vir,n_vir)
 !
 !
 end subroutine mlcc_drv

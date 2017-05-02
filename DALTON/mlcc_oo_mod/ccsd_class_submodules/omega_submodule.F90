@@ -28,6 +28,9 @@ submodule (ccsd_class) omega
 !     The routine assumes that omega1 and omega2 are allocated 
 !     (see wf % initialize_omega).
 !
+   implicit none 
+!
+   logical :: debug = .true.
 !
 contains
 !
@@ -72,16 +75,47 @@ contains
 !     Construct singles contributions 
 !
       call wf%omega_a1
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_b1
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_c1
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_d1
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
 !
 !     Construct doubles contributions 
 !
       call wf%omega_a2
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_b2
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_c2
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_d2
+!
+      wf%omega1 = zero
+      wf%omega2 = zero
+!
       call wf%omega_e2
 !
    end subroutine construct_omega_ccsd
@@ -113,8 +147,6 @@ contains
       integer(i15) :: i = 0, j = 0, a = 0, c = 0, k = 0, d = 0
       integer(i15) :: ad = 0, ad_dim = 0, ci = 0, cidk = 0, ck = 0 
       integer(i15) :: ckd = 0, ckdi = 0, di = 0, dk = 0, kc = 0, da = 0
-!
-      logical :: debug = .true.
 !
       real(dp), dimension(:,:), allocatable :: L_kc_J 
       real(dp), dimension(:,:), allocatable :: L_da_J  ! L_ad^J; a is being batched over
@@ -259,17 +291,17 @@ contains
 !
 !        Calculate the A1 term (sum_ckd g_a,ckd * u_ckd,i) & add to the omega vector
 ! 
-         call dgemm('N','N',&
-                     batch_length,&
-                     wf%n_o,&
-                     (wf%n_o)*(wf%n_v)**2,&
-                     one,&
-                     g_a_ckd,&
-                     batch_length,&
-                     u_ckd_i,&
-                     (wf%n_o)*(wf%n_v)**2,&
-                     one,&
-                     wf%omega1(a_begin,1),&
+         call dgemm('N','N',               &
+                     batch_length,         &
+                     wf%n_o,               &
+                     (wf%n_o)*(wf%n_v)**2, &
+                     one,                  &
+                     g_a_ckd,              &
+                     batch_length,         &
+                     u_ckd_i,              &
+                     (wf%n_o)*(wf%n_v)**2, &
+                     one,                  &
+                     wf%omega1(a_begin,1), &
                      wf%n_v)
 !
       enddo ! End of batches of the index a 
@@ -311,8 +343,6 @@ contains
 !
       class(ccsd) :: wf 
 !
-      logical :: debug = .true.
-!
       integer(i15) :: a = 0, c = 0, k = 0, l = 0, ckl = 0, ki = 0
       integer(i15) :: ak = 0, akcl = 0, al = 0, alck = 0, ck = 0, ai = 0
       integer(i15) :: cl = 0, lc = 0, i = 0, j = 0
@@ -322,6 +352,19 @@ contains
       real(dp), dimension(:,:), allocatable :: g_ki_lc ! g_kilc 
       real(dp), dimension(:,:), allocatable :: g_ckl_i ! g_kilc 
       real(dp), dimension(:,:), allocatable :: u_a_ckl ! u_kl^ac = 2 t_kl^ac - t_lk^ac
+!
+!
+!     Print the omega vector 
+!
+      if (debug) then  
+!
+         write(unit_output,*) 
+         write(unit_output,*) 'Omega(a,i) before B1 term has been added:'
+         write(unit_output,*)
+!
+         call vec_print(wf%omega1, wf%n_v, wf%n_o)
+!
+      endif
 !
 !     Allocate Cholesky vectors L_ki,J and L_lc,J 
 !
@@ -404,7 +447,6 @@ contains
          do c = 1, wf%n_v
             do k = 1, wf%n_o
                do l = 1, wf%n_o
-               
 !
 !                 Calculate necessary indices
 !
@@ -491,8 +533,6 @@ contains
 !
       integer(i15) :: i = 0, k = 0, c = 0, a = 0
       integer(i15) :: ck = 0, ai = 0, ak = 0, ci = 0, aick = 0, akci = 0
-!
-      logical :: debug = .true.
 !
 !     Allocation of F_ck, u_ai_ck and omega1_ai
 !
@@ -642,10 +682,6 @@ contains
       integer(i15) :: b_n_batch = 0, b_start = 0, b_end = 0, b_length = 0, b_max_length = 0, b_batch = 0
 
       integer(i15) :: required = 0, available = 0
-!
-!     Debug 
-!
-      logical :: debug = .true.
 !
 !!!   A2.1 term   !!!
 !
@@ -1098,8 +1134,6 @@ contains
 !
       integer(i15) :: aibj = 0, akbl = 0, cidj = 0 
 !
-      logical :: debug = .true.
-!
 !     Read cholesky vector of type L_ij_J
 !
       call allocator(L_ij_J, (wf%n_o)*(wf%n_o), wf%n_J)
@@ -1373,11 +1407,6 @@ contains
 !
       integer(i15) :: n_batch = 0, max_batch_length = 0
       integer(i15) :: a_batch = 0, a_start = 0, a_end = 0, a_length = 0 
-!
-!     Debug
-!
-      logical :: debug = .true.
-!
 !
 !     Allocate L_ia_J
 !
@@ -1699,8 +1728,6 @@ contains
       implicit none 
 !
       class(ccsd) :: wf 
-!
-      logical :: debug = .true.
 !
 !     Batching variables 
 !
@@ -2307,8 +2334,6 @@ contains
       implicit none 
 !
       class(ccsd) :: wf 
-!
-      logical :: debug = .true.
 !
 !     Indices 
 !

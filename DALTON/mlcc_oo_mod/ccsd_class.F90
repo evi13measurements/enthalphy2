@@ -75,7 +75,7 @@ module ccsd_class
       procedure :: omega_b2 => omega_b2_ccsd 
       procedure :: omega_c2 => omega_c2_ccsd 
       procedure :: omega_d2 => omega_d2_ccsd 
-      procedure :: omega_e2 => omega_b2_ccsd       
+      procedure :: omega_e2 => omega_e2_ccsd       
 !
    end type ccsd
 !

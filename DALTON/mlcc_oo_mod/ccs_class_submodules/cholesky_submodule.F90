@@ -16,11 +16,13 @@ submodule (ccs_class) cholesky
 !
    implicit none 
 !
+   logical :: debug = .true.
+!
 !
 contains
 !
 !
-   module subroutine get_cholesky_ij_ccs(wf, L_ij_J)
+   subroutine get_cholesky_ij_ccs(wf, L_ij_J)
 !
 !     Get Cholesky IJ
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -118,11 +120,11 @@ contains
 !
       call deallocator(L_iJ_k, (wf%n_o)*(wf%n_J), wf%n_o)
       call deallocator(L_iJ_a, (wf%n_o)*(wf%n_J), wf%n_v)
-!    
+! 
    end subroutine get_cholesky_ij_ccs
 !
 !
-   module subroutine get_cholesky_ia_ccs(wf, L_ia_J)
+   subroutine get_cholesky_ia_ccs(wf, L_ia_J)
 !
 !     Get Cholesky IA
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -142,7 +144,7 @@ contains
    end subroutine get_cholesky_ia_ccs
 !
 !
-   module subroutine get_cholesky_ai_ccs(wf, L_ai_J)
+   subroutine get_cholesky_ai_ccs(wf, L_ai_J)
 !
 !     Get Cholesky AI
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -501,7 +503,7 @@ contains
    end subroutine get_cholesky_ai_ccs
 !
 !
-   module subroutine get_cholesky_ab_ccs(wf, L_ab_J, first, last, ab_dim, reorder)
+   subroutine get_cholesky_ab_ccs(wf, L_ab_J, first, last, ab_dim, reorder)
 !
 !     Get Cholesky AB
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017

@@ -366,7 +366,7 @@ contains
 !
       class(hartree_fock) :: wf
 !
-      real(dp), dimension((wf%n_o)*(wf%n_o), wf%n_J) :: L_ij_J ! L_ij^J
+      real(dp), dimension((wf%n_o)**2, wf%n_J) :: L_ij_J ! L_ij^J
 !
       integer(i15) :: unit_chol_mo_ij = -1 ! Unit identifier for cholesky_ij file 
       integer(i15) :: i = 0, j = 0
@@ -380,7 +380,7 @@ contains
 !     Read the Cholesky vectors into the L_ij_J matrix
 !
       do j = 1, wf%n_J
-         read(unit_chol_mo_ij) (L_ij_J(i,j), i = 1, (wf%n_o)*(wf%n_o))
+         read(unit_chol_mo_ij) (L_ij_J(i,j), i = 1, (wf%n_o)**2)
       enddo
 !
 !     Close file
@@ -405,7 +405,7 @@ contains
       real(dp), dimension((wf%n_o)*(wf%n_v), wf%n_J) :: L_ia_J ! L_ia^J
 !
       integer(i15) :: unit_chol_mo_ia = -1 ! Unit identifier for cholesky_ia file
-      integer(i15) :: i=0,j=0
+      integer(i15) :: i = 0, j = 0
 !
 !     Prepare for reading: generate unit idientifier, open, and rewind file
 !
@@ -440,24 +440,41 @@ contains
 !
       real(dp), dimension((wf%n_v)*(wf%n_o), wf%n_J) :: L_ai_J ! L_ai^J
 !
-      integer(i15) :: unit_chol_mo_ai = -1 ! Unit identifier for cholesky_ai file
-      integer(i15) :: i = 0, j = 0
+      real(dp), dimension(:,:), allocatable :: L_ia_J       
 !
-!     Prepare for reading: generate unit idientifier, open, and rewind file
+      integer(i15) :: i = 0, j = 0, a = 0, ia = 0, ai = 0
 !
-      call generate_unit_identifier(unit_chol_mo_ai)
-      open(unit=unit_chol_mo_ai,file='cholesky_ia',status='unknown',form='unformatted') ! E: changed ai to ia; ok?
-      rewind(unit_chol_mo_ai)
+!     Allocation
 !
-!     Read Cholesky vectors into the L_ai_J matrix
+      call allocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
+      L_ia_J = zero
+!     
+!     Get Cholesky IA vector 
 !
-      do j = 1, wf%n_J
-         read(unit_chol_mo_ai) (L_ai_J(i,j), i = 1, (wf%n_o)*(wf%n_v))
+      call wf%read_cholesky_ia(L_ia_J)
+!
+!     Reorder and save in AI vector 
+!      
+      do i = 1, wf%n_o
+         do a = 1, wf%n_v
+!
+!           Needed indices
+!
+            ai = index_two(a, i, wf%n_v)
+            ia = index_two(i, a, wf%n_o)
+!
+            do j = 1, wf%n_J
+!
+               L_ai_J(ai, j) = L_ia_J(ia, j)
+!
+            enddo
+!
+         enddo
       enddo
 !
-!     Close file
+!     Deallocate temporary vector 
 !
-      close(unit_chol_mo_ai)    
+      call deallocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)   
 !
    end subroutine read_cholesky_ai_hartree_fock
 !   
