@@ -24,7 +24,8 @@ contains
 !
    integer(i15) function packed_size(N)
 !
-!     Purpose: Returns size of packed vectors alpha >= beta
+!     Purpose: Returns size of packed symmetric matrices
+!              of dimension N x N (triangular elements) 
 !   
       implicit none
 !
@@ -37,18 +38,21 @@ contains
 !
    subroutine squareup(packed,unpacked,N)
 !
-!     Purpose: Squares up to full dimension (N x N) of packed vectors.
+!     Purpose: Squares up to full dimension (N x N) 
+!              of packed matrices.
 !
       implicit none
 !
-      real(dp),dimension(:,:),intent(in)     :: packed
-      real(dp),dimension(:,:)                :: unpacked
-      integer(i15), intent(in)               :: N
-      integer(i15)                           :: i=0,j=0
+      integer(i15), intent(in) :: N
 !
-      do i=1,N
-         do j=1,N
-            unpacked(i,j) = packed(index_packed(i,j),1)
+      real(dp), dimension(:,:), intent(in) :: packed
+      real(dp), dimension(:,:)             :: unpacked
+!
+      integer(i15) :: i = 0, j = 0
+!
+      do i = 1, N
+         do j = 1, N
+            unpacked(i, j) = packed(index_packed(i,j), 1)
          enddo
       enddo
 !
@@ -57,19 +61,20 @@ contains
 !
    subroutine packin(packed,unpacked,N)
 !
-!     Purpose: Pack down full square matrix of dimension (N x N).
-!
+!     Purpose: Pack down full square matrix of dimension N x N.
 !
       implicit none
 !
-      real(dp),dimension(:,:)              :: packed
-      real(dp),dimension(:,:),intent(in)   :: unpacked
-      integer(i15)                         :: i=0,j=0
-      integer(i15), intent(in)             :: N
+      integer(i15), intent(in) :: N
 !
-      do i = 1,N
-         do j = 1,N
-            packed(index_packed(i,j),1)=unpacked(i,j)
+      real(dp), dimension(:,:) :: packed
+      real(dp), dimension(:,:),intent(in) :: unpacked
+!
+      integer(i15) :: i = 0, j = 0
+!
+      do i = 1, N
+         do j = 1, N
+            packed(index_packed(i, j), 1) = unpacked(i, j)
          enddo
       enddo
 !
@@ -82,7 +87,7 @@ contains
 !
       implicit none
 !
-      integer(i15), intent(in) :: p,q,r,dim_p,dim_q
+      integer(i15), intent(in) :: p, q, r, dim_p, dim_q
 !
       index_three = dim_p*(dim_q*(r-1)+q-1)+p
 !

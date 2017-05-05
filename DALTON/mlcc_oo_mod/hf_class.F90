@@ -67,9 +67,9 @@ module hf_class
 !
 !     Routines needed to initialize HF     
 !
-!        read_hf_info            : sets attributes from file (n_o,n_v,scf_energy,...)
-!        read_transform_cholesky : reads AO Cholesky vectors, transforms to MO basis, and
-!                                  saves the MO vectors to file
+!     read_hf_info            : sets attributes from file (n_o,n_v,scf_energy,...)
+!     read_transform_cholesky : reads AO Cholesky vectors, transforms to MO basis, and
+!                               saves the MO vectors to file
 !
       procedure, non_overridable :: read_hf_info            => read_hf_info_hartree_fock
       procedure, non_overridable :: read_transform_cholesky => read_transform_cholesky_hartree_fock 
@@ -155,12 +155,13 @@ contains
 !     Open the file mlcc_hf_info
 !
       call generate_unit_identifier(unit_identifier_hf)
-      open(unit=unit_identifier_hf,file='mlcc_hf_info',status='old',form='formatted')
+      open(unit=unit_identifier_hf, file='mlcc_hf_info', status='old', form='formatted')
       rewind(unit_identifier_hf)
 !
 !     Read mlcc_hf_info into HF variables
 !  
-      read(unit_identifier_hf,*) wf%n_mo, wf%n_o, n_lambda, wf%nuclear_potential, wf%scf_energy
+      read(unit_identifier_hf,*) wf%n_mo, wf%n_o, n_lambda, &
+                                  wf%nuclear_potential, wf%scf_energy
 !
 !     Set the energy equal to the read SCF energy
 !
@@ -168,7 +169,7 @@ contains
 !
 !     Calculate the number of virtuals
 !
-      wf%n_v = (wf%n_mo) - (wf%n_o)
+      wf%n_v = wf%n_mo - wf%n_o
 !      
 !     Allocate the Fock diagonal and the MO coefficients
 !
@@ -220,7 +221,7 @@ contains
 !     Open Dalton file mlcc_cholesky (see mlcc_write_cholesky.F)
 ! 
       call generate_unit_identifier(unit_chol_ao)
-      open(unit=unit_chol_ao,file='mlcc_cholesky',status='old',form='formatted')
+      open(unit=unit_chol_ao, file='mlcc_cholesky', status='old', form='formatted')
       rewind(unit_chol_ao)
 !
 !     Read the number of Cholesky vectors (n_J) and 
@@ -234,13 +235,13 @@ contains
       call generate_unit_identifier(unit_chol_mo_ia)
       call generate_unit_identifier(unit_chol_mo_ab)
 !
-      open(unit_chol_mo_ij,file='cholesky_ij',status='unknown',form='unformatted')
+      open(unit_chol_mo_ij, file='cholesky_ij', status='unknown', form='unformatted')
       rewind(unit_chol_mo_ij)
 !
-      open(unit_chol_mo_ia,file='cholesky_ia',status='unknown',form='unformatted')
+      open(unit_chol_mo_ia, file='cholesky_ia', status='unknown', form='unformatted')
       rewind(unit_chol_mo_ia)
 !
-      open(unit_chol_mo_ab,file='cholesky_ab',status='unknown',form='unformatted')
+      open(unit_chol_mo_ab, file='cholesky_ab', status='unknown', form='unformatted')
       rewind(unit_chol_mo_ab)
 !
 !     Allocate packed and unpacked Cholesky AO, and 
@@ -341,7 +342,7 @@ contains
 !     Prepare for reading: generate unit idientifier, open file, and rewind
 !
       call generate_unit_identifier(unit_chol_mo_ij)
-      open(unit=unit_chol_mo_ij,file='cholesky_ij',status='unknown',form='unformatted')
+      open(unit=unit_chol_mo_ij, file='cholesky_ij', status='unknown', form='unformatted')
       rewind(unit_chol_mo_ij)
 !
 !     Read the Cholesky vectors into the L_ij_J matrix
@@ -377,7 +378,7 @@ contains
 !     Prepare for reading: generate unit idientifier, open, and rewind file
 !
       call generate_unit_identifier(unit_chol_mo_ia)
-      open(unit=unit_chol_mo_ia,file='cholesky_ia',status='unknown',form='unformatted')
+      open(unit=unit_chol_mo_ia, file='cholesky_ia', status='unknown', form='unformatted')
       rewind(unit_chol_mo_ia)
 !
 !     Read Cholesky vectors into the L_ia_J matrix
@@ -393,7 +394,7 @@ contains
    end subroutine read_cholesky_ia_hartree_fock
 !
 !
-   subroutine read_cholesky_ai_hartree_fock(wf,L_ai_J)
+   subroutine read_cholesky_ai_hartree_fock(wf, L_ai_J)
 !
 !     Read Cholesky AI 
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -446,7 +447,7 @@ contains
    end subroutine read_cholesky_ai_hartree_fock
 !   
 !
-   subroutine read_cholesky_ab_hartree_fock(wf,L_ab_J,first,last,ab_dim,reorder)
+   subroutine read_cholesky_ab_hartree_fock(wf, L_ab_J, first, last, ab_dim, reorder)
 !
 !     Read Cholesky AB 
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -480,7 +481,7 @@ contains
 !     Prepare for reading: generate unit identifier, open, and rewind file
 !  
       call generate_unit_identifier(unit_chol_mo_ab)
-      open(unit=unit_chol_mo_ab,file='cholesky_ab',status='unknown',form='unformatted')
+      open(unit=unit_chol_mo_ab, file='cholesky_ab', status='unknown', form='unformatted')
       rewind(unit_chol_mo_ab)
 !
 !     Calculating batch length

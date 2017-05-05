@@ -1,43 +1,44 @@
 submodule (ccs_class) diis
 !
 !
-!                             -::- DIIS submodule (CCS) -::-
-!                 Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
+!                          -::- DIIS submodule (CCS) -::-
+!             Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
 !
 !
-!     Consists of the following subroutines of the CCS module:
+!   Consists of the following subroutines of the CCS module:
 !
-!     ground_state_solver:        controls the iterative loop, calling in turn
-!                                 the calculation of the energy, the amplitude equations 
-!                                 (and its norm), and the new_amplitudes routine
-! 
-!     new_amplitudes:             calculates the quasi-Newton estimate and passes the 
-!                                 information needed by the DIIS routine.
-! 
-!     diis_ccs:                   This routine saves the quasi-Newton estimate Δ t and
-!                                 t + Δ t to file. It uses the previous estimates to
-!                                 select the amplitudes t for the next iteration.
-!      
-!     calc_ampeqs:                Updates the amplitude equations for the current amplitudes.
-!     calc_ampeqs_norm:           Calculates the norm of the amplitude equations.
-!     calc_quasi_Newton_singles:  Calculates the singles part of the quasi-Newton estimate.
+!   ground_state_solver:        controls the iterative loop, calling in turn
+!                               the calculation of the energy, the amplitude equations 
+!                               (and its norm), and the new_amplitudes routine
+!   new_amplitudes:             calculates the quasi-Newton estimate and passes the 
+!                               information needed by the DIIS routine.
+!   diis_ccs:                   This routine saves the quasi-Newton estimate Δ t and
+!                               t + Δ t to file. It uses the previous estimates to
+!                               select the amplitudes t for the next iteration.
+!    
 !
-!     Can be inherited by models of the same level (e.g. CC2) without modification.
+!   calc_ampeqs:                Updates the amplitude equations for the current amplitudes.
+!   calc_ampeqs_norm:           Calculates the norm of the amplitude equations.
+!   calc_quasi_Newton_singles:  Calculates the singles part of the quasi-Newton estimate.
 !
-!     When inherited by higher level models (e.g. CCSD), the new_amplitudes and calc_ampeqs_norm
-!     routines should be overridden to account for the doubles quasi-Newton estimate, amplitudes, 
-!     and projection vector.
+!  Can be inherited by models of the same level (e.g. CC2) without modification.
+!
+!  When inherited by higher level models (e.g. CCSD), the new_amplitudes and calc_ampeqs_norm
+!  routines should be overridden to account for the doubles quasi-Newton estimate, amplitudes, 
+!  and projection vector.
 !
 !
    implicit none
 !
+!  Some variables available to all routines of the module
+!
    integer(i15) :: iteration = -1 
 !
-   integer(i15) :: unit_dt   = -1        ! Unit identifier for Δ t_i file 
-   integer(i15) :: unit_t_dt = -1        ! Unit identifier for t_i + Δ t_i file
+   integer(i15) :: unit_dt          = -1 ! Unit identifier for Δ t_i file 
+   integer(i15) :: unit_t_dt        = -1 ! Unit identifier for t_i + Δ t_i file
    integer(i15) :: unit_diis_matrix = -1 ! Unit identifier for DIIS matrix file
 !
-   integer(i15), parameter :: diis_dim = 9 ! The maximum dimension of the DIIS matrix 
+   integer(i15), parameter :: diis_dim = 9 ! The maximum dimension of the DIIS matrix plus 1 
 !
 !
 contains
@@ -80,37 +81,34 @@ contains
       energy_threshold = 1.0D-6
       ampeqs_threshold = 1.0D-6
 !
-      max_iterations = 1
+      max_iterations = 25
 !
 !     Let the user know the ground state solver is running
 !
-      write(unit_output,'(/T3,A/)') '::::::::::::::::::::::::::::::::::::::::::::::::::::'
-      write(unit_output,'(T3,A)')   '            Ground state solver (DIIS)              '
-      write(unit_output,'(T3,A)')   '        S. D. Folkestad and E. F. Kjønstad          '
-      write(unit_output,'(T3,A/)')  '                   May 2017                         '
-      write(unit_output,'(T3,A/)')  '::::::::::::::::::::::::::::::::::::::::::::::::::::'
+      write(unit_output,'(/T3,A)')  ':: Ground state solver (DIIS)'
+      write(unit_output,'(T3,A/)')  ':: S. D. Folkestad, E. F. Kjønstad, May 2017'
       write(unit_output,'(T3,A,1X,A/)') &
                                   'Requested the ground state for:', wf%name
 !
-      write(unit_output,'(T3,A,3X,A)') 'Iter.', 'Norm of amplitude eq.'
-      write(unit_output,'(T3,A)')    '-------------------------------'    
+      write(unit_output,'(T3,A)') 'Iter.    Norm of amplitude eq.'
+      write(unit_output,'(T3,A)') '------------------------------'    
 !
-!     Make sure the initial energy is correct
+!     Make sure the initial energy is up to date 
 !
       call wf%calc_energy
 !
 !     Open DIIS files 
 !
       call generate_unit_identifier(unit_dt)
-      open(unit=unit_dt,file='diis_dt',status='unknown',form='formatted')
+      open(unit=unit_dt,file='diis_dt',status='unknown',form='unformatted')
 !
       call generate_unit_identifier(unit_t_dt)
-      open(unit=unit_t_dt,file='diis_t_dt',status='unknown',form='formatted')
+      open(unit=unit_t_dt,file='diis_t_dt',status='unknown',form='unformatted')
 !
       call generate_unit_identifier(unit_diis_matrix)
-      open(unit=unit_diis_matrix,file='diis_matrix',status='unknown',form='formatted')
+      open(unit=unit_diis_matrix,file='diis_matrix',status='unknown',form='unformatted')
 !
-!     Enter solver loop
+!     Enter iterative loop
 !
       iteration = 1
 !
@@ -126,7 +124,7 @@ contains
 !
 !        Update the Fock matrix 
 !
-         call wf%fock_constructor
+         call wf%construct_fock
 !
 !        Construct the current amplitude equations vector,
 !        and calculate the norm of the amplitude equations
@@ -139,9 +137,9 @@ contains
          converged_energy = abs(wf%energy-prev_energy) .lt. energy_threshold
          converged_ampeqs = ampeqs_norm                .lt. ampeqs_threshold
 !
-!        Print iteration information to main output 
+!        Print information to output 
 !
-         write(unit_output,'(T3,I2,5X,E10.3)') iteration, ampeqs_norm 
+         write(unit_output,'(T3,I2,7X,E10.4)') iteration, ampeqs_norm 
          call flshfo(unit_output) 
 !
 !        Perform DIIS update if convergence hasn't been reached
@@ -151,11 +149,11 @@ contains
             converged = .true.
 !
             write(unit_output,'(/T3,A,I2,A/)') 'Converged in ',iteration,' iterations!'
-            write(unit_output,'(T3,A14,1X,F14.8/)') 'Total energy:', wf%energy
+            write(unit_output,'(T3,A,F14.8/)') 'Total energy:', wf%energy
 !
          else
 !
-!           Update the amplitudes 
+!           Update the amplitudes for the next iteration 
 !
             call wf%new_amplitudes
             iteration = iteration + 1
@@ -179,15 +177,15 @@ contains
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
 !
 !     Constructs the amplitude equations vector (the projection vector 
-!     in CCS) for the amplitudes of the current iteration of the ground state
-!     solver. It also calculates the norm of the amplitude equations, which 
-!     is zero when the equations are exactly solved.
+!     in CCS) for the amplitudes of the current iteration of the ground 
+!     state solver. It also calculates the norm of the amplitude equations, 
+!     which is zero when the equations are exactly solved.
 !
       implicit none 
 !
       class(ccs) :: wf 
 !
-!     Reconstruct the projection vector 
+!     Update the projection vector 
 !
       call wf%construct_omega
 !
@@ -293,8 +291,8 @@ contains
 !
             ai = index_two(a, i, wf%n_v)
 !
-            dt(ai, 1) = - wf%omega1(a,i)/(wf%fock_diagonal(wf%n_o + a, 1) - &
-                                          wf%fock_diagonal(i, 1))
+            dt(ai, 1) = - wf%omega1(a, i)/(wf%fock_diagonal(wf%n_o + a, 1) - &
+                                             wf%fock_diagonal(i, 1))
 !
          enddo
       enddo
@@ -302,10 +300,10 @@ contains
    end subroutine calc_quasi_Newton_singles_ccs
 !
 !
-   module subroutine diis_ccs(wf,dt,t_dt,n_variables)
+   module subroutine diis_ccs(wf, dt, t_dt, n_variables)
 !
 !     DIIS routine (CCS)
-!     Written by Sarai D. Folkestad and Eirik F. Kjønstad
+!     Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
 !
 !     The next amplitudes are 
 !
@@ -333,37 +331,36 @@ contains
 !
       integer(i15) :: i = 0, j = 0
 !
-      integer :: info = -1 ! Error integer for dgesv routine (LU factorization)
+      integer      :: info = -1         ! Error integer for dgesv routine (LU factorization)
       integer(i15) :: current_index = 0 ! Progressing as follows: 1,2,...,7,8,1,2,...
 !
       real(dp), dimension(:,:), allocatable :: diis_vector
       real(dp), dimension(:,:), allocatable :: diis_matrix
 !
-      integer, dimension(diis_dim) :: ipiv = 0
+      integer(i15), dimension(diis_dim) :: ipiv = 0 ! Pivot integers (see dgesv routine)
 !
 !     Set the current index 
 !
       current_index = iteration - (diis_dim-1)*((iteration-1)/(diis_dim-1)) ! 1,2,...,7,8,1,2,...
 !
-!
 !     :: Save (Δ t_i) and (t_i + Δ t_i) to files ::
-!
 !
       if (current_index .eq. 1) then  
          rewind(unit_dt)
          rewind(unit_t_dt)
       endif
 !
-      write(unit_dt,*)   (dt(i,1), i = 1, n_variables)
-      write(unit_t_dt,*) (t_dt(i,1), i = 1, n_variables)
-!
+      write(unit_dt)   (dt(i,1), i = 1, n_variables)
+      write(unit_t_dt) (t_dt(i,1), i = 1, n_variables)
 !
 !     :: Solve the least squares problem, G * w = H ::
 !
-!     G : DIIS matrix, G_ij = Δ t_i Δ t_j,
-!     H : DIIS vector,  H_i = 0,
+!        G : DIIS matrix, G_ij = Δ t_i Δ t_j,
+!        H : DIIS vector,  H_i = 0,
 !
-!     where i, j = 1, 2, ..., current_index
+!     where i, j = 1, 2, ..., current_index. To enforce normality
+!     of the solution, G is extended with a row & column of -1's 
+!     and H with a -1 at the end.
 !
 !     First set the DIIS vector to one 
 !
@@ -377,29 +374,29 @@ contains
 !
       if (current_index .gt. 1) then 
 !
-!        Read previous elements 
-!
          rewind(unit_diis_matrix)
 !
          do j = 1, current_index - 1
             do i = 1, current_index - 1
-               read(unit_diis_matrix,*) diis_matrix(i,j)
+!
+               read(unit_diis_matrix) diis_matrix(i,j)
+!
             enddo
          enddo
 !
       endif
 !
-!     Construct the parts of the DIIS matrix G not constructed in 
+!     Get the parts of the DIIS matrix G not constructed in 
 !     the previous iterations 
 !
-      call allocator(dt_i, n_variables, 1) ! Allocate temporary holder of previous quasi-Newton estimates
+      call allocator(dt_i, n_variables, 1) ! Allocate temporary holder of quasi-Newton estimates
       dt_i = zero 
 !
       rewind(unit_dt)
 !
       do i = 1, current_index
 !
-         read(unit_dt,*) (dt_i(j,1), j = 1, n_variables) 
+         read(unit_dt) (dt_i(j,1), j = 1, n_variables) 
 !
          diis_matrix(current_index,i) = ddot(n_variables, dt, 1, dt_i, 1) 
          diis_matrix(i,current_index) = diis_matrix(current_index,i)
@@ -411,32 +408,36 @@ contains
 !
       diis_vector(current_index+1,1) = -one
 !
-!     Write DIIS matrix to file 
+!     Write the current DIIS matrix to file 
 !
       rewind(unit_diis_matrix)
 !
       do j = 1, current_index
          do i = 1, current_index
-            write(unit_diis_matrix,*) diis_matrix(i,j)
+!
+            write(unit_diis_matrix) diis_matrix(i,j)
+!
          enddo
       enddo
 !
 !     Solve the DIIS equation 
 !
-      call dgesv(current_index+1,&
-                  1,&
-                  diis_matrix,&
-                  current_index+1,&
-                  ipiv,&
-                  diis_vector,&
-                  current_index+1,&
-                  info)
+!        Note: on exit, the solution is in the diis_vector,
+!        provided info = 0 (see LAPACK documentation for more)
 !
+      call dgesv(current_index+1,  &
+                  1,               &
+                  diis_matrix,     &
+                  current_index+1, &
+                  ipiv,            &
+                  diis_vector,     &
+                  current_index+1, &
+                  info)
 !
 !     :: Update the amplitudes (placed in dt on exit) ::
 !
-!
       call dzero(dt, n_variables)
+!
       rewind(unit_t_dt)
 !
       do i = 1, current_index
@@ -444,12 +445,11 @@ contains
 !        Read the t_i + Δ t_i vector 
 !
          call dzero(t_dt, n_variables)
-!
-         read(unit_t_dt,*) (t_dt(j, 1), j = 1, n_variables)
+         read(unit_t_dt) (t_dt(j, 1), j = 1, n_variables)
 !
 !        Add w_i (t_i + Δ t_i) to the amplitudes 
 !
-         call daxpy(n_variables, diis_vector(i,1), t_dt, 1, dt, 1)
+         call daxpy(n_variables, diis_vector(i, 1), t_dt, 1, dt, 1)
 !
       enddo
 !

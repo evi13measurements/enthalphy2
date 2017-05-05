@@ -8,7 +8,7 @@ submodule (ccs_class) fock
 !     Contains the following family of procedures of the CCS class:
 !		
 !		initialize_fock_matrix_cc_singles(wf):		   Allocates and sets Fock matrix to 0        
-!		fock_constructor_cc_singles(wf):			      Constructs T1_transformed mo Fock matrix 
+!		construct_fock_cc_singles(wf):			      Constructs T1_transformed mo Fock matrix 
 ! 		one_electron_t1_cc_singles(wf, h1 ,h1_T1):	T1-transformation of one-electron mo integrals
 !
    implicit none 
@@ -39,14 +39,14 @@ contains
       wf%fock_ai = zero
       wf%fock_ab = zero
 !
-      call wf%fock_constructor
+      call wf%construct_fock
 !
    end subroutine initialize_fock_matrix_ccs
 !
 !
-   subroutine fock_constructor_ccs(wf)
+   subroutine construct_fock_ccs(wf)
 !
-!     Fock Constructor
+!     Construct Fock
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
 !
 !     Constructs the T1-transformed Fock matrix blocks (occ/vir-occ/vir),
@@ -507,7 +507,7 @@ contains
 !
       call deallocator(fock_matrix, wf%n_mo, wf%n_mo)
 !
-   end subroutine fock_constructor_ccs
+   end subroutine construct_fock_ccs
 !
 !
    subroutine one_electron_t1_ccs(wf, h1 ,h1_T1)

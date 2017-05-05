@@ -69,7 +69,7 @@ module ccs_class
 !     (for the given T1 amplitudes)
 !
       procedure                  :: initialize_fock_matrix => initialize_fock_matrix_ccs
-      procedure, non_overridable :: fock_constructor       => fock_constructor_ccs
+      procedure, non_overridable :: construct_fock         => construct_fock_ccs
 !
       procedure, non_overridable :: one_electron_t1        => one_electron_t1_ccs ! T1-transf. of h_pq
 !
@@ -77,8 +77,8 @@ module ccs_class
 !
       procedure :: calc_energy => calc_energy_ccs
 !
-!     get Cholesky routines to calculate the occ/vir-occ/vir
-!     blocks of the T1-transformed Cholesky vectors
+!     get Cholesky routines to calculate the occ/vir-occ/vir  blocks of the 
+!     T1-transformed Cholesky vectors
 !
       procedure, non_overridable :: get_cholesky_ij => get_cholesky_ij_ccs ! occ-occ
       procedure, non_overridable :: get_cholesky_ia => get_cholesky_ia_ccs ! occ-vir
@@ -91,9 +91,9 @@ module ccs_class
 !
 !     Ground state solver routines (and helpers)
 !
-!        Note: while this solver is strictly uneccessary for CCS, where the solution
-!        is trivial, it is inherited largely unchanged by descendants (CCSD, CC2, etc.),
-!        where it serves a more prominent role
+!     Note: while this solver is strictly uneccessary for CCS, where the solution
+!           is trivial, it is inherited mostly unaltered by descendants (CCSD, CC2, 
+!           etc.), where it serves an actual role.
 !
       procedure :: ground_state_solver       => ground_state_solver_ccs
 !
@@ -193,9 +193,9 @@ module ccs_class
       end subroutine initialize_fock_matrix_ccs
 !
 !
-      module subroutine fock_constructor_ccs(wf)
+      module subroutine construct_fock_ccs(wf)
 !
-!        Fock Constructor
+!        Construct Fock 
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
 !
 !        Constructs the T1-transformed Fock matrix blocks (occ/vir-occ/vir),
@@ -204,7 +204,7 @@ module ccs_class
 !
          class(ccs) :: wf
 !
-      end subroutine fock_constructor_ccs
+      end subroutine construct_fock_ccs
 !
 !
       module subroutine one_electron_t1_ccs(wf, h1 ,h1_T1)
@@ -218,8 +218,6 @@ module ccs_class
 !
 !              x = I - t1
 !              y = I - t1^T
-!
-         implicit none
 !
          class(ccs) :: wf
 !
@@ -236,8 +234,6 @@ module ccs_class
 !
 !       Directs the solution of the ground state amplitude equations
 !       using a DIIS algorithm.
-!
-        implicit none
 !
         class(ccs) :: wf 
 !
@@ -264,8 +260,6 @@ module ccs_class
 !        Calculate Amplitude Equations Norm 
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
 !
-         implicit none 
-!
          class(ccs) :: wf 
          real(dp)   :: ampeqs_norm 
 !
@@ -280,8 +274,6 @@ module ccs_class
 !        Directs the calculation of the quasi-Newton estimate Δ t_i, 
 !        and t_i + Δ t_i, and calls the DIIS routine to save & get 
 !        the amplitudes for the next iteration.
-!
-         implicit none 
 !
          class(ccs) :: wf 
 !
@@ -321,7 +313,7 @@ module ccs_class
 !
 !        with the constraint that g(w_k) = sum_k w_k - 1 = 0.
 !
-         class(ccs), intent(in) :: wf 
+         class(ccs), intent(in)   :: wf 
 !
          integer(i15), intent(in) :: n_variables 
 !

@@ -69,7 +69,7 @@ contains
       real(dp) :: omega_start = zero
       real(dp) :: omega_end = zero
 !
-      call cpu_time(omega_start)
+    !  call cpu_time(omega_start)
 !
 !     Set the omega vector to zero 
 !
@@ -78,55 +78,22 @@ contains
 !
 !     Construct singles contributions 
 !
-!      call wf%omega_a1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
- !     call wf%omega_b1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-!      call wf%omega_c1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
- !     call wf%omega_d1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
+      call wf%omega_a1
+      call wf%omega_b1
+      call wf%omega_c1
+      call wf%omega_d1
 !
 !     Construct doubles contributions 
 !
       call wf%omega_a2
+      call wf%omega_b2
+      call wf%omega_c2
+      call wf%omega_d2
+      call wf%omega_e2
 !
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-!      call wf%omega_b2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-!      call wf%omega_c2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
- !     call wf%omega_d2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-!      call wf%omega_e2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call cpu_time(omega_end)
-      write(unit_output,*)'Time in omega:', omega_end-omega_start    
+      ! call cpu_time(omega_end)
+      ! write(unit_output,*)'Time in omega:', omega_end-omega_start  
+      ! call flshfo(unit_output)  
 !
 !
    end subroutine construct_omega_ccsd
