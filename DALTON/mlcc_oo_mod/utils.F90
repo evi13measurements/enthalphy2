@@ -143,6 +143,40 @@ contains
 !
    end subroutine num_batch
 !
+   subroutine num_two_batch(required,available,max_batch_length,n_batch,batch_dimension)
+!  Purpose: Calculate number of batches when batching over two variables of same dimension.
+!
+!  required          =  required memory (words)
+!  available         =  available memory (words)
+!  max_batch_length  =  length of batch 
+!  n_batch           =  number of batches
+!  batch_dimension   =  original size of dimension that we batch over
+!
+!  Batching structure will be:
+!  With rest:     (n_batch-1)*(max_batch_length) + rest = required
+!  Without rest:  (n_batch)*(max_batch_length) = required
+!
+      implicit none
+!
+!     
+      integer(i15), intent(in)           :: required, available, batch_dimension
+      integer(i15)                       :: max_batch_length,n_batch,i
+!
+   if (required .lt. available) then
+         n_batch = 1
+         max_batch_length = batch_dimension
+         return
+   endif
+!  
+   do i = 1, batch_dimension
+      if (available .gt. required/i**2) then
+         n_batch = i
+         max_batch_length = batch_dimension/n_batch
+         return
+      endif
+   enddo
+!
+   end subroutine num_two_batch
 !
    subroutine batch_limits(first,last,batch_number,max_batch_length,batch_dimension)
 !
