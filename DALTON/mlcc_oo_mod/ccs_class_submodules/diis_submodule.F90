@@ -64,34 +64,20 @@ contains
       real(dp) :: prev_energy
       real(dp) :: ampeqs_norm
 !
-      real(dp) :: energy_threshold
-      real(dp) :: ampeqs_threshold
-!
       logical :: converged_energy = .false.
       logical :: converged_ampeqs = .false.
 !
-      logical :: converged = .false.
-!
-      integer(i15) :: max_iterations = 25
-!
-!     For now, ground state settings are hard-coded, but: eventually
-!     they will be part of the wavefunction object & adjustable by user
-!     input. Here they are:
-!
-      energy_threshold = 1.0D-6
-      ampeqs_threshold = 1.0D-6
-!
-      max_iterations = 25
+      logical :: converged = .false. ! True iff both the energy and the equations have converged 
 !
 !     Let the user know the ground state solver is running
 !
       write(unit_output,'(/T3,A)')  ':: Ground state solver (DIIS)'
       write(unit_output,'(T3,A/)')  ':: S. D. Folkestad, E. F. Kjønstad, May 2017'
       write(unit_output,'(T3,A,1X,A/)') &
-                                  'Requested the ground state for:', wf%name
+                                    'Requested the ground state for:', wf%name
 !
-      write(unit_output,'(T3,A)') 'Iter.    Norm of amplitude eq.'
-      write(unit_output,'(T3,A)') '------------------------------'    
+      write(unit_output,'(T3,A)')   'Iter.    Norm of amplitude eq.'
+      write(unit_output,'(T3,A)')   '------------------------------'    
 !
 !     Make sure the initial energy is up to date 
 !
@@ -112,13 +98,13 @@ contains
 !
       iteration = 1
 !
-      do while ((.not. converged) .and. (iteration .le. max_iterations))
+      do while ((.not. converged) .and. (iteration .le. wf%settings%ampeqs_max_iterations))
 !
 !        Save the previous energy 
 !
          prev_energy = wf%energy 
 !
-!        Calculate the new, updated energy 
+!        Update the energy 
 !
          call wf%calc_energy
 !
@@ -134,13 +120,12 @@ contains
 !
 !        Check for convergence of the energy and the amplitude equations
 !
-         converged_energy = abs(wf%energy-prev_energy) .lt. energy_threshold
-         converged_ampeqs = ampeqs_norm                .lt. ampeqs_threshold
+         converged_energy = abs(wf%energy-prev_energy) .lt. wf%settings%energy_threshold
+         converged_ampeqs = ampeqs_norm                .lt. wf%settings%ampeqs_threshold
 !
 !        Print information to output 
 !
          write(unit_output,'(T3,I2,7X,E10.4)') iteration, ampeqs_norm 
-         call flshfo(unit_output) 
 !
 !        Perform DIIS update if convergence hasn't been reached
 !
@@ -148,7 +133,7 @@ contains
 !
             converged = .true.
 !
-            write(unit_output,'(/T3,A,I2,A/)') 'Converged in ',iteration,' iterations!'
+            write(unit_output,'(/T3,A,I2,A/)') 'Converged in ', iteration, ' iterations!'
             write(unit_output,'(T3,A,F14.8/)') 'Total energy:', wf%energy
 !
          else
@@ -422,8 +407,8 @@ contains
 !
 !     Solve the DIIS equation 
 !
-!        Note: on exit, the solution is in the diis_vector,
-!        provided info = 0 (see LAPACK documentation for more)
+!     Note: on exit, the solution is in the diis_vector,
+!     provided info = 0 (see LAPACK documentation for more)
 !
       call dgesv(current_index+1,  &
                   1,               &
@@ -456,8 +441,8 @@ contains
 !     Deallocations 
 !
       call deallocator(dt_i, n_variables, 1)
-      call deallocator(diis_vector, current_index+1, 1)
-      call deallocator(diis_matrix, current_index+1, current_index+1)
+      call deallocator(diis_vector, current_index + 1, 1)
+      call deallocator(diis_matrix, current_index + 1, current_index+1)
 !
    end subroutine diis_ccs 
 !

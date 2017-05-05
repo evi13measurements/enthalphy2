@@ -20,6 +20,10 @@ module ccs_class
    use workspace
    use input_output
 !
+!  The preferences class 
+!
+   use preferences_class
+!
 !  The ancestor class module (HF)
 !
    use hf_class
@@ -49,6 +53,10 @@ module ccs_class
       real(dp), dimension(:,:), allocatable :: fock_ia ! occ-vir block
       real(dp), dimension(:,:), allocatable :: fock_ai ! vir-occ block
       real(dp), dimension(:,:), allocatable :: fock_ab ! vir-vir block
+!
+!     Preferences (convergence thresholds and other settings)
+!
+      type(preferences) :: settings 
 !
    contains 
 !

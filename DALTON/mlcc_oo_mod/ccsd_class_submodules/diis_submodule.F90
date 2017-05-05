@@ -7,7 +7,7 @@ submodule (ccsd_class) diis
 !
 !     Consists of the following subroutines of the CCSD module:
 ! 
-!     new_amplitudes:         	  calculates the quasi-Newton estimate and passes the 
+!     new_amplitudes:             Calculates the quasi-Newton estimate and passes the 
 !                                 information needed by the DIIS routine.
 !     calc_ampeqs_norm:           Calculates the norm of the amplitude equations.
 !     calc_quasi_Newton_doubles:  Calculates the doubles part of the quasi-Newton estimate.
@@ -85,7 +85,7 @@ contains
 !
       call dcopy(n_variables, dt, 1, t_dt, 1) ! t_dt = Δ t_i 
 !
-      call daxpy(wf%n_t1am, one, wf%t1am, 1, t_dt, 1)           ! t_dt = t_i + Δ t_i singles 
+      call daxpy(wf%n_t1am, one, wf%t1am, 1, t_dt, 1)                   ! t_dt = t_i + Δ t_i singles 
       call daxpy(wf%n_t2am, one, wf%t2am, 1, t_dt(wf%n_t1am + 1, 1), 1) ! t_dt = t_i + Δ t_i doubles     
 !
 !     Save estimates to file and get the next amplitudes
@@ -108,7 +108,7 @@ contains
 !
    module subroutine calc_quasi_Newton_doubles_ccsd(wf,dt,n_variables)
 !
-!     Calculate quasi-Newton estimate (CCSD)
+!     Calculate quasi-Newtoni doubles estimate (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
 !
 !     Calculates the quasi-Newton estimate Δ t_i (doubbles part)
