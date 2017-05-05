@@ -42,6 +42,15 @@ module cc2_class
 !      
    end type cc2
 !
+!  ::::::::::::::::::::::::::::::::::::::::::::::::::::
+!  -::- Interface to the submodule routines of CCS -::- 
+!  ::::::::::::::::::::::::::::::::::::::::::::::::::::
+!
+   interface
+   !
+   !
+   end interface
+!
 contains
 !
 !
@@ -104,23 +113,6 @@ contains
 !  :::::::::::::::::::::::::::::::::::::::::
 !  -::- Class subroutines and functions -::- 
 !  :::::::::::::::::::::::::::::::::::::::::
-!
-   subroutine initialize_omega_cc2(wf)
-!
-!     Initialize Omega (CCSD)
-!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
-!
-!     Allocates the projection vector omega1 and sets it
-!     to zero.
-!
-      implicit none
-!
-      class(cc2) :: wf
-!
-      call allocator(wf%omega1, wf%n_v, wf%n_o)
-      wf%omega1 = zero
-!
-   end subroutine initialize_omega_cc2
 !
 !
 end module cc2_class
