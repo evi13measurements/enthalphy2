@@ -1,12 +1,36 @@
 Programmering:
   ☐ Fjerdedelsfaktoren i A2-leddet
   ☐ Input-struktur og lesing av input-fil.
-  ☐ Implemented/tasks
-  ☐ DIIS-løser
-  ☐ CCS
+  ☐ Klasser for implementert og oppgave(fra input)
+  ✔ DIIS-løser @done (17-05-05 13:31)
   ☐ CC2
   ☐ Jacobi
+  ☐ Jacobi venstre
+  ☐ Testing av batching i grunntilstand
+  ☐ CC3 grunntilstand
+  ☐ Løser for eksiterte tilstander 
+  ☐ MLCCSD
 
  Omstrukturering:
    ☐ cmake
    ☐ Git-repo
+   ☐ Navn
+
+
+----------------------------------------------------
+Mandag 08.05 :
+Input-struktur
+Klasser for implementert/beregning/settings
+
+Mai:
+CCSD, CC2 (GS)
+Jacobi CCSD
+Jacobi venstre CCSD
+
+Juni:
+Solver for multiplier ligningen + eta
+Solver eksiterte tilstander
+
+Juli:
+MLCCSD
+SCCSD
