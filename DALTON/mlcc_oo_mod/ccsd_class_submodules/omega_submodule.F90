@@ -78,55 +78,24 @@ contains
 !
 !     Construct singles contributions 
 !
-      call wf%omega_a1
+!       call wf%omega_a1
+!       call wf%omega_b1
+!       call wf%omega_c1
+!       call wf%omega_d1
+! !
+! !     Construct doubles contributions 
+! !
+       call wf%omega_a2
+!       call wf%omega_b2
+!       call wf%omega_c2
+!       call wf%omega_d2
+!       call wf%omega_e2  
 !
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_b1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_c1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_d1
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-!     Construct doubles contributions 
-!
-      call wf%omega_a2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_b2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_c2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_d2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
-!
-      call wf%omega_e2
-!
-      wf%omega1 = zero
-      wf%omega2 = zero
+    !  call vec_print(wf%omega2, wf%n_t2am, 1)
 !
       call cpu_time(omega_end)
-      write(unit_output,*)'Time in omega:', omega_end-omega_start    
+      write(unit_output,*)'Time in omega:', omega_end-omega_start
+      call flshfo(unit_output)
 !
    end subroutine construct_omega_ccsd
 !
@@ -762,9 +731,9 @@ contains
 !
 !     Initialize some variables for batching
 !
-      a_start  =0
-      a_end    =0
-      a_length =0
+      a_start  = 0
+      a_end    = 0
+      a_length = 0
 !
 !     Start looping over a-batches
 !

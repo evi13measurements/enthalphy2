@@ -26,6 +26,10 @@ module hf_class
 !   
    type :: hartree_fock
 !
+!     Model name 
+!
+      character(len=7) :: name = 'HF     '
+!
 !     Orbital information attributes
 !
       integer(i15) :: n_o  ! Number of occupied orbitals

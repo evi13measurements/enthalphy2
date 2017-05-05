@@ -20,7 +20,7 @@ submodule (ccs_class) cholesky
 contains
 !
 !
-   subroutine get_cholesky_ij_ccs(wf, L_ij_J)
+   module subroutine get_cholesky_ij_ccs(wf, L_ij_J)
 !
 !     Get Cholesky IJ
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -122,7 +122,7 @@ contains
    end subroutine get_cholesky_ij_ccs
 !
 !
-   subroutine get_cholesky_ia_ccs(wf, L_ia_J)
+   module subroutine get_cholesky_ia_ccs(wf, L_ia_J)
 !
 !     Get Cholesky IA
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -142,7 +142,7 @@ contains
    end subroutine get_cholesky_ia_ccs
 !
 !
-   subroutine get_cholesky_ai_ccs(wf, L_ai_J)
+   module subroutine get_cholesky_ai_ccs(wf, L_ai_J)
 !
 !     Get Cholesky AI
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
@@ -501,7 +501,7 @@ contains
    end subroutine get_cholesky_ai_ccs
 !
 !
-   subroutine get_cholesky_ab_ccs(wf, L_ab_J, first, last, ab_dim, reorder)
+   module subroutine get_cholesky_ab_ccs(wf, L_ab_J, first, last, ab_dim, reorder)
 !
 !     Get Cholesky AB
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
