@@ -841,7 +841,7 @@ contains
                do d = 1, c
                   do a = 1, a_length
                      do b = 1, b_length
-                        if ((a+a_start) .ge. (b+b_start)) then
+                        if ((a+a_first) .ge. (b+b_first)) then
 !
 !                          Calculate compound indices
 !
