@@ -31,14 +31,13 @@ module cc2_class
 !
    type, extends(ccs) :: cc2
 !
-      real(dp), dimension(:,:), allocatable :: omega1
    contains 
 !
 !     Initialization and driver routines
 !
       procedure :: init => init_cc2
       procedure :: drv  => drv_cc2
-      procedure :: initialize_omega => initialize_omega_cc2
+  !    procedure :: initialize_omega => initialize_omega_cc2
 !      
    end type cc2
 !
