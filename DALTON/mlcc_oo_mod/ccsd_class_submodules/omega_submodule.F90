@@ -128,6 +128,7 @@ contains
       call cpu_time(omega_end)
       write(unit_output,*)'Time in omega:', omega_end-omega_start    
 !
+!
    end subroutine construct_omega_ccsd
 !
 !
