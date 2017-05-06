@@ -2,14 +2,14 @@ submodule (ccs_class) fock
 !
 !
 !                       -::- Fock submodule (CCS) -::-
-!           Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
+!            Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
 !
 !
-!     Contains the following family of procedures of the CCS class:
-!		
-!		initialize_fock_matrix_cc_singles(wf):		   Allocates and sets Fock matrix to 0        
-!		construct_fock_cc_singles(wf):			      Constructs T1_transformed mo Fock matrix 
-! 		one_electron_t1_cc_singles(wf, h1 ,h1_T1):	T1-transformation of one-electron mo integrals
+!  Contains the following family of procedures of the CCS class:
+!  
+!  initialize_fock_matrix_ccs(wf):		Allocates and sets Fock matrix to 0        
+!  construct_fock_ccs(wf):			      Constructs T1_transformed mo Fock matrix 
+!  one_electron_t1_ccs(wf, h1 ,h1_T1):	T1-transformation of one-electron mo integrals
 !
    implicit none 
 !

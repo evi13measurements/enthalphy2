@@ -28,6 +28,7 @@ module ccs_class
 !
    use hf_class
 !
+!
    implicit none 
 !
 !

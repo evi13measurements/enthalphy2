@@ -64,6 +64,8 @@ contains
       real(dp) :: prev_energy
       real(dp) :: ampeqs_norm
 !
+      real(dp) :: last_time, first_time
+!
       logical :: converged_energy = .false.
       logical :: converged_ampeqs = .false.
 !
@@ -97,6 +99,8 @@ contains
 !     Enter iterative loop
 !
       iteration = 1
+!
+      call cpu_time(first_time)
 !
       do while ((.not. converged) .and. (iteration .le. wf%settings%ampeqs_max_iterations))
 !
@@ -152,6 +156,10 @@ contains
       close(unit_dt)
       close(unit_t_dt)
       close(unit_diis_matrix)
+!
+      call cpu_time(last_time)
+!
+      write(unit_output,*) 'Total time:',last_time-first_time
 !
    end subroutine ground_state_solver_ccs
 !

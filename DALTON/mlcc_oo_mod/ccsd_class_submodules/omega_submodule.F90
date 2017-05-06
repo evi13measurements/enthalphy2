@@ -30,6 +30,9 @@ submodule (ccsd_class) omega
 !
    logical :: debug = .false.
 !
+   real(dp) :: begin_timer
+   real(dp) :: end_timer 
+!
 !
 contains
 !
@@ -39,18 +42,17 @@ contains
 !     Initialize Omega (CCSD)
 !     Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
 !
-!     Allocates the projection vector (omega1, omega2) and sets it
-!     to zero.
+!     Allocates the projection vector (omega) and sets it to zero.
 !
       implicit none 
 !
       class(ccsd) :: wf
 !
       call allocator(wf%omega1, wf%n_v, wf%n_o)
-      wf%omega1 = zero
+      call dzero(wf%omega1, (wf%n_v)*(wf%n_o))
 !
       call allocator(wf%omega2, wf%n_t2am, 1)
-      wf%omega2 = zero
+      call dzero(wf%omega2, wf%n_t2am)
 !
    end subroutine initialize_omega_ccsd
 !
@@ -60,7 +62,7 @@ contains
 !     Construct Omega (CCSD)
 !     Written by Eirik F. Kjønstad and Sarai Folkestad, Apr 2017
 !
-!     Directs the calculation of the omega vector
+!     Directs the calculation of the omega vector.
 !
       implicit none 
 !
@@ -69,7 +71,7 @@ contains
       real(dp) :: omega_start = zero
       real(dp) :: omega_end = zero
 !
-    !  call cpu_time(omega_start)
+      call cpu_time(omega_start)
 !
 !     Set the omega vector to zero 
 !
@@ -91,9 +93,9 @@ contains
       call wf%omega_d2
       call wf%omega_e2
 !
-      ! call cpu_time(omega_end)
-      ! write(unit_output,*)'Time in omega:', omega_end-omega_start  
-      ! call flshfo(unit_output)  
+       call cpu_time(omega_end)
+       write(unit_output,*)'Time in omega:', omega_end-omega_start  
+       call flshfo(unit_output)  
 !
 !
    end subroutine construct_omega_ccsd
@@ -109,7 +111,7 @@ contains
 !        sum_ckd g_adkc * u_ki^cd,
 !
 !     and adds it to the singles projection vector (omeg1) of
-!     the wavefunction object wfn
+!     the wavefunction object wf.
 !
       implicit none
 !
@@ -137,7 +139,7 @@ contains
 !     Allocate Cholesky vector L_kc_J
 !
       call allocator(L_kc_J, (wf%n_o)*(wf%n_v), wf%n_J)
-      L_kc_J = zero
+      call dzero(L_kc_J, (wf%n_o)*(wf%n_v)*(wf%n_J))
 !
 !     Get Cholesky vector L_kc_J
 !
@@ -146,7 +148,7 @@ contains
 !     Allocate u_ckd_i = u_ki^cd
 !
       call allocator(u_ckd_i, (wf%n_o)*(wf%n_v)**2, wf%n_o)
-      u_ckd_i = zero
+      call dzero(u_ckd_i, ((wf%n_o)**2)*((wf%n_v)**2))
 !
 !     Calculate u_ckd_i
 !
@@ -204,17 +206,16 @@ contains
          ad_dim = batch_length*(wf%n_v) ! Dimension of ad for the batch over index a 
 !
          call allocator(L_da_J, ad_dim, wf%n_J)
-         L_da_J = zero
+         call dzero(L_da_J, ad_dim*(wf%n_J))
 !
 !        Get reordered Cholesky vector L_da_J = L_ad^J 
 !
          reorder = .true.
          call wf%get_cholesky_ab(L_da_J,a_begin,a_end,ad_dim,reorder)
 !
-!        Allocate g_da_kc = g_adkc and set to zero
+!        Allocate g_da_kc = g_adkc
 !
          call allocator(g_da_kc, ad_dim, (wf%n_o)*(wf%n_v))
-         g_da_kc = zero 
 !
 !        Calculate g_da_kc = sum_J L_da_J L_kc_J^T = sum_J L_ad^J L_kc^J = g_adkc 
 !     
@@ -238,7 +239,7 @@ contains
 !        Allocate g_a_ckd = g_adkc and set to zero
 !
          call allocator(g_a_ckd, batch_length, (wf%n_o)*(wf%n_v)**2)
-         g_a_ckd = zero
+         call dzero(g_a_ckd, batch_length*(wf%n_o)*(wf%n_v)**2)
 !
 !        Reorder the integrals to g_a_ckd
 !
@@ -336,8 +337,8 @@ contains
       call allocator(L_ki_J, (wf%n_o)**2, wf%n_J)
       call allocator(L_lc_J, (wf%n_o)*(wf%n_v), wf%n_J)
 !
-      L_ki_J = zero
-      L_lc_J = zero
+      call dzero(L_ki_J, (wf%n_J)*(wf%n_o)**2)
+      call dzero(L_lc_J, (wf%n_o)*(wf%n_v)*(wf%n_J))
 !
 !     Read the Cholesky vectors L_ki_J and L_lc_J
 !
@@ -347,7 +348,6 @@ contains
 !     Allocate integrals g_ki_lc = g_kilc
 !
       call allocator(g_ki_lc, (wf%n_o)**2, (wf%n_o)*(wf%n_v))
-      g_ki_lc = zero
 !
 !     Calculate g_ki_lc = sum_J L_ki_J L_lc_J^T 
 ! 
@@ -372,7 +372,7 @@ contains
 !     Allocate reordered integrals g_ckl_i = g_kilc 
 !
       call allocator(g_ckl_i, (wf%n_v)*((wf%n_o)**2), wf%n_o)
-      g_ckl_i = zero
+      call dzero(g_ckl_i, (wf%n_v)*((wf%n_o)**3))
 !
 !     Determine g_ckl_i = g_kilc 
 !
@@ -404,7 +404,7 @@ contains
 !     Allocate redordered u_a_ckl = u_kl^ac and set it to zero
 !
       call allocator(u_a_ckl, wf%n_v, (wf%n_v)*(wf%n_o)**2)
-      u_a_ckl = zero
+      call dzero(u_a_ckl, ((wf%n_v)**2)*(wf%n_o)**2)
 !
 !     Determine u_a_ckl = u_kl^ac
 !
@@ -505,9 +505,8 @@ contains
       call allocator(u_ai_ck, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))  
       call allocator(omega1_ai, (wf%n_o)*(wf%n_v), 1)
 !
-      F_ck      = zero
-      u_ai_ck   = zero
-      omega1_ai = zero
+      call dzero(F_ck, (wf%n_o)*(wf%n_v))
+      call dzero(u_ai_ck, ((wf%n_o)**2)*(wf%n_v)**2)
 !
 !     Set up u_ck_ai and virtual-occupied Fock matrix
 !
@@ -608,8 +607,6 @@ contains
 !                is constructed and kept in memory full size. 
 !                g_ac_bd is reordered as g_ab_cd and t_ci_dj is reordered as t_cd_ij.
 !                Omega contribution for A2.2 is ordered as Omega_ab_ij, and is reordered into the packed omega2 vector.          
-!
-      use utils
 !
       implicit none
 !
@@ -744,7 +741,7 @@ contains
 !        Get cholesky vectors L_ac^J ordered as L_ca_J
 !
          call allocator(L_ca_J, (wf%n_v)*a_length, wf%n_J)
-         L_ca_J = zero
+         call dzero(L_ca_J, (wf%n_v)*a_length*(wf%n_J))
 !
          reorder = .true.
          call wf%get_cholesky_ab(L_ca_J, a_first, a_last, (wf%n_v)*a_length, reorder)
@@ -765,7 +762,7 @@ contains
 !           Get cholesky vectors L_bd^J ordered as L_db_J
 !
             call allocator(L_db_J, (wf%n_v)*b_length, wf%n_J)
-            L_db_J = zero
+            call dzero(L_db_J, (wf%n_v)*b_length*(wf%n_J))
 !  
             reorder = .true.
             call wf%get_cholesky_ab(L_db_J, b_first, b_last, (wf%n_v)*b_length, reorder)
@@ -773,7 +770,6 @@ contains
 !           Allocate g_ca_db
 !
             call allocator(g_ca_db, (wf%n_v)*a_length, (wf%n_v)*b_length)
-            g_ca_db = zero
 !
 !           g_ca_db = sum_J L_ca_J*L_db_J
 !     
@@ -800,10 +796,11 @@ contains
             call allocator(g_m_ab_cd, packed_size(a_length), packed_size(wf%n_v))
             call allocator(t_p_cd_ij, packed_size(wf%n_v), packed_size(wf%n_o))
             call allocator(t_m_cd_ij, packed_size(wf%n_v), packed_size(wf%n_o))
-            g_p_ab_cd = zero
-            g_m_ab_cd = zero
-            t_p_cd_ij = zero
-            t_m_cd_ij = zero
+!
+            call dzero(g_p_ab_cd, packed_size(a_length)*packed_size(wf%n_v))
+            call dzero(g_m_ab_cd, packed_size(a_length)*packed_size(wf%n_v))
+            call dzero(t_p_cd_ij, packed_size(wf%n_v)*packed_size(wf%n_o))
+            call dzero(t_m_cd_ij, packed_size(wf%n_v)*packed_size(wf%n_o))
 !
             do c = 1, wf%n_v 
                do d = 1, c
@@ -868,8 +865,8 @@ contains
 !
             call allocator(omega2_p_ab_ij, packed_size(a_length), packed_size(wf%n_o))
             call allocator(omega2_m_ab_ij, packed_size(a_length), packed_size(wf%n_o))
-            omega2_p_ab_ij = zero
-            omega2_m_ab_ij = zero
+         !   omega2_p_ab_ij = zero (not needed)
+          !  omega2_m_ab_ij = zero (not needed)
 !  
 !            omega2_ab_ij = sum_(cd) g_ab_cd*t_cd_ij
 !  
@@ -1017,8 +1014,7 @@ contains
 !
 !     Create g_ki_lj = sum_J L_li_J*L_lj_J
 !
-      call allocator(g_ki_lj, (wf%n_o)*(wf%n_o), (wf%n_o)*(wf%n_o))
-      g_ki_lj = zero 
+      call allocator(g_ki_lj, (wf%n_o)*(wf%n_o), (wf%n_o)*(wf%n_o)) 
 !
       call dgemm('N','T',            &
                   (wf%n_o)*(wf%n_o), &
@@ -1101,7 +1097,6 @@ contains
 !
 !                 Calculate compound indices
 !
-
                   cd = index_two(c, d, wf%n_v)
                   kl = index_two(k, l, wf%n_o)
                   kc = index_two(k, c, wf%n_o)
@@ -1127,18 +1122,18 @@ contains
 !
       call deallocator(g_kc_ld, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
-      call dgemm('N','N',            &
-                  (wf%n_o)*(wf%n_o), &
-                  (wf%n_o)*(wf%n_o), &
-                  (wf%n_v)*(wf%n_v), &
-                  one,               &
-                  g_kl_cd,           &
-                  (wf%n_o)**2,       &
-                  t_cd_ij,           &
-                  (wf%n_v)*(wf%n_v), &
-                  one,               &
-                  g_kl_ij,           &
-                  (wf%n_o)*(wf%n_o))
+      call dgemm('N','N',      &
+                  (wf%n_o)**2, &
+                  (wf%n_o)**2, &
+                  (wf%n_v)**2, &
+                  one,         &
+                  g_kl_cd,     &
+                  (wf%n_o)**2, &
+                  t_cd_ij,     &
+                  (wf%n_v)**2, &
+                  one,         &
+                  g_kl_ij,     &
+                  (wf%n_o)**2)
 !
 !     Deallocate t_cd_ij and g_kl_cd
 !
@@ -1147,7 +1142,7 @@ contains
 !
 !     Reorder t_ak_bl to t_ab_kl
 !
-      call allocator(t_ab_kl, (wf%n_v)*(wf%n_v), (wf%n_o)*(wf%n_o))
+      call allocator(t_ab_kl, (wf%n_v)**2, (wf%n_o)**2)
 !
       do a = 1, wf%n_v
          do b = 1, wf%n_v
@@ -1172,23 +1167,23 @@ contains
 !
 !     omega_ab_ij = sum_(kl) t_ab_kl*X_kl_ij
 !
-      call allocator(omega_ab_ij, (wf%n_v)*(wf%n_v), (wf%n_o)*(wf%n_o))
+      call allocator(omega_ab_ij, (wf%n_v)**2, (wf%n_o)**2)
 !
-      call dgemm('N','N',            &
-                  (wf%n_v)*(wf%n_v), &
-                  (wf%n_o)*(wf%n_o), &
-                  (wf%n_o)*(wf%n_o), &
-                  one,               &
-                  t_ab_kl,           &
-                  (wf%n_v)*(wf%n_v), &
-                  g_kl_ij,           &
-                  (wf%n_o)*(wf%n_o), &
-                  zero,              &
-                  omega_ab_ij,       &
-                  (wf%n_v)*(wf%n_v))
+      call dgemm('N','N',      &
+                  (wf%n_v)**2, &
+                  (wf%n_o)**2, &
+                  (wf%n_o)**2, &
+                  one,         &
+                  t_ab_kl,     &
+                  (wf%n_v)**2, &
+                  g_kl_ij,     &
+                  (wf%n_o)**2, &
+                  zero,        &
+                  omega_ab_ij, &
+                  (wf%n_v)**2)
 !
-      call deallocator(t_ab_kl, (wf%n_v)*(wf%n_v), (wf%n_o)*(wf%n_o))
-      call deallocator(g_kl_ij, (wf%n_o)*(wf%n_o), (wf%n_o)*(wf%n_o))
+      call deallocator(t_ab_kl, (wf%n_v)**2, (wf%n_o)**2)
+      call deallocator(g_kl_ij, (wf%n_o)**2, (wf%n_o)**2)
 !
 !     Reorder omega
 !
@@ -1245,23 +1240,23 @@ contains
 !
 !     Integrals
 !
-      real(dp),dimension(:,:),allocatable :: L_ia_J 
-      real(dp),dimension(:,:),allocatable :: L_ki_J 
-      real(dp),dimension(:,:),allocatable :: L_ca_J 
-      real(dp),dimension(:,:),allocatable :: g_kd_lc
-      real(dp),dimension(:,:),allocatable :: g_dl_ck
-      real(dp),dimension(:,:),allocatable :: g_ki_ca
-      real(dp),dimension(:,:),allocatable :: g_ai_ck
+      real(dp), dimension(:,:), allocatable :: L_ia_J 
+      real(dp), dimension(:,:), allocatable :: L_ki_J 
+      real(dp), dimension(:,:), allocatable :: L_ca_J 
+      real(dp), dimension(:,:), allocatable :: g_kd_lc
+      real(dp), dimension(:,:), allocatable :: g_dl_ck
+      real(dp), dimension(:,:), allocatable :: g_ki_ca
+      real(dp), dimension(:,:), allocatable :: g_ai_ck
 !
 !     Reordered T2 amplitudes
 !
-      real(dp),dimension(:,:),allocatable :: t_ai_dl
-      real(dp),dimension(:,:),allocatable :: t_ck_bj
+      real(dp), dimension(:,:), allocatable :: t_ai_dl
+      real(dp), dimension(:,:), allocatable :: t_ck_bj
 !
 !     Intermediates for matrix multiplication
 !
-      real(dp),dimension(:,:),allocatable :: X_ai_ck
-      real(dp),dimension(:,:),allocatable :: Y_ai_bj
+      real(dp), dimension(:,:), allocatable :: X_ai_ck
+      real(dp), dimension(:,:), allocatable :: Y_ai_bj
 !  
 !     Indices
 !     
@@ -1289,7 +1284,7 @@ contains
 !     Allocate L_ia_J
 !
       call allocator(L_ia_J,(wf%n_o)*(wf%n_v),(wf%n_J))
-      L_ia_J=zero
+     ! L_ia_J=zero
 !
 !     Get L_ia_J
 !
@@ -1298,7 +1293,6 @@ contains
 !     Create g_kd_lc = sum_J L_kd_J * L_lc_J
 !
       call allocator(g_kd_lc,(wf%n_o)*(wf%n_v),(wf%n_o)*(wf%n_v))
-      g_kd_lc = zero
 !
       call dgemm('N','T',            &
                   (wf%n_o)*(wf%n_v), &
@@ -1321,8 +1315,9 @@ contains
 !
       call allocator(g_dl_ck, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
       call allocator(t_ai_dl, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      g_dl_ck = zero
-      t_ai_dl = zero
+!
+      call dzero(g_dl_ck, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
+      call dzero(t_ai_dl, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
 !
       do c = 1, wf%n_v
          do d = 1, wf%n_v
@@ -1381,7 +1376,7 @@ contains
 !     Allocate g_ki_ca
 !
       call allocator(g_ki_ca, (wf%n_o)*(wf%n_o), (wf%n_v)*(wf%n_v))
-      g_ki_ca = zero
+      call dzero(g_ki_ca, (wf%n_o)*(wf%n_o)*(wf%n_v)*(wf%n_v))
 !
 !     Allocate L_ki_J
 !
@@ -1416,7 +1411,7 @@ contains
 !        Allocation for L_ac_J as L_ca_J (L_ca_J = L_acJ)
 !
          call allocator(L_ca_J,(wf%n_v)*a_length, wf%n_J)
-         L_ca_J=zero
+        ! L_ca_J=zero
 !
 !        Read Cholesky vectors
 !
@@ -1481,7 +1476,7 @@ contains
 !
       call deallocator(g_ai_ck, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
-!     reorder t_bkcj_1 as t_ck_bj
+!     Reorder t_bkcj_1 as t_ck_bj
 !
       call allocator(t_ck_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
@@ -1510,7 +1505,7 @@ contains
 !     Allocate intermediate Y_ai_bj
 !
       call allocator(Y_ai_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      Y_ai_bj = zero
+     ! Y_ai_bj = zero
 !
 !     Y_ai_bj = - sum_(ck) X_ai_ck*t_ck_bj
 !
@@ -1535,7 +1530,7 @@ contains
 !
       call deallocator(t_ck_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
 !
-!     Omega_aibj,1 =P_ai_bj( 1/2*Y_ai_bj + Y_aj_bi)
+!     Omega_aibj,1 = P_ai_bj ( 1/2*Y_ai_bj + Y_aj_bi )
 !
       do a = 1, wf%n_v
          do i = 1, wf%n_o
@@ -1595,12 +1590,9 @@ contains
 !        u_jk^bc = 2 * t_jk^bc - t_kj^bc,
 !        L_ldkc  = 2 * g_ldkc  - g_lckd.
 !
-!     The first term is referred to as the D2.1 term, and comes out ordered as (ai,bj) 
-!     The second term is referred to as the D2.2 term, and comes out ordered as (ai,bj)
-!     The third term is referred to as the D2.3 term, and comes out ordered as (ai,bj)
-!
-!     All terms are added to the omega vector element omega2(ai,bj) of the 
-!     wavefunction object wf
+!     The first, second, and third terms are referred to as D2.1, D2.2, and D2.3, 
+!     and comes out ordered as (ai,bj). All terms are added to the omega vector of the 
+!     wavefunction object wf.
 !
 !     The routine adds the terms in the following order: D2.3, D2.1, D2.2
 !
@@ -1619,7 +1611,7 @@ contains
       integer(i15) :: j = 0, c = 0, d = 0, di = 0, dl = 0, k = 0, kc = 0, kd = 0, l = 0, ki = 0
       integer(i15) :: lc = 0, ld = 0, aibj = 0, bj = 0, bjck = 0, bk = 0, bkcj = 0, cj = 0, ck = 0
 !
-      real(dp), dimension(:,:), allocatable :: omega2_ai_bj ! For storing the D2.3, D2.2 & D2.1 terms temporarily
+      real(dp), dimension(:,:), allocatable :: omega2_ai_bj ! For storing D2.3, D2.2 & D2.1
 !
 !     Vectors for D2.3 term 
 !
@@ -1650,7 +1642,7 @@ contains
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
       call allocator(L_kc_J, (wf%n_o)*(wf%n_v), wf%n_J)
-      L_kc_J = zero
+   !   L_kc_J = zero
 !
 !     Read the Cholesky vector L_kc_J from file
 !
@@ -1659,7 +1651,7 @@ contains
 !     Allocate g_ld_kc = g_ldkc and set to zero 
 !
       call allocator(g_ld_kc, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      g_ld_kc = zero 
+    !  g_ld_kc = zero 
 !
 !     Calculate g_ld_kc = g_ldkc = sum_J L_ld^J L_kc^J
 !
@@ -1679,7 +1671,7 @@ contains
 !     Allocate L_ld_kc = L_ldkc and set to zero    
 !
       call allocator(L_ld_kc, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      L_ld_kc = zero 
+      call dzero(L_ld_kc, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
 !
 !     Determine L_ld_kc = L_ldkc from g_ld_kc = g_ldkc 
 !
@@ -1713,7 +1705,7 @@ contains
 !     Allocate u_ai_ld = u_il^ad and set to zero 
 !
       call allocator(u_ai_ld, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      u_ai_ld = zero 
+      call dzero(u_ai_ld, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
 ! 
 !     Determine u_ai_ld = u_il^ad = 2 * t_il^ad - t_li^ad 
 !
@@ -1747,7 +1739,7 @@ contains
 !     Allocate the intermediate Z_ai_kc = sum_dl u_ai_ld L_ld_kc and set it to zero
 !
       call allocator(Z_ai_kc, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      Z_ai_kc = zero
+    !  Z_ai_kc = zero
 !
 !     Form the intermediate Z_ai_kc = sum_dl u_ai_ld L_ld_kc
 !
@@ -1771,7 +1763,7 @@ contains
 !     Allocate the D2.3 term omega2_ai_bj and set it to zero
 !
       call allocator(omega2_ai_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      omega2_ai_bj = zero
+    !  omega2_ai_bj = zero
 !
 !     Form the D2.3 term, 1/4 sum_kc Z_ai_kc u_kc_bj = 1/4 sum_kc Z_ai_kc(ai,kc) u_ai_ld(bj,kc)
 !
@@ -1851,8 +1843,8 @@ contains
       call allocator(L_ai_J, (wf%n_o)*(wf%n_v), wf%n_J)
       call allocator(L_kc_J, (wf%n_o)*(wf%n_v), wf%n_J)
 !
-      L_ai_J = zero
-      L_kc_J = zero
+   !   L_ai_J = zero
+   !   L_kc_J = zero
 !
 !     Read the Cholesky vectors from file 
 !
@@ -1862,7 +1854,7 @@ contains
 !     Allocate g_ai_kc = g_aikc and set it zero
 !
       call allocator(g_ai_kc, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      g_ai_kc = zero 
+    !  g_ai_kc = zero 
 !
 !     Form the g_ai_kc integrals from L_ai_J and L_kc_J
 !  
@@ -1887,7 +1879,7 @@ contains
 !     Allocate u_kc_bj and set it to zero 
 !
       call allocator(u_kc_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      u_kc_bj = zero
+      call dzero(u_kc_bj, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
 !
 !     Determine u_kc_bj = u_jk^bc = 2 * t_jk^bc - t_kj^bc 
 !
@@ -1921,7 +1913,7 @@ contains
 !     Allocate omega2_ai_bj and set it to zero 
 !
       call allocator(omega2_ai_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      omega2_ai_bj = zero 
+    !  omega2_ai_bj = zero 
 !
 !     Calculate the D2.1 term sum_ck u_jk^bc g_aikc = sum_ck g_ai_kc u_kc_bj
 !
@@ -1990,7 +1982,7 @@ contains
 !     Allocate L_ki_J and set it to zero
 !
       call allocator(L_ki_J, (wf%n_o)**2, wf%n_J)
-      L_ki_J = zero 
+   !   L_ki_J = zero 
 !
 !     Read the Cholesky vector L_ki_J from file 
 !
@@ -1999,7 +1991,7 @@ contains
 !     Allocate the full g_ai_ck = g_acki and set it to zero 
 !
       call allocator(g_ai_ck, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      g_ai_ck = zero 
+      call dzero(g_ai_ck, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
 !
 !     Prepare for batching over the index a to calculate g_ai_ck = g_acki
 !
@@ -2029,7 +2021,7 @@ contains
          ac_dim = batch_length*(wf%n_v) ! Dimension of ac for the batch over index a 
 !
          call allocator(L_ca_J, ac_dim, wf%n_J)
-         L_ca_J = zero
+      !   L_ca_J = zero
 !
 !        Read the Cholesky vector from file 
 !
@@ -2039,7 +2031,7 @@ contains
 !        Allocate the integral g_ca_ki = g_acki and set to zero 
 !
          call allocator(g_ca_ki, ac_dim, (wf%n_o)**2)
-         g_ca_ki = zero
+         ! g_ca_ki = zero ! Not needed
 !
 !        Calculate g_ca_ki = g_acki from L_ca_J = L_ac^J and L_ki_J = L_ki^J
 !
@@ -2052,7 +2044,7 @@ contains
                      ac_dim,      &
                      L_ki_J,      &
                      (wf%n_o)**2, &
-                     one,         &
+                     zero,        & ! E: Changed from one to zero
                      g_ca_ki,     &
                      ac_dim)
 !
@@ -2092,7 +2084,7 @@ contains
 !     Allocate the u_ck_bj = u_jk^bc vector and set it to zero 
 !
       call allocator(u_ck_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      u_ck_bj = zero 
+      call dzero(u_ck_bj, (wf%n_o)*(wf%n_v)*(wf%n_o)*(wf%n_v))
 !
 !     Determine u_ck_bj = u_jk^bc = 2 * t_jk^bc - t_kj^bc 
 !
@@ -2125,7 +2117,7 @@ contains
 !     Allocate the D2.2 term and set it to zero 
 !
       call allocator(omega2_ai_bj, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      omega2_ai_bj = zero
+ !     omega2_ai_bj = zero
 !
 !     Calculate the D2.2 term, - 1/2 * sum_ck u_jk^bc g_acki = -1/2 * sum_ck g_ai_ck u_ck_bj
 !
@@ -2247,7 +2239,7 @@ contains
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set to zero 
 !
       call allocator(L_kc_J, (wf%n_o)*(wf%n_v), wf%n_J)
-      L_kc_J = zero
+   !   L_kc_J = zero
 !
 !     Read the Cholesky vector from file 
 !
@@ -2256,7 +2248,7 @@ contains
 !     Allocate g_ld_kc = g_ldkc and set to zero 
 !
       call allocator(g_ld_kc, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      g_ld_kc = zero
+    !  g_ld_kc = zero
 !
 !     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
 !
@@ -2280,12 +2272,12 @@ contains
 !     Allocate u_b_kdl = u_kl^bd and set to zero
 !
       call allocator(u_b_kdl, wf%n_v, (wf%n_v)*((wf%n_o)**2))
-      u_b_kdl = zero
+      call dzero(u_b_kdl, (wf%n_v)*(wf%n_v)*((wf%n_o)**2))
 !
 !     Allocate g_kdl_c = g_ldkc and set to zero 
 !
       call allocator(g_kdl_c, (wf%n_v)*((wf%n_o)**2), wf%n_v)
-      g_kdl_c = zero
+      call dzero(g_kdl_c, (wf%n_v)*((wf%n_o)**2)*(wf%n_v))
 !
 !     Determine u_b_kdl = u_kl^bd and g_kdl_c = g_ldkc
 !
@@ -2331,7 +2323,7 @@ contains
 !     Allocate the intermediate X_b_c = F_bc - sum_dkl g_ldkc u_kl^bd and set to zero
 !
       call allocator(X_b_c, wf%n_v, wf%n_v)
-      X_b_c = zero 
+  !    X_b_c = zero 
 !
 !     Copy the virtual-virtual Fock matrix into the intermediate 
 !
@@ -2361,7 +2353,7 @@ contains
 !     Allocate t_c_jai = t_ij^ac and set to zero
 !
       call allocator(t_c_jai, wf%n_v, (wf%n_v)*(wf%n_o)**2)
-      t_c_jai = zero 
+      call dzero(t_c_jai, (wf%n_v)*(wf%n_v)*(wf%n_o)**2)
 !
 !     Determine t_c_jai = t_ij^ac 
 !
@@ -2391,7 +2383,7 @@ contains
 !     Allocate the E2.1 term and set it to zero
 !
       call allocator(omega2_b_jai, wf%n_v, (wf%n_v)*(wf%n_o)**2)
-      omega2_b_jai = zero 
+    ! omega2_b_jai = zero 
 !
 !     Calculate the E2.1 term 
 !
@@ -2461,7 +2453,7 @@ contains
 !     Allocate the Cholesky vector L_kc_J = L_kc^J and set it to zero 
 !
       call allocator(L_kc_J, (wf%n_o)*(wf%n_v), wf%n_J)
-      L_kc_J = zero
+    !  L_kc_J = zero
 !
 !     Read the Cholesky vector from file 
 !
@@ -2470,7 +2462,7 @@ contains
 !     Allocate g_ld_kc = g_ldkc and set to zero 
 !
       call allocator(g_ld_kc, (wf%n_o)*(wf%n_v), (wf%n_o)*(wf%n_v))
-      g_ld_kc = zero
+    !  g_ld_kc = zero
 !
 !     Calculate g_ld_kc = sum_J L_ld^J L_kc^J 
 !
@@ -2494,12 +2486,12 @@ contains
 !     Allocate g_k_dlc = g_ldkc and set to zero 
 !
       call allocator(g_k_dlc, wf%n_o, (wf%n_o)*(wf%n_v)**2)
-      g_k_dlc = zero 
+      call dzero(g_k_dlc, (wf%n_o)*(wf%n_o)*(wf%n_v)**2)
 !
 !     Allocate u_dlc_j = u_lj^dc and set to zero
 !
       call allocator(u_dlc_j, (wf%n_o)*(wf%n_v)**2, wf%n_o)
-      u_dlc_j = zero 
+      call dzero(u_dlc_j, (wf%n_o)*(wf%n_o)*(wf%n_v)**2)
 !
 !     Determine g_k_dlc = g_ldkc and u_dlc_j = u_lj^dc 
 !
@@ -2543,7 +2535,7 @@ contains
 !                                     = F_k_j + sum_cdl g_k_dlc * u_dlc_j, and set it to zero
 !
       call allocator(Y_k_j, wf%n_o, wf%n_o)
-      Y_k_j = zero 
+    !  Y_k_j = zero 
 !
 !     Copy the occupied-occupied Fock matrix, such that Y_k_j = F_kj 
 !
@@ -2573,7 +2565,7 @@ contains
 !     Allocate t_aib_k = t_ik^ab and set it to zero 
 !
       call allocator(t_aib_k, (wf%n_o)*(wf%n_v)**2, wf%n_o)
-      t_aib_k = zero
+      call dzero(t_aib_k, (wf%n_o)*(wf%n_o)*(wf%n_v)**2)
 !
 !     Determine t_aib_k = t_ik^ab 
 !
@@ -2603,7 +2595,7 @@ contains
 !     Allocate the E2.2 term and set to zero 
 !
       call allocator(omega2_aib_j, (wf%n_o)*(wf%n_v)**2, wf%n_o)
-      omega2_aib_j = zero
+   !   omega2_aib_j = zero
 !
 !     Calculate the E2.2 term, 
 !     - sum_k t_aib_k Y_k_j = - sum_k t_ik^ab (F_kj + sum_cdl g_ldkc u_lj^dc)

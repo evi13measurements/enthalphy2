@@ -48,8 +48,8 @@ contains
       call allocator(L_ia_J, (wf%n_o)*(wf%n_v), wf%n_J)
       call allocator(L_iJ_a, (wf%n_o)*(wf%n_J), wf%n_v)
 !
-      L_ia_J = zero
-      L_iJ_a = zero
+    !  L_ia_J = zero E: needed?
+    !  L_iJ_a = zero E: needed?
 !
 !     Read the untransformed Cholesky vectors 
 !
@@ -80,7 +80,7 @@ contains
 !     Allocate L_iJ_k
 !
       call allocator(L_iJ_k, (wf%n_o)*(wf%n_J), wf%n_o)
-      L_iJ_k = zero
+    !  L_iJ_k = zero
 !
 !     T1-transformation
 !
@@ -197,7 +197,7 @@ contains
 !     Allocate L_Ja_i
 !
       call allocator(L_Ja_i, (wf%n_J)*(wf%n_v), wf%n_o)
-      L_Ja_i = zero
+      call dzero(L_Ja_i, (wf%n_J)*(wf%n_v)*(wf%n_o))
 !
 !     Set batching variables 
 !
@@ -228,8 +228,8 @@ contains
          call allocator(L_ba_J, (wf%n_v)*batch_length, wf%n_J) ! L_ab^J = L_ba_J(ba,J)
          call allocator(L_Ja_b, batch_length*(wf%n_J), wf%n_v)
 !
-         L_ba_J = zero
-         L_Ja_b = zero 
+       !  L_ba_J = zero
+        ! L_Ja_b = zero  ! E: needed?
 !
 !        Read Cholesky AB vectors, batching over a
 ! 
@@ -309,10 +309,10 @@ contains
 !
       call allocator(L_ik_J, (wf%n_o)**2, wf%n_J)
 !
-      L_a_iJ = zero   
-      L_k_iJ = zero
+   !   L_a_iJ = zero   (dgem, not needed)
+     ! L_k_iJ = zero E: needed?
 !
-      L_ik_J = zero 
+    !  L_ik_J = zero  E: needed?
 !  
 !     Read Cholesky IJ vectors
 !
@@ -409,7 +409,7 @@ contains
 !     Allocate L_kJ_i 
 !
       call allocator(L_kJ_i, (wf%n_o)*(wf%n_J), wf%n_o)
-      L_kJ_i = zero
+     ! L_kJ_i = zero
 !
 !     Calculate sum_b L_kJ_b*t_b_i = L_kJ_i
 !
@@ -433,7 +433,7 @@ contains
 !     Allocate L_k_iJ
 !  
       call allocator(L_k_iJ, (wf%n_o), (wf%n_o)*(wf%n_J))
-      L_k_iJ = zero
+     ! L_k_iJ = zero
 !
 !     Reorder L_kJ_i to L_k_iJ    
 !
@@ -459,7 +459,7 @@ contains
 !     Allocate L_a_iJ
 !
       call allocator(L_a_iJ, wf%n_v, (wf%n_o)*(wf%n_J))
-      L_a_iJ = zero
+    !  L_a_iJ = zero
 !      
 !     Calculate sum_k t_a_k*L_k_iJ = L_a_iJ
 !
@@ -550,7 +550,7 @@ contains
 !        Allocate L_ib_J
 !     
          call allocator(L_ib_J, (wf%n_o)*(wf%n_v), wf%n_J)
-         L_ib_J = zero
+        ! L_ib_J = zero
 !
 !        Read L_ia_J
 !  
@@ -564,7 +564,7 @@ contains
 !        Allocate L_i,Jb
 !
          call allocator(L_i_Jb, wf%n_o, (wf%n_J)*(wf%n_v))
-         L_i_Jb = zero
+        ! L_i_Jb = zero
 !
 !        Reorder L_ib_J to L_i_Jb
 !
@@ -633,7 +633,7 @@ contains
 !        Allocate L_ib_J
 !     
          call allocator(L_ib_J, (wf%n_o)*(wf%n_v), wf%n_J)
-         L_ib_J = zero
+        ! L_ib_J = zero
 !
 !        Read L_ia_J
 !
@@ -649,7 +649,7 @@ contains
 !        Allocate L_Jb,i for batch of b
 !
          call allocator(L_Jb_i, (wf%n_J)*batch_length, wf%n_o)
-         L_Jb_i = zero
+        ! L_Jb_i = zero
 !
 !        Reorder L_ib_J to L_Jb_i
 !
