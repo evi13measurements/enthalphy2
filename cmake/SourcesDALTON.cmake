@@ -537,6 +537,7 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_oo_mod/preferences_class.F90
     DALTON/mlcc_oo_mod/ccsd_class_submodules/omega_submodule.F90
     DALTON/mlcc_oo_mod/ccsd_class_submodules/diis_submodule.F90
+    DALTON/mlcc_oo_mod/ccsd_class_submodules/jacobian_submodule.F90
     DALTON/mlcc_oo_mod/mlcc_oo_driver.F90
     DALTON/mlcc_oo_mod/input_output.F90
     DALTON/mlcc_oo_mod/utils.F90

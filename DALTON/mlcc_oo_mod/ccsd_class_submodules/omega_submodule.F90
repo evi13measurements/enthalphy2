@@ -75,8 +75,8 @@ contains
 !
 !     Set the omega vector to zero 
 !
-      wf%omega1 = zero
-      wf%omega2 = zero
+      call dzero(wf%omega1, wf%n_t1am)
+      call dzero(wf%omega2, wf%n_t2am)
 !
 !     Construct singles contributions 
 !
@@ -179,8 +179,8 @@ contains
       enddo
 !
 !     Calculate the batching parameters over a = 1,2,...,n_vir,
-!     for which we need to have enough room to store L_ad_J and g_ad_kc, and, later on in the same loop, 
-!     g_ad_kc and g_a_ckd simultaneously
+!     for which we need to have enough room to store L_ad_J and g_ad_kc, and, 
+!     later on in the same loop, g_ad_kc and g_a_ckd simultaneously
 !
       available = get_available()
       required  = max(((wf%n_v)**2)*(wf%n_J) + (wf%n_v**2)*(wf%n_o)*(wf%n_v), &

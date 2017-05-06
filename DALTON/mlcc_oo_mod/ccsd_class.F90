@@ -86,6 +86,10 @@ module ccsd_class
       procedure :: new_amplitudes            => new_amplitudes_ccsd
       procedure :: calc_quasi_Newton_doubles => calc_quasi_Newton_doubles_ccsd
 !
+!     Jacobian transformation routines 
+!
+      procedure :: jacobian_transformation => jacobian_transformation_ccsd
+!
    end type ccsd
 !
 !
@@ -280,6 +284,26 @@ module ccsd_class
          real(dp), dimension(n_variables, 1) :: dt
 !
       end subroutine calc_quasi_Newton_doubles_ccsd
+!
+!
+      module subroutine jacobian_transformation_ccsd(wf,c1am,c2am)
+!
+!        Jacobian Transformation (CCSD)
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
+!
+!        Directs the transformation of the incoming vector c by the 
+!        coupled cluster Jacobian matrix 
+!
+!           A_mu,nu = < mu | [e^(-T) H e^(T),tau_nu] | R >.
+!
+!        On exit, A*c is placed in the incoming c vector.
+!
+         class(ccsd) :: wf 
+!
+         real(dp), dimension(:,:) :: c1am 
+         real(dp), dimension(:,:) :: c2am 
+!
+      end subroutine jacobian_transformation_ccsd
 !
 !
    end interface

@@ -782,31 +782,31 @@ C
      &                 WORK(KT2AM),WORK(KEND1),LWRK1,APROXR12)
          end if
 C (EFK, 2017) Print omega vector for debug of MLCC code
-        WRITE(LUPRI,*)
-        WRITE(LUPRI,*) 'Omega(a,i):'
-        WRITE(LUPRI,*)
-        DO I = 1,NRHFT
-          DO A = 1,NVIRT
-            NAI = NVIRT*(I-1)+A
-            WRITE(LUPRI,*) A,I,WORK(KOMEG1+NAI-1)
-          ENDDO
-        ENDDO
+C         WRITE(LUPRI,*)
+C         WRITE(LUPRI,*) 'Omega(a,i):'
+C         WRITE(LUPRI,*)
+C         DO I = 1,NRHFT
+C           DO A = 1,NVIRT
+C             NAI = NVIRT*(I-1)+A
+C             WRITE(LUPRI,*) A,I,WORK(KOMEG1+NAI-1)
+C           ENDDO
+C         ENDDO
 C (EFK, 2017) Print omega vector for debug of MLCC code
-        WRITE(LUPRI,*)
-        WRITE(LUPRI,*) 'Omega(aibj,1):'
-        WRITE(LUPRI,*)
-        DO I = 1,NRHFT
-          DO A = 1,NVIRT
-            DO J = 1,NRHFT 
-              DO B = 1,NVIRT 
-                NAI = NVIRT*(I-1)+A
-                NBJ = NVIRT*(J-1)+B
-                NAIBJ = (max(nai,nbj)*(max(nai,nbj)-3)/2) + nai + nbj
-                WRITE(LUPRI,*) NAIBJ,1,WORK(KOMEG2+NAIBJ-1)
-              ENDDO
-            ENDDO
-          ENDDO
-        ENDDO
+C         WRITE(LUPRI,*)
+C         WRITE(LUPRI,*) 'Omega(aibj,1):'
+C         WRITE(LUPRI,*)
+C         DO I = 1,NRHFT
+C           DO A = 1,NVIRT
+C             DO J = 1,NRHFT 
+C               DO B = 1,NVIRT 
+C                 NAI = NVIRT*(I-1)+A
+C                 NBJ = NVIRT*(J-1)+B
+C                 NAIBJ = (max(nai,nbj)*(max(nai,nbj)-3)/2) + nai + nbj
+C                 WRITE(LUPRI,*) NAIBJ,1,WORK(KOMEG2+NAIBJ-1)
+C               ENDDO
+C             ENDDO
+C           ENDDO
+C         ENDDO
 C
   240    CONTINUE
 C
@@ -984,10 +984,10 @@ C
          LCONV2 = OMNM    .LT. THRVEC
          LCONVG = LCONV1 .AND. LCONV2
 C (EFK,2017)
-         WRITE(LUPRI,*) 'THRENR',THRENR
-         WRITE(LUPRI,*) 'THRVEC',THRVEC
-         THRENR = 1.0D-10
-         THRVEC = 1.0D-10
+C          WRITE(LUPRI,*) 'THRENR',THRENR
+C          WRITE(LUPRI,*) 'THRVEC',THRVEC
+C          THRENR = 1.0D-10
+C          THRVEC = 1.0D-10
 C
          ITER = ITER+1
          IF (ITER .GT. MAXITE) THEN

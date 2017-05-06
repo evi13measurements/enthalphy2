@@ -2,8 +2,8 @@ module cc2_class
 !
 !
 !
-!               Coupled cluster singles (CC2) class module                                 
-!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017         
+!            Coupled cluster perturbative doubles (CC2) class module                                 
+!         Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017         
 !                                                                           
 !
 !
@@ -18,7 +18,7 @@ module cc2_class
    use workspace
    use input_output
 !
-!  The ancestor class module (ccs)
+!  The ancestor class module (CCS)
 !
    use ccs_class
 !
