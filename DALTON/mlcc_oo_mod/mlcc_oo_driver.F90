@@ -5,6 +5,7 @@ subroutine mlcc_oo_driver
    use hf_class
    use ccs_class
    use ccsd_class
+   use cc2_class
 !
 !  Memory handling and IO modules
 !
