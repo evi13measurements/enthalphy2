@@ -243,19 +243,18 @@ contains
 !
 !        Reorder the integrals to g_a_ckd
 !
-         do a = 1, batch_length
-            do c = 1, wf%n_v
-               do k = 1, wf%n_o
-                  do d = 1, wf%n_v
+         do c = 1, wf%n_v
+            do k = 1, wf%n_o
+               do d = 1, wf%n_v
+                  do a = 1, batch_length
 !
-!                    Calculate the necessary indices
+!                    Get the needed indices 
 !
-                     da  = index_two(d, a, wf%n_v)
                      kc  = index_two(k, c, wf%n_o)
-!
+                     da  = index_two(d, a, wf%n_v)
                      ckd = index_three(c, k, d, wf%n_v, wf%n_o) 
 !
-!                    Set the value of g_a_ckd
+!                    Set the value of reordered integral, g_a_ckd
 !
                      g_a_ckd(a, ckd) = g_da_kc(da, kc) ! g_adkc 
 !
@@ -773,6 +772,7 @@ contains
 !
 !           g_ca_db = sum_J L_ca_J*L_db_J
 !     
+            call cpu_time(begin_timer)
             call dgemm('N','T',            &
                         (wf%n_v)*a_length, &
                         (wf%n_v)*b_length, &
@@ -785,6 +785,8 @@ contains
                         zero,              &
                         g_ca_db,           &
                         (wf%n_v)*a_length)
+            call cpu_time(end_timer)
+            write(unit_output,*) 'Time to make g_acbd',end_timer-begin_timer
 !
 !           Deallocate L_db_J 
 !
@@ -802,10 +804,17 @@ contains
             call dzero(t_p_cd_ij, packed_size(wf%n_v)*packed_size(wf%n_o))
             call dzero(t_m_cd_ij, packed_size(wf%n_v)*packed_size(wf%n_o))
 !
+!           E: attempting to optimize (formaldehyde/pvtz, before: 0.73370899999999750 s)
+!                                                         after:  0.53656699999999091 s)
+!                 -114.33117412 new code 
+!                 -114.3311740730 good...
+!                 -114.33117412
+!
+            call cpu_time(begin_timer)
             do c = 1, wf%n_v 
                do d = 1, c
-                  do a = 1, a_length
-                     do b = 1, b_length
+                  do b = 1, b_length
+                     do a = 1, a_length
                         if ((a+a_first) .ge. (b+b_first)) then
 !
 !                          Calculate compound indices
@@ -820,13 +829,13 @@ contains
 !
 !                          Reorder g_ca_db to g_ab_cd
 !  
-                           g_p_ab_cd(ab,cd) = g_ca_db(ca,db) + g_ca_db(da, cb)
-                           g_m_ab_cd(ab,cd) = g_ca_db(ca,db) - g_ca_db(da, cb)
+                           g_p_ab_cd(ab, cd) = g_ca_db(ca, db) + g_ca_db(da, cb)
+                           g_m_ab_cd(ab, cd) = g_ca_db(ca, db) - g_ca_db(da, cb)
 !
-                           if(c .ne. d) then
-                             g_p_ab_cd(ab,cd) = two*g_p_ab_cd(ab,cd)
-                             g_m_ab_cd(ab,cd) = two*g_m_ab_cd(ab,cd)
-                           endif
+                          if(c .ne. d) then
+                            g_p_ab_cd(ab, cd) = two*g_p_ab_cd(ab, cd)
+                            g_m_ab_cd(ab, cd) = two*g_m_ab_cd(ab, cd)
+                          endif
 !                          
                         endif
                      enddo
@@ -856,6 +865,8 @@ contains
                   enddo
                enddo
             enddo
+            call cpu_time(end_timer)
+            write(unit_output,*) 'Time to reorder in A2:', end_timer-begin_timer
 !
 !           Dellocate g_ac_bd 
 !
@@ -870,6 +881,7 @@ contains
 !  
 !            omega2_ab_ij = sum_(cd) g_ab_cd*t_cd_ij
 !  
+            call cpu_time(begin_timer)
             call dgemm('N','N',                & 
                         packed_size(a_length), &
                         packed_size(wf%n_o),   &
@@ -895,6 +907,8 @@ contains
                         zero,                  &
                         omega2_m_ab_ij,        &
                         packed_size(a_length) )
+            call cpu_time(end_timer)
+            write(unit_output,*) 'Time for dgemm A2',end_timer-begin_timer
 !
 !           Deallocate +-g, +-t
 !  

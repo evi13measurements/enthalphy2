@@ -25,6 +25,13 @@ contains
       real(dp), dimension(:,:) :: c1am 
       real(dp), dimension(:,:) :: c2am 
 !
+      real(dp), dimension(:,:), allocatable :: tr1am ! Transformed vector, singles 
+      real(dp), dimension(:,:), allocatable :: tr2am ! Transformed vector, doubles 
+!
+!     Calculate the singles contributions 
+!
+     ! call wf%jacobian_a1(c1am,c2am)
+!
    end subroutine jacobian_transformation_ccsd
 !
 !

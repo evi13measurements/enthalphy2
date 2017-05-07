@@ -363,10 +363,6 @@ contains
 !
       call wf%initialize_omega
 !
-!     Calculate the omega vector (remove, eventually)
-!
-      call wf%construct_omega
-!
    end subroutine init_ccsd
 !
 !
