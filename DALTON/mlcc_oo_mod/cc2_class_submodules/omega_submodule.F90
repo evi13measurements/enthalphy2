@@ -27,23 +27,6 @@ submodule (cc2_class) omega
 !
 contains
 !
-   subroutine initialize_omega_cc2(wf)
-!
-!     Initialize Omega (CCSD)
-!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
-!
-!     Allocates the projection vector omega1 and sets it
-!     to zero.
-!
-      implicit none
-!
-      class(cc2) :: wf
-!
-      call allocator(wf%omega1, wf%n_v, wf%n_o)
-      wf%omega1 = zero
-!
-   end subroutine initialize_omega_cc2
-!
   subroutine construct_omega_ccsd(wf)
 !
 !     Construct Omega (CC2)

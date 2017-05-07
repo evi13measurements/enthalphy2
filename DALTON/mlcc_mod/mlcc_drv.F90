@@ -35,9 +35,6 @@ subroutine mlcc_drv(work,lwork,lupri)
    call flshfo(luprint)
 !
    call mlcc_oo_driver
-!
-   write(luprint,*) 'Beginning old driver'
-   call flshfo(luprint)
 !!
 !!  Initialize memory variables
 !!

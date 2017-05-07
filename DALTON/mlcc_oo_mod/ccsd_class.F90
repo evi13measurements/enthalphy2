@@ -6,9 +6,11 @@ module ccsd_class
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017         
 !                                                                           
 !
+!
 !  :::::::::::::::::::::::::::::::::::
 !  -::- Modules used by the class -::-
 !  :::::::::::::::::::::::::::::::::::
+!
 !
 !  General tools
 !
@@ -23,9 +25,11 @@ module ccsd_class
 !
    implicit none 
 !
+!
 !  ::::::::::::::::::::::::::::::::::::::
 !  -::- Definition of the CCSD class -::-
 !  ::::::::::::::::::::::::::::::::::::::
+!
 !
    type, extends(ccs) :: ccsd
 !
@@ -34,12 +38,11 @@ module ccsd_class
       integer(i15) :: n_t2am = 0                    ! Number of doubles amplitudes
       real(dp), dimension(:,:), allocatable :: t2am ! Doubles amplitude vector
 !
-!     Schrödinger equation projection attributes (the omega vector)
+!     Schrödinger equation projection vector (the omega vector)
 ! 
 !        < mu | exp(-T) H exp(T) | R >
 !
-      real(dp), dimension(:,:), allocatable :: omega1 ! Singles part
-      real(dp), dimension(:,:), allocatable :: omega2 ! Doubles part
+      real(dp), dimension(:,:), allocatable :: omega2 ! Doubles vector
 !
    contains
 !
@@ -77,11 +80,23 @@ module ccsd_class
       procedure :: omega_d2 => omega_d2_ccsd 
       procedure :: omega_e2 => omega_e2_ccsd       
 !
+!     Ground state solver routine (helpers only, see CCS for the rest)
+!
+      procedure :: calc_ampeqs_norm          => calc_ampeqs_norm_ccsd
+      procedure :: new_amplitudes            => new_amplitudes_ccsd
+      procedure :: calc_quasi_Newton_doubles => calc_quasi_Newton_doubles_ccsd
+!
+!     Jacobian transformation routines 
+!
+      procedure :: jacobian_transformation => jacobian_transformation_ccsd
+!
    end type ccsd
+!
 !
 !  :::::::::::::::::::::::::::::::::::::::::::::::::::::
 !  -::- Interface to the submodule routines of CCSD -::- 
 !  :::::::::::::::::::::::::::::::::::::::::::::::::::::
+!
 !
    interface
 !
@@ -101,7 +116,7 @@ module ccsd_class
 !
       module subroutine construct_omega_ccsd(wf)
 !
-!        Construct Omega 
+!        Construct Omega (CCSD)
 !        Written by Sarai D. Folkestad and Eirik F. Kjønstad, Apr 2017
 !
 !        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
@@ -228,14 +243,79 @@ module ccsd_class
       end subroutine omega_e2_ccsd
 !
 !
+      module subroutine calc_ampeqs_norm_ccsd(wf, ampeqs_norm)
+!
+!        Calculate Amplitude Equations Norm (CCSD)
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
+!
+         class(ccsd) :: wf 
+!
+         real(dp) :: ampeqs_norm 
+!
+      end subroutine calc_ampeqs_norm_ccsd
+!
+!
+      module subroutine new_amplitudes_ccsd(wf)
+!
+!        New Amplitudes (CCSD)
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
+!
+!        Directs the calculation of the quasi-Newton estimate Δ t_i, 
+!        and t_i + Δ t_i, and calls the DIIS routine to save & get 
+!        the amplitudes for the next iteration. 
+!
+         class(ccsd) :: wf 
+!
+      end subroutine new_amplitudes_ccsd
+!
+!
+      module subroutine calc_quasi_Newton_doubles_ccsd(wf,dt,n_variables)
+!
+!        Calculate quasi-Newton estimate (CCSD)
+!        Written by Sarai D. Folkestad and Eirik F. Kjønstad, May 2017
+!
+!        Calculates the quasi-Newton estimate Δ t_i (doubbles part)
+!        and places the contribution in the dt vector (of length n_variables,
+!        with singles first, then doubles, etc. if inherited)
+!
+         class(ccsd) :: wf 
+!
+         integer(i15), intent(in) :: n_variables
+         real(dp), dimension(n_variables, 1) :: dt
+!
+      end subroutine calc_quasi_Newton_doubles_ccsd
+!
+!
+      module subroutine jacobian_transformation_ccsd(wf,c1am,c2am)
+!
+!        Jacobian Transformation (CCSD)
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
+!
+!        Directs the transformation of the incoming vector c by the 
+!        coupled cluster Jacobian matrix 
+!
+!           A_mu,nu = < mu | [e^(-T) H e^(T),tau_nu] | R >.
+!
+!        On exit, A*c is placed in the incoming c vector.
+!
+         class(ccsd) :: wf 
+!
+         real(dp), dimension(:,:) :: c1am 
+         real(dp), dimension(:,:) :: c2am 
+!
+      end subroutine jacobian_transformation_ccsd
+!
+!
    end interface
 !
 !
 contains
 !
+!
 !  ::::::::::::::::::::::::::::::::::::::::::::
 !  -::- Initialization and driver routines -::-
 !  ::::::::::::::::::::::::::::::::::::::::::::
+!
 !
    subroutine init_ccsd(wf)
 !
@@ -254,6 +334,10 @@ contains
       implicit none 
 !
       class(ccsd) :: wf
+!
+!     Set model name 
+!
+      wf%name = 'CCSD   '
 !
 !     Read Hartree-Fock info from SIRIUS
 !
@@ -292,16 +376,15 @@ contains
 !
       class(ccsd) :: wf
 !
-!     Print the energy    
-!
-      write(unit_output,*) 'The SCF energy:', wf%scf_energy
-      write(unit_output,*) 'The MP2 energy:', wf%energy
+      call wf%ground_state_solver
 !
    end subroutine drv_ccsd
+!
 !
 !  :::::::::::::::::::::::::::::::::::::::::
 !  -::- Class subroutines and functions -::- 
 !  :::::::::::::::::::::::::::::::::::::::::
+!
 !
    subroutine initialize_amplitudes_ccsd(wf)
 !
@@ -324,8 +407,8 @@ contains
 !
 !     Calculate the number of singles and doubles amplitudes
 !
-      wf%n_t1am = (wf%n_o) * (wf%n_v) 
-      wf%n_t2am = (wf%n_t1am) * (wf%n_t1am + 1)/2
+      wf%n_t1am = (wf%n_o)*(wf%n_v) 
+      wf%n_t2am = (wf%n_t1am)*(wf%n_t1am + 1)/2
 !
 !     Allocate the singles amplitudes and set to zero
 !

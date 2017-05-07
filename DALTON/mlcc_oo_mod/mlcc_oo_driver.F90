@@ -32,10 +32,6 @@ subroutine mlcc_oo_driver
    call wf % init
    call wf % drv
 !
-!  Say goodbye
-!
-   write(unit_output,*) 'Done with wavefunction calculation!'
-!
 !  Close main output file
 !
    close(unit_output)

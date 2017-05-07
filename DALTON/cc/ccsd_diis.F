@@ -93,7 +93,7 @@ CRDA      CALL READ3(S,LEN,IPOSP(I),IFILS)
       call getwa(ifils,s,iposp(i),len)
       DO 5 J=1,LEN
 5     T(J)=T(J)+C(I)*S(J)
-      write(lupri,*) 'Coefficient',I,C(I)
+C      write(lupri,*) 'Coefficient',I,C(I)
 4     CONTINUE
       RETURN
       END
@@ -335,7 +335,7 @@ C
          READ(LUSDIS) S
 C
          ERR=DDOT(NDIM,T,1,S,1)
-         WRITE(LUPRI,*) 'Dot I,ITER,I*ITER',I,NITER,ERR
+C         WRITE(LUPRI,*) 'Dot I,ITER,I*ITER',I,NITER,ERR
 C
          A(I,IVEC)    =  ERR
          A(IVEC,I)    =  ERR
@@ -350,9 +350,9 @@ C
 C
    !   WRITE(LUPRI,*) 'The G matrix', A
    !   WRITE(LUPRI,*) 'The H vector', B
-      WRITE(LUPRI,*) 'MAXDIIS',MXDIIS
-      WRITE(LUPRI,*) 'NLOOP',NLOOP
-      WRITE(LUPRI,*) 'IVEC',IVEC 
+C      WRITE(LUPRI,*) 'MAXDIIS',MXDIIS
+C      WRITE(LUPRI,*) 'NLOOP',NLOOP
+C      WRITE(LUPRI,*) 'IVEC',IVEC 
 C
       NSIZ=NLOOP+1
 C
@@ -372,16 +372,16 @@ C
          READ(LUTDIS) S
 C
          CALL DAXPY(NDIM,C(I),S,1,T,1)
-         write(lupri,*) 'Coefficient',I,C(I)
+C         write(lupri,*) 'Coefficient',I,C(I)
 C
   300 CONTINUE
 C
 C (EFK, 2017) Print t vector for debug of MLCC code
-        WRITE(LUPRI,*)
-        WRITE(LUPRI,*) 't1am(a,i):'
-        WRITE(LUPRI,*)
-        WRITE(LUPRI,*) T 
-        WRITE(LUPRI,*)
+C         WRITE(LUPRI,*)
+C         WRITE(LUPRI,*) 't1am(a,i):'
+C         WRITE(LUPRI,*)
+C         WRITE(LUPRI,*) T 
+C         WRITE(LUPRI,*)
 C
       RETURN
       END

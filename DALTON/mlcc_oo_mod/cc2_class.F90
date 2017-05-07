@@ -2,8 +2,8 @@ module cc2_class
 !
 !
 !
-!               Coupled cluster singles (CC2) class module                                 
-!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017         
+!            Coupled cluster perturbative doubles (CC2) class module                                 
+!         Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017         
 !                                                                           
 !
 !
@@ -18,7 +18,7 @@ module cc2_class
    use workspace
    use input_output
 !
-!  The ancestor class module (ccs)
+!  The ancestor class module (CCS)
 !
    use ccs_class
 !
@@ -31,14 +31,12 @@ module cc2_class
 !
    type, extends(ccs) :: cc2
 !
-      real(dp), dimension(:,:), allocatable :: omega1
    contains 
 !
 !     Initialization and driver routines
 !
       procedure :: init => init_cc2
       procedure :: drv  => drv_cc2
-      procedure :: initialize_omega => initialize_omega_cc2
 !
 !     Routines to construct the projection vector (omega)
 !
@@ -50,6 +48,7 @@ module cc2_class
       procedure :: omega_b1 => omega_b1_cc2 
       procedure :: omega_c1 => omega_c1_cc2 
       procedure :: omega_d1 => omega_d1_cc2      
+
    end type cc2
 !
 !  ::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -57,20 +56,6 @@ module cc2_class
 !  ::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
    interface
-!
-      module subroutine initialize_omega_cc2(wf)
-!
-!        Initialize Omega (CCSD)
-!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
-!
-!        Allocates the projection vector omega1 and sets it
-!        to zero.
-!
-         implicit none
-!
-         class(cc2) :: wf
-!
-      end subroutine initialize_omega_cc2
 !
       module subroutine construct_omega_cc2(wf)
 !
