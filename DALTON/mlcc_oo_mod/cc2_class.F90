@@ -39,7 +39,17 @@ module cc2_class
       procedure :: init => init_cc2
       procedure :: drv  => drv_cc2
       procedure :: initialize_omega => initialize_omega_cc2
-!      
+!
+!     Routines to construct the projection vector (omega)
+!
+      procedure :: construct_omega => construct_omega_cc2
+!
+!     Helper routines for construct_omega
+!
+      procedure :: omega_a1 => omega_a1_cc2 
+      procedure :: omega_b1 => omega_b1_cc2 
+      procedure :: omega_c1 => omega_c1_cc2 
+      procedure :: omega_d1 => omega_d1_cc2      
    end type cc2
 !
 !  ::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -47,8 +57,89 @@ module cc2_class
 !  ::::::::::::::::::::::::::::::::::::::::::::::::::::
 !
    interface
-   !
-   !
+!
+      module subroutine initialize_omega_cc2(wf)
+!
+!        Initialize Omega (CCSD)
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
+!
+!        Allocates the projection vector omega1 and sets it
+!        to zero.
+!
+         implicit none
+!
+         class(cc2) :: wf
+!
+      end subroutine initialize_omega_cc2
+!
+      module subroutine construct_omega_cc2(wf)
+!
+!        Construct Omega 
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!
+!        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
+!        for the current amplitudes of the object wf 
+!
+         class(cc2) :: wf 
+!
+      end subroutine construct_omega_cc2
+!
+      module subroutine omega_a1_cc2(wf)
+!
+!        Omega A1 term
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!  
+!        Calculates the A1 term, 
+!  
+!           sum_ckd g_adkc * u_ki^cd,
+!  
+!        and adds it to the singles projection vector (omeg1) of
+!        the wavefunction object wfn
+!
+         class(cc2) :: wf
+!
+      end subroutine omega_a1_cc2
+!
+!
+      module subroutine omega_b1_cc2(wf)
+!
+!        Omega B1
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!
+!        Calculates the B1 term, 
+!
+!          - sum_ckl u_kl^ac * g_kilc,
+! 
+!        and adds it to the singles projection vector (omeg1) of
+!        the wavefunction object wfn
+!
+         class(cc2) :: wf 
+!
+      end subroutine omega_b1_cc2
+!
+!
+      module subroutine omega_c1_cc2(wf)
+!
+!        C1 omega term: Omega_ai^C1 = sum_ck F_kc*u_ai_ck,
+!                       u_ai_ck = 2*t_ck_ai-t_ci_ak
+!        
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, March 2017
+!
+         class(cc2) :: wf 
+!
+      end subroutine omega_c1_cc2
+!
+!
+      module subroutine omega_d1_cc2(wf)
+!
+!        D1 omega term: Omega_ai^D1=F_ai_T1
+!
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, March 2017
+!
+            class(cc2) :: wf
+!
+      end subroutine omega_d1_cc2
+!
    end interface
 !
 contains
