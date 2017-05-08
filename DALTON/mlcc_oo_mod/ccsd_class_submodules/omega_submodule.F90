@@ -607,6 +607,8 @@ contains
 !                g_ac_bd is reordered as g_ab_cd and t_ci_dj is reordered as t_cd_ij.
 !                Omega contribution for A2.2 is ordered as Omega_ab_ij, and is reordered into the packed omega2 vector.          
 !
+      use utils
+!
       implicit none
 !
       class(ccsd) :: wf

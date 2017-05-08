@@ -34,3 +34,8 @@ Solver eksiterte tilstander
 Juli:
 MLCCSD
 SCCSD
+
+------------------------------------------------------
+Ting som må diskuteres:
+  ☐ Required mem for batching
+  ☐ Preferences?

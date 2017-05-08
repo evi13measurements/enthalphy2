@@ -48,7 +48,11 @@ module cc2_class
       procedure :: omega_b1 => omega_b1_cc2 
       procedure :: omega_c1 => omega_c1_cc2 
       procedure :: omega_d1 => omega_d1_cc2      
-
+!
+!     Ground state solver helper routines
+!
+      procedure :: calc_energy => calc_energy_cc2
+!
    end type cc2
 !
 !  ::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -69,7 +73,7 @@ module cc2_class
 !
       end subroutine construct_omega_cc2
 !
-      module subroutine omega_a1_cc2(wf)
+      module subroutine omega_a1_cc2(wf, t_kc_di, c_first, c_last, c_length)
 !
 !        Omega A1 term
 !        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
@@ -82,11 +86,15 @@ module cc2_class
 !        the wavefunction object wfn
 !
          class(cc2) :: wf
+!  
+         integer(i15) :: c_first, c_last, c_length
+!
+         real(dp), dimension(c_length*(wf%n_o),(wf%n_v)*(wf%n_o)):: t_kc_di
 !
       end subroutine omega_a1_cc2
 !
 !
-      module subroutine omega_b1_cc2(wf)
+      module subroutine omega_b1_cc2(wf, t_lc_ak, c_first, c_last, c_length)
 !
 !        Omega B1
 !        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
@@ -100,10 +108,14 @@ module cc2_class
 !
          class(cc2) :: wf 
 !
+         integer(i15) :: c_first, c_last, c_length
+!
+         real(dp), dimension(c_length*(wf%n_o),(wf%n_v)*(wf%n_o)) :: t_lc_ak
+!
       end subroutine omega_b1_cc2
 !
 !
-      module subroutine omega_c1_cc2(wf)
+      module subroutine omega_c1_cc2(wf, t_kc_ai, c_first, c_last, c_length)
 !
 !        C1 omega term: Omega_ai^C1 = sum_ck F_kc*u_ai_ck,
 !                       u_ai_ck = 2*t_ck_ai-t_ci_ak
@@ -111,6 +123,10 @@ module cc2_class
 !        Written by Eirik F. Kjønstad and Sarai D. Folkestad, March 2017
 !
          class(cc2) :: wf 
+!
+         integer(i15) :: c_first, c_last, c_length
+!
+         real(dp), dimension(c_length*(wf%n_o),(wf%n_v)*(wf%n_o)) :: t_kc_ai
 !
       end subroutine omega_c1_cc2
 !
@@ -121,7 +137,7 @@ module cc2_class
 !
 !        Written by Eirik F. Kjønstad and Sarai D. Folkestad, March 2017
 !
-            class(cc2) :: wf
+         class(cc2) :: wf
 !
       end subroutine omega_d1_cc2
 !
@@ -184,11 +200,63 @@ contains
 !
       class(cc2) :: wf
 !
+      call wf%ground_state_solver
+!
    end subroutine drv_cc2
 !
 !  :::::::::::::::::::::::::::::::::::::::::
 !  -::- Class subroutines and functions -::- 
 !  :::::::::::::::::::::::::::::::::::::::::
 !
+   subroutine calc_energy_cc2(wf)
+!
+!  Calculate Energy (CC2)
+!
+!  Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!  Calculate the CC2 energy
+!
+   implicit none
+!
+   class(cc2) :: wf
+!
+!
+!     Integrals
+!
+      real(dp), dimension(:,:), allocatable :: L_bj_J
+      real(dp), dimension(:,:), allocatable :: L_ia_J
+      real(dp), dimension(:,:), allocatable :: g_ia_bj ! = g_aibj
+!
+!     t2 amplitudes
+!
+      real(dp), dimension(:,:), allocatable :: t_ia_bj ! = g_aibj/(e_a + e_b - e_i - e_j)
+!
+!     Batching variables
+!  
+      integer(i15) :: a_batch, a_first, a_last, a_length
+      integer(i15) :: required, available, n_batch, batch_dimension, max_batch_length
+!
+!
+!     Prepare for batching over index a (Assumes A1 requires the most memory)
+!  
+      required = (2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                           !    
+               + 2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                            ! Needed for g_aibj  
+               + 2*((wf%n_v)**2)*(wf%n_J) + ((wf%n_o)**2)*(wf%n_J) &       ! and 't2' amplitudes  
+               + 2*(wf%n_v)**2*(wf%n_o)**2)                                !
+!      
+      required = 4*required ! In words
+      available = get_available()
+!
+      batch_dimension  = wf%n_v ! Batch over the virtual index a
+      max_batch_length = 0      ! Initilization of unset variables 
+      n_batch          = 0
+!
+      call num_batch(required, available, max_batch_length, n_batch, batch_dimension)           
+!
+!     Loop over the number of a batches 
+!
+      do a_batch = 1, n_batch
+!
+      enddo
+   end subroutine calc_energy_cc2
 !
 end module cc2_class
