@@ -211,7 +211,8 @@ contains
 !        Get reordered Cholesky vector L_da_J = L_ad^J 
 !
          reorder = .true.
-         call wf%get_cholesky_ab(L_da_J,a_begin,a_end,ad_dim,reorder)
+         call wf%get_cholesky_ab(L_da_J, a_begin, a_end, &
+                                 ad_dim, reorder)
 !
 !        Allocate g_da_kc = g_adkc
 !
