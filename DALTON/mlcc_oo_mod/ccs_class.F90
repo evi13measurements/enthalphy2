@@ -37,7 +37,7 @@ module ccs_class
 !  ::::::::::::::::::::::::::::::::::::: 
 !
 !
-   type, extends(hartree_fock) :: ccs
+   type, extends(hf) :: ccs
 !
 !     Amplitude attributes
 !

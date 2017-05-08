@@ -12,9 +12,9 @@ Programmering:
   ☐ MLCCSD
 
  Omstrukturering:
-   ☐ cmake
-   ☐ Git-repo
-   ☐ Navn
+   ☐ cmake - bør gjøres så fort vi får et eget program. 
+   ☐ Git-repo ! 
+   ☐ Navn (eT, e^T?)
 
 
 ----------------------------------------------------
@@ -38,4 +38,3 @@ SCCSD
 ------------------------------------------------------
 Ting som må diskuteres:
   ☐ Required mem for batching
-  ☐ Preferences?

@@ -3,7 +3,7 @@ module cc2_class
 !
 !
 !            Coupled cluster perturbative doubles (CC2) class module                                 
-!         Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017         
+!         Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017         
 !                                                                           
 !
 !
@@ -64,7 +64,7 @@ module cc2_class
       module subroutine construct_omega_cc2(wf)
 !
 !        Construct Omega 
-!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
 !
 !        Directs the construction of the projection vector < mu | exp(-T) H exp(T) | R >
 !        for the current amplitudes of the object wf 
@@ -76,7 +76,7 @@ module cc2_class
       module subroutine omega_a1_cc2(wf, t_kc_di, c_first, c_last, c_length)
 !
 !        Omega A1 term
-!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
 !  
 !        Calculates the A1 term, 
 !  
@@ -97,7 +97,7 @@ module cc2_class
       module subroutine omega_b1_cc2(wf, t_lc_ak, c_first, c_last, c_length)
 !
 !        Omega B1
-!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!        Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
 !
 !        Calculates the B1 term, 
 !
@@ -153,7 +153,7 @@ contains
    subroutine init_cc2(wf)
 !
 !     Initialize CC2 object
-!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
 !
 !     Performs the following tasks
 !
@@ -194,7 +194,7 @@ contains
    subroutine drv_cc2(wf)
 !
 !     CC2 Driver
-!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!     Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
 !
       implicit none 
 !
@@ -212,51 +212,53 @@ contains
 !
 !  Calculate Energy (CC2)
 !
-!  Written by Eirik F. Kjønstad and Sarai D. Folkestad, Apr 2017
+!  Written by Eirik F. Kjønstad and Sarai D. Folkestad, May 2017
 !  Calculate the CC2 energy
 !
    implicit none
 !
    class(cc2) :: wf
 !
+!  Integrals
 !
-!     Integrals
+   real(dp), dimension(:,:), allocatable :: L_bj_J
+   real(dp), dimension(:,:), allocatable :: L_ia_J
+   real(dp), dimension(:,:), allocatable :: g_ia_bj ! = g_aibj
 !
-      real(dp), dimension(:,:), allocatable :: L_bj_J
-      real(dp), dimension(:,:), allocatable :: L_ia_J
-      real(dp), dimension(:,:), allocatable :: g_ia_bj ! = g_aibj
+!  t2 amplitudes
 !
-!     t2 amplitudes
+   real(dp), dimension(:,:), allocatable :: t_ia_bj ! = g_aibj/(e_a + e_b - e_i - e_j)
 !
-      real(dp), dimension(:,:), allocatable :: t_ia_bj ! = g_aibj/(e_a + e_b - e_i - e_j)
-!
-!     Batching variables
+!  Batching variables
 !  
-      integer(i15) :: a_batch, a_first, a_last, a_length
-      integer(i15) :: required, available, n_batch, batch_dimension, max_batch_length
+   integer(i15) :: a_batch, a_first, a_last, a_length
+   integer(i15) :: required, available, n_batch, batch_dimension, max_batch_length
 !
 !
-!     Prepare for batching over index a (Assumes A1 requires the most memory)
+!  Prepare for batching over index a 
 !  
-      required = (2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                           !    
-               + 2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                            ! Needed for g_aibj  
-               + 2*((wf%n_v)**2)*(wf%n_J) + ((wf%n_o)**2)*(wf%n_J) &       ! and 't2' amplitudes  
-               + 2*(wf%n_v)**2*(wf%n_o)**2)                                !
-!      
-      required = 4*required ! In words
-      available = get_available()
+   required = (2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                     !    
+            + 2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                      ! Needed for g_aibj  
+            + 2*((wf%n_v)**2)*(wf%n_J) + ((wf%n_o)**2)*(wf%n_J) & ! and 't2' amplitudes  
+            + 2*(wf%n_v)**2*(wf%n_o)**2) &                        !
+            + (wf%n_v)*(wf%n_o)*(wf%n_J) &                        ! L_ia_J
+            + (wf%n_v)*(wf%n_o))**2                               ! g_ia_jb
+!     
+   required = 4*required ! In words
+   available = get_available()
 !
-      batch_dimension  = wf%n_v ! Batch over the virtual index a
-      max_batch_length = 0      ! Initilization of unset variables 
-      n_batch          = 0
+   batch_dimension  = wf%n_v ! Batch over the virtual index a
+   max_batch_length = 0      ! Initilization of unset variables 
+   n_batch          = 0
 !
-      call num_batch(required, available, max_batch_length, n_batch, batch_dimension)           
+   call num_batch(required, available, max_batch_length, n_batch, batch_dimension)           
 !
-!     Loop over the number of a batches 
+!  Loop over the number of a batches 
 !
-      do a_batch = 1, n_batch
+   do a_batch = 1, n_batch
 !
-      enddo
+   enddo
+!
    end subroutine calc_energy_cc2
 !
 end module cc2_class
