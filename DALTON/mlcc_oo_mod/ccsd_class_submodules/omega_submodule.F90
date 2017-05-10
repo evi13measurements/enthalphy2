@@ -93,9 +93,9 @@ contains
       call wf%omega_d2
       call wf%omega_e2
 !
-       call cpu_time(omega_end)
-       write(unit_output,*)'Time in omega:', omega_end-omega_start  
-       call flshfo(unit_output)  
+      call cpu_time(omega_end)
+      write(unit_output,*)'Time in omega:', omega_end-omega_start  
+      call flshfo(unit_output)  
 !
 !
    end subroutine construct_omega_ccsd
@@ -240,7 +240,8 @@ contains
 !        Allocate g_a_ckd = g_adkc and set to zero
 !
          call allocator(g_a_ckd, batch_length, (wf%n_o)*(wf%n_v)**2)
-         call dzero(g_a_ckd, batch_length*(wf%n_o)*(wf%n_v)**2)
+!
+         g_a_ckd = zero
 !
 !        Reorder the integrals to g_a_ckd
 !

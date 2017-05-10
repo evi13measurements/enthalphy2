@@ -33,6 +33,10 @@ contains
       real(dp), dimension(:,:), allocatable :: tr1am ! Transformed vector, singles 
       real(dp), dimension(:,:), allocatable :: tr2am ! Transformed vector, doubles 
 !
+!     Testing string operations...
+!
+      character(len=25) :: line 
+!
 !     Allocate the transformed vector and set it to zero
 !
       call allocator(tr1am, wf%n_v, wf%n_o)
@@ -43,12 +47,12 @@ contains
 !
 !     Calculate the singles contributions 
 !
-      call wf%jacobian_a1(tr1am,c1am)
+   !   call wf%jacobian_a1(tr1am,c1am)
 !
       write(unit_output,*) 'tr1am(a,i)'
       call vec_print(tr1am, wf%n_v, wf%n_o)
 !
-      call wf%jacobian_b1(tr1am,c1am)
+   !   call wf%jacobian_b1(tr1am,c1am)
 !
    end subroutine jacobian_transformation_ccsd
 !
