@@ -234,15 +234,21 @@ contains
    integer(i15) :: a_batch, a_first, a_last, a_length
    integer(i15) :: required, available, n_batch, batch_dimension, max_batch_length
 !
+!  Indices
+!  
+   integer(i15) :: a = 0, b = 0
+   integer(i15) :: i = 0, j = 0
+!
+   integer(i15) :: bj = 0, ai = 0, ia = 0
 !
 !  Prepare for batching over index a 
 !  
    required = (2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                     !    
             + 2*(wf%n_v)*(wf%n_o)*(wf%n_J) &                      ! Needed for g_aibj  
             + 2*((wf%n_v)**2)*(wf%n_J) + ((wf%n_o)**2)*(wf%n_J) & ! and 't2' amplitudes  
-            + 2*(wf%n_v)**2*(wf%n_o)**2) &                        !
+            + 2*(wf%n_v)**2*(wf%n_o)**2 &                         !
             + (wf%n_v)*(wf%n_o)*(wf%n_J) &                        ! L_ia_J
-            + (wf%n_v)*(wf%n_o))**2                               ! g_ia_jb
+            + (wf%n_v)*(wf%n_o)**2)                               ! g_ia_jb
 !     
    required = 4*required ! In words
    available = get_available()
@@ -256,6 +262,98 @@ contains
 !  Loop over the number of a batches 
 !
    do a_batch = 1, n_batch
+!
+!     For each batch, get the limits for the a index 
+!
+      call batch_limits(a_first, a_last, a_batch, max_batch_length, batch_dimension)
+      a_length = a_last - a_first + 1 
+!
+!     Allocate L_bj_J and L_ia_J (= reordering of L_bj_J constrained to the batch)
+!
+      call allocator(L_bj_J, (wf%n_v)*(wf%n_o), wf%n_J)
+      call allocator(L_ia_J, a_length*(wf%n_o), wf%n_J)
+      call dzero(L_bj_J, (wf%n_v)*(wf%n_o), wf%n_J)
+      call dzero(L_ia_J, a_length*(wf%n_o), wf%n_J)
+!
+      call wf%get_cholesky_ai(L_bj_J)
+!
+!     Create L_ia_J
+!
+      do a = 1, a_length
+         do i = 1, wf%n_v
+            do J = 1, wf%n_J
+!
+!              Calculate compound indices
+!
+               ia = index_two(i, a, wf%n_o)
+               ai = index_two(a + a_first - 1, i, wf%n_v)
+!
+               L_ia_J(ia, J) = L_bj_J(ai, J)
+!
+            enddo
+         enddo
+      enddo
+!
+!     Allocate g_ia_bj
+!
+      call allocator(g_ia_bj, a_length*(wf%n_o), (wf%n_o)*(wf%n_v))
+!
+!     Construct integral g_ia_bj (= g_aibj for the batch)
+!
+      call dgemm('N','T',            &
+                  a_length*(wf%n_o), &
+                  (wf%n_o)*(wf%n_v), &
+                  wf%n_J,            &
+                  one,               &
+                  L_ia_J,            &
+                  a_length*(wf%n_o), &
+                  L_bj_J,            &
+                  (wf%n_o)*(wf%n_v), &
+                  zero,              &
+                  g_ia_bj,           &
+                  a_length*(wf%n_o))
+!
+!     L_bj_J and L_ia_J
+!
+      call deallocator(L_bj_J, (wf%n_v)*(wf%n_o), wf%n_J)
+      call deallocator(L_ia_J, a_length*(wf%n_o), wf%n_J)
+!
+!     Allocate t_ia_bj
+!
+      call allocator(t_ia_bj, a_length*(wf%n_o), (wf%n_o)*(wf%n_v))
+!
+!     Create t2 amplitudes
+!
+      do i = 1, wf%n_o
+         do a = 1, a_length
+!
+!           Calculate compound index
+!
+            ia = index_two(i, a, wf%n_o)
+!
+            do b = 1, wf%n_v
+               do j = 1, wf%n_o
+!
+!                 Calculare compond index               
+!
+                  bj = index_two(b, j, wf%n_v)
+!
+                  t_ia_bj(ia, bj) = - g_ia_bj(ia, bj)/(wf%fock_diagonal(a + wf%n_o, 1) &
+                                                     + wf%fock_diagonal(b + wf%n_o, 1) &
+                                                     - wf%fock_diagonal(i, 1) - wf%fock_diagonal(j, 1))
+!
+               enddo
+            enddo
+         enddo
+      enddo
+!
+!     Deallocate g_ia_bj
+!
+      call deallocator(g_ia_bj, a_length*(wf%n_o), (wf%n_o)*(wf%n_v))
+!
+!     Deallocate t_ia_bj
+!
+      call deallocator(t_ia_bj, a_length*(wf%n_o), (wf%n_o)*(wf%n_v))
 !
    enddo
 !
