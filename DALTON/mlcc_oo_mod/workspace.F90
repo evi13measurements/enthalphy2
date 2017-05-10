@@ -100,10 +100,10 @@ contains
 !  
       implicit none
 !     
-      integer, intent(in)              :: M,N
-      integer, dimension(:,:), pointer :: elm
-      integer                          :: size
-      integer                          :: stat, error
+      integer, intent(in)                  :: M,N
+      integer, dimension(:,:), allocatable :: elm
+      integer                              :: size
+      integer                              :: stat, error
 !  
       size = M*N
 !  
@@ -132,10 +132,10 @@ contains
 !  
       implicit none
 !  
-      integer, dimension(:,:), pointer :: elm
-      integer                          :: stat, error
-      integer, intent(in)              :: M, N
-      integer                          :: size
+      integer, dimension(:,:), allocatable :: elm
+      integer                              :: stat, error
+      integer, intent(in)                  :: M, N
+      integer                              :: size
 !  
       size = M*N
 !  

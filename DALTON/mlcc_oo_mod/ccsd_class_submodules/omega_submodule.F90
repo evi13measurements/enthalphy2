@@ -93,9 +93,9 @@ contains
       call wf%omega_d2
       call wf%omega_e2
 !
-       call cpu_time(omega_end)
-       write(unit_output,*)'Time in omega:', omega_end-omega_start  
-       call flshfo(unit_output)  
+      call cpu_time(omega_end)
+      write(unit_output,*)'Time in omega:', omega_end-omega_start  
+      call flshfo(unit_output)  
 !
 !
    end subroutine construct_omega_ccsd
@@ -211,7 +211,8 @@ contains
 !        Get reordered Cholesky vector L_da_J = L_ad^J 
 !
          reorder = .true.
-         call wf%get_cholesky_ab(L_da_J,a_begin,a_end,ad_dim,reorder)
+         call wf%get_cholesky_ab(L_da_J, a_begin, a_end, &
+                                 ad_dim, reorder)
 !
 !        Allocate g_da_kc = g_adkc
 !
@@ -239,7 +240,8 @@ contains
 !        Allocate g_a_ckd = g_adkc and set to zero
 !
          call allocator(g_a_ckd, batch_length, (wf%n_o)*(wf%n_v)**2)
-         call dzero(g_a_ckd, batch_length*(wf%n_o)*(wf%n_v)**2)
+!
+         g_a_ckd = zero
 !
 !        Reorder the integrals to g_a_ckd
 !

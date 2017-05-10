@@ -100,7 +100,7 @@ subroutine mlcc_interface_drv(work,lwork,lupri)
    integer, intent(in)                    :: lwork !free space in work
    real*8, intent(in), dimension(lwork)   :: work !work statis array
 !
-   call mlcc_drv(work,lwork,lupri)
+  ! call mlcc_drv(work,lwork,lupri)
 !
 end subroutine mlcc_interface_drv
 !
