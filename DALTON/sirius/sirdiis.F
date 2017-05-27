@@ -120,6 +120,9 @@ C
       PARAMETER (D4 = 4.0D0)
       LOGICAL C2DIIS
 C
+C (EFK,2017)
+C      INTEGER LUMLCC
+C
       CALL QENTER('SRDIIS')
       ICONV = 0
       IF (MXDGSS .GT. 1) THEN
@@ -188,6 +191,19 @@ C
       CALL MEMGET2('REAL','SAO' ,KSAO ,NNBAST,WRK,KFREE,LFREE)
       CALL MEMGET2('REAL','STMP',KSTMP,N2BAST,WRK,KFREE,LFREE)
       CALL RDONEL('OVERLAP',.TRUE.,WRK(KSAO),NNBAST)
+C (EFK, 2017) Write AO overlap integrals and mo coeffs
+C      write(lupri,*) 'Writing AO overlap and MO coeffs to disk'
+C      lumlcc = -1
+C      call gpopen(lumlcc,'mlcc_ao_overlap','UNKNOWN','SEQUENTIAL',
+C     &        'FORMATTED',idummy,.false.)
+C      write(lumlcc,*) (WRK(KSAO + I - 1), I = 1, NNBAST)
+C      call gpclose(lumlcc, 'KEEP')
+C      lumlcc = -1
+C      call gpopen(lumlcc,'mlcc_mo_coeffs','UNKNOWN','SEQUENTIAL',
+C     &        'FORMATTED',idummy,.false.)
+C      write(lumlcc,*) (CMO(I), I = 1, NNBAST)
+C      call gpclose(lumlcc, 'KEEP')
+C
       IF (IPR_DIIS .GT. 25) THEN
          WRITE (LUPRI,'(/A)') ' SRDIIS test output of SAO:'
          CALL OUTPKB(WRK(KSAO),NBAS,NSYM,-1,LUPRI)

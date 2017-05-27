@@ -836,7 +836,14 @@ C
          END IF
 C (EFK,2017) For debug of MLCC code 
           WRITE(LUPRI,*) 'Norm:',OMNM
-
+C
+C          WRITE(LUPRI,*) 'Omega1', (WORK(KOMEG1 + I - 1), I = 1,25)
+C          WRITE(LUPRI,*) 'Omega2', (WORK(KOMEG2 + I - 1), I = 1,25)
+C
+C        WRITE(LUPRI,*)
+C        WRITE(LUPRI,*) 'Omega(aibj,1):'
+C        WRITE(LUPRI,*)
+C        WRITE(LUPRI,*) (WORK(KOMEG2+I-1),I=1,20)
 C
          IF (CCSLV) THEN
            IF (IPRINT .GE. 3) THEN
@@ -1033,6 +1040,12 @@ C
      &  ' R12       energy converged to within ',THRENR,' is ',ER12
       END IF
 c
+C
+C     (EFK, 2017) Debug for cc module. Check the Jacobi transform.
+C
+      call cc_mod_jacobi_test(WORK(KOMEG1),WORK(KOMEG2),WORK(KT1AM),
+     &                        WORK(KT2AM),WORK(KEND1),LWRK1)
+C
       IF (CCPAIR) THEN 
 C        Print CC pair energies (WK/UniKA/21-11-2002).
          CALL CCSD_CBS2(WORK(KT1AM),WORK(KT2AM),WORK(KEND1),LWRK1,
