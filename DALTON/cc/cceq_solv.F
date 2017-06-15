@@ -447,6 +447,12 @@ C
       END IF
       CALL FLSHFO(LUPRI)
 C
+C
+C     (EFK, 2017) Debug for cc module. Check the Jacobi transform.
+C
+      call cc_mod_jacobi_test(WRK,LWRK)
+C
+C
       CALL QEXIT('CCEQ_SOL')
       RETURN
       END
