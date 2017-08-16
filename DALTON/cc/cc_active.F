@@ -47,6 +47,7 @@ C
 #include "molde.h"
 #include "peract.h"
 #include "iratdef.h"
+#include "mlcc_mod.h"
 C
       CHARACTER*9 SECNAM
       PARAMETER (SECNAM = 'CC_SELACT')
@@ -1032,6 +1033,12 @@ C
 C
 C
   500 CONTINUE
+C
+C     Local orbitals for mlcc module  
+C    
+C      if (mllorb) then
+C         call  mlcc_write_local_orbital_info(WORK(KCMO))
+C      endif
 C
       WRITE(LUPRI,'(//,A,/,A,/)') 
      &            'Final results of selection of orbitals',
@@ -2146,6 +2153,11 @@ C
 C
       NBASI = MAX(NDIM,1)
       NACTI = MAX(NVECS,1)
+      write(lupri,*)'Sarai'
+      call output(scr,1,ndim,1,nvecs,ndim,nvecs,1,lupri)
+      write(lupri,*)
+     &        'Fock matrix before proj on inactive occupied orbitals'
+         call output(fock,1,ndim,1,ndim,ndim,ndim,1,lupri)
 C
       CALL DGEMM('T','N',NVECS,NDIM,NDIM,ONE,SCR,NBASI,
      &            FOCK,NBASI,ZERO,WORK(KSCRIQ),NACTI)
@@ -2153,7 +2165,7 @@ C
       CALL DGEMM('N','N',NVECS,NVECS,NDIM,ONE,WORK(KSCRIQ),NACTI,
      &           SCR,NBASI,ZERO,WORK(KFCKIJ),NACTI)
 C
-      IF (DBGPRT) THEN
+      IF (.true.) THEN
          write(lupri,*)
      &        'Fock matrix projected on inactive occupied orbitals'
          call output(work(kfckij),1,nvecs,1,nvecs,nvecs,nvecs,1,lupri)
@@ -2715,7 +2727,7 @@ C
             IF (MXVECL .LE. 0) MXVECL = NRHF(ISYM)
          END IF
          KOFF1 = KOCDEN + IOFDEN(ISYM)
-         WRITE(LUPRI,'(//,A,I3,/)') 'ACTIVE OCCUPIED. SYMMETRY :',ISYM
+         WRITE(LUPRI,'(//,A,I3,I3/)') 'ACTIVE OCCUPIED. SYMMETRY :',ISYM
          CALL CHOLD_DENDECO(SELDIR,WORK(KOFF1),NDIM,LACBAS(IOFF),
      &              NRED,WORK(KSCR1),THRS,MXVECL,NVECS,IOPT,INFOC,
      &              IATDUM,MINSPR,WORK(KEND2),LWRK2)

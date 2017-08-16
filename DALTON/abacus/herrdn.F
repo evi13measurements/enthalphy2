@@ -4289,6 +4289,7 @@ casm
 #include "suscc.h"
 #include "center.h"
 #include "infpar.h"
+#include "mlcc_mod.h"
 C
       LOGICAL FNDEOI
       DATA FNDEOI /.FALSE./
@@ -4494,7 +4495,7 @@ C
          END IF
       END DO
 C
-      IF (.NOT. ACTSEL) GOTO 100
+      IF ((.NOT. ACTSEL) .and. (.not. mllorb)) GOTO 100
 C
       CALL SYSTEM('cp molden.inp MOLDEN2.INP')
 C
@@ -4552,6 +4553,20 @@ C
      &       ' on nucleus',ICENT,' :'
          WRITE(LUPRI,'(12I6)') (KBSCEN(I,ICENT),I=1,NBSCEN(ICENT))
       END DO
+C
+C     MLCC For new module
+C     
+      mlatom=-1
+      call gpopen(mlatom, 'center_info','UNKNOWN','SEQUENTIAL',
+     &        'UNFORMATTED',idummy,.false.)
+      rewind(mlatom)
+      write(mlatom) NUCIND, NBASIS
+      write(mlatom) NBSCEN
+      do ICENT = 1, NUCIND
+        write(mlatom) (KBSCEN(I,ICENT),I=1,NBSCEN(ICENT))
+      enddo
+C
+      call gpclose(mlatom, 'KEEP')
 C
   100 CONTINUE
 C

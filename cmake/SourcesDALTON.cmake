@@ -404,6 +404,7 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/cc/cc_lanczos_lrextras.F
     DALTON/cc/rpa_grad.F
     DALTON/cc/cc_active.F
+    DALTON/cc/mlcc_local_orbitals.F
     DALTON/choles/cc_caa.F
     DALTON/choles/cc_choatr.F
     DALTON/choles/cc_chocc2.F

@@ -1978,7 +1978,9 @@ C
      &   ' ----- One-electron Hamiltonian matrix from SIRH1 :'
       CALL RDONEL('ONEHAMIL',.TRUE.,H1AO,NNBAST)
       if (mlccch) then
-        call mlcc_wr_aoint(H1AO,NNBAST)
+        OVRLP = 1
+        CALL RDONEL('OVERLAP',.TRUE.,WRK(OVRLP),NNBAST)
+        call mlcc_wr_aoint(H1AO,NNBAST, WRK(OVRLP))
       endif
 C
 C     Add field-dependent terms
