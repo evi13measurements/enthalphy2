@@ -795,7 +795,7 @@ C (EFK, 2017) Print omega vector for debug of MLCC code
 C         WRITE(LUPRI,*)
 C         WRITE(LUPRI,*) 'Omega(aibj,1):'
 C         WRITE(LUPRI,*)
-C         DO I = 1,NRHFT
+C         DO I = 1,NRHFT +=============================================================================+
 C           DO A = 1,NVIRT
 C             DO J = 1,NRHFT 
 C               DO B = 1,NVIRT 
@@ -836,7 +836,14 @@ C
          END IF
 C (EFK,2017) For debug of MLCC code 
           WRITE(LUPRI,*) 'Norm:',OMNM
-
+C
+C          WRITE(LUPRI,*) 'Omega1', (WORK(KOMEG1 + I - 1), I = 1,25)
+C          WRITE(LUPRI,*) 'Omega2', (WORK(KOMEG2 + I - 1), I = 1,25)
+C
+C        WRITE(LUPRI,*)
+C        WRITE(LUPRI,*) 'Omega(aibj,1):'
+C        WRITE(LUPRI,*)
+C        WRITE(LUPRI,*) (WORK(KOMEG2+I-1),I=1,20)
 C
          IF (CCSLV) THEN
            IF (IPRINT .GE. 3) THEN
@@ -1032,7 +1039,7 @@ C
         WRITE(LUPRI,'(A,D10.2,a,F16.9)') 
      &  ' R12       energy converged to within ',THRENR,' is ',ER12
       END IF
-c
+C
       IF (CCPAIR) THEN 
 C        Print CC pair energies (WK/UniKA/21-11-2002).
          CALL CCSD_CBS2(WORK(KT1AM),WORK(KT2AM),WORK(KEND1),LWRK1,
@@ -1247,6 +1254,7 @@ C
          ETOT = EN2 + ECCP
 C
       END IF
+C
 C
 C-----------------------------------------------------
 C     IF Triples corrections open files for integrals.
