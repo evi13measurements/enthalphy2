@@ -3855,9 +3855,8 @@ C
 C
 C----------------------------------------------------------------------------
 C     Method 4: Using polinomial fitting we
-C               get an i value and analyze E = |J(f) - J(i)| / J(f)
-C               infere the i=f [symb. i_(f)] value and analyze 
-C               E = |J(f) - J(i_(f))| / J(f)
+C               infer a J(i+1) value and analyze E = |J(r) - J(i+1)| / J(r)
+C               infer the J(f) value and analyze E = |J(r) - J(f)| / J(r)
 C----------------------------------------------------------------------------
 C
 C     Watch out the following three methods.
@@ -3916,8 +3915,8 @@ C
 C
 C----------------------------------------------------------------------------
 C     Method 5: Using rational function fitting we
-C               get an i value and analyze E = |J(f) - J(i)| / J(f)
-C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
+C               infer a J(i+1) value and analyze E = |J(r) - J(i+1)| / J(r)
+C               infer the J(f) value and analyze E = |J(r) - J(f)| / J(r)
 C----------------------------------------------------------------------------
 C
         ELSE IF (NCMTHD .EQ. 5) THEN
@@ -3973,8 +3972,8 @@ C
 C
 C----------------------------------------------------------------------------
 C     Method 6: Using spline function fitting we
-C               get an i value and analyze E = |J(f) - J(i)| / J(f)
-C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
+C               infer a J(i+1) value and analyze E = |J(r) - J(i+1)| / J(r)
+C               infer the J(f) value and analyze E = |J(r) - J(f)| / J(r)
 C----------------------------------------------------------------------------
 C
         ELSE IF (NCMTHD .EQ. 6) THEN
@@ -4044,8 +4043,8 @@ C
 C
 C----------------------------------------------------------------------------
 C     Method 7: Using the Y = A + B*Tanh(C*N) function fitting we
-C               get an i value and analyze E = |J(f) - J(i)| / J(f)
-C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
+C               infer a J(i+1) value and analyze E = |J(r) - J(i+1)| / J(r)
+C               infer the J(f) value and analyze E = |J(r) - J(f)| / J(r)
 C               Here is used the Numerical Recipes'
 C----------------------------------------------------------------------------
 C
@@ -4223,9 +4222,9 @@ C
 C
 C----------------------------------------------------------------------------
 C     Method 8: Using the Y = A + B*Tanh(C*N) function fitting we
-C               get an i value and analyze E = |J(f) - J(i)| / J(f)
-C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
-C               Here it is used NL2SOL tool.
+C               infer a J(i+1) value and analyze E = |J(r) - J(i+1)| / J(r)
+C               infer the J(f) value and analyze E = |J(r) - J(f)| / J(r)
+C               Here it is used MinPack tool.
 C----------------------------------------------------------------------------
 C
         ELSE IF (NCMTHD .EQ. 8) THEN
@@ -4336,8 +4335,8 @@ C
 C
 C----------------------------------------------------------------------------
 C     Method 9: Using the Y = A + B*Tanh(C*N) function fitting we
-C               get an i value and analyze E = |J(f) - J(i)| / J(f)
-C               get the i_(f) value and analyze E = |J(f) - J(i_(f))| / J(f)
+C               infer a J(i+1) value and analyze E = |J(r) - J(i+1)| / J(r)
+C               infer the J(f) value and analyze E = |J(r) - J(f)| / J(r)
 C               Here it is used NL2SOL tool.
 C----------------------------------------------------------------------------
 C
@@ -12244,8 +12243,8 @@ c     &      ' In NL2SOL 5: A, B & C :',x(1),x(2),x(3)
 C
  999  WRITE(NLUPRI,'(/,1X,A)')
      &   '-------------------------------------------------------'
-      WRITE(NLUPRI,'(1X,2(A,I5))')
-     &   ' Leave NL2SOL after',ITEC,' iter. with INFO equal to',IV(1)
+      WRITE(NLUPRI,'(1X,2(A,I8))')
+     &   ' Leave NL2SOL after',IV(31),' iter. with INFO equal to',IV(1)
       WRITE(NLUPRI,'(1X,A,/)')
      &   '-------------------------------------------------------'
 C

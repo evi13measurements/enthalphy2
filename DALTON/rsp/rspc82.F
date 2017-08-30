@@ -1709,7 +1709,7 @@ C
 #include "priunit.h"
 #include "infrsp.h"
 #include "wrkrsp.h"
-CPFP 17-01-2016
+CPFP 17-01-2016 Needed for SOS-module
 #include "mxcent.h"
 #include "spnout.h"
 Cend-PFP
@@ -3215,9 +3215,9 @@ C
       LOGICAL BINMEM
       DIMENSION XINDX(*),FCAC(*),H2AC(*)
 C
-CPFP
+CPFP 17-01-2017 Needed for SOS-module
 C      PARAMETER (MAXST=400)
-      PARAMETER (MAXST=900)
+      PARAMETER (MAXST=1500)
 Cend-PFP
       DIMENSION STVAL(MAXST),ISTART(MAXST),IEQUAL(MAXST)
 C

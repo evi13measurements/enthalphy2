@@ -1355,9 +1355,9 @@ C
 #include "wrkrsp.h"
 C
 C     Local arrays:
-CPFP
+CPFP 17-01-2017 Needed for SOS-module
 C      PARAMETER (MAXVEC = 120)
-      PARAMETER (MAXVEC = 800)
+      PARAMETER (MAXVEC = 900)
 Cend-PFP
       DIMENSION JLDP(MAXVEC)
 C
