@@ -1,0 +1,251 @@
+WESTA short pocket input manual
+------------------------------
+(Sep 2004, hjaaj)
+
+Three types of calculations:
+
+  NONADI : non-adiabatic coupling (in WESNAD)
+  TRAMOM : transition moments (in WESMOM)
+  SHAKE  : shake-upd (in WESSHK)
+
+Input:
+
+**WESTA
+.xxx
+**END OF WESTA INPUT
+
+----------------------------------------------
+'.NONADI' - calculate non-adiabatic coupling
+      NONADI = .TRUE.
+      NGEOM = 2
+
+'.SYMORT' - symmetric orthogonalization of wf(1) and wf(2)
+            for the two geometries when non-adiabatic.
+      SYMORT = .TRUE.
+      WAVEOV = .TRUE.
+
+'.DISPLA' - geometry displacement
+      RDDELQ = .FALSE. ! default is .TRUE:
+      READ (5, '(I5)') NMAXD
+      DO I = 1, NMAXD
+         READ (5,*) (DELQ(I,J), J = 1, 3)
+      END DO
+
+----------------------------------------------
+'.DIPLEN' - calculate dipole length moments   (x = 2)
+'.DIPVEL' - calculate dipole velocity moments (x = 3)
+'.DIPMAG' - calculate magnetic dipole moments (x = 4)
+      TRAMOM    = .TRUE.
+      MOMTYP(x) = .TRUE.
+
+'.CENTOP' - Specification of origin for transition moments
+      READ (5, '(3F10.6)') (CENTOP(I),I=1,3)
+
+'.NSTATE' - Number of states for which we simultaneously
+            want to obtain intensities.
+      READ (5, '(I5)') NSTAT2
+      DO I =1, NSTAT2
+         ICIORD(I) = I
+      END DO
+
+----------------------------------------------
+'.STATES' - states
+      READ(5,'(2I5)') ISTAT1,ISTAT2
+      DATA ISTAT1/1/, ISTAT2/2/
+
+'.SYMDIF' - Two states of different state
+            and/or spin symmetry
+      READ (5, '(2I5)') LSYM1,LSYM2
+      READ (5, '(2I5)') LSPIN1,LSPIN2
+
+'.WFOVER' - calculate overlap between wf(1) and wf(2)
+      WAVEOV    = .TRUE.
+
+----------------------------------------------
+'.SHAKE ' - Shake-up calculation between a singlet
+            ground state and doublet core hole states
+            IACFLG, IACSYM, IACORB give type, symmetry and
+            orbital # for annihilation/creation.
+      READ (5, '(I5)') NSTAT2
+      READ (5, '(3I5)') IACFLG, IACSYM, IACORB
+      SHAKE  = .TRUE.
+      LSPIN1 = 1
+      LSPIN2 = 2
+      NGEOM  = 1
+      DO I = 1, NSTAT2
+         ICIORD(I) = I
+      END DO
+
+----------------------------------------------
+'.PRINT ' - print levels
+            (IPRDEF will be default for levels not specified)
+      READ (5, '(8I5)') IPRDEF,IPRNAD,IPRTRM,IPRBIO,
+     *                  IPRMLC,IPRSHK
+
+'.TITLE ' - Title lines
+      WRITE (6,'(///A/A/)')
+     1   ' WESTA JOB TITLE:',' ----------------'
+ 1115 READ (5, '(A)') TITLIN
+         WORD = TITLIN(1:7)
+         IF (WORD(1:1) .EQ. '*' .OR. WORD(1:1) .EQ. '.') THEN
+            WRITE (6,'(/)')
+            GO TO 1100
+         END IF
+         WRITE (6,'(1X,A)') TITLIN
+         GO TO 1115
+
+'.MOLECU' - units for molecule input
+      READ (5, '(2I5)') LUMLC(1),LUMLC(2)
+      default: LUMLC/5,0/
+
+'.READMO' - input source for molecular orbitals,
+
+'.INPTES' - only input test, no calculation
+      INPTES = .TRUE.
+
+'.RESTAR' - restart, not implemented.
+      RESTAR = .TRUE.
+
+----------------------------------------------
+
+C           '.READMO' - input source for molecular orbitals,
+C                       using READMW
+              READ (5, '(I5)') IRDMOW
+              IF (IRDMOW .GT. 2) THEN
+                READ (5, '(8I5)') NSYM, NELMN1,NELMX1,NELMN3, NELMX3
+                READ (5, '(8I5)') (NISH(I),I=1,NSYM)
+                IF (NELMN1 .EQ. 0 .AND. NELMX3 .EQ. 0) THEN
+C                    ... CAS calculation
+                  MCTYPE = 1
+                  READ (5, '(8I5)') (NASH(I),I=1,NSYM)
+                  READ (5, '(8I5)') (NSSH(I),I=1,NSYM)
+                  READ (5, '(8I5)') (NBAS(I),I=1,NSYM)
+                  NASHT = 0
+                  DO 401 I = 1,NSYM
+                     NAS1(I) = 0
+                     NAS2(I) = NASH(I)
+                     NAS3(I) = 0
+                     NASHT   = NASHT + NASH(I)
+  401             CONTINUE
+                ELSE
+C                 ... RAS calculation
+                  MCTYPE = 2
+                  READ (5, '(8I5)') (NAS1(I),I=1,NSYM)
+                  READ (5, '(8I5)') (NAS2(I),I=1,NSYM)
+                  READ (5, '(8I5)') (NAS3(I),I=1,NSYM)
+                  READ (5, '(8I5)') (NSSH(I),I=1,NSYM)
+                  READ (5, '(8I5)') (NBAS(I),I=1,NSYM)
+                  NASHT = 0
+                  DO 411 I = 1,NSYM
+                     NASH(I) = NAS1(I) + NAS2(I) + NAS3(I)
+                     NASHT   = NASHT   + NASH(I)
+  411             CONTINUE
+                  IF (NELMN1 .LT. 0) THEN
+C                    ... special test option for CAS in RAS2
+                     NELMN1 = 0
+                     NELMX3 = 0
+                  END IF
+               END IF
+             END IF
+
+
+'.REDUCE' - Transition moment between wave functions with
+            reduced graphs (e.g. X-ray moments)
+      REDUCE = .TRUE.
+
+'.FROZEN' - Core orbital is frozen
+      FROZEN = .TRUE.
+  
+'.OCEINT' - OCE-integrals used, read AO-overlap from file
+      OCEINT = .TRUE.
+
+'.NACTEL' - Number of active electrons
+      READ (5, '(I5)') NACTEL
+
+'.CICALC' - CI-vectors (and MO:s) from CI calculation.
+            Assign CI-F21 file to LUSPEC(1)
+      CICALC = .TRUE.
+
+'.CIORD ' - Order of "ISTATE" in each NSTATE CI- f21 file
+            Assign CI-F21 file to LUSPEC(1)
+      READ (5, '(12I5)') (ICIORD(I), I = 1, NSTAT2)
+
+C
+C     ===============
+C
+      IF (LSYM2  .EQ. 0) LSYM2  = LSYM1
+      IF (LSPIN2 .EQ. 0) LSPIN2 = LSPIN1
+      SPIN1  = (LSPIN1 -1)/D2
+      SPIN2  = (LSPIN2 -1)/D2
+      LSYM   = LSYM1
+      ISPIN  = LSPIN1
+      SPIN   = SPIN1
+C
+      IF (WAVEOV .AND. .NOT. NONADI .AND. .NOT. SHAKE) TRAMOM = .TRUE.
+C
+C
+C
+      IF (INPTES) WRITE (6,'(//A/)') ' THIS IS AN INPUT TEST RUN ONLY.'
+      WRITE (6,'(2A,/)') ' THE FOLLOWING PROPERTIES WILL BE',
+     *                   ' CALCULATED IN THIS RUN:'
+      IF (NONADI) THEN
+         WRITE (6,'(6X,A)') 'Non-adiabatic coupling.'
+         IF (SYMORT) WRITE (6,'(9X,A)')
+     *      ' The two MCSCF wave functions are symmetrically'//
+     *      ' orthogonalized.'
+      END IF
+      IF (TRAMOM) THEN
+         WRITE (6,'(/6X,A)') 'Transition properties:'
+         IF (MOMTYP(1)) WRITE (6,'(9X,A)') 'Wave function overlap.'
+         IF (MOMTYP(2)) WRITE (6,'(9X,A)')
+     *      'Dipole length transition moments.'
+         IF (MOMTYP(3)) WRITE (6,'(9X,A)')
+     *      'Dipole velocity transition moments.'
+         IF (MOMTYP(4)) WRITE (6,'(9X,A)')
+     *      'Magnetic dipole transition moments.'
+      END IF
+      IF (SHAKE) THEN
+         WRITE (6, '(/A/,A,I3,A)')
+     *    ' Annihilation/creation amplitudes between the ground state',
+     *    ' and the',NSTAT2,' lowest hole/particle states.'
+         IF (IACFLG .EQ. 0 ) THEN
+            WRITE(6,'(/A,/)')
+     *      ' No Annihilation/creation, IACFLG = 0'
+         ELSE IF (IACFLG .EQ. 1 ) THEN
+            WRITE(6,'(/A,I3/A,I3/)')
+     *      ' SHAKE-annihilation of one electron in symmetry=', IACSYM,
+     *      ' orbital number ', IACORB
+         ELSE IF (IACFLG .EQ. 2 ) THEN
+            WRITE(6,'(/A,I3/A,I3/)')
+     *      ' BIS-creation of one electron in symmetry=', IACSYM,
+     *      ' orbital number ', IACORB
+         ELSE
+            WRITE(6,'(/A/)')
+     *      ' IACFLG out of RANGE (0,1,2) '
+            STOP 'IACFLG outof Range (0,1,2) '
+         END IF
+      END IF
+C
+         IF (SYMORT) WRITE (6,'(/A)')
+     *     ' The hole/particle MCSCF wave functions are symmetrically'//
+     *     ' orthogonalized.'
+         IF (NSTAT2 .GT. MSTAT2) THEN
+            WRITE (6, '(//A,I3)') ' ERROR, TOO MANY FINAL STATES,'//
+     *         ' CURRENT MAXIMUM IS',MSTAT2
+            STOP 'WESINP: too many final states'
+         END IF
+          WRITE (6,'(/9X,A)') ' Order of CI ISTATE vectors per state'
+          WRITE (6,'(9X,(12I5))') (ICIORD(I), I = 1, NSTAT2)
+C
+      IF (IPRNAD .EQ. -1) IPRNAD = IPRDEF
+      IF (IPRTRM .EQ. -1) IPRTRM = IPRDEF
+      IF (IPRBIO .EQ. -1) IPRBIO = IPRDEF
+      IF (IPRMLC .EQ. -1) IPRMLC = IPRDEF
+      IF (IPRSHK .EQ. -1) IPRSHK = IPRDEF
+      WRITE (6,'(//,(A,I5))')
+     *   ' GENERAL PRINT LEVEL: ',IPRDEF,
+     *   ' WESNAD  PRINT LEVEL: ',IPRNAD,
+     *   ' WESMOM  PRINT LEVEL: ',IPRTRM,
+     *   ' BIORAS  PRINT LEVEL: ',IPRBIO,
+     *   ' READIW  PRINT LEVEL: ',IPRMLC,
+     *   ' WESSHK  PRINT LEVEL: ',IPRSHK
