@@ -1,0 +1,203 @@
+#!/bin/bash
+#
+# wes-ac for calculation of adiabatic correction with westa
+#
+# Sep 2004 Hans Joergen Aa. Jensen.
+# Revised Aug 2009 & 4-Aug-2010 HJAaJ
+#
+
+#
+# 1. read input and define program executables
+#
+
+params=$*
+
+WESTA_DALTON=${DALTON:-"/people/disk2/hjj/prog/svnDalton_trunk/bin/dalton -M 6000 "}
+WESTA="/people/disk2/hjj/prog/westa/westa.x"
+
+WRKDIR=`pwd`
+SCRDIR=/scratch/$USER
+
+IERR=0
+if [ "$1" = "-r" ]; then
+ shift
+ RESTART=${1%\.tar.gz}
+ shift
+ OLDTAR=${RESTART}.tar.gz
+ if [ ! -r ${OLDTAR} ]; then
+  echo "ERROR, restart file $OLDTAR is not readable/does not exist"
+  IERR=1
+ fi
+else
+ OLDTAR=norestart
+fi
+
+if [ $# -lt 5 ]; then
+   echo ERROR: too few arguments
+fi
+
+DALAINP=${1%\.dal}
+shift
+MOLAINP=${1%\.mol}
+shift
+DALBINP=${1%\.dal}
+shift
+MOLBINP=${1%\.mol}
+shift
+WESINP=${1%\.inp}
+shift
+
+if [ ! -r ${DALAINP}.dal ]; then
+   echo ERROR: Dalton A input ${DALAINP}.dal is not readable
+   IERR=1
+fi
+if [ ! -r ${DALBINP}.dal ]; then
+   echo ERROR: Dalton B input ${DALBINP}.dal is not readable
+   IERR=1
+fi
+if [ ! -r ${MOLAINP}.mol ]; then
+   echo ERROR: Dalton A input ${MOLAINP}.mol is not readable
+   IERR=1
+fi
+if [ ! -r ${MOLBINP}.mol ]; then
+   echo ERROR: Dalton B input ${MOLBINP}.mol is not readable
+   IERR=1
+fi
+if [ ! -r ${WESINP}.inp ]; then
+   echo ERROR: Westa input ${WESINP}.inp is not readable
+   IERR=1
+fi
+if [ $IERR -ne 0 ]; then
+   echo "Call : $0 $params"
+   echo "Usage: $0 [-r restart.tar.gz] a.dal a.mol b.dal b.mol w1.inp [w2.inp ...]"
+   exit 1
+fi
+
+#
+# 2. ksh/bash functions
+#
+function backup()
+{
+  for i ; do
+    if [ -f "${i}" ]; then
+        if [ -f "${i}.6" ]; then mv -f "${i}.6" "${i}.7"; fi
+        if [ -f "${i}.5" ]; then mv -f "${i}.5" "${i}.6"; fi
+        if [ -f "${i}.4" ]; then mv -f "${i}.4" "${i}.5"; fi
+        if [ -f "${i}.3" ]; then mv -f "${i}.3" "${i}.4"; fi
+        if [ -f "${i}.2" ]; then mv -f "${i}.2" "${i}.3"; fi
+        if [ -f "${i}.1" ]; then mv -f "${i}.1" "${i}.2"; fi
+        if [ -f "${i}.0" ]; then mv -f "${i}.0" "${i}.1"; fi
+        if [ -f "${i}" ]; then mv -f "${i}" "${i}.0" ; fi
+    fi
+  done
+}
+
+#
+# 3. start execution
+#
+
+WESDIR=$SCRDIR/westa.$$
+mkdir -p $WESDIR
+
+if [ ! -d $WESDIR ]; then
+   echo "Error creating directory $WESDIR for Westa"
+   exit 1
+fi
+
+# geometry A
+
+SCRDIR_A=$SCRDIR/$MOLAINP
+
+echo "wes-ac: geometry A in " $SCRDIR_A
+
+if [ -f $OLDTAR ]; then
+   $WESTA_DALTON -D -t $SCRDIR_A -f $RESTART  $DALAINP  $MOLAINP
+   ierr=$?
+else
+   $WESTA_DALTON -D -t $SCRDIR_A  $DALAINP  $MOLAINP
+   ierr=$?
+fi
+if [ $ierr -ne 0 ]; then
+   echo "Error in Dalton on geometry A, exit code $ierr"
+   exit $ierr
+fi
+
+cd $SCRDIR_A
+if [ -f AOPROPER -a -f SIRIFC ]; then
+   mv AOPROPER $WESDIR/AOPROPER.A
+   mv SIRIFC $WESDIR/SIRIFC.1A
+   cd ..
+   rm -f -r $SCRDIR_A
+else
+   echo 'ERROR geom A: AOPROPER and SIRIFC not generated in ' `pwd`
+   ls -slt
+   exit 1
+fi
+
+#
+
+cd $WRKDIR
+
+if [ "$DALAINP" = "$MOLAINP" ]; then
+   AJOB=$DALAINP
+else
+   AJOB=${DALAINP}_${MOLAINP}
+fi
+OUTTAR=$AJOB.tar.gz
+
+# geometry B
+
+SCRDIR_B=$SCRDIR/$MOLBINP
+
+echo "wes-ac: geometry B in " $SCRDIR_B
+
+if [ -f $OUTTAR ]; then
+   $WESTA_DALTON -D -t $SCRDIR_B -f $AJOB  $DALBINP  $MOLBINP
+   ierr=$?
+   if [ $ierr -ne 0 ]; then
+      echo "Error in Dalton on geometry B, exit code $ierr"
+      exit $ierr
+   fi
+else
+   echo "ERROR: $OUTTAR was not created"
+   exit 1
+   $WESTA_DALTON -D -t $SCRDIR_B           $DALBINP  $MOLBINP
+fi
+
+cd $SCRDIR_B
+if [ -f AOPROPER -a -f SIRIFC ]; then
+   mv AOPROPER $WESDIR/AOPROPER.B
+   mv SIRIFC $WESDIR/SIRIFC.1B
+   cd ..
+   rm -f -r $SCRDIR_B
+else
+   echo 'ERROR geom B: AOPROPER and SIRIFC not generated in ' `pwd`
+   ls -slt
+   exit 1
+fi
+cd $WRKDIR
+
+# Westa ...
+
+while [ -r ${WESINP}.inp ]; do
+   WESOUT=${WESINP}_${DALAINP}_$MOLAINP.out
+   WESINP=${WESINP}.inp
+
+   backup $WESOUT
+
+   cp $WESINP $WESDIR
+
+   cd $WESDIR
+   echo "Running westa on $WESINP, output in $WESOUT"
+   $WESTA < $WESINP > $WRKDIR/$WESOUT
+   cd $WRKDIR
+
+#
+#  more Westa runs?
+#
+
+   WESINP=${1%\.inp}
+   shift
+done
+
+# -- end of wes-ac script --
