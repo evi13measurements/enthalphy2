@@ -80,6 +80,7 @@ set(EXTERNAL_LIBS)
 
 include(ConfigVersion)
 include(SourcesDALTON)
+include(SourcesWESTA)
 include(ConfigArchitecture)
 include(ConfigCompilerFlags)
 include(CheckFortranStandardCompatibility)
@@ -177,6 +178,8 @@ if(USE_BUILTIN_LAPACK)
 endif()
 
 include(LibsDALTON)
+
+include(LibsWESTA)
 
 include(ConfigTesting)
 

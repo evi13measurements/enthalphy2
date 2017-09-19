@@ -307,13 +307,14 @@ C
 C
 C GET S**(-1/2)
 C
-      CALL MPABT(TSWF,      NSTAT2,NSTAT2,NSTAT2,NSTAT2,
-     *            WRK(KU1),  NSTAT2,NSTAT2,NSTAT2,NSTAT2,
-     *            WRK(KSWF1),NSTAT2,NSTAT2)
-C
-      CALL MPAB (WRK(KU1),  NSTAT2,NSTAT2,NSTAT2,NSTAT2,
-     *            WRK(KSWF1),NSTAT2,NSTAT2,NSTAT2,NSTAT2,
-     *            TSWF,      NSTAT2,NSTAT2)
+      CALL DGEMM('N','T',NSTAT2,NSTAT2,NSTAT2,1.D0,
+     &           TSWF,      NSTAT2,
+     &           WRK(KU1),  NSTAT2,0.D0,
+     &           WRK(KSWF1),NSTAT2)
+      CALL DGEMM('N','N',NSTAT2,NSTAT2,NSTAT2,1.D0,
+     &           WRK(KU1),  NSTAT2,
+     &           WRK(KSWF1),NSTAT2,0.D0,
+     &           TSWF,      NSTAT2)
 C
 C     print out TSWF
 C
@@ -470,15 +471,17 @@ C
          CALL OUTPUT(WRK(KCYB),1,NOCCT,1,NOCCT,NOCCT,NOCCT,1,LUPRI)
       ENDIF
 C
-      CALL MPAB(     VC1 ,NBAST,NOCCT,NBAST,NOCCT,
-     *          WRK(KCXA),NOCCT,NOCCT,NOCCT,NOCCT,
-     *          WRK(KVSS),NBAST,NOCCT)
+         CALL DGEMM('N','N',NBAST,NOCCT,NOCCT,1.D0,
+     &              VC1,      NBAST,
+     &              WRK(KCXA),NOCCT,0.D0,
+     &              WRK(KVSS),NBAST)
 C
       CALL DCOPY((NOCCT*NBAST),WRK(KVSS),1,VC1,1)
 C
-      CALL MPAB(     VC2 ,NBAST,NOCCT,NBAST,NOCCT,
-     *          WRK(KCYB),NOCCT,NOCCT,NOCCT,NOCCT,
-     *          WRK(KVSS),NBAST,NOCCT)
+         CALL DGEMM('N','N',NBAST,NOCCT,NOCCT,1.D0,
+     &              VC2,      NBAST,
+     &              WRK(KCYB),NOCCT,0.D0,
+     &              WRK(KVSS),NBAST)
 C
        CALL DCOPY((NOCCT*NBAST),WRK(KVSS),1,VC2,1)
 C
@@ -527,14 +530,16 @@ C  IF OCEINT THEN ORBITALS S ASSUMED TO BE OBTAINED FROM OCEOVL
 C  (AS INPUT IN SMO) OCEINT NOT IMPLEMENTED YET (21/10 1988)
 C
       IF ( .NOT. OCEINT) THEN
-      CALL MPAB (SAO,NBAST,NBAST,NBAST,NBAST,
-     *           VC2,NBAST,NOCCT,NBAST,NORBT,
-     *           WRK,NBAST,NOCCT)
+         CALL DGEMM('N','N',NBAST,NOCCT,NBAST,1.D0,
+     &              SAO, NBAST,
+     &              VC2, NBAST,0.D0,
+     &              WRK, NBAST)
+         CALL DGEMM('T','N',NOCCT,NOCCT,NBAST,1.D0,
+     &              VC1, NBAST,
+     &              WRK, NBAST,0.D0,
+     &              SMO, NOCCT)
      
 C
-      CALL MPATB(VC1,NBAST,NOCCT,NBAST,NORBT,
-     *           WRK,NBAST,NOCCT,NBAST,NOCCT,
-     *           SMO,NOCCT,NOCCT)
       ENDIF
       IF (IPRBIO .GE. 10) THEN
          WRITE(LUPRI,'(/A)')' TROVLP-TEST: SMO12 matrix (occ-occ block)'

@@ -332,12 +332,14 @@ C
 C
       ELSE
 C
-         CALL MPAB(SAOAA,NBAST,NBAST,NBAST,NBAST,
-     *              WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *              WRK(KWRK1),NBAST,NORBT)
-         CALL MPATB(WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *              WRK(KWRK1),NBAST,NORBT,NBAST,NORBT,
-     *              WRK(KSMO),NORBT,NORBT)
+         CALL DGEMM('N','N',NBAST,NORBT,NBAST,1.D0,
+     &              SAOAA,     NBAST,
+     &              WRK(KVC),  NBAST,0.D0,
+     &              WRK(KWRK1),NBAST)
+         CALL DGEMM('T','N',NORBT,NORBT,NBAST,1.D0,
+     &              WRK(KVC),  NBAST,
+     &              WRK(KWRK1),NBAST,0.D0,
+     &              WRK(KSMO), NORBT)
 C
          II = KSMO
          DO 1100 I = 1,NORBT
@@ -383,12 +385,14 @@ C
       CALL SYMMO(1,CMO,WRK(KVC))
 C
 C
-      CALL MPAB(SAOAA,NBAST,NBAST,NBAST,NBAST,
-     *           WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *           WRK(KWRK1),NBAST,NORBT)
-      CALL MPATB(WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *            WRK(KWRK1),NBAST,NORBT,NBAST,NORBT,
-     *            WRK(KSMO),NORBT,NORBT)
+         CALL DGEMM('N','N',NBAST,NORBT,NBAST,1.D0,
+     &              SAOAA,     NBAST,
+     &              WRK(KVC),  NBAST,0.D0,
+     &              WRK(KWRK1),NBAST)
+         CALL DGEMM('T','N',NORBT,NORBT,NBAST,1.D0,
+     &              WRK(KVC),  NBAST,
+     &              WRK(KWRK1),NBAST,0.D0,
+     &              WRK(KSMO), NORBT)
       II = KSMO
       DO I = 1,NORBT
          WRK(II) = WRK(II) - D1
@@ -431,12 +435,14 @@ C     get and check CMOB1
 C
       CALL READMW(IRDMOW,LUIT1V(2,1),CMO)
       CALL SYMMO(1,CMO,WRK(KVC))
-      CALL MPAB(SAOBB,NBAST,NBAST,NBAST,NBAST,
-     *           WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *           WRK(KWRK1),NBAST,NORBT)
-      CALL MPATB(WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *            WRK(KWRK1),NBAST,NORBT,NBAST,NORBT,
-     *            WRK(KSMO),NORBT,NORBT)
+         CALL DGEMM('N','N',NBAST,NORBT,NBAST,1.D0,
+     &              SAOBB,     NBAST,
+     &              WRK(KVC),  NBAST,0.D0,
+     &              WRK(KWRK1),NBAST)
+         CALL DGEMM('T','N',NORBT,NORBT,NBAST,1.D0,
+     &              WRK(KVC),  NBAST,
+     &              WRK(KWRK1),NBAST,0.D0,
+     &              WRK(KSMO), NORBT)
       II = KSMO
       DO I = 1,NORBT
          WRK(II) = WRK(II) - D1
@@ -470,12 +476,14 @@ C
       IF (NSTAT2 .EQ. 1) THEN
       CALL READMW(IRDMOW,LUIT1V(2,2),CMO)
       CALL SYMMO(1,CMO,WRK(KVC))
-      CALL MPAB(SAOBB,NBAST,NBAST,NBAST,NBAST,
-     *           WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *           WRK(KWRK1),NBAST,NORBT)
-      CALL MPATB(WRK(KVC),NBAST,NORBT,NBAST,NORBT,
-     *            WRK(KWRK1),NBAST,NORBT,NBAST,NORBT,
-     *            WRK(KSMO),NORBT,NORBT)
+         CALL DGEMM('N','N',NBAST,NORBT,NBAST,1.D0,
+     &              SAOBB,     NBAST,
+     &              WRK(KVC),  NBAST,0.D0,
+     &              WRK(KWRK1),NBAST)
+         CALL DGEMM('T','N',NORBT,NORBT,NBAST,1.D0,
+     &              WRK(KVC),  NBAST,
+     &              WRK(KWRK1),NBAST,0.D0,
+     &              WRK(KSMO), NORBT)
       II = KSMO
       DO 4100 I = 1,NORBT
          WRK(II) = WRK(II) - D1
@@ -615,60 +623,5 @@ C
      *      WORD,'" not found on AOPROPER.',LUPROP
          STOP 'WESPROP error: property not found on AOPROPER.'
       END IF
-      RETURN
-      END
-C  /* Deck getref */
-      SUBROUTINE GETREF(CREF,LCREF)
-C
-C 28 JAN 87 BASED ON READMC(RSPMC)
-C l.r. Sep 2004 hjaaj
-C
-C Purpose:
-C  GET MC REFERENCE STATE from SIRIFC
-C
-#include "implicit.h"
-#include "priunit.h"
-C
-      DIMENSION CREF(LCREF)
-      LOGICAL   FNDLAB, CIRESPON
-C
-#include "inftap.h"
-C
-      CALL QENTER('GETREF')
-      IF (LCREF .EQ. 1) THEN
-         CREF(1) = 1.0D0
-      ELSE IF (LCREF .EQ. 0) THEN
-C        ... Hartree-Fock case ....
-      ELSE
-         REWIND LUSIFC
-         IF ( FNDLAB(LBSIFC,LUSIFC) ) THEN
-            CIRESPON = .FALSE.
-         ELSE
-            CIRESPON = .TRUE.
-            REWIND LUSIFC
-            CALL MOLLAB('CIRESPON',LUSIFC,LUPRI)
-         END IF
-         READ (LUSIFC)
-         READ (LUSIFC) MISHT,MASHT,MOCCT,MORBT,MBAST,
-     *                 MCONF,MWOPT,MWOPH,MDETS
-         IF (LCREF .EQ. MCONF) THEN
-C
-            READ (LUSIFC)
-         ELSE IF (LCREF .EQ. MDETS) THEN
-            CALL MOLLAB('CREFDETS',LUSIFC,LUPRI)
-         ELSE
-            WRITE(LUPRI,'(/A/3I20//A,5I5)')
-     &         'GETREF error, LCREF .ne. NCONF/NCDETS from SIRIFC:',
-     &          LCREF,MCONF,MDETS,
-     &         'MISHT,MASHT,MOCCT,MORBT,MBAST',
-     &          MISHT,MASHT,MOCCT,MORBT,MBAST
-            CALL QUIT('GETREF error, LCREF .ne. NCONF')
-         END IF
-         CALL READT (LUSIFC,LCREF,CREF)
-      END IF
-C
-C *** End of GETREF
-C
-      CALL QEXIT('GETREF')
       RETURN
       END

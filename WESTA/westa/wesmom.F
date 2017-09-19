@@ -469,27 +469,28 @@ C
 C
 C        ACTIVE PART OF CONTRAVARIANT AO TRANSITION DENSITY MATRIX
 C
-C put zeroing here
-            CALL DZERO(WRK(KDAO), N2BASX)
-C
          IF (NASHT .GT. 0) THEN
             JVCA1 = KVCA1 + NISHT*NBAST
             JVCA2 = KVCA2 + NISHT*NBAST
-            CALL MPAB (WRK(JVCA1),NBAST,NASHT,NBAST,NASHT,
-     1                  WRK(KDTV),NASHT,NASHT,NASHT,NASHT,
-     2                  WRK(KW4),NBAST,NASHT)
-            CALL MPABT(WRK(KW4),NBAST,NASHT,NBAST,NASHT,
-     1                  WRK(JVCA2),NBAST,NASHT,NBAST,NASHT,
-     2                  WRK(KDAO),NBAST,NBAST)
+            CALL DGEMM('N','N',NBAST,NASHT,NASHT,1.D0,
+     &                 WRK(JVCA1),NBAST,
+     &                 WRK(KDTV), NASHT,0.D0,
+     &                 WRK(KW4),  NBAST)
+            CALL DGEMM('N','T',NBAST,NBAST,NASHT,1.D0,
+     &                 WRK(KW4),  NBAST,
+     &                 WRK(JVCA2),NBAST,0.D0,
+     &                 WRK(KDAO), NBAST)
             IF (IPRTRM .GE. 6) THEN
                WRITE (LUPRI,'(//2A)')
      1         ' TRANSITION DENSITY MATRIX OVER ACTIVE MO:S',
      2         ' IN CONTRAVARIANT AO BASIS'
               CALL OUTPUT(WRK(KDAO),1,NBAST,1,NBAST,NBAST,NBAST,1,LUPRI)
             END IF
+         ELSE
+            CALL DZERO(WRK(KDAO), N2BASX)
          END IF
 C
-C        INACTIVE PART OF CONTRAVARIANT AO TRANSITION DENSITY MATRIX
+C        Add INACTIVE PART OF CONTRAVARIANT AO TRANSITION DENSITY MATRIX
 C
          IF ( NISHT .GT. 0 .AND. ABS(OVLA12) .GT. THRDC ) THEN
             KT1 = KDAO + N2BASX
@@ -498,13 +499,14 @@ C
             IF (KTE .GT. LWRK) CALL ERRWRK('WESMOM.DCAO',KTE,LWRK)
             CALL DUNIT(WRK(KT1),NISHT)
             CALL DSCAL(NISHT,(D2*OVLA12),WRK(KT1),(NISHT+1))
-            CALL MPAB (WRK(KVCA1),NBAST,NISHT,NBAST,NISHT,
-     1                  WRK(KT1),  NISHT,NISHT,NISHT,NISHT,
-     2                  WRK(KT2),  NBAST,NISHT)
-            CALL MPABT(WRK(KT2),  NBAST,NISHT,NBAST,NISHT,
-     1                  WRK(KVCA2),NBAST,NISHT,NBAST,NISHT,
-     2                  WRK(KT1),  NBAST,NBAST)
-            CALL DAXPY(N2BASX,D1,WRK(KT1),1,WRK(KDAO),1)
+            CALL DGEMM('N','N',NBAST,NISHT,NISHT,1.D0,
+     &                 WRK(KVCA1),NBAST,
+     &                 WRK(KT1),  NISHT,0.D0,
+     &                 WRK(KT2),  NBAST)
+            CALL DGEMM('N','T',NBAST,NBAST,NISHT,1.D0,
+     &                 WRK(KT2),  NBAST,
+     &                 WRK(KVCA2),NBAST,1.D0,
+     &                 WRK(KDAO), NBAST)
 C
          END IF
          IF (IPRTRM .GE. 6) THEN
@@ -650,17 +652,18 @@ C       wave function basis and write out final results.
 C
         IF (MOMTYP(2)) THEN
 C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,NSTAT2,NSTAT2,
-     *               WRK(KRWMOM),NSTAT2,1,     NSTAT2,1,
-     *               WRK(KFIMOM),NSTAT2,1)
-C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,    NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + NSTAT2),NSTAT2,1)
-C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,      NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 2*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 2*NSTAT2),NSTAT2,1)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM),NSTAT2,0.D0,
+     &                 WRK(KFIMOM),NSTAT2)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + NSTAT2),NSTAT2)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 2*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 2*NSTAT2),NSTAT2)
 C
          CALL HEADER('<<<<< RESULTS: DIPOLE LENGTH MOMENTS >>>>>',-1)
 C
@@ -692,17 +695,18 @@ C
 C
         IF (MOMTYP(3)) THEN
 C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,    NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 3*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 3*NSTAT2),NSTAT2,1)
-C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,      NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 4*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 4*NSTAT2),NSTAT2,1)
-C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,      NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 5*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 5*NSTAT2),NSTAT2,1)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 3*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 3*NSTAT2),NSTAT2)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 4*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 4*NSTAT2),NSTAT2)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 5*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 5*NSTAT2),NSTAT2)
 C
          CALL HEADER('<<<<< RESULTS: DIPOLE VELOCITY MOMENTS >>>>>',-1)
 C
@@ -735,17 +739,18 @@ C
 C
         IF (MOMTYP(4)) THEN
 C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,    NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 6*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 6*NSTAT2),NSTAT2,1)
-C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,      NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 7*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 7*NSTAT2),NSTAT2,1)
-C
-          CALL MPAB(WRK(KTSWF), NSTAT2,NSTAT2,      NSTAT2,NSTAT2,
-     *               WRK(KRWMOM + 8*NSTAT2),NSTAT2,1,NSTAT2,1,
-     *               WRK(KFIMOM + 8*NSTAT2),NSTAT2,1)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 6*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 6*NSTAT2),NSTAT2)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 7*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 7*NSTAT2),NSTAT2)
+           CALL DGEMM('N','N',NSTAT2,1,NSTAT2,1.D0,
+     &                 WRK(KTSWF), NSTAT2,
+     &                 WRK(KRWMOM + 8*NSTAT2),NSTAT2,0.D0,
+     &                 WRK(KFIMOM + 8*NSTAT2),NSTAT2)
 C
          CALL HEADER('<<<<< RESULTS: MAGNETIC DIPOLE MOMENTS >>>>>',-1)
 C

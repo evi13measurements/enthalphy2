@@ -1,0 +1,10 @@
+set(WESTA_FIXED_FORTRAN_SOURCES
+    WESTA/westa/expcd2.F
+    WESTA/westa/expcid.F
+    WESTA/westa/wesgp.F
+    WESTA/westa/wesmom.F
+    WESTA/westa/wesnad.F
+    WESTA/westa/wesshk.F
+    WESTA/westa/westra.F
+    WESTA/westa/wfovlp.F
+    )

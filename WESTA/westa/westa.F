@@ -148,7 +148,7 @@ C
       WRITE(6,2200) STARS,RELEAS,STARS
  2200 FORMAT(1X,A)
       WRITE(6,400)
-  400 FORMAT(//,T2,'Authors:',
+  400 FORMAT(//,T2,'Version 2017. Original WESTA authors 1985:'/
      * T12,'Hans Agren,              University of Linkoeping, Sweden'/
      * T12,'Hans Joergen Aa. Jensen, University of Odense,     Denmark'/
      * T12,'Jeppe Olsen,             University of Lund,       Sweden'/)
@@ -960,7 +960,6 @@ C
         NUMERR = NUMERR + 1
       ENDIF
       IF (NUMERR .GT. 0) THEN
-        CALL TRACE
         STOP 'WESTA error: no configurations'
       ENDIF
  1610 FORMAT(/' SETUPW-ERROR, NCONF =',I10)
@@ -1779,22 +1778,5 @@ C
      *     OCEINT/.FALSE./,CICALC/.FALSE./,
      *     NUCMASS/2*1.007276/
 C  2*proton mass, value not double-checked /hjaaj sep 04 TODO
-      END
-C  /* Deck sbdorb */
-      BLOCK DATA SBDORB
-C     Initialize MULD2H in common block /INFORB/
-#include <implicit.h>
-#include <inforb.h>
-C
-C     MULTIPLICATION TABLE FOR SYMMETRIES (MULD2H is in /INFORB/)
-C
-      DATA MULD2H/1,2,3,4,5,6,7,8,
-     *            2,1,4,3,6,5,8,7,
-     *            3,4,1,2,7,8,5,6,
-     *            4,3,2,1,8,7,6,5,
-     *            5,6,7,8,1,2,3,4,
-     *            6,5,8,7,2,1,4,3,
-     *            7,8,5,6,3,4,1,2,
-     *            8,7,6,5,4,3,2,1/
       END
 
