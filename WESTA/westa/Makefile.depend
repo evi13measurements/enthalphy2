@@ -1,0 +1,69 @@
+arhpack.o arhpack.i : arhpack.F  \
+  ../dalton/include/implicit.h  ../dalton/include/nosync.h
+ 
+ 
+expcd2.o expcd2.i : expcd2.F  \
+  ../dalton/include/ciinfo.h  ../dalton/include/detbas.h  ../dalton/include/implicit.h \
+  ../dalton/include/inforb.h  ../dalton/include/mxpdim.h  ../dalton/include/strnum.h
+ 
+ 
+expcid.o expcid.i : expcid.F  \
+  ../dalton/include/ciinfo.h  ../dalton/include/detbas.h  ../dalton/include/implicit.h \
+  ../dalton/include/inforb.h  ../dalton/include/mxpdim.h  ../dalton/include/strnum.h
+ 
+ 
+wesdum.o wesdum.i : wesdum.F 
+ 
+ 
+wesgp.o wesgp.i : wesgp.F  \
+  ../dalton/include/implicit.h  ../dalton/include/infind.h  ../dalton/include/inforb.h \
+  ../dalton/include/inftap.h  ../dalton/include/maxash.h  ../dalton/include/maxorb.h \
+  ../dalton/include/priunit.h  ../dalton/include/wcborb.h  ../include/wesinf.h \
+  ../include/westap.h
+ 
+ 
+wesmom.o wesmom.i : wesmom.F  \
+  ../dalton/include/implicit.h  ../dalton/include/infdim.h  ../dalton/include/infinp.h \
+  ../dalton/include/inforb.h  ../dalton/include/inftap.h  ../dalton/include/infvar.h \
+  ../dalton/include/iratdef.h  ../dalton/include/maxorb.h  ../dalton/include/priunit.h \
+  ../include/wesinf.h  ../include/westap.h
+ 
+ 
+wesnad.o wesnad.i : wesnad.F  \
+  ../dalton/include/codata.h  ../dalton/include/implicit.h  ../dalton/include/infdim.h \
+  ../dalton/include/infinp.h  ../dalton/include/inforb.h  ../dalton/include/infvar.h \
+  ../dalton/include/maxorb.h  ../dalton/include/priunit.h  ../include/wesinf.h \
+  ../include/westap.h
+ 
+ 
+wesshk.o wesshk.i : wesshk.F  \
+  ../dalton/include/implicit.h  ../dalton/include/infdim.h  ../dalton/include/infinp.h \
+  ../dalton/include/inforb.h  ../dalton/include/inftap.h  ../dalton/include/infvar.h \
+  ../dalton/include/iratdef.h  ../dalton/include/maxorb.h  ../dalton/include/priunit.h \
+  ../include/wesinf.h  ../include/westap.h
+ 
+ 
+westa.o westa.i : westa.F  \
+  ../dalton/include/implicit.h  ../dalton/include/infdim.h  ../dalton/include/infind.h \
+  ../dalton/include/infinp.h  ../dalton/include/inforb.h  ../dalton/include/infpri.h \
+  ../dalton/include/inftap.h  ../dalton/include/infvar.h  ../dalton/include/iratdef.h \
+  ../dalton/include/maxash.h  ../dalton/include/maxorb.h  ../dalton/include/priunit.h \
+  ../dalton/include/wcborb.h  ../include/wesgto.h  ../include/wesinf.h \
+  ../include/westap.h
+ 
+ 
+westra.o westra.i : westra.F  \
+  ../dalton/include/cbreor.h  ../dalton/include/ciinfo.h  ../dalton/include/csfbas.h \
+  ../dalton/include/detbas.h  ../dalton/include/implicit.h  ../dalton/include/infinp.h \
+  ../dalton/include/inforb.h  ../dalton/include/infvar.h  ../dalton/include/maxorb.h \
+  ../dalton/include/mxpdim.h  ../dalton/include/priunit.h  ../dalton/include/strnum.h \
+  ../include/wesinf.h
+ 
+ 
+wfovlp.o wfovlp.i : wfovlp.F  \
+  ../dalton/include/implicit.h  ../dalton/include/infdim.h  ../dalton/include/infinp.h \
+  ../dalton/include/inforb.h  ../dalton/include/infvar.h  ../dalton/include/iratdef.h \
+  ../dalton/include/maxorb.h  ../dalton/include/priunit.h  ../include/wesinf.h \
+  ../include/westap.h
+ 
+ 
