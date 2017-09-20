@@ -600,7 +600,7 @@ C
 C  WESINF  ? NGEOM,IRDMOW,NCONF1,NCONF2,LSYM1,LSYM2,LSPIN1,LSPIN2,NSTAT2
 C  WESTAP  ? LUSYMV,...
 C  INFTAP  : LUSIFC
-C  INFINP  : FLAG(26)
+C  INFINP  : FLAG(26+34)
 C  INFORB  ? N2BASX...
 C  INFIND  ? IROW,ISAO,ISW...
 C  INFVAR  ? NCONF
@@ -675,6 +675,7 @@ C
       ELSE
          WRITE (LUPRI,*) 'Main label on SIRIFC.1A : ',LBSIFC
       END IF
+      FLAG(34) = .TRUE. ! MO 2-el integrals not needed
       CALL SETSIR(WORK,LWORK)
       FLAG(26) = .FALSE.
 C     ... do not write SIRIUS.STRINGINFO for WESTA (!)
