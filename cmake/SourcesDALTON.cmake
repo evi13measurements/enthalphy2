@@ -529,24 +529,6 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/mlcc_mod/mlcc_fock.F90
     DALTON/mlcc_mod/mlcc_energy.F90
     DALTON/cc/cc_mod_jacobi_test.F
-    DALTON/mlcc_oo_mod/hf_class.F90
-    DALTON/mlcc_oo_mod/ccs_class.F90
-    DALTON/mlcc_oo_mod/ccs_class_submodules/cholesky_submodule.F90
-    DALTON/mlcc_oo_mod/ccs_class_submodules/fock_submodule.F90
-    DALTON/mlcc_oo_mod/ccs_class_submodules/diis_submodule.F90
-    DALTON/mlcc_oo_mod/ccsd_class.F90
-    DALTON/mlcc_oo_mod/cc2_class.F90
-    DALTON/mlcc_oo_mod/cc2_class_submodules/omega_submodule.F90
-    DALTON/mlcc_oo_mod/calc_settings_class.F90
-    DALTON/mlcc_oo_mod/calc_procedures_class.F90
-    DALTON/mlcc_oo_mod/ccsd_class_submodules/omega_submodule.F90
-    DALTON/mlcc_oo_mod/ccsd_class_submodules/diis_submodule.F90
-    DALTON/mlcc_oo_mod/ccsd_class_submodules/jacobian_submodule.F90
-    DALTON/mlcc_oo_mod/mlcc_oo_driver.F90
-    DALTON/mlcc_oo_mod/input_output.F90
-    DALTON/mlcc_oo_mod/utils.F90
-    DALTON/mlcc_oo_mod/workspace.F90
-    DALTON/mlcc_oo_mod/types.F90
     DALTON/pdpack/arhpack.F
     DALTON/pdpack/eispack.F
     DALTON/pdpack/jacobi.F

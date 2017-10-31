@@ -3040,7 +3040,7 @@ C
 !            write(lupri,*) 'BASA(I-1), BASB(I-1)',
 !     &      BASA(I-1), BASB(I-1)
             ALPHA(NUCI,NBLOCK) = 0.25D0/(BASA(I-1)*J+BASB(I-1))**2
-!            write(lupri,*) 'ALPHA(nuci,nblock)', ALPHA(NUCI,NBLOCK)
+            write(lupri,*) 'ALPHA(nuci,nblock)', ALPHA(NUCI,NBLOCK)
             CPRIMU(NUCI,NRCI,NBLOCK) = 1.0D0
   110    CONTINUE
          NUC(NBLOCK) = NUCI
@@ -3245,6 +3245,7 @@ C  /* Deck nrmorb */
      &           THRMIN = 1.D-17, EXPMIN = 1.D-10)
       CHARACTER*1 SPDCAR
       DIMENSION ALPHA(KPRIM), CPRIM(KPRIM,KPRIM), CPRIMU(KPRIM,KPRIM)
+      write(lupri,*)ALPHA(1)
 C
       PIPPI = (DP5/PI)**DP75
       IF (NUCIJ.EQ.1 .AND. ABS(ALPHA(1)).LE.EXPMIN) THEN
