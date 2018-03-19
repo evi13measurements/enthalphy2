@@ -19,6 +19,7 @@ C
          endif
 C
 C
+        mlunit = -1
          call gpopen(mlunit, 'LOCAL_ORB_INFO','UNKNOWN','SEQUENTIAL',
      &        'FORMATTED',idummy,.false.)
          rewind(mlunit)

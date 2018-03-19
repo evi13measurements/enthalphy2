@@ -28,6 +28,7 @@ C
 C     Open Sirius Fock file
 C     ---------------------
 C
+      lu_sir = -1
       call gpopen(lu_sir,'SIRIFC','OLD',' ','UNFORMATTED',
      &             idummy,'.FALSE.')
       rewind(lu_sir)
@@ -67,6 +68,7 @@ C
 C
 C     Write to mlcc_hf_info
 C
+      lu_mlcc = -1
       call  gpopen(lu_mlcc,'MLCC_HF_INFO','UNKNOWN','SEQUENTIAL',
      &        'FORMATTED',idummy,.false.)
       rewind(lu_mlcc)
