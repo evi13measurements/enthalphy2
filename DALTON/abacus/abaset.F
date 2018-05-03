@@ -49,6 +49,8 @@ C     Solvent added dec 92
 C     l.r. aug. 98 hjaaj
 C     MAKE_MOTWOINT added oct 2017 hjaaj
 C
+      use pelib_interface, only: use_pelib
+
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
@@ -63,12 +65,13 @@ C
       LOGICAL     DIPOK, FNDLAB, MCSSYM
 C
 C Used from common blocks:
-C   GNRINF : RNRESP, IPRUSR
+C   GNRINF : IPRUSR, EMBEDDING, ?
 C   ABAINF : DIPDER, POLAR,  DOWALK, IPRDEF
 C   INFINP : ISTATE,ISPIN,NACTEL,POTNUC,LSOLMX,RSOL(3)
 C   INFOPT : EMCSCF,EPOT,EMY,EACTIV,ESOLT
 C   PAST   : PASDIP, PASORT, PASRES
 C   CBISOL : SOLVNT, ...
+C   pcmlog.h : PCM
 C
 #include "gnrinf.h"
 #include "abainf.h"
@@ -81,6 +84,7 @@ C
 #include "inftap.h"
 #include "past.h"
 #include "cbisol.h"
+#include "pcmlog.h"
 #include "cbirhs.h"
 #include "spinfo.h"
 C
@@ -346,6 +350,11 @@ C     of QX matrix
 C
       FLAG(23) = .TRUE.
 C
+C     set EMBEDDING (for restart without calling SIRIUS)
+C
+      EMBEDDING = FLAG(16) .or. PCM .or. QM3 .or. QMMM .OR. QMNPMM
+     &            .OR. USE_PELIB()
+C
 C     END OF SETSIR
 C
       DTIM = SECOND() - DST
@@ -431,6 +440,7 @@ C
 #include "linaba.h"
 #include "soppinf.h"
 C
+      LOGICAL :: DOREAL, DOIMAG
       CHARACTER*8 RTNLBL(2)
 C
 C PART 1 : ******* I/O buffer sizes, initialize IROW()
@@ -516,18 +526,36 @@ C
       IPRTRA = IPRNTR
 
       IF ((NASHT.GT.1 .AND. .NOT.HSROHF) .OR. H2MO) THEN
-         IF (CTOCD .OR. DOEXCI .OR. ABALNR .OR. VCD .OR.
+         ! hjaaj Aug 2017: next two statements copied from abaort.F(MCORL)
+         DOREAL = MOLHES .OR. DIPDER .OR. QPGRAD .OR. VCD 
+         DOIMAG = SHIELD .OR. MAGSUS .OR. VCD .OR. SPNSPN .OR. ECD .OR.
+     &            VROA .OR. MOLGFA .OR. SPINRO .OR. OPTROT
+
+         ! Standard second order level for ABACUS
+         KTRLVL = 3
+
+         IF ( DOREAL .OR. DOIMAG ) THEN
+           ! Second order properties: we need to construct GD vectors
+           ! hjaaj Aug. 2017: in order to have USEDRC true and
+           ! KTRLVL = 3, we need to program TR1L2D for ABATR1. TODO
+           ! (The options tested above are copied from setting
+           ! of DOREAL and DOIMAG in subroutine MCORL)
+            USEDRC = .FALSE.
+            KTRLVL = 6 ! all active-general distributions
+         END IF
+
+         ! do we need a higher level for RESPONS calls ?
+         IF (HYPER .OR. VERDET .OR. MCD) THEN
+            KTRLVL = 10 ! quadratic resonse with RESPONS module
+         ELSE IF (CTOCD .OR. DOEXCI .OR. ABALNR .OR. VCD .OR.
      &       SPNSPN .OR. MAGSUS .OR. SHIELD .OR. SPINRO .OR.
      &       MOLGFA .OR. RNLRSC) THEN
-            KTRLVL = 4  ! linear response with RESPONS module
-         ELSE IF (HYPER .OR. VERDET .OR. MCD) THEN
-            KTRLVL = 10 ! quadratic resonse with RESPONS module
-         ELSE
-            ! ABARSP (calling RESPONS module) is not called
-            ! NB! if some tests should be missing above, then
-            ! ABARSP will call TRACTL again with the necessary
-            ! transformation level.
-            KTRLVL = 3
+            IF (KTRLVL .EQ. 6) THEN
+               KTRLVL = 5 ! we need the common set of KTRLVLs 6 and 4
+               USEDRC = .TRUE.
+            ELSE
+               KTRLVL = 4  ! linear response with RESPONS module
+            END IF
          END IF
          ITRLVL = KTRLVL
          FLAG(14) = .TRUE.
@@ -561,7 +589,7 @@ C        does exist. /980529-hjaaj
       END IF ! .NOT. FLAG(34)
 
       IF (.NOT. FLAG(34)) THEN ! MO integrals not needed
-      IF (FTRCTL .OR. NEWCMO .OR. (ITRLVL .GT. ITRLVL_LAST) .OR.
+      IF (FTRCTL .OR. NEWCMO .OR. (.NOT.FLAG(14)) .OR.
      &    (USEDRC .AND. LVLDRC_LAST .LT. 0)) THEN
       ! ... needed integrals not available
          WRITE (LUPRI,1020) KTRLVL
