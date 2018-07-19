@@ -11,7 +11,7 @@ C
 #include "priunit.h"
 C
       integer lu_sir 
-      integer lu_mlcc 
+      integer lu_mlcc
       integer idummy 
       integer n_symmetries, n_basis_sym, n_orbitals_sym 
       integer n_lambda
@@ -29,6 +29,7 @@ C     Open Sirius Fock file
 C     ---------------------
 C
       lu_sir = -1
+      lu_mlcc = -1
       call gpopen(lu_sir,'SIRIFC','OLD',' ','UNFORMATTED',
      &             idummy,'.FALSE.')
       rewind(lu_sir)

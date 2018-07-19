@@ -12,6 +12,7 @@ C     Open Sirius Fock file
 C     ---------------------
 C
       lu_sir = -1
+      lu_mlcc  = -1
       call gpopen(lu_sir,'SIRIFC','OLD',' ','UNFORMATTED',idummy,'.FALSE.')
       rewind(lu_sir)
 C
