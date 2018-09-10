@@ -676,7 +676,7 @@ C
          WRITE (LUPRI,*) 'Main label on SIRIFC.1A : ',LBSIFC
       END IF
       FLAG(34) = .TRUE. ! MO 2-el integrals not needed
-      CALL SETSIR(WORK,LWORK)
+      CALL SETSIR(.FALSE.,WORK,LWORK) ! .FALSE. : do not generate MOTWOINT
       FLAG(26) = .FALSE.
 C     ... do not write SIRIUS.STRINGINFO for WESTA (!)
 C
