@@ -1357,7 +1357,7 @@ C
 C     Local arrays:
 CPFP 17-01-2017 Needed for SOS-module
 C      PARAMETER (MAXVEC = 120)
-      PARAMETER (MAXVEC = 900)
+      PARAMETER (MAXVEC = 1500)
 Cend-PFP
       DIMENSION JLDP(MAXVEC)
 C
