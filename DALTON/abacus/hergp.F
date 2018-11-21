@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -55,11 +49,11 @@ C  /* Deck addgrd */
 #include "implicit.h"
 #include "mxcent.h"
 #include "trkoor.h"
-      REAL*8 GRAD(MXCOOR)
+      REAL*8 GRAD(NCOOR)
       REAL*8 ERGMOL, GRDMOL(NCOOR), HESMOL(NCOOR,NCOOR) ! automatic arrays
 
       CALL ABAREAD_TAYMOL(ERGMOL,GRDMOL,HESMOL,NCOOR)
-      DO, I = 1, NCOOR
+      DO I = 1, NCOOR
          GRDMOL(I) = GRDMOL(I) + GRAD(I)
       END DO
       CALL ABAWRIT_TAYMOL(ERGMOL,GRDMOL,HESMOL,NCOOR)
@@ -535,6 +529,11 @@ C       I. Mills, T. Cvitas, K. Homann, N. Kallay, and K. Kuchitsu
 C       Quantities, Units and Symbols in Physical Chemistry
 C       (IUPAC, Blackwell Scientific, Oxford, 1988)
 C
+C 07 Febr 2016 Miro Ilias: added nuclear mass for the Tc atom to enable automatic symmetry detection
+C (otherwise was getting NaNs), based on
+C https://www.ncsu.edu/chemistry/msf/pdf/IsotopicMass_NaturalAbundance.pdf
+C   G. Audi, A. H. Wapstra Nucl. Phys A. 1993, 565, 1-65 
+C   G. Audi, A. H. Wapstra Nucl. Phys A. 1995, 595, 409-480.
 C
 #include "implicit.h"
 #include "priunit.h"
@@ -963,7 +962,7 @@ C
 C
 C     Tc:
 C
-     &   .000000D0,   .000000D0,   .000000D0,   .000000D0,   .000000D0,
+     & 97.907216D0,   .000000D0,   .000000D0,   .000000D0,   .000000D0,
      &   .000000D0,   .000000D0,   .000000D0,   .000000D0,   .000000D0,
      &   .000000D0,   .000000D0,   .000000D0,   .000000D0,   .000000D0,
      &   .000000D0,   .000000D0,   .000000D0,   .000000D0,   .000000D0,
@@ -2037,7 +2036,6 @@ C
                IF ((ICHARG .NE. 0 .AND. .NOT.NOORBT(IATOM))
      &              .OR. (ICHARG .EQ. 0 .AND. SOLVNT 
      &              .AND. (IATOM .EQ. NUCIND))) THEN
-                  NATTYP(JATOM + 1) = ICHARG
                   ICHTOT = ICHTOT + ICHARG
                   DO 30 KCOOR = 1, 3
                      GEOM(3*JATOM + KCOOR) =
@@ -2045,7 +2043,8 @@ C
      &                    *CORD(KCOOR,IATOM)
  30               CONTINUE
                   JATOM = JATOM + 1
-                  NUMIS(JATOM) = ISOTOP(IATOM)
+                  NATTYP(JATOM) = ICHARG
+                  NUMIS(JATOM)  = ISOTOP(IATOM)
                END IF
             END IF
  20      CONTINUE

@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -75,6 +69,7 @@ C
 #include "dummy.h"
 C
 C Used from common blocks:
+C   exeinf.h : NEWCMO
 C   INFINP : ISTATE,FLAG(*),?
 C   INFVAR : NCONF,NWOPT,NVAR
 C   INFIND : ISX()
@@ -86,6 +81,7 @@ C
 #include "maxorb.h"
 #include "maxash.h"
 #include "priunit.h"
+#include "exeinf.h"
 #include "infinp.h"
 #include "infvar.h"
 #include "infind.h"
@@ -421,6 +417,7 @@ C
          LAB123(3) = 'CANORB  '
          WRITE (LUIT1) LAB123,TABLE(6)
          CALL WRITT(LUIT1,NCMOT4,CMO)
+         NEWCMO = .TRUE.
          GO TO 9000
       END IF
 C        ----------------------------------------------------
@@ -475,6 +472,7 @@ C
          LAB123(3) = ' CIORB  '
          WRITE (LUIT1) LAB123,TABLE(6)
          CALL WRITT(LUIT1,NCMOT4,CMO)
+         NEWCMO = .TRUE.
 C
 C        Go to 4000 to transform to CNO orbitals, if requested.
 C
@@ -581,6 +579,7 @@ C
       END IF
       WRITE (LUIT1) LAB123,TABLE(6)
       CALL WRITT(LUIT1,NCMOT,CMO)
+      NEWCMO = .TRUE.
       REWIND LUIT1
 C
 C
@@ -661,6 +660,7 @@ C        write the natural orbitals to LUIT1 label NEWORB
          LAB123(3) = '(CNOORB)'
          WRITE (LUIT1) LAB123,TABLE(6)
          CALL WRITT(LUIT1,NCMOT4,CMO)
+         NEWCMO = .TRUE.
          IF (.NOT.FLAG(34)) FLAG(14) = .FALSE.
 C        if (int.transf. needed in optimization) then new transf. needed
       END IF

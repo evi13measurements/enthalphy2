@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -249,6 +243,7 @@ C  /* Deck twoexp */
 C
 C     TUH
 C
+      use pelib_interface, only: use_pelib
 #include "implicit.h"
 #include "dummy.h"
 #include "priunit.h"
@@ -286,7 +281,7 @@ C defined parallel calculation types
 C
       PARAMETER (D0 = 0.0D0)
       PARAMETER (MXDMAT = 2*MXCOOR)
-      LOGICAL   DDFOCK, NOBLK, ZFS2EL, PARCAL_IS_OK, PARCAL_SAVE
+      LOGICAL   DDFOCK, NOBLK, ZFS2EL, PARHER_IS_OK, PARHER_SAVE
       INTEGER   IFCTYP(MXDMAT), ISYMDM(MXDMAT)
       DIMENSION ALPGR1(MXPRIM)
 C
@@ -415,7 +410,7 @@ C        Zero EE gradient and Hessian, if calculated.
 C        Allocate memory for HESSEE.
          IF (MOLGRD) CALL DZERO(GRADEE,MXCOOR)
          KHESEE = KLAST
-         IF (MOLHES .OR. PARCAL) THEN
+         IF (MOLHES .OR. PARHER) THEN
            KLAST  = KHESEE + MXCOOR*MXCOOR
            CALL DZERO(WORK(KHESEE),MXCOOR*MXCOOR)
          ENDIF
@@ -474,13 +469,13 @@ C           dimension ISYMDM(MXDMAT), IFCTYP(MXDMAT)
          END IF
 C
 C        Is it OK to do parallel calculation here ??
-         PARCAL_IS_OK = PARCAL ! has user wanted PARCAL ?
+         PARHER_IS_OK = PARHER ! has user wanted PARHER ?
          IF ((NASHT .GT. 0) .AND. (.NOT.(HSROHF.OR.DFTADD)))
-     &      PARCAL_IS_OK = .FALSE. ! parallel TWOEXP only for SCF 
+     &      PARHER_IS_OK = .FALSE. ! parallel TWOEXP only for SCF 
 C
 C        ERI can only be used for Hartree-Fock gradients
 C
-         DOERI = RUNERI .AND. .NOT. PARCAL_IS_OK .AND. NODV .AND. NOPV
+         DOERI = RUNERI .AND. .NOT. PARHER_IS_OK .AND. NODV .AND. NOPV
      &                  .AND. ITYPE.EQ.2 .AND. MAXDIF .LT. 2
 C
          CALL GETDMT(WORK(KDMAT),NDMAT,WORK(KLAST),LWRK,NODC,NODV,
@@ -493,9 +488,9 @@ C
      &               LWRK)
 C
 #if defined (VAR_MPI) || defined (VAR_PVM)
-         IF (PARCAL_IS_OK) THEN
+         IF (PARHER_IS_OK) THEN
             IF ((NASHT .GT. 0) .AND. (.NOT.(HSROHF.OR.DFTADD)))
-     &         CALL QUIT(' ERROR in TWOEXP: PARCAL only'// 
+     &         CALL QUIT(' ERROR in TWOEXP: PARHER only'// 
      &                   ' implemented for SCF')
 C
             KNSTAT = KLAST
@@ -548,8 +543,8 @@ cfrj-end
                HFXFAC = HFXFC0
             END IF
          ELSE
-            PARCAL_SAVE = PARCAL
-            PARCAL = .FALSE.
+            PARHER_SAVE = PARHER
+            PARHER = .FALSE.
 #endif
             IF (DOERI) THEN
                CALL TIMER('START ',TIMSTR,TIMEND)
@@ -592,7 +587,7 @@ cfrj-end
      &         CALL TIMER('TWOEXP/TWOINT',TIMSTR,TIMEND)
             END IF
 #if defined (VAR_MPI) || defined (VAR_PVM)
-            PARCAL = PARCAL_SAVE
+            PARHER = PARHER_SAVE
          END IF
 #endif
 CTROND
@@ -634,6 +629,7 @@ C
                   CALL ADDGRD(GSOLNN)
                END IF
                IF (PCM) CALL ADDGRD(GSOLCV)
+               IF (USE_PELIB()) CALL ADDGRD(PEGRAD)
                CALL ABAREAD_TAYMOL(ERGMOL,GRDMOL,HESMOL,NCOOR)
                CALL PRIGRD(GRDMOL,WORK(KCSTRA),WORK(KSCTRA))
                NCDEP3 = 3*NUCDEP
@@ -733,10 +729,10 @@ C
 C     Read CMO and DV from SIRIFC
 C
       CALL QENTER('ONEDSF')
-      CALL RD_SIRIFC('CMO',FOUND,CMO,DTSO,N2BASX)
+      CALL RD_SIRIFC('CMO',FOUND,CMO)
       IF (.NOT.FOUND) CALL QUIT('ONEDSF ERROR: CMO not found on SIRIFC')
       IF (NASHT .GT. 0) THEN
-         CALL RD_SIRIFC('DV',FOUND,DV,DTSO,N2BASX)
+         CALL RD_SIRIFC('DV',FOUND,DV)
          IF (.NOT.FOUND)
      &      CALL QUIT('ONEDSF ERROR: DV not found on SIRIFC')
       END IF

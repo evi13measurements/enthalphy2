@@ -8,7 +8,6 @@
 
 import os
 import sys
-import string
 import re
 import subprocess
 import shutil
@@ -143,10 +142,6 @@ def parse_input():
             choices=('intelmpi', 'openmpi', 'sgimpt'),
             default='intelmpi',
             help='specify the BLACS implementation; only used in combination with --scalapack [default: %(default)s]')
-    group.add_argument('--scalasca',
-            action='store_true',
-            default=False,
-            help='build using SCALASCA profiler mode [default: %(default)s]')
     
     group = parser.add_argument_group('advanced options')
     group.add_argument('--check',
@@ -209,7 +204,7 @@ def check_cmake_exists(cmake_command):
             shell=True,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
-    if not ('cmake version' in p.communicate()[0]):
+    if not (b'version' in p.communicate()[0]):
         print('   This code is built using CMake')
         print('')
         print('   CMake is not found')
@@ -245,14 +240,11 @@ def gen_cmake_command(args):
 
     command += ' -DENABLE_MPI=%s'            % translate_cmake(args.mpi)
     command += ' -DENABLE_SGI_MPT=%s'        % translate_cmake(args.sgi_mpt)
-    command += ' -DENABLE_OMP=%s'            % translate_cmake(args.omp)
+    command += ' -DENABLE_OPENMP=%s'            % translate_cmake(args.omp)
     command += ' -DENABLE_64BIT_INTEGERS=%s' % translate_cmake(args.int64)
     command += ' -DENABLE_GPU=%s'            % translate_cmake(args.gpu)
     command += ' -DENABLE_CUBLAS=%s'         % translate_cmake(args.cublas)
     command += ' -DENABLE_REAL_SP=%s'        % translate_cmake(args.real_sp)
-    command += ' -DENABLE_CSR=%s'            % translate_cmake(args.csr)
-    command += ' -DENABLE_SCALASCA=%s'       % translate_cmake(args.scalasca)
-    command += ' -DENABLE_TIMINGS=%s'        % translate_cmake(args.timings)
     command += ' -DENABLE_STATIC_LINKING=%s' % translate_cmake(args.static)
 
     command += ' -DENABLE_SCALAPACK=%s'      % translate_cmake(args.scalapack)
@@ -295,7 +287,6 @@ def gen_cmake_command(args):
         command += ' -DENABLE_AUTO_LAPACK=OFF'
 
     if args.gpu:
-        command += ' -DENABLE_OPENACC=ON'
         command += ' -DENABLE_CUDA=ON'
 
     if args.mkl != 'none':
@@ -369,7 +360,7 @@ def setup_build_path(build_path):
             print('remove the build directory and then rerun setup')
             sys.exit(1)
     else:
-        os.makedirs(build_path, 0755)
+        os.makedirs(build_path, 0o755)
 
 def run_cmake(command, build_path):
     topdir = os.getcwd()
@@ -378,7 +369,7 @@ def run_cmake(command, build_path):
             shell=True,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE)
-    s = p.communicate()[0]
+    s = str(p.communicate()[0])
     # print cmake output to screen
     print(s)
     # write cmake output to file
@@ -421,7 +412,7 @@ def configure_host(args):
             u = os.uname()
         else:
             u = "Windows"
-        host = string.join(u)
+        host = " ".join(u)
     msg = None
     # Generic systems
     if re.search('ubuntu', host, re.I):
@@ -436,7 +427,7 @@ def configure_host(args):
     if msg is None:
         return False
     if not args.show:
-        print msg
+        print(msg)
     return True
 
 
@@ -464,20 +455,11 @@ def configure_default_compilers(args):
             args.mpi = 'on'
 
     if not args.fc:
-        if os.environ.has_key("FC"):
-            args.fc = os.environ["FC"]
-        else:
-            args.fc = 'gfortran'
+        args.fc = os.environ.get('FC', 'gfortran')
     if not args.cc:
-        if os.environ.has_key("CC"):
-            args.cc = os.environ["CC"]
-        else:
-            args.cc = 'gcc'
+        args.cc = os.environ.get('CC', 'gcc')
     if not args.cxx:
-        if os.environ.has_key("CXX"):
-            args.cxx = os.environ["CXX"]
-        else:
-            args.cxx = 'g++'
+        args.cxx = os.environ.get('CXX', 'g++')
 
 configure_ubuntu = configure_default_compilers
 configure_fedora = configure_default_compilers

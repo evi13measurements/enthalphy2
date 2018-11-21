@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -29,7 +23,7 @@ C  /* Deck excinp */
 #include "mxcent.h"
 #include "maxorb.h"
 #include "maxaqn.h"
-      PARAMETER (NTABLE = 16)
+      PARAMETER (NTABLE = 17)
       LOGICAL NEWDEF
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
 #include "cbiexc.h"
@@ -46,7 +40,10 @@ C    *            '.MAXRED', '.MAXPHP','.TRIPLE','.XXXXXX',
      *            '.MAXRED', '.MAXPHP','.TRIPLE','.MAGPRP',
 Cend-PFP
      *            '.OPTORB', '.NEXCIT','.DIPSTR','.PRINT ',
-     *            '.ROTVEL', '.FNAC  ','.STOP  ','.SUMRUL'/
+     *            '.ROTVEL', '.FNAC  ','.STOP  ','.SUMRUL',
+CClark:7/1/2016
+     *            '.STOPPW'/
+CClark:end
 C
       NEWDEF = (WORD .EQ. '*EXCITA')
       ICHANG = 0
@@ -63,7 +60,8 @@ C
                ICHANG = ICHANG + 1
                DO 200 I = 1, NTABLE
                   IF (TABLE(I) .EQ. WORD) THEN
-                     GO TO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16), I
+                     GO TO (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17),
+     &                      I
                   END IF
   200          CONTINUE
                IF (WORD .EQ. '.OPTION') THEN
@@ -143,6 +141,20 @@ C                 DIPSTR = .TRUE.
 CKeinSPASmehr
                   ICHANG = ICHANG + 1
                GO TO 100
+CClark:7/1/2016
+   17          CONTINUE
+               STOPPW = .TRUE.
+               READ (LUCMD,*) QMIN,QMAX,QSTEP
+               READ (LUCMD,*) VMIN,VMAX,VSTEP
+               LVEL = INT((VMAX-VMIN)/VSTEP+1.0001)
+CClark: QMAX reset by qmax=2*me*Vmax/hbar according to Bonderup)
+               WRITE (LUPRI,'(1A)')
+     &         'Qmax reset to 2*Vmax according to Bonderup'
+               QMAX = 2*VMAX
+               LQ   = INT((QMAX-QMIN)/QSTEP+1.0001)
+               ICHANG = ICHANG + 1
+               GO TO 100
+CClark:end
             ELSE IF (PROMPT .EQ. '*') THEN
                GO TO 300
             ELSE
@@ -198,15 +210,22 @@ C
      &         ' First order nonadiabatic coupling elements'
             IF (CUT) WRITE (LUPRI,'(//A)')
      &         ' Program is stopped after EXCITA.'
+CClark:7/1/2016
+            IF (SUMRUL) WRITE (LUPRI,'(A)') 
+     &         ' Dipole Oscillator Strength Sum Rule.'
+            IF (STOPPW) WRITE (LUPRI,'(A)')
+     &         ' Stopping Power from Generalized Oscillator Strength.'
+CClark:end
          END IF
       END IF
 
-      IF (PARCAL.AND.EXCTRP.AND.ABASOP) THEN
-          WRITE (LUPRI, '(A,A)' ) 'Parallel calculations of '//
-     &                 'triplet excitation energies',
-     &                 ' is not implemented in the SOPPA module'
-          CALL PARQUIT('EXCTRP for ABASOP')
-      ENDIF
+CRF    We are removing this limitation
+C      IF (PARCAL.AND.EXCTRP.AND.ABASOP) THEN
+C          WRITE (LUPRI, '(A,A)' ) 'Parallel calculations of '//
+C     &                 'triplet excitation energies'//
+C     &                 ' is not implemented in the SOPPA module'
+C          CALL PARQUIT('EXCTRP for ABASOP')
+C      ENDIF
 
       RETURN
       END
@@ -235,6 +254,10 @@ C
 CPFP 
       MAGPRP = .FALSE.
 Cend-PFP
+CClark:7/1/2016
+      SUMRUL = .FALSE.
+      STOPPW = .FALSE.
+CClark:end
       CALL IZERO(NEXCIT,8)
       THREXC = 1.D-04
       MAXITE = 60
@@ -249,8 +272,11 @@ C
       END
 C  /* Deck excita */
       SUBROUTINE EXCITA(TRLEN,TRVEL,TQLEN,TQVEL,
-     &                  TRLON,TRMAG,BSRLON,TTLEN,EXENG,FONAC,
-     &                  FONA2,SECMAT,WORK,LWORK,PASS)
+     &                  TRLON,TRMAG,BSRLON,TTLEN,EXENG,
+CClark:11/01/2016
+     &                  BETHE,STOPP,
+CClark:end
+     &                  FONAC,FONA2,SECMAT,WORK,LWORK,PASS)
 C
 CSPAS:23/5-11: second and third moment sum rules added (in TTLEN)
 C
@@ -269,6 +295,9 @@ C
       DIMENSION TTLEN(10,NSYM,MXNEXI,*)
       DIMENSION TRLON(3,NSYM,MXNEXI,*), TRMAG(3,NSYM,MXNEXI,*)
       DIMENSION BSRLON(3,NSYM,MXNEXI,*),EXENG(NSYM,MXNEXI,*)
+CClark:11/01/2016
+      DIMENSION BETHE(3,LQ,*),STOPP(3,LVEL,*)
+CClark:end
       DIMENSION FONAC(3*NATOMS,NSYM,MXNEXI),FONA2(3*NATOMS,NSYM,MXNEXI)
       DIMENSION SECMAT(3,MXNEXI,NSYM)
 C
@@ -279,9 +308,15 @@ C
 C
       IPRRSP = IPREXC
 C
-      IF (AORPA .OR. AOHRP .OR. DCRPA .OR. AOSOP .OR. AOSOC) THEN
+      IF (AORPA .OR. AOHRP .OR. DCRPA .OR. AOSOP
+CPi
+     &    .OR. AOSOC .OR. AOCC2) THEN
          CALL SO_EXCIT1(TRLEN,TRVEL,TQLEN,TQVEL,TTLEN,TRLON,TRMAG,
-     &                  BSRLON,SECMAT,EXENG,WORK,LWORK)
+     &                  BSRLON,SECMAT,EXENG,
+CClark:11/01/2016
+     &                  BETHE,STOPP,
+CClark:end
+     &                  WORK,LWORK)
       ELSE
          CALL EXCIT1(TRLEN,TRVEL,TQLEN,TQVEL,TTLEN,
      &               TRLON,TRMAG,BSRLON,EXENG,FONAC,FONA2,
@@ -372,10 +407,10 @@ C
       KWORK1 = KFREE
       LWORK1 = LFREE
 C
-      CALL RD_SIRIFC('CMO',FOUND,WORK(KCMO),WORK(KFREE),LFREE)
+      CALL RD_SIRIFC('CMO',FOUND,WORK(KCMO))
       IF (.NOT.FOUND) CALL QUIT('EXCIT1 error: CMO not found on SIRIFC')
       IF (NASHT .GT. 0) THEN
-         CALL RD_SIRIFC('DV',FOUND,WORK(KWORK1),WORK(KWORK1),LWORK1)
+         CALL RD_SIRIFC('DV',FOUND,WORK(KWORK1))
          IF (.NOT.FOUND)
      &      CALL QUIT('EXCIT1 error: DV not found on SIRIFC')
          CALL DSPTSI(NASHT,WORK(KWORK1),WORK(KUDV))
@@ -482,7 +517,8 @@ C
       END IF
       IF (ROTSTR) THEN         ! rot. str., len+London
          LOCDIPLEN = .TRUE.
-         LOCLONDON = .TRUE.
+CPi 11.08.16: No london orbitals in SOPPA
+         IF (.NOT. ABASOP) LOCLONDON = .TRUE.
          LOCANGMOM = .TRUE.
          IF (NODIFC) LOCHBDO = .TRUE.
       END IF
@@ -1160,7 +1196,7 @@ C
       END IF
 CSPAS:23/5-11: second and third moment sum rules
       IF (SUMRUL) THEN
-         CALL HEADER_A('Electric octapole transition '
+         CALL HEADER_A('Electric octupole transition '
      &               //'moments (in a.u.)',15)
          WRITE (LUPRI,'(A,2(/A))')
      &   '  Sym.   Mode    Frequency                Length     '//

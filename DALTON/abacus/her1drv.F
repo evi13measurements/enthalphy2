@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -317,6 +311,8 @@ C     1983.
 C
 C     Symmetry included  880406  TUH & PRT
 C
+      use pelib_interface, only: use_pelib, pelib_ifc_molgrad
+      use fde_mod
 #include "implicit.h"
 #include "mxcent.h"
 #include "maxaqn.h"
@@ -371,6 +367,7 @@ C
 C... added by Bin Gao, Feb. 16, 2011
 C... for ECP
 #include "ecpinf.h"
+      type(fde_import) :: itmp
       IF (IPRINT .GE. 5) CALL TITLER('Output from ONEDR1','*',103)
 C
       TIMHER = D0
@@ -402,8 +399,10 @@ Cjth
 #ifndef PRG_DIRAC
 C
 C     ***** Nuclear contributions *****
-C
-      IF (PROPTY.AND..NOT.EXPGRA) CALL DIPNUC(CSTRA,SCTRA,IPRINT,DIFDIP)
+C     Nanna H. List 17/12-2014: Always compute nuclear contrib to dipole moment
+C                    (then we can use it in e.g. SIRIUS and RESPONSE)
+C      IF (PROPTY.AND..NOT.EXPGRA) CALL DIPNUC(CSTRA,SCTRA,IPRINT,DIFDIP)
+      CALL DIPNUC(CSTRA,SCTRA,IPRINT,DIFDIP)
       IF (PROPTY.AND.DIFQDP) CALL SECNUC(CSTRA,SCTRA,IPRINT)
 C
 #endif
@@ -537,7 +536,7 @@ C
          CALL MEMGET('REAL',KTLM, LMTOT,WORK,KFREE,LFREE)
          LWRK  = LWORK - KFREE + 1
          CALL SOLFL(WORK(KGLM),EPDIEL,RCAV,LCAVMX)
-         CALL RD_SIRIFC('SOLTLM',FOUND,WORK(KTLM),WORK(KFREE),LWRK)
+         CALL RD_SIRIFC('SOLTLM',FOUND,WORK(KTLM))
          IF (.NOT. FOUND)
      &    CALL QUIT('ONEDR1 ERROR: "SOLTLM" not found on SIRIFC.')
          CALL FCMFAC(LCAVMX,LMNTOT,LMTOT,WORK(KGLM),WORK(KTLM),
@@ -827,6 +826,17 @@ C
                  STHMAT(I,2) = STHMAT(I,2) + STHMAT(I,3)
  800          CONTINUE
            END IF
+
+           IF (DOFDE) THEN
+C      get the options
+              call fde_get_import_info(itmp)
+C      calculate the potential and add it to 1e-fock, if requested
+              if (itmp%im_vemb) then
+! to check if nnbast
+                 call fde_calculate_emb_pot_mat(nnbast,sthmat(:,2))
+              endif
+           END IF
+
            CALL WRTUND(STHMAT,NNBAST,NNBASX,IPRINT)
         ENDIF
       END IF
@@ -882,10 +892,15 @@ C
 C        CALL HEADER('GRADFT in DFT_MOLGRAD ',-1)
 C        CALL OUTPUT(GRADFT,1,3,1,NATOMS,3,NATOMS,1,LUPRI)
       END IF
-Ckr
-Ckr   Get QMMM gradient/Hessian integrals
-Ckr
-C
+
+C     ****************************************
+C     ***** PE contribution to gradient ******
+C     ****************************************
+C     NHL 03/13
+      IF (PROPTY .AND. USE_PELIB()) THEN
+         CALL PELIB_IFC_MOLGRAD(DENMAT, PEGRAD(1:3*NATOMS))
+      END IF
+
 C     *************************
 C     ***** Print Section *****
 C     *************************
@@ -929,6 +944,10 @@ C
                CALL PRIGRD(GSOLNN,WORK(KCSTRA),WORK(KSCTRA))
                CALL HEADER('Cavity solvent part of the gradient',-1)
                CALL PRIGRD(GSOLCV,WORK(KCSTRA),WORK(KSCTRA))
+            END IF
+            IF (USE_PELIB()) THEN
+               CALL HEADER('Polarizable embedding part of gradient',-1)
+               CALL PRIGRD(PEGRAD,WORK(KCSTRA),WORK(KSCTRA))
             END IF
             IF (DFTRUN) THEN
                CALL HEADER('DFT contribution to gradient',-1)

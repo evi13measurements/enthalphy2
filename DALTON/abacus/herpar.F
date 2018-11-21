@@ -1,25 +1,18 @@
 
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
 !
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 C
 C File: herpar.F
@@ -35,7 +28,12 @@ C  /* Deck her_pardrv */
      &                      ICEDIF,IFTHRS,GABRAO,DMRAO,DMRSO,
      &                      DINTSKP,RELCALC,GENCTR)
 
-C
+C  Hermit parallel driver.  Only called from PARDRV (checked Nov. 2016).
+
+C Note Nov. 2016 hjaaj: GENCTR is apparently related to some BUILD_OPENRSP
+C work, but no comment explains the meaning. Was introduced in Jan. 2014
+C according to "git blame".  Currently it is **UNDEFINED** in the calls of PARDRV !!!
+
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
@@ -69,7 +67,7 @@ C
 #include "memint.h"
 C
       CALL QENTER('HER_PARDRV')
-      IF (IPRINT .GT. 3) CALL TITLER('Output from HER_PARDRV','*',103)
+      IF (IPRINT .GT. 2) CALL TITLER('Output from HER_PARDRV','*',103)
 C
 C     Determine total number of tasks - MTOTTK.
 C
@@ -107,8 +105,11 @@ C     Derivatives with respect to magnetic field(DDFOCK=T)
 C         L_TMPMT = 3*N2BASX + L_SUS
 C modified by Bin Gao, June 3, 2009, from linsca
          NFMAT = 3*NDMAT
-         IF (MAXDER .EQ. 2 .AND. .NOT.GENCTR)
-     &      NFMAT = 6*NDMAT
+#ifdef BUILD_OPENRSP
+         IF (USE_OPENRSP) THEN
+            IF (MAXDER .EQ. 2 .AND. .NOT.GENCTR) NFMAT = 6*NDMAT
+         END IF
+#endif
          L_FCK = NFMAT*N2BASX
          L_TMPMT = L_FCK + L_SUS
       ELSE IF (ITYPE .EQ. 8) THEN
@@ -277,13 +278,11 @@ C
 C Used from common blocks
 C
 C MXORB : MXSHEL (used for INFPAR)
-C GNRINF: NEWBAS
-C SIRIPC: NEWGEO
+C GNRINF: NEWBAS, NEWGEO
 C INFPAR: NODTOT, NTASK
 C INFORB: N2BASX
 C
 #include "gnrinf.h"
-#include "siripc.h"
 #include "inforb.h"
 #include "infpar.h"
 Cef begin
@@ -353,6 +352,10 @@ C
 !     initialize memory windows for rma access within a given shared-memory / NUMA node
 !--------------------------------------------------------------------------------------
       if(rma_model)then
+         IF (IPRINT .GT. 2) then
+            write(lupri,*) 'Using rma model'
+            flush(lupri)
+         end if
 
         rma_win_info%dmat_win = -1
         rma_win_info%fmat_win = -1
@@ -614,7 +617,7 @@ C
 C MXCENT : MXCENT (for DORPS, etc.)
 C MXORB  : MXSHEL (for INFPAR)
 C MAXAQN : *      (for SYMMET)
-C SIRIPC : NEWGEO (PVM: BASDIR, LENBAS)
+C GNRINF : NEWGEO (PVM: BASDIR, LENBAS)
 C INFORB : N2BASX
 C MOLINP : NMLINE, MLINE()
 C CBIREA : UNCONT
@@ -628,7 +631,6 @@ C PARINT : *
 C
 #include "gnrinf.h"
 #include "inftap.h"
-#include "siripc.h"
 #include "inforb.h"
 #include "molinp.h"
 #include "cbirea.h"
@@ -895,6 +897,144 @@ C
 C
 #endif
       CALL QEXIT('HER_SDINIT')
+      RETURN
+      END
+C  /* Deck her_sendreceive_molinfo */
+      SUBROUTINE HER_sendreceive_molinfo(IPRINT,WORK,KFREE,LFREE)
+!
+!     Hans Joergen Aa. Jensen, Nov. 2016
+!
+!     New routine (2016) called by both master and slaves to transfer
+!     molecule information from master to slaves.
+!
+
+#ifdef VAR_MPI
+#ifdef USE_MPI_MOD_F90
+      use mpi
+#include "implicit.h"
+#else
+#include "implicit.h"
+#include "mpif.h"
+#endif
+#else
+#include "implicit.h"
+#endif
+C
+      INTEGER IPRINT, KFREE, LFREE
+      REAL*8  WORK(*)
+
+#include "priunit.h"
+#include "mxcent.h"
+#include "maxaqn.h"
+#include "maxorb.h"
+#include "mtags.h"
+C
+C Used from common blocks:
+C
+C MXCENT : MXCENT (for DORPS, etc.)
+C MXORB  : MXSHEL (for INFPAR)
+C MAXAQN : *      (for SYMMET)
+C
+C INFPAR : MASTER, MYNUM, ?
+C
+C gnrinf : a lot
+C INFORB : MULD2H, ...
+C MOLINP : NMLINE, MLINE()
+C CBIREA : UNCONT, LMULBS
+C DORPS  : DOREPS(), DOCOOR()
+C ABAINF : DOSYM()
+C SYMMET : MAXREP
+C DFTCOM : HFXFAC, HFXMU, ...
+C EXPOPT : EXPGRA
+C R12INT : R12INT, INTGAC
+C
+#include "gnrinf.h"
+#include "infpar.h"
+#include "inforb.h"
+#include "molinp.h"
+#include "cbirea.h"
+#include "dorps.h"
+#include "abainf.h"
+#include "symmet.h"
+#include "dftcom.h"
+#include "expopt.h"
+#include "r12int.h"
+
+      CALL QENTER('HER_sendreceive_molinfo')
+      IF (IPRINT .GT. 3) THEN
+         CALL TITLER('Output from HER_sendreceive_molinfo','*',103)
+         WRITE(LUPRI,'(A,I0)') ' From node number ',MYNUM
+      END IF
+
+#if defined (VAR_MPI)
+      CALL MPIXBCAST(NEWBAS,1,'LOGICAL',MASTER)! gnrinf.h
+      CALL MPIXBCAST(NEWGEO,1,'LOGICAL',MASTER)! gnrinf.h
+      CALL MPIXBCAST(HFXFAC,1,'DOUBLE',MASTER) ! dftcom.h
+      CALL MPIXBCAST(HFXMU, 1,'DOUBLE',MASTER) ! dftcom.h
+      CALL MPIXBCAST(DOSRIN,1,'LOGICAL',MASTER)! gnrinf.h
+      CALL MPIXBCAST(SRINTS,1,'LOGICAL',MASTER)! gnrinf.h
+      CALL MPIXBCAST(ERFEXP,1,'LOGICAL',MASTER)! gnrinf.h
+      CALL MPIXBCAST(CHIVAL,1,'DOUBLE',MASTER) ! gnrinf.h
+      CALL MPIXBCAST(EXPGRA,1,'LOGICAL',MASTER)! expopt.h
+C
+! hjaaj Nov 2016: always send basis set information
+         IF (IPRINT .GT. 3) WRITE(LUPRI,'(A,2L10)')
+     &        ' Sending/receiving orbital information.'//
+     &        ' NEWBAS,NEWGEO :',NEWBAS,NEWGEO
+C  /molinp/
+         CALL MPIXBCAST(NMLINE,1,'INTEGER',MASTER)
+C Arnfinn, nov -08: Sending NONTYP_QM, numbers of atomtypes except MM
+         CALL MPIXBCAST(NONTYP_QM,1,'INTEGER',MASTER)
+         CALL MPIXBCAST(NMLAU,1,'INTEGER',MASTER)
+C  /molinc/
+         CALL MPIXBCAST(MLINE,len_MLINE*NMLINE,'STRING',MASTER)
+C  /cbirea/
+         CALL MPIXBCAST(LCMMAX,1,'INTEGER',MASTER)
+         CALL MPIXBCAST(NCMSTR,1,'INTEGER',MASTER)
+         CALL MPIXBCAST(NCMEND,1,'INTEGER',MASTER)
+         CALL MPIXBCAST(LCNTNUUM,1,'LOGICAL',MASTER)
+         CALL MPIXBCAST(UNCONT,1,'LOGICAL',MASTER)
+         CALL MPIXBCAST(LMULBS,1,'LOGICAL',MASTER)     ! cbirea.h
+C  /inforb/
+         CALL MPIXBCAST(MULD2H,NINFI,'INTEGER',MASTER)
+C  /infpar/
+         CALL MPIXBCAST(NODTOT,NPARI,'INTEGER',MASTER)
+C  /dorps/ DOREPS, DOCOOR (NDORL covers both)
+         CALL MPIXBCAST(DOREPS(0),NDORL,'LOGICAL',MASTER)
+C  dosym()
+         CALL MPIXBCAST(DOSYM,NSYML,'LOGICAL',MASTER)
+C  comr12
+         CALL MPIXBCAST(R12INT,NR12L,'LOGICAL',MASTER) ! r12int.h
+         CALL MPIXBCAST(INTGAC,NR12I,'INTEGER',MASTER) ! r12int.h
+!     END IF
+
+      IF (MYNUM .NE. MASTER) THEN ! I am a slave
+C
+C        Since REAINI is not initialized outside of SETHER,
+C        make sure slaves initialize it properly
+C        (REAINI will return immediately if already called).
+C
+         RELCAL = .FALSE.
+         TSTINP = .FALSE.
+         CALL REAINI(0,RELCAL,TSTINP)
+C
+C        Other defaults for the slaves
+C
+         USE_OPENRSP = .FALSE.
+C
+C        Set basis set information always (with NEWGEO .true.)
+C
+         IPREAD = IPRINT-5
+         CALL SETHER(IPREAD,.true.,WORK(KFREE),LFREE)
+!        CALL SETHER(IPREAD,NEWGEO,WORK(KFREE),LFREE)
+C
+      END IF
+C
+#else
+      CALL QUIT('ERROR: '//
+     &   'HER_sendreceive_molinfo called for sequential Dalton')
+#endif
+      CALL QEXIT('HER_sendreceive_molinfo')
       RETURN
       END
 C  /* Deck her_rvres */
@@ -1388,7 +1528,7 @@ C     This is a slave in a parallel run; check for programming error
      &                I2TYP,ICEDIF,IFTHRS,
      &                N2RED,dmat_buff,fmat_buff,KHESEE,KDMRAO,
      &                KGABAO,KDMRSO,GENCTR,.false.)
-      IF (IPRINT .GE. 2) THEN
+      IF (IPRINT .GE. 1) THEN
          WRITE(LUPRI,'(/A,4I5)')
      &   'After HER_RVINIT; ITYPE, IATOM, NDMAT, MAXDIF =',
      &   ITYPE,IATOM,NDMAT,MAXDIF
@@ -1489,6 +1629,10 @@ C     ***********************************
 C     ***** Calculate the integrals *****
 C     ***********************************
 C
+      IF (IPRINT .GE. 1) THEN
+         write(lupri,*) 'HER_NODSTR: Calling TWOINT, NDMAT=',NDMAT
+         flush(lupri)
+      END IF
       GMAT   = 0
       INDXAB = 0
       NUMDIS = 0
@@ -1541,6 +1685,10 @@ C
       deallocate(JORBS)
       deallocate(KORBS)
 C
+      IF (IPRINT .GE. 1) THEN
+         write(lupri,*) 'Exit from HER_NODSTR'
+         flush(lupri)
+      END IF
       CALL QEXIT('HER_NODSTR')
       RETURN
       END
@@ -1586,9 +1734,6 @@ C
       real(8), intent(inout)    :: fmat_buff(*), dmat_buff(*)
       logical, intent(in)       :: set_cb_blocks
 
-      LOGICAL FIRST_TIME_CALLED
-      DATA FIRST_TIME_CALLED /.TRUE./
-      SAVE FIRST_TIME_CALLED
 C
 #include "infpar.h"
 C
@@ -1597,8 +1742,7 @@ C
 C MXCENT : MXCENT (for DORPS, etc.)
 C MXORB  : MXSHEL (for INFPAR)
 C MAXAQN : *      (for SYMMET)
-C GNRINF : NEWBAS, (PVM: BASDIR, LENBAS)
-C SIRIPC : NEWGEO
+C GNRINF : NEWBAS, NEWGEO, (PVM: BASDIR, LENBAS),
 C INFORB : N2BASX
 C MOLINP : NMLINE, MLINE()
 C CBIREA : UNCONT
@@ -1611,7 +1755,6 @@ C HRUNIT : *
 C PARINT : *
 C
 #include "gnrinf.h"
-#include "siripc.h"
 #include "inforb.h"
 #include "inftap.h"
 #include "molinp.h"
@@ -1641,14 +1784,12 @@ C
         call qenter('HER_RVINIT - 1 -')
 C
 C       Since REAINI is not initialized outside of SETHER, make sure slaves
-C       initialize it properly
+C       initialize it properly (REAINI will return immediately if
+C       already called).
 C
-        IF (FIRST_TIME_CALLED) THEN
-           RELCAL = .FALSE.
-           TSTINP = .FALSE.
-           CALL REAINI(0,RELCAL,TSTINP)
-           FIRST_TIME_CALLED = .FALSE.
-        END IF
+        RELCAL = .FALSE.
+        TSTINP = .FALSE.
+        CALL REAINI(0,RELCAL,TSTINP)
 C
 #if defined (VAR_MPI)
         CALL MPIXBCAST(FIRST ,   1,'LOGICAL',MASTER)
@@ -1914,7 +2055,7 @@ C
 !       call flshfo(lupri)
       end if
 
-      CALL MEMGET('REAL',KHESEE,MXCOOR*MXCOOR,WORK,KFREE,LFREE)     
+      CALL MEMGET('REAL',KHESEE,MXCOOR*MXCOOR,WORK,KFREE,LFREE)
 C added by Bin Gao, June 3, 2009
       CALL MPIXBCAST(GENCTR,1,'LOGICAL',MASTER)
 C
@@ -1978,6 +2119,7 @@ C     Copied from TWOLOP and rewritten by Paal Dahle Nov.1994
 
 !     module dependencies
       use parallel_communication_models_mpi
+      use pelib_interface, only: use_pelib
 C
 #include "implicit.h"
 #include "priunit.h"
@@ -1988,12 +2130,13 @@ C
 #include "dummy.h"
 #include "mtags.h"
 #include "pcmlog.h"
+#include "gnrinf.h"
       LOGICAL PRINTA, PRINTB, PRINTC, PRINTD, NOPV, NODV, PERTUR,
      &        EXPECT, UNDIFF, DDFOCK, DIRFCK, DIA2SO, ZFS2EL,
      &        DISTRI, NOCONT, SPNORB,
      &        RETUR, FIRST, SQ12EL, LONDON, SUSCEP, ADISTR, DONE,
      &        SOFOCK,RELCALC,GENCTR
-      DIMENSION DMAT(*), FMAT(*), GMAT(*),INDHSQ(*), 
+      DIMENSION DMAT(*), FMAT(*), GMAT(*),INDHSQ(*),
      & IODDHR(*), INDHER(*), WORK(LWORK), ISYMDM(*), IFCTYP(*),
      &          JSTRSH(*), NPRIMS(*), NCONTS(*), IORBSH(MXSHEL,MXAOVC),
      &          TSKCPU(MTOTTK), IWHICH(MTOTTK), IJS(NTASK),
@@ -2465,6 +2608,7 @@ C
                CALL ADDGRD(GSOLNN)
             END IF
             IF (PCM) CALL ADDGRD(GSOLCV)
+            IF (USE_PELIB()) CALL ADDGRD(PEGRAD)
             CALL ABAREAD_TAYMOL(ERGMOL,GRDMOL,HESMOL,NCOOR)
             CALL PRIGRD(GRDMOL,WORK(KCSTRA),WORK(KSCTRA))
             NCDEP3 = 3*NUCDEP

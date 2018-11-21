@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -57,8 +51,6 @@ C
 !TRA2,TRA2E1: OPHLFx parameter, call DARMOV(LUHLFx) if true to delete
 !   any large temporary files before exit from TRACTL.
 !-- version n04 --
-!931201-hjaaj:
-!TRALVL: 'MOFCFV' is not defined any more.
 !920529-hjaaj:
 !TR2CTL: fixed error in LTUPQ calculation (s/NOCR/NOCQ/)
 !        use NOCOUL in LTUPQ calculation
@@ -88,7 +80,7 @@ C
 #include "dummy.h"
 C
 C Used from common blocks:
-C   INFTRA : IPRTRA,USEDRC
+C   INFTRA : IPRTRA,NEWTRA_USEDRC
 C CBGETDIS : IAD*
 C   INFTAP : LUORDA
 C
@@ -146,8 +138,8 @@ C     Delete AOORDINT after transformation if ITRSIR .lt. 0
 C
       DELORD = (ITRSIR .LT. 0)
       JTRSIR = ABS(ITRSIR)
-      IF (JTRSIR .GE. 1 .AND. JTRSIR .LE. 4) USEDRC = .TRUE.
-C     ... USEDRC must be true for second order transformation;
+      IF (JTRSIR .GE. 1 .AND. JTRSIR .LE. 4) NEWTRA_USEDRC = .TRUE.
+C     ... NEWTRA_USEDRC must be true for second order transformation;
 C         can be true by input for higher order (e.g. for RESPONS)
 C
 C     Translate from SIRIUS convention for transformation level
@@ -157,7 +149,7 @@ C
 C
       NOTUVX = .TRUE.
       NOCOUL = .FALSE.
-      NOEXCH = .NOT.USEDRC
+      NOEXCH = .NOT.NEWTRA_USEDRC
       MCOPT  = .FALSE.
 C
 
@@ -176,7 +168,7 @@ C     Set TRINP and TRUNIT
 C
       CALL TRASET(JRDAO, KWORK)
 C
-      CALL TRACT2(NTRLVL,NOTUVX,NOCOUL,NOEXCH,MCOPT,CMO,DUMMY,
+      CALL TRACT2(NTRLVL,NOTUVX,NOCOUL,NOEXCH,MCOPT,CMO,VDUMMY,
      &            WORK,KWORK)
 C     CALL TRACT2(NTRLVL,NOTUVX,NOCOUL,NOEXCH,MCOPT,CMO,TUVX,
 C    &            WRK,MEMX)
@@ -233,8 +225,8 @@ C
       KFREE  = 1
       LFREE  = MEMX
       LCDTRA = MMORBX
-      CALL MEMGET2('INTE','CDTRA',KCDTRA,LCDTRA,WRK,KFREE,LFREE)
-      CALL MEMGET2('INTE','TRTYP',KTRTYP,MXCORB,WRK,KFREE,LFREE)
+      CALL MEMGET2('INTE','ICDTRA',KCDTRA,LCDTRA,WRK,KFREE,LFREE)
+      CALL MEMGET2('INTE','ITRTYP',KTRTYP,MXCORB,WRK,KFREE,LFREE)
 C
 C     Set MO loop limits for the four integral indices
 C
@@ -264,7 +256,7 @@ C  address of ICDTRA from the LUMINT address array
 C  (here IADRM).
 C
 #include "implicit.h"
-      DIMENSION IADRM(3,1297)
+      INTEGER  IADRM(3,1297)
       IADFRE = IADRM(1,1297)
       IADCMO = IADRM(2,1297)
       IADCDT = IADRM(3,1297)
@@ -306,7 +298,7 @@ C
      &         'OLD',' ','UNFORMATTED',IDUMMY,.FALSE.)
             LUORDA = LUINTA
 
-            CALL REWSPL(LUINTA)
+            REWIND(LUINTA)
             CALL MOLLAB('BASINFO ',LUINTA,LUPRI)
 !           consistency checks before reading of AOTWOINT in RDAO2
             READ (LUINTA) NSYM_x, NBAS_x, LBUF, NIBUF, NBITS, LENINT4
@@ -331,8 +323,9 @@ C
                ! in RDAO2 outside RDAO2!
             END IF
             IF (ierr .gt. 0) THEN
-               call quit(
-     &            'SIR_INTOPEN_NEWTRA: AOTWOINT info not consistent')
+               write(lupri,'(/A)') ' SIR_INTOPEN_NEWTRA INFO: '//
+     %            'AOTWOINT info not consistent - deleting old AOTWOINT'
+               CALL GPCLOSE(LUINTA,'DELETE')
             END IF
          END IF
       END IF
@@ -542,7 +535,11 @@ C            and ICDTRA address
             WRITE (LUPRI,*) 'ICDTRA matrix:'
             DO 10 I = 1,NORBT
                IR = IROW(I)
-               WRITE (LUPRI,'(I5,(T8,10I7))') I,(ICDTRA(IR+J),J=1,I)
+               IF (ISUM(I,ICDTRA(IR+1),1) .EQ. 0) THEN
+                  WRITE (LUPRI,'(I5,A)') I,'   All entries are zero.'
+               ELSE
+                  WRITE (LUPRI,'(I5,(T8,10I7))') I,(ICDTRA(IR+J),J=1,I)
+               END IF
    10       CONTINUE
             WRITE (LUPRI,*) 'Positive addresses in IADRM:'
             WRITE (LUPRI,*)
@@ -650,11 +647,12 @@ C
          WRITE(LUPRI,*) 'IC    ,ID     :',ICNEW,IDNEW
          WRITE(LUPRI,*) 'IYPC  ,ITYPD  : ',COBTYP(ITYPC),
      &                                '  ',COBTYP(ITYPD)
-         WRITE (LUPRI,'(/A)') 'ICDTRA matrix:'
+         WRITE (LUPRI,'(/A)')
+     &   'ICDTRA matrix (rows with only zeroes are not printed):'
          DO I = 1,NORBT
             IR = IROW(I)
             IF (ISUM(I,ICDTRA(IR+1),1) .EQ. 0) THEN
-               WRITE (LUPRI,'(I5,A)') I,'   All entries are zero.'
+             ! WRITE (LUPRI,'(I5,A)') I,'   All entries are zero.'
             ELSE
                WRITE (LUPRI,'(I5,(T8,10I7))') I,(ICDTRA(IR+J),J=1,I)
             END IF
@@ -1254,10 +1252,8 @@ C
 C
 C     SET TIME AT START OF TRANSFORMATION
 C
-      IF (IPRTRA .GE. 0) THEN
-         CALL GETTIM(TCPU0,TWALL0)
-         TCPU1  = TCPU0
-         TWALL1 = TWALL0
+      IF (IPRTRA .GE. 2) THEN
+         CALL GETTIM(TCPU1,TWALL1)
       END IF
 C
       IF (IPRTRA .GE. 2) THEN
@@ -1532,15 +1528,6 @@ C    &              X1,X2,X3, USPQ,RUPQ,TUPQ)
   102   CONTINUE
   103  CONTINUE
   104 CONTINUE
-C
-      IF (IPRTRA .GE. 0) THEN
-         CALL GETTIM(TCPU,TWALL)
-         TCPU  = TCPU -TCPU0
-         TWALL = TWALL-TWALL0
-         WRITE(LUPRI,2200) TCPU, TWALL
-      END IF
- 2200 FORMAT(/' Integral transformation: Total CPU and WALL times (sec)'
-     &       ,2F12.3)
 C
 C     FINALLY save first free address on LUMINT in IADOUT(1,LIADUT) and
 C     WRITE OUT THE DAFILE ADDRESS LIST ON UNIT 13
@@ -2975,6 +2962,8 @@ C
       ELSE IF (IRDAO .EQ. 3) THEN
          ITUSYM = 1
          CALL TRASET_3(LX2X3, LWORK)
+      ELSE IF (IRDAO .LT. 0) THEN
+         ! do no more, this is called from .FCKTRA routines
       ELSE
          WRITE (LUPRI,*) 'ERROR TRASET: Illegal IRDAO =',IRDAO
          CALL QTRACE(LUPRI)
@@ -3178,7 +3167,7 @@ C
       KINT = 1
       KIINT = KINT + LBUF
 C
-      CALL REWSPL(LUINTA)
+      REWIND(LUINTA)
 C
       CALL MOLLAB('BASTWOEL',LUINTA,LUPRI)
  150  CONTINUE
@@ -3330,7 +3319,7 @@ C     Redefine MFRO,MISH,MASH according to requested integral
 C     transformation.  If KTRLVL .eq. 1 then this is the same
 C     as in Sirius.
 C
-      CALL IZERO(ITRTYP,MORBT)
+      ITRTYP(1:MORBT) = 0
       IMOL = 0
       DO 300 ISYM = 1, MSYM
          IF (KTRLVL .EQ. 0) THEN
@@ -3341,10 +3330,10 @@ C
             MFRO(ISYM) = 0
             MISH(ISYM) = 0
          END IF
-         IMOG = IMOL + MFRO(ISYM)
-         IMOA = IMOL + MFRO(ISYM) + MISH(ISYM)
+         IMOG = IMOL + MFRO(ISYM) ! off-set to g indices
+         IMOA = IMOL + MFRO(ISYM) + MISH(ISYM) ! off-set to a indices
          NMOA = MASH(ISYM)
-         IMOL = IMOL + MORB(ISYM)
+         IMOL = IMOL + MORB(ISYM) ! last index to transform in this symmetry
 C        ... if 3. order or full integral transformation
 C            then reset MASH(*) to MORB(*) - MFRO(ISYM)
 C            for symmetry quadruplet tests in TR2CTL
@@ -3355,12 +3344,13 @@ C            and for limits on (c d) summation indices in TRA2
          END IF
 C
          NG = MIN(4,JTRLVL)
-         DO 240 I = IMOG + 1,IMOL
+         DO I = IMOG + 1,IMOL
             ITRTYP(I) = NG
-  240    CONTINUE
-         DO 250 I = IMOA + 1,IMOA + NMOA
+            ! this includes the a indices, but they are overwritten below
+         END DO
+         DO I = IMOA + 1,IMOA + NMOA
             ITRTYP(I) = 4
-  250    CONTINUE
+         END DO
   300 CONTINUE
 C
 C     Define ICDTRA matrix
@@ -3368,18 +3358,21 @@ C
       ICDTRA(1:MMORBX) = 0
 
       IDIST = 0
-      DO 780 I = 1,MORBT
+      DO I = 1,MORBT
          IF (ITRTYP(I) .GE. 3) THEN
             IR = (I*I-I)/2
-            DO 770 J = 1,I
+            DO J = 1,I
                IF ( (ITRTYP(I)+ITRTYP(J)).GE.7 ) THEN
                   IDIST = IDIST + 1
                   ICDTRA(IR+J) = IDIST
                END IF
-  770       CONTINUE
+            END DO
          END IF
-  780 CONTINUE
-      IF (IPRTRA .GE. 3) THEN
+      END DO
+      IF (IPRTRA .GE. 5) THEN
+         WRITE (LUPRI,'(/A)') ' ITRTYP(1:NORBT) = '//
+     &      'number of integral indices in which this orbital enters:'
+             WRITE(LUPRI,'(5(2X,10I2))') ITRTYP(1:MORBT)
          WRITE (LUPRI,'(/A)')
      &      ' ICDTRA: list of distributions included on LUMINT:'
          DO 810 I = 1,MORBT
@@ -3428,34 +3421,33 @@ C
 #include "implicit.h"
 C
       CALL QENTER('TRALVL')
-      JTRLVL = ABS(ITRSIR)
-#if defined (VAR_OLDCODE)
-c --- 931201-hjaaj: MOFCFV does not exist any more
-      IF (MOFCFV) THEN
-         KTRLVL = 0
-      ELSE
+      ! a: active, o:occupied, g:general in comments for JTRSIR
+      JTRSIR = ABS(ITRSIR)
+      IF (JTRSIR .EQ. 0) THEN      ! (aa|aa)
+         JTRLVL = 0
          KTRLVL = 1
-      END IF
-#else
-      KTRLVL = 0
-#endif
-      IF (JTRLVL .EQ. 0) THEN
+      ELSE IF (JTRSIR .EQ. 1) THEN ! (ga|aa)
+         JTRLVL = 1
          KTRLVL = 1
-      ELSE IF (JTRLVL .EQ. 1) THEN
-         KTRLVL = 1
-      ELSE IF (JTRLVL .EQ. 2) THEN
-         KTRLVL = 0
-      ELSE IF (JTRLVL .EQ. 3) THEN
-         JTRLVL = 2
-         KTRLVL = 1
-      ELSE IF (JTRLVL .EQ. 4) THEN
+      ELSE IF (JTRSIR .EQ. 2) THEN ! (gg|oo) + <gg|oo> (for (aa|ii) and (ai|ai)
          JTRLVL = 2
          KTRLVL = 0
-      ELSE IF (JTRLVL .EQ. 5) THEN
+      ELSE IF (JTRSIR .EQ. 3) THEN ! (gg|aa) + <gg|aa>
+         JTRLVL = 2
+         KTRLVL = 1
+      ELSE IF (JTR2IR .EQ. 4) THEN ! (gg|oo) + <gg|oo>
+         JTRLVL = 2
+         KTRLVL = 0
+      ELSE IF (JTRSIR .EQ. 5) THEN ! (gg|go)
          JTRLVL = 3
          KTRLVL = 0
-      ELSE IF (JTRLVL .GE. 6) THEN ! KTRLVL is inactive
+      ELSE IF (JTRSIR .EQ. 6) THEN ! (gg|ga)
+      ! hjaaj aug 2017;  new option for abacus: we only need active-general for abatr1
+         JTRLVL = 3
+         KTRLVL = 1
+      ELSE IF (JTRSIR .GE. 7) THEN ! (gg|gg)
          JTRLVL = 4
+         KTRLVL = 0  ! KTRLVL is inactive
       END IF
       NTRLVL = 100*KTRLVL + JTRLVL
       CALL QEXIT('TRALVL')

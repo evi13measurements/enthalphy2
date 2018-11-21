@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -55,7 +49,7 @@ C  /* Deck rhsinp */
      &            '.STOP  ', '.NODDY ', '.NODPTR',
      &            '.PTRPRI', '.SORPRI', '.PTRSKI'/
 C
-      NEWDEF = WORD .EQ. '*GETSGY'
+      NEWDEF = WORD .EQ. '*GETSGY' .OR. WORD .EQ. '*RHSIDE'
       ICHANG = 0
       IF (NEWDEF) THEN
          WORD1 = WORD
@@ -79,10 +73,10 @@ C
                  CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
                  GO TO 100
                END IF
-               WRITE (LUPRI,'(/,3A,/)') ' Keyword "',WORD,
-     *            '" not recognized under *GETSGY.'
+               WRITE (LUPRI,'(/4A/)') ' Keyword "',WORD,
+     *            '" not recognized under ',WORD1
                CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
-               CALL QUIT('Illegal keyword under *GETSGY.')
+               CALL QUIT('Illegal keyword under '//WORD1)
     1          CONTINUE
                   SKIP = .TRUE.
                GO TO 100
@@ -197,10 +191,10 @@ C
             ELSE IF (PROMPT .EQ. '*') THEN
                GO TO 300
             ELSE
-               WRITE (LUPRI,'(/,3A,/)') ' Prompt "',WORD,
-     *            '" not recognized under *GETSGY.'
+               WRITE (LUPRI,'(/4A/)') ' Prompt "',WORD,
+     *            '" not recognized under ',WORD1
                CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
-               CALL QUIT('Illegal prompt under *GETSGY.')
+               CALL QUIT('Illegal prompt under '//WORD1)
             END IF
       END IF
   300 CONTINUE
@@ -444,11 +438,9 @@ C
 C
 C Used from common blocks:
 C   CBIRHS : *
-C   GNRINF : PARCAL
-C   INFPAR : NODTOT
+C   INFPAR : NODTOT, PARHER
 C
 #include "cbirhs.h"
-#include "gnrinf.h"
 #include "abainf.h"
 #include "nuclei.h"
 #include "symmet.h"
@@ -836,7 +828,7 @@ C
                L2INT  = LWORK - K2INT + 1
 C
 #if defined (VAR_MPI) || defined (VAR_PVM)
-               IF (PARCAL .AND. DDFOCK) THEN
+               IF (PARHER .AND. DDFOCK) THEN
 C
                   KNSTAT = KLAST
                   KLAST  = KNSTAT + (NODTOT + 1)/IRAT
@@ -975,15 +967,14 @@ C           **********************
 C           ***** CMO and DV *****
 C           **********************
 C
-            CALL RD_SIRIFC('CMO',FOUND,WORK(KCMO),WORK(KGETFD),LGETFD)
+            CALL RD_SIRIFC('CMO',FOUND,WORK(KCMO))
             IF (.NOT.FOUND)
      &         CALL QUIT('RHSIDE error: CMO not found on SIRIFC')
             IF (NASHT .GT. 0) THEN
                IF (NODV) THEN
                   CALL DZERO(WORK(KDV),  NNASHX)
                ELSE
-                  CALL RD_SIRIFC('DV',FOUND,WORK(KDV),
-     &               WORK(KGETFD),LGETFD)
+                  CALL RD_SIRIFC('DV',FOUND,WORK(KDV))
                   IF (.NOT.FOUND)
      &            CALL QUIT('RHSIDE error: DV not found on SIRIFC')
                END IF
@@ -1038,7 +1029,7 @@ C           ******************************
 C           ***** Read Fock matrix F *****
 C           ******************************
 C
-            CALL RD_SIRIFC('FOCK',FOUND,WORK(KFOCK),WORK(KWRKGD),LWRKGD)
+            CALL RD_SIRIFC('FOCK',FOUND,WORK(KFOCK))
             IF (.NOT.FOUND)
      &      CALL QUIT('RHSIDE error: FOCK not found on SIRIFC')
 C
@@ -1286,7 +1277,7 @@ C
 C           Case 2: Densities read in
 C
             ELSE
-               CALL RD_SIRIFC('PV',FOUND,PV,WORK(KFREE),LFREE)
+               CALL RD_SIRIFC('PV',FOUND,PV)
                IF (.NOT.FOUND)
      &            CALL QUIT('RHSIDE error: PV not found on SIRIFC')
             END IF
@@ -1530,12 +1521,28 @@ C
                   IF (IPRGDY .GT. 2)
      &               CALL TIMER('START ',TIMSTR,TIMEND)
                   NGD = 1
-CSPAS : 3/12-98 : changes for SOPPA
-                  IF (ABASOP) THEN
+                  IF (ABASOP) THEN ! SPAS : 3/12-98 : changes for SOPPA
                      CALL ANGRHS(WORK(KFDCSQ),WORK(KGD),WORK(KCINDX),
      &                           WORK(KWKRHS),1,LWKRHS)
                      GRDICT = D0
                      GRDACT = D0
+                  ELSE IF (NASHT .GT. 0 .AND. DFTRUN) THEN
+                  !  open-shell DFT not implemented in GETFD
+                     WRITE (LUPRI,'(///A/A,I0,A)')
+     &   'Fatal error: Requested magnetic or atom derivative'//
+     &   ' property is not implemented for open-shell DFT. ',
+     &   ' Atom no. ',IATOM, ' ( 0 means external magnetic B field )'
+                     CALL QUIT('Fatal error: Requested property'//
+     &               ' is not implemented for open-shell DFT')
+                  ELSE IF (NASHT .GT. 1 .AND. HSROHF) THEN
+                  !  ABARHS expects MOTWOINT if NASHT .gt. 1 /Mar.2018, hjaaj
+                     WRITE (LUPRI,'(///A/A,I0,A//A)')
+     &   'Fatal error: Requested magnetic or atom derivative'//
+     &   ' property is not implemented for HSROHF. ',
+     &   ' Atom no. ',IATOM, ' ( 0 means external magnetic B field )',
+     &   'Note: You can use the .MCSCF path to calculate this property.'
+                     CALL QUIT('Fatal error: Requested property'//
+     &               ' is not implemented for HSROHF')
                   ELSE
                      CALL ABARHS(NGD,DV,PV,WORK(KFC),WORK(KFV),
      &                           WORK(KCREF),CMO,WORK(KTDSQ),
@@ -1544,7 +1551,6 @@ CSPAS : 3/12-98 : changes for SOPPA
      &                           WORK(KGD),WORK(KCINDX),LONDON,
      &                           WORK(KDFTSQ),WORK(KWKRHS),1,LWKRHS)
                   ENDIF
-CKeinSPASmehr
                   IF (IPRGDY .GT. 2)
      &               CALL TIMER('ABARHS',TIMSTR,TIMEND)
                   IF (SOLVNT .AND. IATOM .GT. 0) THEN
@@ -2863,21 +2869,20 @@ C  /* Deck ofabmo */
       SUBROUTINE OFABMO(CMO,DV,FMAT,WORK,LWORK)
 #include "implicit.h"
 #include "priunit.h"
-#include "iratdef.h"
 #include "inforb.h"
       DIMENSION CMO(NCMOT), DV(NASHT,NASHT), FMAT(N2ORBT), WORK(LWORK)
       LOGICAL FOUND
 C
-      CALL RD_SIRIFC('CMO',FOUND,CMO,WORK,LWORK)
+      CALL RD_SIRIFC('CMO',FOUND,CMO)
       IF (.NOT.FOUND) CALL QUIT('OFABMO error: CMO not found on SIRIFC')
       IF (NASHT .GT. 0) THEN
          IF (NNASHX .GT. LWORK) CALL STOPIT('OFABMO',' ',LWORK,NNASHX)
-         CALL RD_SIRIFC('DV',FOUND,WORK,WORK,LWORK)
+         CALL RD_SIRIFC('DV',FOUND,WORK)
          IF (.NOT.FOUND)
      &      CALL QUIT('OFABMO error: DV not found on SIRIFC')
          CALL DSPTSI(NASHT,WORK,DV)
       END IF
-      CALL RD_SIRIFC('FOCK',FOUND,FMAT,WORK,LWORK)
+      CALL RD_SIRIFC('FOCK',FOUND,FMAT)
       IF (.NOT.FOUND)
      &   CALL QUIT('OFABMO error: FOCK not found on SIRIFC')
       RETURN
@@ -2885,7 +2890,6 @@ C
 C  /* Deck ofabhg */
       SUBROUTINE OFABHG(HWORK,UMOG,WORK,LWORK)
 #include "implicit.h"
-#include "iratdef.h"
 #include "inforb.h"
       REAL*8    HWORK(NBAST,NBAST), UMOG(*), WORK(LWORK)
       INTEGER   MBAS(8)
@@ -2923,7 +2927,6 @@ C  /* Deck ofabh1 */
 #include "implicit.h"
 #include "dummy.h"
 #include "priunit.h"
-#include "iratdef.h"
 #include "inforb.h"
       INTEGER   IINDX4(4,LBUF)
       REAL*8    UMOG(NBAST,NBAST,NBAST,NBAST), AOBUF(LENINT4)
@@ -2975,7 +2978,6 @@ C
 C  /* Deck rumog1 */
       SUBROUTINE RUMOG1(UMOGA,NORBT,NOH2,NOLOND,IINDX4,X,WORK)
 #include "implicit.h"
-#include "iratdef.h"
 #include "priunit.h"
       LOGICAL NOH2, NOLOND
       INTEGER P,Q,R,S,X

@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -438,11 +432,14 @@ C
             LPV = NNASHX
          END IF
          CALL TR1L2M(NDERIV, TR1MAT, PV,LPV, H2XAC,FXQ,
-     *               .NOT.USEDRC,LONDON,WRK(KWRK1),LWRK1)
-         IF (USEDRC) THEN
-            CALL TR1L2D(NDERIV, TR1MAT,PV,LPV,FXQ, LONDON,
-     &                  WRK(KWRK1),LWRK1)
-         END IF
+     *               .TRUE.,LONDON,WRK(KWRK1),LWRK1)
+! Dirac format of London integrals is not implemented yet
+!        CALL TR1L2M(NDERIV, TR1MAT, PV,LPV, H2XAC,FXQ,
+!    *               .NOT.USEDRC,LONDON,WRK(KWRK1),LWRK1)
+!        IF (USEDRC) THEN
+!           CALL TR1L2D(NDERIV, TR1MAT,PV,LPV,FXQ, LONDON,
+!    &                  WRK(KWRK1),LWRK1)
+!        END IF
 C
 C        CALL TR1L2M(NDERIV,TR1MAT,PV,H2XAC,FXQ, NODRC,LONDON,
 C    &               WRK,LFRSAV)
@@ -694,8 +691,6 @@ C   DDOT, DZERO, MOLLAB, QTRACE
 #include "implicit.h"
       DIMENSION PV(LPV,*),TMAT(N2ORBX,*)
       DIMENSION H2XAC(NASHT,NASHT,NASHT,NASHT,*)
-C     HJMAERK: N2ASHX,NNASHX eller NNASHX,NNASHX half-transf. int. ?
-C     921002: use N2ASHX,N2ASHX so we may use old GETINT option
       DIMENSION FXQ(NASHT*NORBT,*)
       DIMENSION WRK(LFRSAV)
       LOGICAL   NODRC, LONDON
@@ -734,7 +729,6 @@ C
 C
 C     Check input
 C
-
       IF (NASHT .LE. 1) GO TO 9999
 C     (FXQ zero matrix and H2XAC not used if NASHT .le. 1)
 C
@@ -1222,7 +1216,7 @@ C
 #include "iratdef.h"
       PARAMETER (D2 = 2.0D0, DM1 = -1.0D0)
 C
-      LOGICAL   LONDON, DFTADX
+      LOGICAL   LONDON, DFTADD_save
       DIMENSION TMAT(N2ORBX,NTMAT),CMO(*),UDV(*)
       DIMENSION FXC(NORBT,NORBT,NTMAT), FXV(NORBT,NORBT,NTMAT)
       DIMENSION WRK(LWRK)
@@ -1279,11 +1273,10 @@ C     Scale anti-symmetric density to "get things right..."
       ELSE
          IFCSET = 13
       END IF
-      DO 100 I = 1,NXMAT
-         ISYMDM(I) = JWOPSY
-         IFCTYP(I) = IFCSET
-  100 CONTINUE
-      DFTADX = DFTADD
+      ISYMDM(1:NXMAT) = JWOPSY
+      IFCTYP(1:NXMAT) = IFCSET
+
+      DFTADD_save = DFTADD
       IF (LONDON) DFTADD = .FALSE.
 
          IF (IPRLIN.GE.21) THEN
@@ -1304,7 +1297,7 @@ C     Scale anti-symmetric density to "get things right..."
       CALL SIRFCK(WRK(KFXCAO),WRK(KDXCAO),NXMAT,ISYMDM,IFCTYP,
      &            DIRFCK,WRK(KFREE),LFREE)
       IPRFCK = IPRFCK_save
-      DFTADD = DFTADX
+      DFTADD = DFTADD_save
 
          IF (IPRLIN.GE.21) THEN
             IF (NISHT.GT.0) THEN

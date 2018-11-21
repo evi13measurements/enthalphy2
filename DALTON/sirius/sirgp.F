@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -619,7 +613,7 @@ C -- end of subroutine PRWOP
 C
       END
 C  /* Deck readmo */
-      SUBROUTINE READMO(CMO,JRDMO,WRK,LFREE)
+      SUBROUTINE READMO(CMO,JRDMO)
 C
 C Last revision 7-Jan-1985 hjaaj -- ver. 2.6
 C  8-Jul-1992 hjaaj (removed H1VIRT and FCMO calls)
@@ -642,15 +636,16 @@ C
 C
 #include "implicit.h"
 #include "dummy.h"
-      DIMENSION CMO(*),WRK(*)
+      DIMENSION CMO(*)
       LOGICAL   FOUND
 C
 #include "priunit.h"
 #include "inforb.h"
 #include "inftap.h"
+#include "infpri.h"
 C
       LOGICAL      NOSTOP
-      CHARACTER*8  MOLABL
+      CHARACTER*8  MOLABL, RTNLBL(2)
       CHARACTER*10 PFMT
 C
       CALL QENTER('READMO')
@@ -731,9 +726,12 @@ C
          MOLABL = 'NEWORB  '
       END IF
       LBLERR = -1
-      CALL MOLLAB(MOLABL,LUIT1,LBLERR)
+      CALL MOLLB2(MOLABL,RTNLBL,LUIT1,LBLERR)
       IF (LBLERR .GE. 0) THEN
          CALL READT(LUIT1,NCMOT,CMO)
+         IF (IPRSIR .GT. 0) WRITE(LUPRI,'(4A,1X,A)')
+     &   '* Read MO coefficients from SIRIUS.RST with label "',MOLABL,
+     &   '" and header info: ',RTNLBL(1:2)
       ELSE IF (LBLERR .EQ. -1) THEN
          WRITE (LUPRI,'(//3A)')
      & ' --- FATAL ERROR, MO label "',MOLABL,'" not found on SIRIUS.RST'
@@ -760,7 +758,7 @@ C
 C-- IRDMO = 10: read CMO from SIRIFC (LUSIFC)
 C
  1000 CONTINUE
-      CALL RD_SIRIFC('CMO',FOUND,CMO,WRK,LFREE)
+      CALL RD_SIRIFC('CMO',FOUND,CMO)
       IF (.NOT.FOUND) THEN
          IF (NOSTOP) THEN
             JRDMO = JRDMO + 1
@@ -827,9 +825,11 @@ C
 C Used from common blocks:
 C  INFORB : NCMOT
 C  INFTAP : LUIT1
+C exeinf.h : NEWCMO
 C
 #include "inforb.h"
 #include "inftap.h"
+#include "exeinf.h"
 C
       LOGICAL FNDLAB
       CHARACTER*8 MOLBL(3),LABTBL(3)
@@ -878,6 +878,7 @@ C     ...label 'NEWORB  '
       WRITE (LUIT1) MOLBL,LABTBL(3)
 C     ...label 'EODATA  '
       REWIND LUIT1
+      NEWCMO = .TRUE.
 C
       CALL QEXIT('NEWORB')
       RETURN
@@ -1059,6 +1060,53 @@ C
       RETURN
 C
 C     End of GETAC1.
+C
+      END
+C  /* Deck getvir */
+      SUBROUTINE GETVIR(FC,FCVIR)
+C
+C  7-Nov-2017 Hans Joergen Aa. Jensen (based on GETAC)
+C
+C Module : SIRGP
+C
+C Purpose: Extract blocks with virtual-virtual orbital indices out
+C          of symmetry packed matrix (e.g. the Fock matrix).
+C          Both FC and FCVIR are symmetry packed.
+C
+#include "implicit.h"
+      REAL*8  FC(*), FCVIR(*)
+C
+C INFORB : NSSHT, NNSSHT, NSYM, NSSH(*), IIORB(*), IISH(*), NOCC(*)
+C
+#include "inforb.h"
+
+      IROW(I) = (I*(I-1))/2
+C
+      CALL QENTER('GETVIR ')
+C
+      CALL DZERO(FCVIR,NNSSHT)
+      IISSH_I = 0
+      DO 300 ISYM=1,NSYM
+      IF (NSSH(ISYM).EQ.0) GO TO 300
+         NOCCI = NOCC(ISYM)
+         NORBI = NORB(ISYM)
+         IJFC  = IIORB(ISYM) + IROW(NOCCI+1)
+         IJFCVIR = IISSH_I
+         DO 290 I = (NOCCI+1),NORBI
+            IJFC   = IJFC + NOCCI
+            DO 280 J = (NOCCI+1),I
+               IJFC = IJFC + 1
+               IJFCVIR = IJFCVIR + 1
+               FCVIR(IJFCVIR) = FC(IJFC)
+  280       CONTINUE
+  290    CONTINUE
+         IISSH_I = IISSH_I + IROW(NSSH(ISYM)+1)
+  300 CONTINUE
+C
+      CALL QEXIT('GETVIR ')
+      RETURN
+C
+C     End of GETVIR.
 C
       END
 C  /* Deck pksym1 */
@@ -1443,8 +1491,7 @@ C
 !     ------------------------------------------------------------------
       integer                        :: i, j
       integer                        :: lscr
-      integer                        :: idummy
-      real*8                         :: dummy
+      real*8                         :: vdummy(2)
       real*8, allocatable            :: cmo(:)
       real*8, allocatable            :: dvao(:,:,:)
       real*8, allocatable            :: dcao(:,:,:)
@@ -1453,7 +1500,7 @@ C
       logical                        :: ex              = .false.
 !     ------------------------------------------------------------------
 
-      call qenter('aodens')
+      call qenter('write_aodens')
 
       !> open the unformatted file AO-densities
       inquire(FILE='AO-densities',exist=ex)
@@ -1482,7 +1529,7 @@ C
       !> read MOs from SIRIUS.RST 
       !> a. if HF these are the final HF orbitals
       !> b. if MC these are the final MCSCF orbitals
-      call readmo(cmo,9,dummy,idummy)
+      call readmo(cmo,9,vdummy,0)
 
       select case(trim(density))
 
@@ -1545,7 +1592,7 @@ C
       !> close the file "AO-densities"
       close(1234, status="keep")
 
-      call qexit('aodens')
+      call qexit('write_aodens')
 
       end subroutine write_aodens
 
@@ -1614,30 +1661,35 @@ C     thus NSYM from ccorb.h and not from inforb.h /hjaaj checked aug 04
       RETURN
       END
 C  /* Deck rdsupm */
-      SUBROUTINE RDSUPM(NSIM,FMAT,DMAT,WORK,LFREE)
+      SUBROUTINE RDSUPM(NSIM,FMAT,DMAT,ISYMDM,WORK,LFREE)
 C
 C     Jan 90, Hans Joergen Aa. Jensen
-C     l.r. 2-Apr-1997 hjaaj
-C     (FMAT and DMAT now (NBAST,NBAST))
+C     2-Apr-1997 hjaaj (FMAT and DMAT now (NBAST,NBAST))
+C       Oct-2014 hjaaj (ISYMDM in parameter list)
 C
 #include "implicit.h"
 #include "priunit.h"
-      DIMENSION FMAT(*), DMAT(*), WORK(*)
+      DIMENSION FMAT(*), DMAT(*), ISYMDM(*), WORK(*)
 C
 C Used from common blocks:
-C  INFORB : NBAST,N2BASX
-C  INFTAP : LUSUPM
+C  INFORB  : NBAST,N2BASX
+C  INFTAP  : LUSUPM
 C  PRIUNIT : IPRSTAT
-C  CBIHRS : parameters for FORMSUP
+C  CBIHRS  : parameters for FORMSUP
+C  frame.h : POTNUC
+C  DFTCOM  : HFXFAC
 C
 #include "inforb.h"
 #include "inftap.h"
 #include "infpri.h"
 #include "cbihrs.h"
+#include "frame.h"
+#include "dftcom.h"
 C
 C     Local variables:
 C
-      LOGICAL FNDLAB
+      LOGICAL FNDLAB, FNSUPM_OK, NOSYM, F_EXIST
+      character*8  FNSUPM_local
 
       CALL QENTER('RDSUPM')
 C
@@ -1649,17 +1701,62 @@ C     ... special code for AOSUPMAT not to be used
          CALL QTRACE(LUPRI)
          CALL QUIT('Programming ERROR: RDSUPM called with LUSUPM.eq.-1')
       END IF
+      IF (ONLY_J) THEN
+         HFXFACSUP = 0.0D0
+      ELSE
+         HFXFACSUP = HFXFAC
+      END IF
+      if (HFXFACSUP .eq. 0.0D0) then
+         FNSUPM_local = 'AO2_JINT'
+      else if (HFXFACSUP .eq. 1.0D0) then
+         FNSUPM_local = FNSUPM
+      else
+         FNSUPM_local = 'AODFTINT'
+      end if
+      if (LUSUPM .gt. 0) call GPCLOSE(LUSUPM,'KEEP')
 C
       I = 0
- 100     IF (LUSUPM .LE. 0) CALL GPOPEN(LUSUPM,FNSUPM,
+ 100     IF (LUSUPM .LE. 0) CALL GPOPEN(LUSUPM,FNSUPM_local,
      &      'UNKNOWN',' ','UNFORMATTED',IDUMMY,.FALSE.)
          I = I + 1
-         CALL REWSPL(LUSUPM)
-         IF (.NOT. FNDLAB('PSUPMAT ',LUSUPM)) THEN
+         REWIND(LUSUPM)
+
+         FNSUPM_OK = FNDLAB('PXSUPMAT',LUSUPM)
+         IF (FNSUPM_OK) THEN
+            READ (LUSUPM) XFAC, XPOTNUC, NOSYM
+            IF (abs(XFAC-HFXFACSUP) .gt. THRSUP) THEN
+               WRITE(LUPRI,*)
+               WRITE(LUPRI,*) 'Calculating ',FNSUPM_local,
+     &         ' because HFXFAC changed from',XFAC,' to',HFXFACSUP
+               FNSUPM_OK = .FALSE.
+            END IF
+            IF (abs(XPOTNUC-POTNUC) .gt. THRSUP) THEN
+               WRITE(LUPRI,'(/3A)') 'Calculating ',FNSUPM_local,
+     &         ' because geometry has changed.'
+               FNSUPM_OK = .FALSE.
+            END IF
+            IF (NOSSUP .AND. .NOT.NOSYM) THEN
+               FNSUPM_OK = .FALSE.
+               WRITE(LUPRI,'(/3A)') 'Calculating ',FNSUPM_local,
+     &         ' because .NOSYM requested'
+               FNSUPM_OK = .FALSE.
+            END IF
+         ELSE
+            WRITE(LUPRI,'(/2A)') 'Calculating ',FNSUPM_local
+         END IF
+
+         IF (.NOT. FNSUPM_OK) THEN
             IF (I.GT.1) CALL QUIT('CALL FORMSUP failed')
-            CALL TIMER('START ',TIMSTR,TIMEND)
-            CALL FORMSUP(WORK,LFREE,NOSSUP,THRSUP,IPRSUP)
-            CALL TIMER('FORMSUP',TIMSTR,TIMEND)
+            inquire(file='AOTWOINT',EXIST=F_EXIST)
+            IF (.NOT. F_EXIST) THEN
+               CALL newTIMER('START ')
+               CALL MAKE_AOTWOINT(WORK,LFREE)
+               CALL newTIMER('MAKE_AOTWOINT')
+               CALL FLSHFO(LUPRI)
+            END IF
+            CALL newTIMER('START ')
+            CALL FORMSUP(WORK,LFREE,NOSSUP,HFXFACSUP,THRSUP,IPRSUP)
+            CALL newTIMER('FORMSUP')
             CALL FLSHFO(LUPRI)
             GO TO 100
          END IF
@@ -1675,7 +1772,7 @@ C
 C
 C     note equivalence(WORK, IWORK)
 C
-      CALL RDSUPP(NSIM,FMAT,DMAT,WORK,WORK,LFREE)
+      CALL RDSUPP(NSIM,FMAT,DMAT,ISYMDM,WORK,WORK,LFREE)
 C
 C     square Fock matrices, restore DCAO
 C
@@ -1693,7 +1790,7 @@ C
       END
 C  /* Deck rdsupp */
 #include "vdir.h"
-      SUBROUTINE RDSUPP(NSIM,FMAT,DMAT,WORK,IWORK,LFREE)
+      SUBROUTINE RDSUPP(NSIM,FMAT,DMAT,ISYMDM,WORK,IWORK,LFREE)
 C
 C Jan 90, Hans Joergen Aa. Jensen
 C
@@ -1704,38 +1801,41 @@ C
 #include "thrzer.h"
       PARAMETER (D0 = 0.0D0)
 C
-      DIMENSION FMAT(N2BASX,NSIM), DMAT(N2BASX,NSIM)
-      DIMENSION WORK(LFREE), IWORK(IRAT*LFREE)
+      REAL*8  FMAT(N2BASX,NSIM), DMAT(N2BASX,NSIM), WORK(LFREE)
+      INTEGER IWORK(IRAT*LFREE), ISYMDM(NSIM)
 C
 C Used from common blocks:
 C
 C   INFORB : N2BASX,MULD2H(8,8),...
 C   INFIND : IROW(:),ISAO(:)
-C   INFVAR : JWOPSY
 C   INFTAP : LUSUPM
-C   PRIUNIT : LUERR, IPRSTAT
+C   PRIUNIT: LUERR, IPRSTAT
 C
 #include "maxash.h"
 #include "maxorb.h"
 #include "priunit.h"
 #include "inforb.h"
 #include "infind.h"
-#include "infvar.h"
 #include "inftap.h"
 #include "infpri.h"
 C
       LOGICAL NOSYM
-      DIMENSION MBAS(8)
+      INTEGER MBAS(8)
 C
       CALL QENTER('RDSUPP')
-      CALL REWSPL(LUSUPM)
-      CALL MOLLAB('PSUPMAT ',LUSUPM,LUPRI)
+      REWIND(LUSUPM)
+      CALL MOLLAB('PXSUPMAT',LUSUPM,LUPRI)
 C
 C *** Test if LUSUPM file is OK
 C
-      READ (LUSUPM) NOSYM, MSYM, MBAS
+      READ (LUSUPM) XFAC,XPOTNUC,NOSYM, MSYM, MBAS
       NERR = 0
-      IF (JWOPSY .NE. 1 .AND. .NOT.NOSYM) NERR = NERR + 1
+      ISYMDM_ALL = ISYMDM(1)
+      DO I = 1,NSIM
+         IF (ISYMDM(I) .NE. ISYMDM_ALL) ISYMDM_ALL = -1 ! not all d.m. have same symmetry
+         IF (ISYMDM(I) .NE. 1 .AND. .NOT.NOSYM)         NERR = NERR + 1
+         IF (ISYMDM(I) .LT. 1 .OR. ISYMDM(I) .GT. NSYM) NERR = NERR + 1
+      END DO
       IF (MSYM .NE. NSYM) THEN
          NERR = NERR + 10
       ELSE
@@ -1756,7 +1856,8 @@ C
          CALL QUIT('RDSUPP ERROR: AOSUPINT inconsistent with AOONEINT')
       END IF
       IF (IPRSTAT .GT. 5) THEN
-         WRITE (LUERR,*) 'Test output from RDSUPP, NOSYM =',NOSYM
+         WRITE (LUERR,*) 'Test output from RDSUPP, XFAC,NOSYM =',
+     &   XFAC,NOSYM
       END IF
 C
 C
@@ -1781,13 +1882,15 @@ C
          ISPL = ISAO(NPL)
          ISQ1 = ISAO(NQ1)
          ISQL = ISAO(NQL)
+         if (ISYMDM_ALL .gt. 0) then
          IF (ISP1.EQ.ISPL .AND. ISQ1.EQ.ISQL) THEN
             ISPQ = MULD2H(ISP1,ISQ1)
-            IF (ISPQ .NE. JWOPSY) THEN
+            IF (ISPQ .NE. ISYMDM_ALL) THEN
                READ (LUSUPM)
                GO TO 100
             END IF
          END IF
+         end if
 C
          IF (ITYP .EQ. 1) THEN
             IREC1 = IREC1 + 1
@@ -1812,7 +1915,7 @@ C
                      ISQ = ISAO(IQ)
                      ISPQ = MULD2H(ISQ,ISP)
                      IPQ = IROW(IP) + IQ
-                   IF (ISPQ .EQ. JWOPSY) THEN
+                   IF (ISPQ .EQ. ISYMDM(ISIM)) THEN
                      DPQ = DMAT(IPQ,ISIM)
 C                    note NRS = IPQ
                      IF (ABS(DPQ) .GT. THRZER)
@@ -1879,6 +1982,7 @@ C
          CALL ERRWRK('RDSUPP.TYP2',LENP,LFREE)
   900 CONTINUE
       IF (IPRSTAT .GT. 5) THEN
+         WRITE (LUERR,*) 'RDSUPP statistics.'
          WRITE (LUERR,*) 'Total number of records :',IREC
          WRITE (LUERR,*) 'No. of records of type 1:',IREC1
          WRITE (LUERR,*) 'No. of records of type 2:',IREC2
@@ -2019,7 +2123,7 @@ C
       RETURN
       END
 C  /* Deck rd_sirifc */
-      SUBROUTINE RD_SIRIFC(KEY,FOUND,AMAT,WRK,LWRK)
+      SUBROUTINE RD_SIRIFC(KEY,FOUND,AMAT)
 C
 C Read specific information from Sirius interface file
 C
@@ -2084,7 +2188,7 @@ C
 C
       CHARACTER*(*) KEY
       LOGICAL   FOUND
-      DIMENSION AMAT(*), WRK(LWRK)
+      DIMENSION AMAT(*)
 C
 C Used from common blocks:
 C   INFINP : NLMSOL

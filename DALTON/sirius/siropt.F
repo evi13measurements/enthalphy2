@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -399,7 +393,7 @@ C
 C
 C     First retrieve orbitals :
 C
-      CALL READMO (WRK(KCMO),9,WRK(KWRK10),LWRK10)
+      CALL READMO (WRK(KCMO),9)
 C
 C *** Transform two-electron integrals
 C
@@ -812,7 +806,7 @@ C
             DEPSAV = DEPRED
             EMCOLD = EMCGEO
             DEPRED = DEPGEO
-            CALL SIRSTP(JWSTEP,DUMMY,DUMMY,DUMMY,DUMMY,1)
+            CALL SIRSTP(JWSTEP,VDUMMY,DUMMY,DUMMY,DUMMY,1)
             EMCOLD = EMCSCF
             DEPRED = DEPSAV
             IF (WLKREJ) GO TO 700
@@ -1188,7 +1182,7 @@ C     ... this is RHF which will be followed by MCSCF
             JWSTEP = 1
             EMCOLD = EMCGEO
             DEPRED = DEPGEO
-            CALL SIRSTP(JWSTEP,DUMMY,DUMMY,DUMMY,DUMMY,1)
+            CALL SIRSTP(JWSTEP,VDUMMY,DUMMY,DUMMY,DUMMY,1)
          ELSE
             WLKREJ = .FALSE.
          END IF
@@ -1306,7 +1300,8 @@ C        hjaaj Dec 2002:
 C        allow printing of orbital energies for open-shell systems.
          WRITE (LUPRI,'(/A/A/A/A)')
      &' Orbital energy analysis for an open-shell system.',
-     &' Orbital energies are not well-defined for open-shell systems',
+     &' Orbital energies are not uniquely defined'//
+     &' for open-shell systems',
      &'   here is used block diagonalization of'//
      &  ' the FD=FC+FV Fock matrix.',
      &" NOTE that Koopmans' theorem is not fulfilled for this case."
@@ -1445,6 +1440,9 @@ C     take care of 1-electron case and no virtuals case
          WRITE(LUPRI,'(/A)')
      &   ' INFO: E(LUMO) - E(HOMO) small or negative.'
       END IF
+      IF (EHOMO .GT. 0.0d0) THEN
+         WRITE(LUPRI,'(/A)') ' WARNING: E(HOMO) positive!'
+      END IF
       IF ( VALCON .GT. EMYCNV ) THEN
          WRITE(LUPRI,'(/A//A,1P,D10.2)') ' NOTE:'//
      *   ' MOLECULAR ORBITALS ARE NOT CANONICAL HARTREE-FOCK ORBITALS',
@@ -1535,6 +1533,7 @@ C
 #include "dummy.h"
 C
 C Used from common blocks:
+C   exeinf.h : NEWCMO
 C   INFINP: ISTATE,LROOTS,FLAG(*),MAXCIT,THRGRD,ITRLVL,?
 C   INFVAR: NCONF (p.t. only NCONF)
 C   INFIND: ISX()
@@ -1547,6 +1546,7 @@ C
 #include "maxorb.h"
 #include "maxash.h"
 #include "priunit.h"
+#include "exeinf.h"
 #include "infinp.h"
 #include "infvar.h"
 #include "infind.h"
@@ -1576,6 +1576,15 @@ C
       DATA STAR8/'********'/
 C
       CALL QENTER('OPTST ')
+
+      IF (ISTATE .GT. NCONF) THEN
+         WRITE(LUPRI,'(//A,I0,A,I0)')
+     &   'FATAL ERROR: requested .STATE ',ISTATE,
+     &   ' is greater than number of configurations: ',NCONF
+         CALL QUIT('ERROR: '//
+     &   'requested .STATE is greater than number of configurations')
+      END IF
+
 C     Transfer ICI0 to local variable ICSTRT
       ICSTRT = ICI0
 C
@@ -1660,6 +1669,7 @@ C        Write NEWORB
 C
          WRITE (LUIT1) STAR8,LBLDAT(1),LBLINF(2),TABLE(6)
          CALL WRITT(LUIT1,NCMOT4,WRK(KCMO))
+         NEWCMO = .TRUE.
 C        single configuration has always natural orbitals
          IF (CNOLBL .EQ. 'ONLYNO') THEN
             TRCNO  = .FALSE.
@@ -1709,7 +1719,7 @@ C      A  single configuration will already have natural orbitals
          IF (MAXCIT .EQ. 0) THEN
             IF (CNOLBL .EQ. 'ONLYNO') THEN
                TRCNO  = .FALSE.
-            ELSE
+            ELSE IF (CNOLBL .NE. 'TRTOFC') THEN
                CNOLBL = 'ONLYFD'
             END IF
          END IF
@@ -1808,16 +1818,16 @@ C     (but we test to be sure!)
 C
   400 CONTINUE
          REWIND LUIT1
-         IF ( .NOT.FNDLAB(TABLE(2),LUIT1) ) GO TO 490
-            READ (LUIT1,END=490,ERR=490)
-         IF ( .NOT.FNDLB2(TABLE(3),LBLINF,LUIT1) ) GO TO 490
-         IF ( ICSTRT.EQ.5 .AND. LBLINF(2).EQ.'NRSAVE  ')
-     &      FLAG(39) = .TRUE.
-C        ... if user has specified .RESTART, then respect shift to NR
+         IF ( .NOT.FNDLB2(TABLE(3),LBLINF,LUIT1) ) GO TO 490 ! label 'STARTVEC'
+         IF ( ICSTRT.EQ.5 ) THEN ! .RESTART
+            REWIND LUIT1
+            IF ( .NOT.FNDLAB(TABLE(2),LUIT1) ) GO TO 490     ! label 'OLDORB  ' for backstep after restart
+            IF ( LBLINF(2).EQ.'NRSAVE  ') FLAG(39) = .TRUE.  ! if user has specified .RESTART, then respect shift to NR
+         END IF
          IF (FLAG(39)) GO TO 495
 C        ... if (ONLYNR) one vector is all that is needed,
 C            so no reason to do more checking.
-C        We now check if sufficient vectors using label information.
+C        We now check if sufficient vectors available using label information.
          READ (LBLINF(1),'(2I4)',ERR=405) LROIT1,JSTA
          IF (LROIT1 .LT. LROOTS) GO TO 493
          GO TO 495
@@ -1832,28 +1842,30 @@ C        error reading LBLINF(1) -- use the old check
 C
   490 CONTINUE
          REWIND LUIT1
+         CALL DMPLAB(LUIT1, LUPRI)
          IF (ICSTRT .EQ. 4) THEN
             NWARN = NWARN + 1
             WRITE (LUPRI,'(//A/A//)')
-     *       '@@*** (OPTST) MC start vectors not found on SIRIUS.RST',
-     *       '@@*** WARNING lowest diagonal elements used.'
+     &       '@@*** (OPTST) MC start vectors not found on SIRIUS.RST',
+     &       '@@*** WARNING lowest diagonal elements used.'
             ICSTRT = 1
             GO TO 10
          ELSE IF (ICSTRT .EQ. 5) THEN
             WRITE (LUPRI,'(//A/A//)')
-     *       '@@*** (OPTST) MC start vectors not found on SIRIUS.RST,',
-     *       '@@            .RESTART not possible.'
+     &      '@@*** (OPTST) MC start vectors or OLDORB'//
+     &          ' not found on SIRIUS.RST,',
+     &      '@@            .RESTART not possible.'
             CALL QTRACE(LUPRI)
-            CALL QUIT(
-     &         'MC start vectors for .RESTART not found on SIRIUS.RST.')
+            CALL QUIT( 'ERROR: '//
+     &      ' All necessary info for .RESTART not found on SIRIUS.RST.')
          ELSE
-            WRITE (LUPRI,'(//A/A/A//)')
-     *       ' *** (OPTST) MC start vectors not found on SIRIUS.RST,',
-     *       '             no recover when CISTRT 6 or 7',
-     *       '             optimization abandoned.'
+            WRITE (LUPRI,'(//A/A//)')
+     &       '@@*** (OPTST) Old CI vectors not found on SIRIUS.RST,',
+     &       '@@            no recover when CISTRT 6 or 7,'//
+     &          ' optimization abandoned.'
             CALL QTRACE(LUPRI)
-            CALL QUIT(
-     &     '(OPTST) Start vectors not found on SIRIUS.RST as expected.')
+            CALL QUIT('ERROR: '//
+     &      'Old CI vectors not found on SIRIUS.RST as expected.')
          END IF
   493 CONTINUE
          REWIND LUIT1
@@ -1973,7 +1985,7 @@ C
  9000 CONTINUE
       REWIND LUIT1
       IF ( .NOT.FNDLAB(TABLE(6),LUIT1) ) THEN
-         CALL READMO(WRK,7,DUMMY,0)
+         CALL READMO(WRK,7)
          CALL NEWORB(LBLDAT(2),WRK,.FALSE.)
       END IF
       IF (TRCNO) THEN
@@ -1993,7 +2005,7 @@ C
          KW31   = KAOCC  + NASHT
          LW31   = LFREE  - KW31
          IF (LW31 .LE. 0) CALL ERRWRK('OPTST.SIRCNO',-KW31,LFREE)
-         CALL READMO(WRK(KCMO),9,DUMMY,0)
+         CALL READMO(WRK(KCMO),9)
          IF (HFCALC) THEN
             WRK(KCVECS) = D1
             ICREF  = 1
@@ -2050,6 +2062,7 @@ C        write the natural orbitals to LUIT1 label NEWORB
          LBLINF(2) = '(CNOORB)'
          WRITE (LUIT1) STAR8,LBLDAT(1),LBLINF(2),TABLE(6)
          CALL WRITT(LUIT1,NCMOT4,WRK(KCMO))
+         NEWCMO = .TRUE.
          IF (NASHT .EQ. 1 .OR.
      &      (CNOLBL .NE. 'ONLYFD' .AND. NASHT .GT. 1)) THEN
             IF (NASHT.EQ.1) WRK(KAOCC) = NACTEL
@@ -2560,6 +2573,10 @@ C    *) FCDIA, ISMO
 C    *) CMO
 C
       use pelib_interface, only: use_pelib, pelib_ifc_fock
+#if defined (HAS_PCMSOLVER)
+      use pcm_config, only: pcm_configuration, pcm_cfg
+      use pcm_scf
+#endif
 #include "implicit.h"
       DIMENSION CMO(*),DV(*),PV(*),FC(*),FV(*),FQ(NORBT,*),XINDX(*)
       DIMENSION ERLM(NLMSOL,2),GORB(*),CREF(*),FCAC(*),H2AC(*),WRK(*)
@@ -2613,6 +2630,9 @@ C
      *            'PCMINFO ','PCMJXMAT','QMMMTMAT','PEFMAT  '/
       DATA LABEOD, LABCC  /'EODATA  ', 'TRCCINT '/
       DATA LABUNI, LABAUX /'FULLBAS ', 'AUXILBAS'/
+#if defined (HAS_PCMSOLVER)
+      real(8), allocatable :: fock_pcm_mo(:)
+#endif
 C
       CALL QENTER('WR_SIRIFC')
       LGLOCAL = BOYORB.OR.PIPORB
@@ -2907,6 +2927,21 @@ Ckr
          WRITE (LUSIFC) (WRK(KPOT + I - 1), I = 1, NTS)
          IF (NEQRSP) CALL V2Q(WRK(KWRK2),WRK(KPOT),QSENEQ,QETNEQ,NEQRSP)
       END IF
+
+#if defined (HAS_PCMSOLVER)
+! Write PCM contribution to Fock matrix in MO basis to SIRIFC
+      if(pcm_cfg%do_pcm) then
+         kwrk2 = 1
+         lwrk2 = lfree - kwrk2 +1
+! Allocate scratch space for the PCM Fock matrix contribution in AO basis.
+         allocate(fock_pcm_mo(nnorbt))
+         fock_pcm_mo = 0.0d0
+! Calculate PCM contribution to Fock matrix in MO basis
+         call pcm_mo_fock(fock_pcm_mo, cmo, wrk(kwrk2), lwrk2)
+         WRITE (LUSIFC) LAB123,'EXTPCMMAT'
+         CALL WRITT (LUSIFC,MMORBT,fock_pcm_mo)
+      end if
+#endif
 
 C ****** edh: 24/11/2011 ******
 

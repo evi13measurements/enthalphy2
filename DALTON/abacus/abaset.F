@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -32,7 +26,7 @@ C
 !900418-hjaaj: NSETUP: call sirini
 !901203-hjaaj: SETSIR: FLAG now read from SIRIUS
 !910214-hjaaj: SETSIR: IPRSTAT = MAX(IPRIN4,IPRIN6), var altid = 1
-!              SETSIR: THRP/THRQ = 1.0D-12, var = 1.0D-10
+!              SETSIR: THRP = 1.0D-12, var = 1.0D-10
 !              SETSIR: print RAS parameters after reading LUSIFC
 !920113-hjaaj: SETSIR: IPRDNS=IPRCIX=...=IPRSIR=MAX(IPRIN4,IPRIN6)
 !920226-hjaaj: NSETUP: check if NCONF from SETCI same as NCONF from LUSIFC
@@ -41,13 +35,16 @@ C
 !===========================================================================
 #endif
 C  /* Deck setsir */
-      SUBROUTINE SETSIR(WORK,LWORK)
+      SUBROUTINE SETSIR(MAKE_MOTWOINT,WORK,LWORK)
 C
 C     Written by hjaaj 1985
 C     Modified for symmetry tuh 060988
 C     Solvent added dec 92
 C     l.r. aug. 98 hjaaj
+C     MAKE_MOTWOINT added oct 2017 hjaaj
 C
+      use pelib_interface, only: use_pelib
+
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
@@ -55,17 +52,20 @@ C
 #include "maxmom.h"
       PARAMETER (D0 = 0.0D0)
 C
-      LOGICAL DIPOK, FNDLAB, MCSSYM
+      LOGICAL     MAKE_MOTWOINT
+      REAL*8      WORK(LWORK)
+
       CHARACTER*8 RTNLBL(2)
-      DIMENSION WORK(LWORK)
+      LOGICAL     DIPOK, FNDLAB, MCSSYM
 C
 C Used from common blocks:
-C   GNRINF : RNRESP, IPRUSR
+C   GNRINF : IPRUSR, EMBEDDING, ?
 C   ABAINF : DIPDER, POLAR,  DOWALK, IPRDEF
 C   INFINP : ISTATE,ISPIN,NACTEL,POTNUC,LSOLMX,RSOL(3)
 C   INFOPT : EMCSCF,EPOT,EMY,EACTIV,ESOLT
 C   PAST   : PASDIP, PASORT, PASRES
 C   CBISOL : SOLVNT, ...
+C   pcmlog.h : PCM
 C
 #include "gnrinf.h"
 #include "abainf.h"
@@ -78,6 +78,7 @@ C
 #include "inftap.h"
 #include "past.h"
 #include "cbisol.h"
+#include "pcmlog.h"
 #include "cbirhs.h"
 #include "spinfo.h"
 C
@@ -156,7 +157,7 @@ C        2. Most of the remaining parameters are only used
 C           in SIRIUS, except that DIRFCK determines whether
 C           a direct calculations is caried out or not.
 C
-      DORHF  = .FALSE.
+      DOSCF  = .FALSE.
       DOMP2  = .FALSE.
       DOCINO = .FALSE.
       DOCI   = .FALSE.
@@ -177,7 +178,7 @@ C
       ABAIPH = .FALSE.
       INERSI = .FALSE.
       INERSF = .FALSE.
-C     
+C
 C   Check if "SOLVNT" calculation
 C   Read information if so. From WRSIFC in SIRIUS:
 C
@@ -316,7 +317,7 @@ C
 C
 C     call NSETUP to define CI variables, Sirius unit numbers etc.
 C
-      CALL NSETUP(WORK,LWORK,IPRNTR)
+      CALL NSETUP(MAKE_MOTWOINT,WORK,LWORK,IPRNTR)
 C
       IF (NWOPT.NE.MWOPT .OR. NWOPH.NE.MWOPH) THEN
       IF (MCSSYM) THEN
@@ -343,6 +344,11 @@ C     of QX matrix
 C
       FLAG(23) = .TRUE.
 C
+C     set EMBEDDING (for restart without calling SIRIUS)
+C
+      EMBEDDING = FLAG(16) .or. PCM .or. QM3 .or. QMMM .OR. QMNPMM
+     &            .OR. USE_PELIB()
+C
 C     END OF SETSIR
 C
       DTIM = SECOND() - DST
@@ -354,7 +360,7 @@ C
 C
       END
 C  /* Deck nsetup */
-      SUBROUTINE NSETUP(WORK,LFREE,IPRNTR)
+      SUBROUTINE NSETUP(MAKE_MOTWOINT,WORK,LFREE,IPRNTR)
 C
 C  NSETUP is modified from SIRSET 1-Sep-1988 tuh
 C Written by hjaaj 21-Feb-1985
@@ -397,21 +403,23 @@ C
 C -- local constants
       PARAMETER (D1=1.0D0, D2=2.0D0)
 #include "dummy.h"
-      DIMENSION WORK(LFREE)
-#include "litinfo.h"
+      LOGICAL   MAKE_MOTWOINT
+      REAL*8    WORK(LFREE)
 C
 C Used from common blocks:
 C   priunit.h : LUERR,...
+C   exeinf.h : FTRCTL, NEWCMO, ITRLVL_LAST, LVLDRC_LAST
 C   INFINP : ISTATE,LSYM,MCTYPE,?
 C   INFORB : NISH(8),...
 C   INFVAR : NCONF,NWOPT,NVAR,JWOPSY,JWOP(2,*)
 C   INFDIM : NCONMA,NWOPMA,NVARMA,NWOPDI,MAXRL
 C   INFOPT : ?
-C   INFTRA : ITRLVL,THRP,THRQ
+C   INFTRA : ITRLVL,THRP
 C   INFTAP : LUSIFC
 C   CCOM   : THRS
 C
 #include "abainf.h"
+#include "exeinf.h"
 #include "infinp.h"
 #include "inforb.h"
 #include "infind.h"
@@ -424,7 +432,9 @@ C
 #include "inflin.h"
 #include "ccom.h"
 #include "linaba.h"
+#include "soppinf.h"
 C
+      LOGICAL :: DOREAL, DOIMAG
       CHARACTER*8 RTNLBL(2)
 C
 C PART 1 : ******* I/O buffer sizes, initialize IROW()
@@ -490,59 +500,93 @@ C
       IF (ABAHF) NCONRF = 0
       LSYMRF = LSYM
 C
-C
 C PART 4 : *** Set INFTRA
 C          Open MO integral file(s)
 C          (FLAG(34) false tells that mo integrals needed)
 C          (FLAG(14) true tells that old mo integral file exists)
 C          Set ITRLVL to minimum transformation level required.
 C
+      IF (MAKE_MOTWOINT) THEN
+         ! MAKE_MOTWOINT input parameter is set to false in RESPONS to signal
+         ! no integral transformation here in NSETUP.
+         ! (TRACTL is instead called in RSPDRV after CALL SETSIR; we do not know
+         !  here what transformation level needed for response.) /Oct 2017 hjaaj
+
+      IF (.NOT. FLAG(34)) THEN ! flag(34): MO integrals not needed
+
       AO2INTFILE_LABEL = 'AOTWOINT'
-      THRP = MAX(1.D-15,THRS)
-      THRQ = MAX(1.D-15,THRS)
-C
-C     USEDRC must be set to false, kr-nov.95
-C
-      USEDRC = .FALSE.
+      THRP   = MAX(1.D-15,THRS,THRP)
+      USEDRC = .TRUE.
       IPRTRA = IPRNTR
+
       IF ((NASHT.GT.1 .AND. .NOT.HSROHF) .OR. H2MO) THEN
-         FLAG(14) = .TRUE.
-         FLAG(34) = .FALSE.
-         IF (NEWTRA) THEN
-C            ... we need (ia/ (inactive-secondary) Mulliken distributions;
-C            they are only calculated for level 5 in "NEWTRA"
-C            transformation  /hjaaj June 09
-            KTRLVL = 5
-            ITRLVL = KTRLVL
-         ELSE
-            KTRLVL = 4
-            ITRLVL = KTRLVL
+         ! hjaaj Aug 2017: next two statements copied from abaort.F(MCORL)
+         DOREAL = MOLHES .OR. DIPDER .OR. QPGRAD .OR. VCD 
+         DOIMAG = SHIELD .OR. MAGSUS .OR. VCD .OR. SPNSPN .OR. ECD .OR.
+     &            VROA .OR. MOLGFA .OR. SPINRO .OR. OPTROT
+
+         ! Standard second order level for ABACUS
+         KTRLVL = 3
+
+         IF ( DOREAL .OR. DOIMAG ) THEN
+           ! Second order properties: we need to construct GD vectors
+           ! hjaaj Aug. 2017: in order to have USEDRC true and
+           ! KTRLVL = 3, we need to program TR1L2D for ABATR1. TODO
+           ! (The options tested above are copied from setting
+           ! of DOREAL and DOIMAG in subroutine MCORL)
+            USEDRC = .FALSE.
+            KTRLVL = 6 ! all active-general distributions
          END IF
+
+         ! do we need a higher level for RESPONS calls ?
+         IF (HYPER .OR. VERDET .OR. MCD) THEN
+            KTRLVL = 10 ! quadratic resonse with RESPONS module
+         ELSE IF (CTOCD .OR. DOEXCI .OR. ABALNR .OR. VCD .OR.
+     &       SPNSPN .OR. MAGSUS .OR. SHIELD .OR. SPINRO .OR.
+     &       MOLGFA .OR. RNLRSC) THEN
+            IF (KTRLVL .EQ. 6) THEN
+               KTRLVL = 5 ! we need the common set of KTRLVLs 6 and 4
+               USEDRC = .TRUE.
+            ELSE
+               KTRLVL = 4  ! linear response with RESPONS module
+            END IF
+         END IF
+         ITRLVL = KTRLVL
+         FLAG(14) = .TRUE.
          CALL SIR_INTOPEN
 C        ... SIR_INTOPEN returns FLAG(14) false if no mo integral file
 C        or if ITRLVL on file too small.
       ELSE IF (ABASOP) THEN
 C        ... SOPPA requires full integral transformation
-         KTRLVL = 10
+C        --- But not if run through AO-SOPPA module        
+         IF(AOSOP.OR.AORPA.OR.DCRPA.OR.AOSOC.OR.AOCC2.OR.AOHRP) THEN
+            KTRLVL = 0
+CPi 15.08.16: AO-SOPPA does not need MO integrals
+            FLAG(34) = .TRUE.
+         ELSE
+            KTRLVL = 10
+         ENDIF
          ITRLVL = KTRLVL
-         FLAG(14) = .TRUE.
-         FLAG(34) = .FALSE.
-         CALL SIR_INTOPEN
+         FLAG(14) = .TRUE. 
+         IF (KTRLVL.GT.0) CALL SIR_INTOPEN
       ELSE
 C        ... Hartree-Fock, MO integral file will normally
 C        not exist, but open to define name 'MOTWOINT' instead
 C        of e.g. 'fort.13', and to avoid problems if it actually
 C        does exist. /980529-hjaaj
-         KTRLVL = 4
+         KTRLVL = 0
          ITRLVL = KTRLVL
          FLAG(14) = .TRUE.
          FLAG(34) = .TRUE.
          CALL SIR_INTOPEN
       END IF
+      END IF ! .NOT. FLAG(34)
 
-      IF (.NOT. FLAG(14)) THEN
+      IF (.NOT. FLAG(34)) THEN ! MO integrals not needed
+      IF (FTRCTL .OR. NEWCMO .OR. (.NOT.FLAG(14)) .OR.
+     &    (USEDRC .AND. LVLDRC_LAST .LT. 0)) THEN
       ! ... needed integrals not available
-         WRITE (LUPRI,1020)
+         WRITE (LUPRI,1020) KTRLVL
          KCMO  = 1
          KWTRA = KCMO + NCMOT
          LWTRA = LFREE - KWTRA
@@ -553,7 +597,11 @@ C        does exist. /980529-hjaaj
          CALL READT (LUSIFC,NCMOT,WORK(KCMO))
          CALL TRACTL(KTRLVL,WORK(KCMO),WORK(KWTRA),LWTRA)
          FLAG(14) = .TRUE.
+         NEWCMO   = .FALSE.
       END IF
+      END IF ! .NOT. FLAG(34)
+
+      END IF ! MAKE_MOTWOINT
 C
 C
 C PART 5 : **** MISCELLANEOUS ******************************************
@@ -583,7 +631,8 @@ C
       END IF
  1020 FORMAT(/,' NSETUP: MO transformation level too low'
      &        ,' or no MO integral file found.',
-     &       /,' NSETUP: generating MO 2-el. integral file.'/)
+     &       /,' NSETUP: generating MO 2-el. integral file.'
+     &        ,' Transformation level: ',I0/)
  1610 FORMAT(/,' NSETUP-ERROR, NCONF =',I10)
  1620 FORMAT(/,' NSETUP-ERROR, NCONF from interface file',I12,
      *       /,'               NCONF from SETCI         ',I12)

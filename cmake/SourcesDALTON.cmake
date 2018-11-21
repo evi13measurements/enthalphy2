@@ -75,6 +75,8 @@ set(DALTON_C_SOURCES
     DALTON/pdpack/scatter-io.c
     )
 set(DALTON_FIXED_FORTRAN_SOURCES
+    DALTON/main/dalgnr.F
+    DALTON/main/dalpar.F
     DALTON/abacus/aba2eth.F
     DALTON/abacus/aba2r12.F
     DALTON/abacus/aba2tex.F
@@ -121,7 +123,6 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/abacus/abavib.F
     DALTON/abacus/abavrml.F
     DALTON/abacus/abawalk.F
-    DALTON/abacus/dalgnr.F
     DALTON/abacus/eckart.F
     DALTON/abacus/ecp.F
     DALTON/abacus/her1ave.F
@@ -613,6 +614,7 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/sirius/sirfck.F
     DALTON/sirius/sirgp.F
     DALTON/sirius/sirgrad.F
+    DALTON/sirius/sirfcktra.F
     DALTON/sirius/sirief.F
     DALTON/sirius/sirinp.F
     DALTON/sirius/sirlintrn.F
@@ -627,7 +629,6 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/sirius/sirorb.F
     DALTON/sirius/sirout.F
     DALTON/sirius/sir_mep.F
-    DALTON/sirius/sir_qfit.F
     DALTON/sirius/sirpcm.F
     DALTON/sirius/sirpcmder.F
     DALTON/sirius/sirpop.F
@@ -646,44 +647,36 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/sirius/symchk.F
     DALTON/soppa/ccsd_tcmepkx.F
     DALTON/soppa/dc_calc.F
-    DALTON/soppa/dc_eres.F
+    DALTON/soppa/dc_omec.F
     DALTON/soppa/dc_r1vec.F
     DALTON/soppa/dc_res_o.F
     DALTON/soppa/dc_rsplex.F
     DALTON/soppa/dc_sres.F
-    DALTON/soppa/rp_anal.F
     DALTON/soppa/rp_charge.F
-    DALTON/soppa/rp_check.F
-    DALTON/soppa/rp_diag.F
-    DALTON/soppa/rp_eres.F
-    DALTON/soppa/rp_getgp.F
-    DALTON/soppa/rp_incred.F
     DALTON/soppa/rp_init.F
-    DALTON/soppa/rp_lrsolv.F
     DALTON/soppa/rp_newtrial.F
-    DALTON/soppa/rp_optvec.F
     DALTON/soppa/rp_orth_trn.F
-    DALTON/soppa/rp_redev.F
-    DALTON/soppa/rp_res_o.F
-    DALTON/soppa/rp_residual.F
-    DALTON/soppa/rp_rsplex.F
-    DALTON/soppa/rp_sres.F
     DALTON/soppa/rp_trial1.F
-    DALTON/soppa/rp_trial2.F
-    DALTON/soppa/rp_trmom.F
+    DALTON/soppa/rp_trial3.F
+    DALTON/soppa/so_pertdens.F
+    DALTON/soppa/so_pertd1.F
+    DALTON/soppa/so_pertd2.F
+    DALTON/soppa/so_propmo.F
     DALTON/soppa/so_anal.F
     DALTON/soppa/so_aodens.F
     DALTON/soppa/so_bcktr.F
     DALTON/soppa/so_bextract.F
+    DALTON/soppa/so_tbextract.F
     DALTON/soppa/so_check.F
     DALTON/soppa/so_close.F
     DALTON/soppa/so_collect_tm.F
-    DALTON/soppa/so_dens.F
     DALTON/soppa/so_densai1.F
     DALTON/soppa/so_densai2.F
+    DALTON/soppa/so_dens.F
     DALTON/soppa/so_diag.F
     DALTON/soppa/so_ediag1.F
     DALTON/soppa/so_ediag2.F
+    DALTON/soppa/so_ediag2t.F
     DALTON/soppa/so_eres.F
     DALTON/soppa/so_excit1.F
     DALTON/soppa/so_excout.F
@@ -696,6 +689,9 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/soppa/so_init.F
     DALTON/soppa/so_initial.F
     DALTON/soppa/so_intrp.F
+    DALTON/soppa/so_lnraba.F
+    DALTON/soppa/so_lnrout.F
+    DALTON/soppa/so_lrsoeq.F
     DALTON/soppa/so_lrsolv.F
     DALTON/soppa/so_memmax.F
     DALTON/soppa/so_moenergy.F
@@ -707,25 +703,32 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/soppa/so_optvec.F
     DALTON/soppa/so_ordeig.F
     DALTON/soppa/so_orth_trn.F
+    DALTON/soppa/so_polar.F
     DALTON/soppa/so_prpint.F
     DALTON/soppa/so_read.F
     DALTON/soppa/so_readset.F
+    DALTON/soppa/so_reave.F
     DALTON/soppa/so_redev.F
+    DALTON/soppa/so_redgp.F
+    DALTON/soppa/so_redle.F
     DALTON/soppa/so_res_a.F
     DALTON/soppa/so_res_b.F
-    DALTON/soppa/so_res_c.F
     DALTON/soppa/so_res_cb.F
+    DALTON/soppa/so_res_cbt.F
     DALTON/soppa/so_res_cd.F
+    DALTON/soppa/so_res_cdt.F
+    DALTON/soppa/so_res_c.F
     DALTON/soppa/so_res_cp.F
     DALTON/soppa/so_res_fck.F
+    DALTON/soppa/so_residual.F
     DALTON/soppa/so_res_o.F
     DALTON/soppa/so_res_ovl.F
-    DALTON/soppa/so_res_ovlr.F
     DALTON/soppa/so_res_sym.F
     DALTON/soppa/so_res_tcb.F
-    DALTON/soppa/so_residual.F
+    DALTON/soppa/so_res_tcbt.F
     DALTON/soppa/so_ropt.F
     DALTON/soppa/so_rpprp1.F
+    DALTON/soppa/so_rspleq.F
     DALTON/soppa/so_rsplex.F
     DALTON/soppa/so_sdiag1.F
     DALTON/soppa/so_secgp.F
@@ -734,10 +737,11 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/soppa/so_sort.F
     DALTON/soppa/so_sqait2.F
     DALTON/soppa/so_sres.F
+    DALTON/soppa/so_stoppw.F
     DALTON/soppa/so_t2m1.F
     DALTON/soppa/so_t2mp.F
-    DALTON/soppa/so_test.F
     DALTON/soppa/so_test1.F
+    DALTON/soppa/so_test.F
     DALTON/soppa/so_tfset.F
     DALTON/soppa/so_time.F
     DALTON/soppa/so_tmltr.F
@@ -745,11 +749,14 @@ set(DALTON_FIXED_FORTRAN_SOURCES
     DALTON/soppa/so_tr1rp.F
     DALTON/soppa/so_trial1.F
     DALTON/soppa/so_trial2.F
+    DALTON/soppa/so_trial3.F
     DALTON/soppa/so_trmom.F
+    DALTON/soppa/so_trmom_1.F
     DALTON/soppa/so_twofock.F
     DALTON/soppa/so_write.F
     DALTON/soppa/so_writeset.F
     DALTON/soppa/so_wrtve.F
+    DALTON/fde/emb_quit.F
     )
 if(NOT ENABLE_CRAY_WRAPPERS)
     # radovan: CRAY provides these functions
@@ -776,22 +783,29 @@ set(DALTON_FREE_FORTRAN_SOURCES
     DALTON/gp/memory_parallel.F90
     DALTON/abacus/rma_windows.F90
     DALTON/cc/dyn_index.F90
+    DALTON/soppa/so_parutils.F90
+    DALTON/soppa/so_info.F90
     DALTON/qmcmm/herqmnp.F90
     DALTON/qmcmm/fock.F90
     DALTON/qmcmm/response.F90
     DALTON/qmcmm/input.F90
+    DALTON/fde/emb_main.F90
+    DALTON/fde/emb_cfg.F90
+    DALTON/fde/emb_dalton_evaluators.F90
+    DALTON/fde/emb_dalton_input.F90
+    DALTON/fde/emb_data.F90
+    DALTON/fde/emb_export.F90
+    DALTON/fde/emb_input.F90
+    DALTON/fde/emb_io.F90
+    DALTON/fde/emb_dalton_io.F
+    DALTON/fde/emb_main.F90
+    DALTON/fde/emb_max_block_length.F90
+    DALTON/fde/emb_types.F90
+    DALTON/fde/xcfun_autogen.F90
+    DALTON/fde/xml_file.F90
+    DALTON/fde/xml_parser.F90
+    DALTON/fde/xml_structure.F90
    )
-if(ENABLE_PCMSOLVER)
-   set(DAL_PCM_SOURCES
-    DALTON/pcm/pcm_scf.F90
-    DALTON/pcm/pcm_integrals.F90
-    DALTON/pcm/pcm_linear_response.F90
-    DALTON/pcm/pcmmod_cfg.F90
-    DALTON/pcm/pcm_write.F90
-    DALTON/pcm/pcm_utils.F90
-   )
-   set(DALTON_FREE_FORTRAN_SOURCES "${DALTON_FREE_FORTRAN_SOURCES} ${DAL_PCM_SOURCES}")
-endif()
 set(DALTON_OWN_BLAS_SOURCES
     DALTON/pdpack/gp_blas.F
     )

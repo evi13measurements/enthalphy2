@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -138,10 +132,12 @@ CHJMAERKE: define IPR_DIIS separately?
 C
       MXERRV = MAXEVC
       IF (MXERRV .LE. 0) THEN
-         MXERRV = MIN(NWOPT,8)
+         MXERRV = MIN(NWOPT-1,8)
 C        ... fixes linear dependency problem for very small debug runs
 C            MXERRV=10 gave lin.dep. for 2 el. in 2 orbitals,
 C            MXERRV=2 gave quadratic convergence ! (940701-hjaaj)
+C        (180705-hjaaj: in a small test case with NWOPT=3, the full space
+C         MXERRV=NWOPT gave lin.dep. problem for some solvers, therefore now "NWOPT-1")
 C        (130919-hjaaj: decreased default from 10 to 5, because
 C         with 10 the span of BMAT may be >1.D15, giving problems
 C         in the DIIS solver - an example has been seen !!!)
@@ -305,7 +301,7 @@ C
       use qmcmm_fock, only: qmnpmm_fock
 #ifdef HAS_PCMSOLVER
       use pcm_scf
-      use pcmmod_cfg
+      use pcm_config, only: pcm_configuration, pcm_cfg
 #endif
       use pelib_interface, only: use_pelib, pelib_ifc_fock,
      &                           pelib_ifc_energy
@@ -446,11 +442,11 @@ C
       IF (LUW4 .NE. LUPRI .OR. IPR_DIIS .LE. 1) THEN
 #ifdef HAS_PCMSOLVER
       IF (FLAG(16) .OR. PCM .OR. QM3 .OR. QMMM .OR. QMNPMM .OR.
-     &    pcmmod_is_pcm_calculation) THEN
-#else              
+     &    pcm_cfg%do_pcm) THEN
+#else
       IF (FLAG(16) .OR. PCM .OR. QM3 .OR. QMMM .OR. QMNPMM) THEN
 #endif
-C     this also includes the case of MMPCM   
+C     this also includes the case of MMPCM
       IF (.NOT.AUTOCC) THEN
          WRITE (LUW4,'(/A)')
      &      ' Iter      Total energy       Solvation energy    '//
@@ -574,7 +570,7 @@ C------------------
 #endif
 C
 #ifdef HAS_PCMSOLVER
-      if (pcmmod_is_pcm_calculation) then
+      if (pcm_cfg%do_pcm) then
               dodifden = .false.
       end if
 #endif
@@ -1023,6 +1019,9 @@ c        density
              CALL PCMFCK(DAOSAV(1,1),DAOSAV(1,2),WRK(KFCSOL),
      &                   DUMMY,.FALSE.,ESOLT,WRK(KFREE),
      &                   LFREE,IPR_DIIS)
+!             write(lupri,*) 'pcm fock matrix'
+!             call outpak(wrk(kfcsol), nbast, 1, lupri)
+
              CALL DAXPY(NNBAST,DM1,WRK(KFCSOL),1,FAOSAV(1,INDEVC,1),1)
            END IF
          ELSE  ! the mmpcm interface is only implemented for hf/dft so
@@ -1088,7 +1087,7 @@ C
          END IF
 C
 #ifdef HAS_PCMSOLVER
-         if (pcmmod_is_pcm_calculation) then
+         if (pcm_cfg%do_pcm) then
 ! Allocate scratch space for the PCM Fock matrix contribution in AO basis.
            allocate(fock_pcm_ao(nnbasx))
            fock_pcm_ao = 0.0d0
@@ -1096,15 +1095,15 @@ C
 ! subroutines
            allocate(density_ao_symm(nnbasx))
            density_ao_symm = 0.0d0
-! Allocate the PCM Fock matrix contribution in AO basis. 
-! It is of dimension NNBASX and we take the memory from the WRK array. 
+! Allocate the PCM Fock matrix contribution in AO basis.
+! It is of dimension NNBASX and we take the memory from the WRK array.
 ! We zero it out afterwards.
 !           call memget('REAL', kfcsol, nnbasx, wrk, kfree, lfree)
 !           call dzero(wrk(kfcsol), nnbasx)
 ! DAOSAV(:, 1) = DCAO (density matrix for closed shells)
 ! DAOSAV(:, 2) = DVAO (density matrix for open shells)
 ! PCM doesn't care about closed/open shells, so we decide at this
-! higher level which one of them to pass, based on the wavefunction asked.          
+! higher level which one of them to pass, based on the wavefunction asked.
            if (nasht == 0 .or. (nasht > 0 .and. dodft) .or. hsrohf) then
              density_ao_symm(:) = daosav(:, 1)
 ! We pass just DCAO, i.e. density_matrix = DCAO
@@ -1112,36 +1111,38 @@ C
 ! We sum DCAO and DVAO, i.e. density_matrix = DCAO + DVAO
              density_ao_symm(:) = daosav(:, 1) + daosav(:, 2)
            end if
-! Call the energy driver with the symmetry-unpacked density matrix 
+! Call the energy driver with the symmetry-unpacked density matrix
            if (nsym > 1) then
              allocate(density_ao(nnbasx))
              density_ao = 0.0d0
-! Symmetry un-pack density_ao_symm to density_ao             
+! Symmetry un-pack density_ao_symm to density_ao
              call pksym1(density_ao, density_ao_symm, nbas, nsym, -1)
-             call pcm_energy_driver(density_ao, esolt, wrk(kfree), 
-     &                               lfree)
+             esolt = pcm_scf_driver(density_ao, fock_pcm_ao,
+     &                              wrk(kfree), lfree)
            else
-             call pcm_energy_driver(density_ao_symm, esolt, wrk(kfree), 
-     &                              lfree)
+             esolt = pcm_scf_driver(density_ao_symm, fock_pcm_ao,
+     &                              wrk(kfree), lfree)
            end if
-! Call the Fock driver           
-           call pcm_oper_ao_driver(fock_pcm_ao, 'TotASC'//char(0), 
-     &                             wrk(kfree), lfree)
 ! Copy the PCM Fock matrix contribution on top of the AO basis Fock matrix
            if (nsym > 1) then
              allocate(fock_pcm_ao_symm(nnbasx))
              fock_pcm_ao_symm = 0.0d0
-! Symmetry-pack fock_pcm_ao to fock_pcm_ao_symm 
+! Symmetry-pack fock_pcm_ao to fock_pcm_ao_symm
              call pksym1(fock_pcm_ao, fock_pcm_ao_symm, nbas, nsym, +1)
-             call daxpy(nnbast, -1.0d0, fock_pcm_ao_symm, 1, 
+             call daxpy(nnbast, -1.0d0, fock_pcm_ao_symm, 1,
      &                                  faosav(1, indevc, 1), 1)
            else
-             call daxpy(nnbast, -1.0d0, fock_pcm_ao, 1, 
+             call daxpy(nnbast, -1.0d0, fock_pcm_ao, 1,
      &                                  faosav(1, indevc, 1), 1)
            end if
 ! We can print it here, if needed.
-!lf            write(lupri,*) 'extpcm fock matrix'
-!lf            call outpak(wrk(kfcsol), nbast, 1, lupri)
+!          write(lupri,*) 'extpcm fock matrix'
+!          if (nsym > 1) then
+!             call outpak(fock_pcm_ao_symm, nbast, 1, lupri)
+!          else
+!             call outpak(fock_pcm_ao, nbast, 1, lupri)
+!          endif
+
 ! Clean-up
            deallocate(fock_pcm_ao)
            deallocate(density_ao_symm)
@@ -1200,10 +1201,10 @@ C
          END IF
          IF (LUW4 .NE. LUPRI .OR. IPR_DIIS .LE. 1) THEN
 #ifdef HAS_PCMSOLVER
-            IF (EMBEDDING .or. pcmmod_is_pcm_calculation) then
-#else                
+            IF (EMBEDDING .or. pcm_cfg%do_pcm) then
+#else
             IF (EMBEDDING) THEN
-#endif                    
+#endif
 C           this also includes the case of MMPCM
                IF (.NOT.AUTOCC) THEN
                   WRITE (LUW4,'(A,I3,1P,2G20.12,D15.5,D12.2)')
@@ -1434,8 +1435,10 @@ C          OK wrt. DIIS if both goes up or both goes down /Feb-2004 hjaaj
              EMCDIF_test = EMCDIF
          END IF
 C        Do not try that with open-shell - it does not work./pawsa
-!        IF (ONLYFC .AND. JTDIIS.GT.1 .AND. ITDIIS.GT.3 .AND.
-         IF (JTDIIS.GT.1 .AND. ITDIIS.GT.3 .AND. J_removed.EQ.0 .AND.
+C        Nov. 2018 jmho: disable again for open-shell because it really
+C        does not work.
+         IF (ONLYFC .AND. JTDIIS.GT.1 .AND. ITDIIS.GT.3 .AND.
+     &       J_removed.EQ.0 .AND.
      &       GRDNRM .LE. 10.0D0 .AND.
      &       ( ABS(CVEC(INDEVC)) .LT. 0.1D0 .OR.
      &         ABS(CVEC(INDEVC)) .GT. 5.0D0 .OR.
@@ -1468,7 +1471,7 @@ C
 C               restore old CMO from LUIT1 (for backstep);
 C               no DIFDEN because DAOSAV is for current, not previous iteration
 C
-                CALL READMO(CMO,9,DUMMY,1)
+                CALL READMO(CMO,9)
                 DIFDEN = .FALSE.
              END IF
              IF (JNDEVC .NE. 1) THEN
@@ -1710,7 +1713,7 @@ C
          JWOPSY = 1
          CALL SIRSET(WRK(KFREE),LFREE,OLDWOP)
          IAVERR = 0
-         CALL AVECHK(WRK(KFREE),LFREE,IAVERR)
+         CALL AVECHK(IAVERR)
          IF (IAVERR .NE. 0) CALL QUIT(
      &      'SIRCTL DIIS error: inconsistency in sup.sym. after AUTOCC')
          RHFWOP = .TRUE.
@@ -1892,13 +1895,12 @@ C
          CALL MEMREL('DIIS_CTL.WR_SIRIFC',WRK,1,KPV,KFREE,LFREE)
       END IF
 C
-C        Transform integrals for abacus or response,
+C        Transform integrals for abacus or response or something else,
 C        if converged and if not followed by higher level,
-C        and if not Cholesky decomposition
+C        and if requested in input (.FINAL TRANSFORMATION)
 C
       IF (ICONV .NE. 0 .AND. ABS(ITRFIN) .LE. 10 .AND.
-     &    .NOT.(DOMP2 .OR. DOCI .OR. DOMC) .AND.
-     &    .NOT. CHOINT) THEN
+     &    .NOT.(DOMP2 .OR. DOCI .OR. DOMC)) THEN
          IF (IPRI6 .GE. 0) WRITE (LUPRI,'(/A,I3)')
      &      ' --- Transforming 2-el. integrals acc. to'//
      &      ' .FINAL TRANSFORMATION =',ITRFIN

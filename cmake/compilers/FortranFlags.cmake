@@ -1,7 +1,7 @@
 set(reorder_definitions "")
 if(CMAKE_Fortran_COMPILER_ID MATCHES GNU) # this is gfortran
     add_definitions(-DVAR_GFORTRAN)
-    set(CMAKE_Fortran_FLAGS         "-DVAR_GFORTRAN -ffloat-store -fcray-pointer")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DVAR_GFORTRAN -ffloat-store -fcray-pointer -std=legacy")
     if(${CMAKE_HOST_SYSTEM_PROCESSOR} MATCHES "i386")
         set(CMAKE_Fortran_FLAGS
             "${CMAKE_Fortran_FLAGS} -m32"
@@ -12,21 +12,12 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES GNU) # this is gfortran
             "${CMAKE_Fortran_FLAGS} -m64"
             )
     endif()
-    if(NOT DEVELOPMENT_CODE)
-        # suppress warnings in exported code
-        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -w")
-    endif()
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -fbacktrace -fcray-pointer -Wuninitialized")
     set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -ffast-math -funroll-loops -ftree-vectorize")
     set(CMAKE_Fortran_FLAGS_PROFILE "${CMAKE_Fortran_FLAGS_RELEASE} -g -pg")
     if(ENABLE_STATIC_LINKING)
         set(CMAKE_Fortran_FLAGS
             "${CMAKE_Fortran_FLAGS} -static"
-            )
-    endif()
-    if(ENABLE_OMP)
-        set(CMAKE_Fortran_FLAGS
-            "${CMAKE_Fortran_FLAGS} -fopenmp"
             )
     endif()
     if(ENABLE_64BIT_INTEGERS)
@@ -48,11 +39,7 @@ endif()
 
 if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     add_definitions(-DVAR_IFORT)
-    set(CMAKE_Fortran_FLAGS         "-fpp -assume byterecl -DVAR_IFORT")
-    if(NOT DEVELOPMENT_CODE)
-        # suppress warnings in exported code
-        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -w")
-    endif()
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -fpp -assume byterecl -DVAR_IFORT")
     set(CMAKE_Fortran_FLAGS_DEBUG   "-O0 -g -traceback")
     set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -ip -diag-disable 8290 -diag-disable 8291")
     set(CMAKE_Fortran_FLAGS_PROFILE "${CMAKE_Fortran_FLAGS_RELEASE} -g -pg")
@@ -64,11 +51,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Intel)
     if(ENABLE_STATIC_LINKING)
         set(CMAKE_Fortran_FLAGS
             "${CMAKE_Fortran_FLAGS} -static-libgcc -static-intel"
-            )
-    endif()
-    if(ENABLE_OMP)
-        set(CMAKE_Fortran_FLAGS
-            "${CMAKE_Fortran_FLAGS} -openmp"
             )
     endif()
     if(ENABLE_64BIT_INTEGERS)
@@ -95,7 +77,7 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
     add_definitions(-DVAR_PGI)
 
 # Patrick: mcmodel=medium is not available on PGI Free for MacOS X
-    set(CMAKE_Fortran_FLAGS         "-DVAR_PGF90")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DVAR_PGF90")
     if(NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mcmodel=medium")
     endif()
@@ -110,18 +92,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES PGI)
     if(ENABLE_64BIT_INTEGERS)
         set(CMAKE_Fortran_FLAGS
             "${CMAKE_Fortran_FLAGS} -i8 -i8storage"
-            )
-    endif()
-    if(ENABLE_OMP) 
-        set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -mp " )
-        set(CMAKE_Fortran_FLAGS_RELEASE "${CMAKE_Fortran_FLAGS_RELEASE} -Mconcur")
-    endif()
-# WARNING you may need to add -Mcuda=5.5 
-# For now use --extra-fc-flags="-Mcuda=5.5"
-# ./setup --fc=pgf90 --cc=pgcc --cxx=pgcpp --openacc --extra-fc-flags="-Mcuda=5.5" build
-    if(ENABLE_OPENACC) 
-        set(CMAKE_Fortran_FLAGS
-            "${CMAKE_Fortran_FLAGS} -acc"
             )
     endif()
     if(ENABLE_BOUNDS_CHECK)
@@ -163,7 +133,7 @@ endif()
 if(CMAKE_Fortran_COMPILER_ID MATCHES Cray) 
     add_definitions(-DVAR_CRAY)
 
-    set(CMAKE_Fortran_FLAGS         "-DVAR_CRAY -eZ")
+    set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -DVAR_CRAY -eZ")
     # Patrick: For cray we want to use the system allocator since it is faster and has less memory requirements than the cray allocator
     #if(ENABLE_TITANBUILD)
     #   set(CMAKE_Fortran_FLAGS "${CMAKE_Fortran_FLAGS} -hsystem_alloc")
@@ -176,24 +146,6 @@ if(CMAKE_Fortran_COMPILER_ID MATCHES Cray)
         set(CMAKE_Fortran_FLAGS
             "${CMAKE_Fortran_FLAGS} -s integer64"
             )
-    endif()
-# WARNING OpenMP (OMP) is activated as default with cray 
-    if(ENABLE_OMP) 
-      #do nothing OpenMP activated as default with cray 
-    else()
-      #can be deactivated using -x omp or -h noomp
-      set(CMAKE_Fortran_FLAGS
-        "${CMAKE_Fortran_FLAGS} -h noomp"
-        )
-    endif()
-# WARNING OpenACC is activated as default on cray 
-    if(ENABLE_OPENACC) 
-      #do nothing OpenACC activated as default with cray 
-    else()
-      #can be deactivated using -x acc or -h noacc
-      set(CMAKE_Fortran_FLAGS
-        "${CMAKE_Fortran_FLAGS} -h noacc"
-        )	  
     endif()
     if(ENABLE_BOUNDS_CHECK)
         set(CMAKE_Fortran_FLAGS

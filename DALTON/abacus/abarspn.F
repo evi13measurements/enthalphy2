@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -53,9 +47,8 @@ C      MXPHP  - maximum size for explicit subblock of configuration
 C               Hessian
 C  In common:
 C
-C      FABRHS - true : transform integrals to MO basis;
-C               normally true first time routine is called
-C               at a new geometry.
+C      NEWCMO - true : transform integrals to MO basis because possibly new CMO coefficients,
+C               normally true first time routine is called at a new geometry.
 C
 #include "implicit.h"
 #include "iratdef.h"
@@ -70,6 +63,7 @@ C
 C
 C Used from common blocks:
 C ABAINF : DODRCT
+C exeinf.h : FTRCTL, NEWCMO, ITRLVL_LAST, LVLDRC_LAST
 C INFLIN : NCONRF
 C INFINP : DIRFCK,HSORHF,...
 C INFORB : NASHT,...
@@ -130,8 +124,6 @@ C
       END IF
       CALL FLSHFO(LUPRI)
 
-      IF (DODRCT .AND. NCONRF.LE.1) FABRHS = .FALSE.
-C     ... no integral transformation for HF or DFT direct calculations.
 C
       REWIND LUGDVE
       REWIND LUSOVE
@@ -195,14 +187,9 @@ C
 C
       CALL FLSHFO(LUPRI)
 C
-C     PERFORM INTEGRAL TRANSFORMATION
+C     PERFORM INTEGRAL TRANSFORMATION, if needed
 C
-cSPAS:29.11.2002 debugging newtra for SOPPA
-cSPAS IF (FABRHS) THEN
-!     IF (FABRHS .AND.
-!    &    .NOT. (SOPPA .AND. NEWTRA .AND. .NOT. CCPPA)) THEN
-cKeinSPASMehr:29.11.2002 debugging newtra for SOPPA
-      IF (FABRHS) THEN
+      IF (NEWCMO .OR. FTRCTL) THEN
       IF ( (NASHT .GT. 1 .AND. .NOT.HSROHF) .OR. .NOT.DIRFCK ) THEN ! no mo integrals needed for ao-direct HF or DFT
          KCMO   = 1
          KWTRA  = KCMO   + NCMOT
@@ -217,27 +204,29 @@ cKeinSPASMehr:29.11.2002 debugging newtra for SOPPA
          READ (LUSIFC)
          READ (LUSIFC)
          CALL READT (LUSIFC,NCMOT,WRK(KCMO))
-cs
+
          USEDRC = .TRUE.
          IF (RSPCI) THEN
             USEDRC = .FALSE.
             JTRLVL = 0
          ELSE IF (SOPPA .OR. NEXVAL.EQ.0) THEN  ! SOPPA or quadratic response
             JTRLVL = -10
-         ELSE IF (NEWTRA .AND. .NOT.USEDRC) THEN
-            JTRLVL = -5 ! level 5 needed for occ-sec distributions in NEWTRA
          ELSE
             JTRLVL = -4
          ENDIF
-cs
-         FLAGSV = DORSP
-         DORSP  = .TRUE.
-         CALL SIR_INTOPEN
-         DORSP  = FLAGSV
-         CALL TRACTL(JTRLVL,WRK(KCMO),WRK(KWTRA),LWTRA)
+
+         IF (NEWCMO .OR. FTRCTL .OR.
+     &       (ABS(JTRLVL) .GT. ITRLVL_LAST) .OR.
+     &       (USEDRC .AND. LVLDRC_LAST .LT. 0) ) THEN
+            FLAGSV = DORSP
+            DORSP  = .TRUE.
+            CALL SIR_INTOPEN
+            DORSP  = FLAGSV
+            CALL TRACTL(JTRLVL,WRK(KCMO),WRK(KWTRA),LWTRA)
+         END IF
+         NEWCMO = .FALSE.
       END IF
       END IF
-      FABRHS = .FALSE.
 C
 C     ORGANIZE CALCULATION FOR EACH PERTURBATION OPERATOR
 C
@@ -708,7 +697,8 @@ C     &                       ABS_FREQ_ALPHA(K),RES0)
           ENDDO
           WRITE(LUPRI,*) 'Vectors equal to zero'
         ELSE
-          CALL ABS_CTL(LABEL,KZVAR,WRK(KGD),WRK(KXSOL),
+          NGD=1
+          CALL ABS_CTL(LABEL,KZVAR,WRK(KGD),NGD,WRK(KXSOL),
      &               ABS_FREQ_ALPHA,NFREQ_ALPHA,LUABSVECS,
      &               WRK(KMJWOP),CMO,UDV,FC,FCAC,FV,PV,XINDX,
      &               WRK(KRES),WRK(KFREE),LFREE)

@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -161,7 +155,7 @@ C
      *                  ISYMA,ISYMB,ISYMC,ISYMD,CMO,FC,MJWOP)
 C
 C
-      use pelib_interface, only: use_pelib, pelib_ifc_cro
+      use pelib_interface, only: use_pelib
 #include "implicit.h"
 C
       PARAMETER ( D0 = 0.0D0, D1 = 1.0D0, DM1 = -1.0D0 )
@@ -248,63 +242,13 @@ C
       END IF
 C
       IF (USE_PELIB()) THEN
-         IF (.NOT. TDHF) THEN
-             CALL QUIT('ERROR: MCSCF cubic response not'//
-     &                 ' implemented with PE library.')
-         ELSE IF (NASHT > 0) THEN
-             CALL QUIT('ERROR: cubic response not implemented for'//
-     &                 ' open shell systems with PE library.')
-         ELSE IF (TRPLET) THEN
-             CALL QUIT('ERROR: triplets not implemented for cubic'//
-     &                 ' response with PE library.')
-         ENDIF
-         CALL PELIB_IFC_CRO(VECB, VECC, VECD, ETRS, XINDX,
-     &                      WRK(KZYMB), WRK(KZYMC), WRK(KZYMD),
-     &                      UDV, WRK(KFREE), LFREE, KZYVA, KZYVB,
-     &                      KZYVC, KZYVD, ISYMA, ISYMB, ISYMC,
-     &                      ISYMD, CMO, MJWOP)
+        CALL QUIT('ERROR: cubic response not implemented'//
+     &             ' for PEQM.')
       END IF
 C
       IF (QMMM) THEN
-#ifdef MOD_UNRELEASED
-         IF (TDHF) THEN
-             CALL QMMMCRO(VECB, VECC, VECD,
-     *                 ETRS,XINDX,WRK(KZYMB),WRK(KZYMC),WRK(KZYMD),
-     *                 UDV,WRK(KFREE),LFREE,
-     *                 KZYVA,KZYVB,KZYVC,KZYVD,
-     *                 ISYMA,ISYMB,ISYMC,ISYMD,CMO,MJWOP)
-            CALL QMMMCRO(VECB, VECD, VECC,
-     *                 ETRS,XINDX,WRK(KZYMB),WRK(KZYMD),WRK(KZYMC),
-     *                 UDV,WRK(KFREE),LFREE,
-     *                 KZYVA,KZYVB,KZYVD,KZYVC,
-     *                 ISYMA,ISYMB,ISYMD,ISYMC,CMO,MJWOP)
-            CALL QMMMCRO(VECC, VECB, VECD,
-     *                 ETRS,XINDX,WRK(KZYMC),WRK(KZYMB),WRK(KZYMD),
-     *                 UDV,WRK(KFREE),LFREE,
-     *                 KZYVA,KZYVC,KZYVB,KZYVD,
-     *                 ISYMA,ISYMC,ISYMB,ISYMD,CMO,MJWOP)
-            CALL QMMMCRO(VECC, VECD, VECB,
-     *                 ETRS,XINDX,WRK(KZYMC),WRK(KZYMD),WRK(KZYMB),
-     *                 UDV,WRK(KFREE),LFREE,
-     *                 KZYVA,KZYVC,KZYVD,KZYVB,
-     *                 ISYMA,ISYMC,ISYMD,ISYMB,CMO,MJWOP)
-            CALL QMMMCRO(VECD, VECC, VECB,
-     *                 ETRS,XINDX,WRK(KZYMD),WRK(KZYMC),WRK(KZYMB),
-     *                 UDV,WRK(KFREE),LFREE,
-     *                 KZYVA,KZYVD,KZYVC,KZYVB,
-     *                 ISYMA,ISYMD,ISYMC,ISYMB,CMO,MJWOP)
-            CALL QMMMCRO(VECD, VECB, VECC,
-     *                 ETRS,XINDX,WRK(KZYMD),WRK(KZYMB),WRK(KZYMC),
-     *                 UDV,WRK(KFREE),LFREE,
-     *                 KZYVA,KZYVD,KZYVB,KZYVC,
-     *                 ISYMA,ISYMD,ISYMB,ISYMC,CMO,MJWOP)
-         ELSE
-            CALL QUIT('CR-QM/MM only implemented for TDHF/TDDFT')
-         END IF
-#else
          CALL QUIT('ERROR: cubic response not implemented'//
      &             ' for QMMM.')
-#endif
       END IF
 
       IF (FLAG(16)) THEN
@@ -421,6 +365,7 @@ C
       SAVE LAB, FRQ, N, ISYM
 C
       DATA N/0/
+      CALL QENTER('BCDCHK')
 C
 C     set variables
 C
@@ -495,7 +440,7 @@ C
             WRITE (LUPRI,'(/8A,/A)') ' Component ',ALAB,', ',BLAB,', ',
      &           CLAB,', ',DLAB,'   not calculated because it does'//
      &           ' not contribute to average gamma'
-            RETURN
+            GO TO 9000
          END IF
       END IF
 C
@@ -578,14 +523,14 @@ C
                    END IF
                    IF (DOCAL.AND.TPAMP) THEN
       WRITE(LUPRI,'(//A,2(/A,A10,I4,F10.6),2(/A,I7,F10.6))')
-     *     ' Third order transition moment in a.u. for',
+     *     ' Second order transition moment in a.u. for',
      *     ' A operator, symmetry, frequency: ',ALAB,ISYMA,FREQA,
      *     ' B operator, symmetry, frequency: ',BLAB,ISYMB,-FREQB,
      *     ' State no.,  symmetry, excitation energy:',ISYMC,-FREQC,
      *     ' State no.,  symmetry, excitation energy:',ISYMD,FREQD
       WRITE(LUPRI,'(/A)') ' is equal to the already calculated'
       WRITE(LUPRI,'(/A,4(/A,A10,I4,F10.6))')
-     *' Third order transition moment in a.u. for',
+     *' Second order transition moment in a.u. for',
      *' A operator, symmetry, frequency: ',LAB(I,1),ISYM(I,1),-FRQ(I,1),
      *' B operator, symmetry, frequency: ',LAB(I,2),ISYM(I,2),-FRQ(I,2),
      *' Symmetry, excitation energy:     ','  ',ISYM(I,3),-FRQ(I,3),
@@ -593,10 +538,9 @@ C
 C    This will set up IEQTO used for output analysis
                       CALL DIPLAB(LAB(I,1),I1)
                       CALL DIPLAB(LAB(I,2),I2)
-                      CALL DIPLAB(LAB(I,3),I3)
                       IEQTO(1)=I1
                       IEQTO(2)=I2
-                      IEQTO(3)=I3
+                      IEQTO(3)=ICFR
                       IEQTO(4)=IDFR
                       IEQTO(5)=ISYM(I,4)
 C    End of setting up IEQTO
@@ -747,7 +691,7 @@ C
          FRQ(N,3) = FREQC
          FRQ(N,4) = FREQD
       ELSE
-         RETURN
+         GO TO 9000
       END IF
 C
 C
@@ -798,21 +742,31 @@ C
       VNORM = DNRM2(KZYVD,VECD,1)
       IF ( VNORM .LT. THRSML ) IBCDEQ = 0
 C
+ 9000 CALL QEXIT('BCDCHK')
       RETURN
       END
 
       SUBROUTINE DIPLAB(LAB,I)
 C
-#include "implicit.h"
-C
-      CHARACTER*8 LAB
-C
 C Map dipole operators to integer number
 C X => 1, Y => 2, and Z => 3
 C
-      IF (LAB(1:1).EQ.'X') I=1
-      IF (LAB(1:1).EQ.'Y') I=2
-      IF (LAB(1:1).EQ.'Z') I=3
+#include "implicit.h"
+C
+      CHARACTER*8 LAB
+#include "priunit.h"
+C
+      IF (LAB(1:1).EQ.'X') THEN
+         I=1
+      ELSE IF (LAB(1:1).EQ.'Y') THEN
+         I=2
+      ELSE IF (LAB(1:1).EQ.'Z') THEN
+         I=3
+      ELSE
+         I=-123456789 ! very negative number, chosen to give error if used as index
+!        WRITE(LUPRI,'(//2A)')
+!    &   'INFO: DIPLAB called with a non-dipole label: ',LAB
+      END IF
 C
       RETURN
       END

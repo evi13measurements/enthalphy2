@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -682,6 +676,8 @@ C
       KFRSAV = KFREE
 C
 C
+      LUSUPM_here = LUSUPM
+      ! setting "LUSUPM_here = -1" below for cases not OK in RDSUPM
       ISYMDM(1) = 1
       ISYMDM(2) = 1
       IF (HFXFAC .eq. 0.0D0) THEN
@@ -698,6 +694,7 @@ C JT Aug 09 beg
       IF (DFT_SPINDNS) THEN
          ISYMDM(3) = 1
          IFCTYP(3) = -12
+         LUSUPM_here = -1
       END IF
 C JT Aug 09 end
 C
@@ -749,16 +746,23 @@ C we need only the difference between Fa and Q which is
 C the negative of the exchange part
 C
          IFCTYP(2)=12
+         LUSUPM_here = -1
       END IF
+      IF (ADDSRI) LUSUPM_here = -1 ! no srDFT cases because of SRINTS (yet)
       CALL DZERO(FCAO,NDMAT*N2BASX)
-C     ... note: NDMAT = # of FCAO matrices; NFMAT = # of non-zero FCAO matrices
+C     ... note: NDMAT = # of DCAO and FCAO matrices; NFMAT = # of non-zero FCAO matrices
       IF (NFMAT .GT. 0) THEN
-      IF (LUSUPM .NE. -1 .AND.
-     &   .NOT. (HSROHF .OR. DODFT .OR.
-     &          DOCISRDFT .OR. DOHFSRDFT .OR. DOMCSRDFT)) THEN
-         CALL RDSUPM(NFMAT,FCAO(IOFFAO),DCAO(IOFFAO),WRK(KFREE),LFREE)
+      IF (LUSUPM_here .NE. -1) THEN
+!    &   .NOT. (HSROHF .OR. DODFT .OR.
+!    &          DOCISRDFT .OR. DOHFSRDFT .OR. DOMCSRDFT)) THEN
+         if (iprsir .gt. 5) write(lupri,*)
+     &   'RDSUPM called. NFMAT, ISYMDM(1:NFMAT)',NFMAT,ISYMDM(1:NFMAT)
+         CALL RDSUPM(NFMAT,FCAO(IOFFAO),DCAO(IOFFAO),ISYMDM,
+     &      WRK(KFREE),LFREE)
       ELSE
-         IF (DIRFCK) THEN ! density matrice may be destroyed in SIRFCK
+         if (iprsir .gt. 5) write(lupri,*)
+     &      'SIRFCK called, NFMAT',NFMAT,ISYMDM(1:NFMAT)
+         IF (DIRFCK) THEN ! density matrices may be destroyed in SIRFCK
             CALL MEMGET('REAL',KDMAT_SAVE,N2BASX*NDMAT,WRK,KFREE,LFREE)
             CALL DCOPY(NDMAT*N2BASX,DCAO(IOFFAO),1,WRK(KDMAT_SAVE),1)
          END IF

@@ -1,29 +1,26 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
 C  /* Deck abactl */
       SUBROUTINE ABACTL(WORK,LWORK)
+C
+      USE SO_INFO, ONLY: SO_NUM_ACTIVE_MODELS
+      use pelib_interface, only: use_pelib
 C
 #include "implicit.h"
 #include "priunit.h"
@@ -73,7 +70,7 @@ C
 C
 C     Tag this as an ABACUS run.
 C
-      CALL ABASET
+      CALL ABA_SET
 C
 C     *************************
 C     ***** Input Section *****
@@ -212,7 +209,7 @@ C     ***** Dipole moment gradient *****
 C     **********************************
 C
       CALL GETTIM(TIMSTR,TIMDUM)
-      IF (.NOT. PASDIP) THEN
+      IF (.NOT. PASDIP .AND. .NOT. USE_PELIB()) THEN
          CALL DIPCTL(WORK(KLAST),LWRK,PASDIP)
          IF (PASDIP) CALL ABAWRIT_RESTART
          CALL FLSHFO(LUPRI)
@@ -300,7 +297,8 @@ C
       IF (.NOT. PASREL) THEN
       IF (MOLHES .OR. SHIELD .OR. MAGSUS .OR. VCD .OR.
      &    DIPDER .OR. POLAR .OR. QPGRAD .OR. (SPNSPN .AND. DOPSO) .OR.
-     &    ECD .OR. VROA .OR. MOLGFA .OR. SPINRO .OR. OPTROT) THEN
+     &    ECD .OR. VROA .OR. MOLGFA .OR. SPINRO .OR. OPTROT
+     &    .AND. .NOT. USE_PELIB()) THEN
          CALL RELAX(WORK(KPSO),WORK(KSD),WORK(KFC),WORK(KSDFC),
      &              WORK(KLAST),LWRK,PASREL,.FALSE.)
          IF (PASREL) CALL ABAWRIT_RESTART
@@ -346,19 +344,36 @@ C
 C     Added an extra dimension to keep complex numbers in case of
 C     absorption, panor+kr-02
 C
-         KPOLDD = KLAST
-         KPOLDQ = KPOLDD + 2*9*MXFR
-         KPOLDL = KPOLDQ + 2*27*MXFR
-         KPOLDA = KPOLDL + 2*9*MXFR
-         KPOLVL = KPOLDA + 2*9*MXFR
-         KPOLVV = KPOLVL + 2*9*MXFR
-         KFOVIB = KPOLVV + 2*9*MXFR
-         KLST1  = KFOVIB + (3*NATOMS+3)*(3*NATOMS+3)*NSYM*MXFR
-         LWRK1  = LWORK - KLST1 + 1
          IF (.NOT. PASLNR) THEN
-            CALL LNRABA(WORK(KPOLDD),WORK(KPOLDQ),WORK(KPOLDL),
-     &                  WORK(KPOLDA),WORK(KPOLVL),WORK(KPOLVV),
-     &                  WORK(KFOVIB),WORK(KLST1),LWRK1,PASLNR)
+CPi
+            IF(.NOT.(AORPA.OR.DCRPA.OR.AOSOP.OR.AOSOC.OR.AOCC2) )THEN
+               KPOLDD = KLAST
+               KPOLDQ = KPOLDD + 2*9*MXFR
+               KPOLDL = KPOLDQ + 2*27*MXFR
+               KPOLDA = KPOLDL + 2*9*MXFR
+               KPOLVL = KPOLDA + 2*9*MXFR
+               KPOLVV = KPOLVL + 2*9*MXFR
+               KFOVIB = KPOLVV + 2*9*MXFR
+               KLST1  = KFOVIB + (3*NATOMS+3)*(3*NATOMS+3)*NSYM*MXFR
+               LWRK1  = LWORK - KLST1 + 1
+               CALL LNRABA(WORK(KPOLDD),WORK(KPOLDQ),WORK(KPOLDL),
+     &                     WORK(KPOLDA),WORK(KPOLVL),WORK(KPOLVV),
+     &                     WORK(KFOVIB),WORK(KLST1),LWRK1,PASLNR)
+            ELSE
+               NMODEL = so_num_active_models()
+               KPOLDD = KLAST
+               KPOLDQ = KPOLDD + 2*9*NFRVAL*NMODEL
+               KPOLDL = KPOLDQ + 2*27*NFRVAL*NMODEL
+               KPOLDA = KPOLDL + 2*9*NFRVAL*NMODEL
+               KPOLVL = KPOLDA + 2*9*NFRVAL*NMODEL
+               KPOLVV = KPOLVL + 2*9*NFRVAL*NMODEL
+               KLST1  = KPOLVV + 2*9*NFRVAL*NMODEL
+               LWRK1  = LWORK - KLST1 + 1
+               CALL SO_LNRABA(WORK(KPOLDD),WORK(KPOLDQ),WORK(KPOLDL),
+     &                        WORK(KPOLDA),WORK(KLST1),LWRK1,PASLNR)
+C              Is this for vibrational stuff?               
+               KFOVIB = KLST1 
+            ENDIF
             IF (PASLNR) CALL ABAWRIT_RESTART
             CALL FLSHFO(LUPRI)
          END IF
@@ -397,9 +412,11 @@ C     ******************************************
 C
       CALL GETTIM(TIMSTR,TIMDUM)
       NMODEL = 1
-CPFP 2009-Jun NMODEL increased from 4 to 5
-      IF (AORPA .OR. AOHRP .OR. DCRPA 
-     &          .OR. AOSOP .OR. AOSOC) NMODEL = 5
+CRF  2016-Jan Set NMODEL to actual AOSOPPA methods
+      IF (AORPA .OR. AOHRP .OR. DCRPA
+CPi
+     &          .OR. AOSOP .OR. AOSOC .OR. AOCC2)
+     &         NMODEL = so_num_active_models()
       IF (DOEXCI .AND. .NOT. PASEXC) THEN
          KTRLEN = KLST1
          KTRVEL = KTRLEN + 3*NSYM*MXNEXI*NMODEL
@@ -410,7 +427,11 @@ CPFP 2009-Jun NMODEL increased from 4 to 5
          KTRMAG = KTRLON + 3*NSYM*MXNEXI*NMODEL
          KBSRLO = KTRMAG + 3*NSYM*MXNEXI*NMODEL
          KEXENG = KBSRLO + 3*NSYM*MXNEXI*NMODEL
-         KSECMT = KEXENG + NSYM*MXNEXI*NMODEL
+CClark:11/01/2016
+         KBETHE = KEXENG + 3*LQ*NMODEL
+         KSTOPP = KBETHE + 3*LVEL*NMODEL
+CClark:end
+         KSECMT = KSTOPP + NSYM*MXNEXI*NMODEL
          KFONAC = KSECMT + 3*NSYM*MXNEXI
          KFONA2 = KFONAC + 3*NUCDEP*NSYM*MXNEXI
          KRMLEN = KFONA2 + 3*NUCDEP*NSYM*MXNEXI
@@ -426,6 +447,9 @@ CPFP 2009-Jun NMODEL increased from 4 to 5
          CALL EXCITA(WORK(KTRLEN),WORK(KTRVEL),WORK(KTQLEN),
      &               WORK(KTQVEL),WORK(KTRLON),WORK(KTRMAG),
      &               WORK(KBSRLO),WORK(KTTLEN),WORK(KEXENG),
+CClark:11/01/2016
+     &               WORK(KBETHE),WORK(KSTOPP),
+CClark:end
      &               WORK(KFONAC),WORK(KFONA2),WORK(KSECMT),
      &               WORK(KLST2),LWRK2,PASEXC)
          IF (PASEXC) CALL ABAWRIT_RESTART
@@ -441,7 +465,11 @@ CPFP 2009-Jun NMODEL increased from 4 to 5
          KTRMAG = KTRLON
          KBSRLO = KTRMAG
          KEXENG = KBSRLO
-         KSECMT = KEXENG
+CClark:11/01/2016
+         KBETHE = KEXENG
+         KSTOPP = KBETHE
+CClark:end
+         KSECMT = KSTOPP
          KFONAC = KSECMT
          KFONA2 = KFONAC
          KRMLEN = KFONA2
@@ -542,6 +570,7 @@ CAMT Add empirical DFT-D gradient...
          IF (SOLVNT.OR.PCM) CALL ADDGRD(GSOLTT)
          IF (SOLVNT.OR.PCM) CALL ADDGRD(GSOLNN)
          IF (PCM) CALL ADDGRD(GSOLCV)
+         IF (USE_PELIB()) CALL ADDGRD(PEGRAD)
       END IF
 C
 C     Calculated dipole moment
@@ -550,9 +579,9 @@ C
 C
 C     Calculated elements of dipole gradient
 C
-      CALL DZERO(DIP1,9*NUCDEP)
+      IF (.NOT. USE_PELIB()) CALL DZERO(DIP1,9*NUCDEP)
 Clf to be adjusted for PCM IR intensities calculation
-      IF (DIPDER) THEN
+      IF (DIPDER .AND. .NOT. USE_PELIB()) THEN
          CALL DIPADD(DDIPN)
          CALL DIPADD(DDIPE)
          CALL DIPADD(DDIPS)
@@ -595,6 +624,13 @@ C
       CALL FLTORB(WORK(KLST2),LWRK1)
       CALL FLSHFO(LUPRI)
 C
+C     *******************************************************
+C     ***** Freezing any coordinates ???                *****
+C     *******************************************************
+C
+      CALL FREEZE_COORDINATES(WORK(KLST2),LWRK1)
+      CALL FLSHFO(LUPRI)
+C
 C     **************************
 C     ***** Output section *****
 C     **************************
@@ -609,7 +645,11 @@ C
      &            WORK(KFC),WORK(KSDFC),WORK(KTRLEN),
      &            WORK(KTRVEL),WORK(KTQLEN),WORK(KTQVEL),
      &            WORK(KTRMAG),WORK(KTRLON),WORK(KBSRLO),WORK(KTTLEN),
-     &            WORK(KEXENG),WORK(KFONAC),WORK(KFONA2),WORK(KFOVIB),
+     &            WORK(KEXENG),
+CClark:11/01/2016
+     &            WORK(KBETHE),WORK(KSTOPP),
+CClark:end
+     &            WORK(KFONAC),WORK(KFONA2),WORK(KFOVIB),
      &            WORK(KSECMT),
      &            WORK(KRMLEN),WORK(KRQLEN),WORK(KRLEN),
      &            WORK(KRMVEL),WORK(KRQVEL),WORK(KRVEL),
@@ -661,7 +701,11 @@ C     ***** Vibrational analysis *****
 C     ********************************
 C
       CALL GETTIM(TIMSTR,TIMDUM)
-      IF (VIB) CALL VIBCTL(WORK(KLAST),LWRK3)
+      IF (VIB) THEN 
+          CALL SET_VIBCTL('Copy_PRJTRO')
+          CALL VIBCTL(WORK(KLAST),LWRK3)
+          CALL SET_VIBCTL('Reset')
+      END IF
       CALL GETTIM(TIMVIB,TIMDUM)
       TIMVIB = TIMVIB - TIMSTR
       CALL FLSHFO(LUPRI)
@@ -698,6 +742,12 @@ C     input:  WRDSRC - which ABACUS label to look for in input file
 C             (one of **START, **EACH , or **PROPE)
 C
       use pelib_interface, only: use_pelib
+CPi Haase, 22.07.16: since the commonblocks soppinf.h (used in integral
+C direct soppa program) and infsop.h (used in molecular orbital basis
+C soppa program) contain the same triplet variables, import the necessary
+C variables from soppinf.h through the so_info module:
+      use SO_INFO, only: AORPA, AOHRP, DCRPA, AOSOP, AOSOC, AOCC2
+C
 #include "implicit.h"
 #include "iratdef.h"
 #include "dummy.h"
@@ -705,7 +755,7 @@ C
 #include "maxaqn.h"
 #include "maxorb.h"
 #include "priunit.h"
-      PARAMETER (NDIR = 28, NTABLE = 60, D0 = 0.D0)
+      PARAMETER (NDIR = 29, NTABLE = 60, D0 = 0.D0)
       LOGICAL   POPULA, NOHESS, FCKEXP
       LOGICAL   DIPORG_SET,  GAGORG_SET, CAVORG_SET
       LOGICAL   GRDINP, NO_ABACUS_INPUT
@@ -738,14 +788,16 @@ C Common blocks used for SOPPA :
 C use from COMMON /INFDIM/ :  NCONMA,NWOPMA,NVARMA
 C use from COMMON /INFSOP/ :  N2P2HS,N2P2HT
 C use from COMMON /INFRSP/ :  SOPPA
+C infpar.h : PARHER
 #include "infdim.h"
 #include "infmp2.h"
 #include "infsop.h"
 #include "infrsp.h"
 #include "infinp.h"
-#include "soppinf.h"
+C#include "soppinf.h"
 #include "locinf.h"
-C
+#include "infpar.h"
+
 C  jim-gesc 1.0: TABDIR(#17) ="*LROPTS" , TABLE(60)=".LRESC ". check INTRST for gaugeo
       DATA TABDIR /'*END OF', 'xxxxxxx', '*NUCREP',
      &             '*ONEINT', '*TWOEXP', '*GETSGY',
@@ -756,8 +808,7 @@ C  jim-gesc 1.0: TABDIR(#17) ="*LROPTS" , TABLE(60)=".LRESC ". check INTRST for 
      &             'xXXXXXX', '*LOCALI', '*SOPPA ', ! *LOCALI: PFP 27/03-2006 - SOS for spin-spin coupling included
      &             '*LINRES', '*EXPECT', '*SPIN-S',
      &             '*QRPROP', '*AAT   ', '*TRPRSP',
-     &             '*ABALNR'/
-C
+     &             '*ABALNR', '*RHSIDE'/
 Caug04-hjaaj: disabled currently inactive .NACME
 Csep08-spas: .NACME reactivated for Vib_g
 C                      1          2          3
@@ -946,16 +997,16 @@ C
          DOPERT(I,2) = .TRUE.
    60 CONTINUE
 C
-C     Set FTRONV and FABRHS in /EXEINF/:
+C     Set FTRONV and NEWCMO in /EXEINF/:
 C
 C     TROINV is run twice. FTRONV keeps track of it, and setting it TRUE
 C     indicates first run.
 C
       FTRONV = .TRUE.
 C
-C     ABARHS has a variable of the same kind:
+C     NEWCMO means we need new MOTWOINT file because CMO has changed
 C
-      FABRHS = .TRUE.
+      NEWCMO = .TRUE.
 C
 C     **** Find Abacus input *****
 C
@@ -1179,17 +1230,17 @@ C
   131    CONTINUE
             READ (LUCMD,*) (ORIGIN(ICOOR), ICOOR = 1,3)
          GOTO 100
-  132    CONTINUE
+  132    CONTINUE!   .NOMASV
             MASSVE = .FALSE.
          GOTO 100
-  133    CONTINUE
+  133    CONTINUE!   .MODARW
             DARWIN = .FALSE.
          GOTO 100
-  134    CONTINUE
+  134    CONTINUE!   .ALPHA
             ABA_ALPHA = .TRUE.
             ABALNR = .TRUE.
          GOTO 100
-  135    CONTINUE
+  135    CONTINUE!   .VROA
             VROA   = .TRUE.
             ABALNR = .TRUE.
          GOTO 100
@@ -1198,7 +1249,7 @@ C
             OPTROT = .TRUE.
             ABALNR = .TRUE.
          GOTO 100
-  137    CONTINUE
+  137    CONTINUE!   .SOPPA(
             ABASOP = .TRUE.
             CCPPA  = .TRUE.
          GOTO 100
@@ -1219,7 +1270,7 @@ C
             READ (LUCMD,*) (DIPORG(ICOOR), ICOOR = 1, 3)
             DIPORG_SET = .TRUE.
          GOTO 100
- 143     CONTINUE
+ 143     CONTINUE!   .RAMAN
             RAMAN  = .TRUE.
             ABALNR = .TRUE.
          GOTO 100
@@ -1244,7 +1295,7 @@ cs
  149     CONTINUE
             MCD = .TRUE.
          GOTO 100
- 150     CONTINUE
+ 150     CONTINUE ! .SOPPA
             ABASOP = .TRUE.
          GOTO 100
  151     CONTINUE
@@ -1445,7 +1496,7 @@ cs    write session
 cs
       IF (.NOT. ABASOP .AND. DOMP2 .AND. (NASHT .EQ. 0)) THEN
          WRITE(LUPRI,'(3A/A)') '@ ',WRDSRC,' properties not ' //
-     &        'available for MP2 wave functions!',
+     &        'available for MP2 wave functions! **PROPERTIES skipped.',
      &      '@ You may consider using SOPPA instead.'
          SKIPAB = .TRUE.
          GOTO 789
@@ -1465,21 +1516,24 @@ CSPAS : 26/08-2013 fixing the problem with the test jobs running MPI
          IF (PARCAL) THEN
 CRF Only quit if the stuff that is asked for is not yet parallelized.
             par_soppa_input_errors = .false.
-            IF (.NOT.DOEXCI.OR.
+CPi 17.08.16: RF: Polarizabilities now work
+C            IF (.NOT.DOEXCI.OR.
+            IF (
 C All the properties which parallel soppa currently cannot do. I.e all.
      &      ANY( (/  SHIELD, MAGSUS, SPINRO, MOLGFA, SPNSPN, 
-     &           POLAR, CTOCD /) ) 
+     &            CTOCD /) ) 
      &         ) THEN
-               WRITE(LUPRI,'(3A)')'@ ', WRDSRC, 'SOPPA can only be ' //
-     &               'run in parallel for excitation energies'
+               WRITE(LUPRI,'(3A)')'@ ', WRDSRC, ' SOPPA can only be '
+     &         //'run in parallel for excitation energies and '
+     &         //'polarizabilities'
                par_soppa_input_errors = .true.
             ENDIF
 C            
 C Parallel soppa should be run using mp2 from the cc module
 C 
             IF (DOMP2) THEN
-               WRITE(LUPRI,'(3A/A)')'@ ', WRDSRC, 'Parallel SOPPA can'//
-     &               ' currently only run using the MP2 applitudes ',
+               WRITE(LUPRI,'(3A/A)')'@ ', WRDSRC, ' Parallel SOPPA can'
+     &             //' currently only run using the MP2 amplitudes ',
      &               'from the CC module'
                par_soppa_input_errors = .true. 
             ENDIF
@@ -1504,11 +1558,13 @@ CKeinSPASmehr
      &              'K. L. Bak, S. Rettrup and S. P. A. Sauer,',
      &              '@     J. Phys. Chem. A 113, 11995-12012 (2009))'
             ENDIF
+C
          ELSE
             IF (DODRCT) THEN
                AOSOP = .TRUE.
                WRITE(LUPRI,'(//5x,A,/,5x,A,A,/,5x,A)')
-     &              ' AO integral driven SOPPA :',
+CPi extra space to avoid test crash
+     &              ' AO integral driven SOPPA  :',
      &              '    (Ref.: K. L. Bak, H. Koch, J. Oddershede,',
      &              ' O. Christiansen and S. P. A. Sauer',
      &              '     J. Chem. Phys. 112, 4173-4185 (2000))'
@@ -1518,7 +1574,9 @@ CKeinSPASmehr
      *             ' Second Order Polarization Propagator Approximation'
             END IF
          END IF
-         IF (SHIELD .OR. MAGSUS .OR. SPINRO .OR. MOLGFA) THEN
+CPi 9.8.16 SPAS: In case of ECD or OECD avoid london orbitals
+         IF (SHIELD .OR. MAGSUS .OR. SPINRO .OR. MOLGFA.OR.ECD
+     &       .OR.OECD) THEN
             NOLOND = .TRUE.
          END IF
 C
@@ -1605,7 +1663,7 @@ cLig
      &   ' matrices are calculated simultaneously (for direct SCF).'
       IF (SUPMAT) WRITE (LUPRI,'(5X,A)')
      &   ' Two-electron supermatrix integrals are used.'
-      IF (PARCAL) WRITE (LUPRI,'(5X,A)')
+      IF (PARHER) WRITE (LUPRI,'(5X,A)')
      &   ' Two-electron integrals will be calculated in parallel'
       IF (LINCPL) THEN
          WRITE (LUPRI,'(A)') ' Analyze the gradient in normal '//
@@ -1868,15 +1926,17 @@ c            CALL QUIT('Not supported input in ABAINP')
      &                         'cannot be calculated with SOPPA'
             IERR = IERR + 1
          END IF
-         IF (OECD)    THEN
-            WRITE(LUPRI,'(A)') ' Incompatible input. OECD '//
-     &                         'cannot be calculated with SOPPA'
-            IERR = IERR + 1
+         IF (OECD .AND. .NOT.NOLOND) THEN
+            WRITE(LUPRI,'(A)')
+     &      ' OECD and SOPPA only without London orbitals.'//
+     &      ' London orbitals (GIAO) disabled.'
+            NOLOND = .TRUE.
          END IF
-         IF (ECD)    THEN
-            WRITE(LUPRI,'(A)') ' Incompatible input. ECD '//
-     &                         'cannot be calculated with SOPPA'
-            IERR = IERR + 1
+         IF (ECD .AND. .NOT.NOLOND)  THEN
+            WRITE(LUPRI,'(A)')
+     &      ' ECD and SOPPA only without London orbitals.'//
+     &      ' London orbitals (GIAO) disabled.'
+            NOLOND = .TRUE.
          END IF
          IF (MCD)    THEN
             WRITE(LUPRI,'(A)') ' Incompatible input. MCD '//
@@ -1916,26 +1976,24 @@ CAMT quit here to catch this...
       IF ((NSYM.GT.1).AND.
      &    (MAGSUS.OR.MOLGFA.OR.SPINRO).AND.(DFTRUN)) THEN
             IF (MAGSUS) THEN
-              WRITE(LUPRI,'(5X,A50)')
-     &           'WARNING: Magnetic Suceptibilities requested with '
-              WRITE(LUPRI,'(5X,A50)')
+              WRITE(LUPRI,'(5X,A)')
+     &           'WARNING: Magnetic Suceptibilities requested with ',
      &           '         DFT and symmetry but not yet implemented'
             ENDIF
             IF (MOLGFA) THEN
-              WRITE(LUPRI,'(5X,A50)')
-     &           'WARNING: Rotational g-tensors requested with     '
-              WRITE(LUPRI,'(5X,A50)')
+              WRITE(LUPRI,'(5X,A)')
+     &           'WARNING: Rotational g-tensors requested with     ',
      &           '         DFT and symmetry but not yet implemented'
             ENDIF
             IF (SPINRO) THEN
-              WRITE(LUPRI,'(5X,A50)')
-     &           'WARNING: Spin-rotation constants requested with  '
-              WRITE(LUPRI,'(5X,A50)')
+              WRITE(LUPRI,'(5X,A)')
+     &           'WARNING: Spin-rotation constants requested with  ',
      &           '         DFT and symmetry but not yet implemented'
             ENDIF
-              WRITE(LUPRI,'(5X,A50)')
+            WRITE(LUPRI,'(5X,A)')
      &           '         Please re-run with NoSymmetry...        '
-            CALL QUIT('Specified Mag. Props. NYI with Symm for DFT')
+            CALL QUIT('ERROR: Specified magnetic properties'//
+     &           ' not implemented with symmetry for DFT')
       ENDIF
 CAMT--------------
       IF (USE_PELIB()) THEN
@@ -1943,13 +2001,25 @@ CAMT--------------
      &                 ' the polarizable embedding scheme (PE library).'
         IF (POLAR) THEN
          WRITE (LUPRI,'(4A)') 'ERROR: .POLARI and .PEQM are not',
-     &                       'compatible. Please use either .ALPHA',
-     &                       'or the RESPONSE module and set frequency',
-     &                       'to zero.'
+     &                        ' compatible. Please use either .ALPHA',
+     &                        ' or the RESPONSE module and set',
+     &                        ' frequency to zero.'
          CALL QUIT('ERROR: .POLARI and .PEQM are not compatible'//
      &             ' (see output file for more details)')
 
         END IF
+        IF ((MAGSUS .OR. MOLGFA) .AND. .NOT. NOLOND) THEN
+         WRITE (LUPRI,'(4A)') 'ERROR: .MAGNET and .MOLGFA are not',
+     &                        ' implemented for .PEQM with London',
+     &                        ' orbitals. You may consider using',
+     &                        ' .NOLOND to deactivate use of London',
+     &                        ' orbitals.'
+         CALL QUIT('ERROR: .MAGNET and .MOLGFA are not implemented'//
+     &             ' for .PEQM with London orbitals'//
+     &             ' (see output file for more details)')
+        END IF
+        WRITE(LUPRI,'(6X,A)') 'Environment is modeled using'//
+     &                 ' the polarizable embedding scheme (PE library).'
       END IF
 C
 C
@@ -1968,7 +2038,7 @@ cs
             IF (WORD .EQ. TABDIR(I)) THEN
                GO TO
      *         (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,
-     *              22,23,24,25,26,27,28), I
+     *              22,23,24,25,26,27,28,29), I
             END IF
   210    CONTINUE
          IF (WORD(1:2) .EQ. '**') GO TO 1
@@ -1989,7 +2059,7 @@ cs
       GO TO 200
     5   CALL TWOINP(WORD)
       GO TO 200
-    6   CALL RHSINP(WORD)
+    6   CALL RHSINP(WORD) ! *GETSGY, alias to *RHSIDE; kept for backwards compatibility
       GO TO 200
     7   CALL EXCINP(WORD)
       GO TO 200
@@ -2039,6 +2109,8 @@ C jim-gesc 1.4 : CALL LRSCINP to read OPTNS @ DAL  file
       GO TO 200
    28   CALL LNRINP(WORD) ! *ABALNR
       GO TO 200
+   29   CALL RHSINP(WORD) ! *RHSIDE
+      GO TO 200
 C
     1 CONTINUE
 C
@@ -2047,7 +2119,7 @@ C
       IF (.NOT. ABASOP .AND. DOMP2 .AND. (NASHT .EQ. 0)) THEN
          IF (.NOT. NO_ABACUS_INPUT)
      &   WRITE(LUPRI,'(/3A/A)') '@ INFO ',WRDSRC,' properties not ' //
-     &        'available for MP2 wave functions!',
+     &        'available for MP2 wave functions! **PROPERTIES skipped.',
      &      '@ INFO You may consider using SOPPA instead.'
          SKIPAB = .TRUE.
          GOTO 789
@@ -2070,7 +2142,8 @@ Chj   this call had survived from when ABACUS was a separate program.
 Chj   I have now made sure that READIN always is called in the beginning,
 Chj   also if RNHERM is false. /April 2009 hjaaj
 
-      CALL SETSIR(WORK,LWORK)
+      CALL SETSIR(.TRUE.,WORK,LWORK)
+      ! true means do 2-el integral transformation in SETSIR, if needed
 C
 C     If SOPPA calculation, then
 C     1) set SOPPA true in /INFRSP/
@@ -2218,6 +2291,9 @@ C  /* Deck result */
      &                  CSTRA,SCTRA,SPNDSO,SPNPSO,
      &                  SPNSD,SPNFC,SPSDFC,TRLEN,TRVEL,TQLEN,TQVEL,
      &                  TRMAG,TRLON,BSRLON,TTLEN,EXENG,
+CClark:11/01/2016
+     &                  BETHE,STOPP,
+CClark:end
      &                  FONAC,FONA2,FOVIBG,SECMAT,
      &                  RMLEN,RQLEN,RLEN,RMVEL,RQVEL,RVEL,SLEN,SVEL,
      &                  WORK,LWORK)
@@ -2244,7 +2320,11 @@ C
      &          SPSDFC(MXCOOR,MXCOOR)
       DIMENSION TRLEN(*), TRVEL(*), TQLEN(*), TQVEL(*), TTLEN(*),
      &          TRLON(*), TRMAG(*), BSRLON(*),
-     &          EXENG(*), FONAC(*), FONA2(*), FOVIBG(*),
+     &          EXENG(*), 
+CClark:11/01/2016
+     &          BETHE(*), STOPP(*),
+CClark:end
+     &          FONAC(*), FONA2(*), FOVIBG(*),
      &          SECMAT(*),
      &          RMLEN(*), RQLEN(*), RLEN(*),
      &          RMVEL(*), RQVEL(*), RVEL(*), SLEN(*), SVEL(*)
@@ -2621,18 +2701,35 @@ C
 C     Frequency-dependent linear response properties
 C     Polarizabilities and G tensors
 C
-      IF (ABALNR) CALL LNROUT(POLDD,POLDL,POLDA,POLVL,POLVV,FOVIBG,
-     &                        IPRDEF,WORK,LWORK)
+      IF (ABALNR) THEN
+         IF (AORPA .OR. AOHRP .OR. DCRPA .OR. AOSOP .OR.
+CPi
+     &       AOSOC .OR. AOCC2) THEN
+CRF         Merging AO-SOPPA, adjust call signature           
+            CALL SO_LNROUT(POLDD,POLDL,POLDA,POLVL,POLVV,FOVIBG,
+     &                     WORK,LWORK)
+                           
+         ELSE
+            CALL LNROUT(POLDD,POLDL,POLDA,POLVL,POLVV,FOVIBG,
+     &                  IPRDEF,WORK,LWORK)
+         ENDIF
+      ENDIF
 C
 C     Excitation energies and (oriented) electronic circular dichroism
 C
       IF (DOEXCI) THEN
 CPFP-2009
 C         IF (AORPA .OR. DCRPA .OR. AOSOP .OR. AOSOC) THEN
-         IF (AORPA .OR. AOHRP .OR. DCRPA .OR. AOSOP .OR. AOSOC) THEN
+         IF (AORPA .OR. AOHRP .OR. DCRPA .OR. AOSOP .OR.
+CPi
+     &       AOSOC .OR. AOCC2) THEN
 Cend-PFP
             CALL SO_EXCOUT(TRLEN,TRVEL,TQLEN,TQVEL,TRMAG,TRLON,BSRLON,
-     &                     TTLEN,EXENG,FONAC,FONA2,SECMAT,WORK,LWORK)
+     &                     TTLEN,EXENG,
+CClark:11/01/2016
+     &                     BETHE,STOPP,
+CClark:end
+     &                     FONAC,FONA2,SECMAT,WORK,LWORK)
          ELSE
             CALL EXCOUT(TRLEN,TRVEL,TQLEN,TQVEL,
      &                  TRMAG,TRLON,BSRLON,TTLEN,EXENG,
@@ -3075,6 +3172,7 @@ C  /* Deck timsta */
 #include "mxcent.h"
 #include "infpri.h"
 #include "abainf.h"
+      IF (TIMALL .LE. 1.0D0) RETURN ! only output if > 1s total CPU time
       CALL HEADER('CPU time statistics for ABACUS',0)
       CALL TIMPRI('INPUT ',TIMINP,TIMALL)
       CALL TIMPRI('TRAROT',TIMTRO,TIMALL)

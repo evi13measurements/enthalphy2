@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -100,7 +94,7 @@ C
 #include "ccqrinf.h"
 C
       LOGICAL CCMMCONV,DIELCONV,CCDC
-      LOGICAL CC1BSV,CC1ASV,FASAVE,CICLC,HFCLC, DAR2SA,
+      LOGICAL CC1BSV,CC1ASV,NEWCMO_SAVE,CICLC,HFCLC, DAR2SA,
      *        TRPCLC,OOTV, EXCLC, RLORBS, LPROJECT, EX, TRIPLET,
      *        LDUM, ETASAV, LCCPTSV
       LOGICAL BP2SAV
@@ -1219,7 +1213,7 @@ C----------------------------------------------------
 C        Solve equations for ai-part of Zeta-kappa-0.
 C----------------------------------------------------
 C
-         FASAVE = FABRHS
+         NEWCMO_SAVE = NEWCMO
          NCOSAV = NCONF
 C
          IF (DIRECT) CALL CCDFFOP
@@ -1265,7 +1259,7 @@ C-tbp    MXRM   = 40
 
          MXPHP  = 1
 C
-         FABRHS = .TRUE.
+         NEWCMO = .TRUE.
          NCONF  = 1
 C
          IF (RHSNORM.GT.1.0D-12) THEN
@@ -1312,7 +1306,7 @@ C
          CALL CC_WRRSP('L0',0,1,IOPT,MODEL,WORK(KSOLUT),DUMMY,DUMMY,
      &                 WORK(KWRK2),LWRK2)
 C
-         FABRHS = FASAVE
+         NEWCMO = NEWCMO_SAVE
          NCONF  = NCOSAV
 C
          WRITE(LUPRI,'(/A,F10.6)')
@@ -3199,6 +3193,10 @@ C
          end if
       ENDIF
 C
+      IF (CCSTST) THEN
+         CALL DZERO(ETA(1+NT1AMX),NT2AMX)
+      END IF
+
       IF ( IPRINT .GT. 10 ) THEN
          ETA1 = DDOT(NT1AMX,ETA(1),1,ETA(1),1)
          ETA2 = DDOT(NT2AMX,ETA(1+NT1AMX),1,ETA(1+NT1AMX),1)

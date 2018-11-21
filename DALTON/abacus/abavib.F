@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -193,8 +187,14 @@ C
          MAXDIF = 2
       ELSE IF (MOLGRD) THEN
          MAXDIF = 1
+!     ELSE
+!        MAXDIF = 0
+! The two lines above break .VIBANA because
+! after geometry walk is converged then
+! MOLGRD and MOLHES are reset to .false.
       END IF
       DOVCD = VCD
+      VIB_PRJTRO = .TRUE.
       RETURN
       END
 C  /* Deck vibctl */
@@ -323,8 +323,8 @@ C
             END IF
  16      CONTINUE
          IF (IDIFF .GT. 0) THEN
-            WRITE (LUPRI,'(/,A,/,12X,A)') ' WARNINGCoordinates on'//
-     &           ' DALTON.HES differ from MOLECULE.INP',
+            WRITE (LUPRI,'(/A)') ' WARNING Coordinates on'//
+     &           ' DALTON.HES differ from MOLECULE.INP. '//
      &           'Coordinates from DALTON.HES will be used'
          END IF
  18      CONTINUE
@@ -497,18 +497,21 @@ C     ******************************************************************
 C     **** Project out trans-rot coordinates from molecular Hessian ****
 C     ******************************************************************
 C
-      KTRROV = 1
-      KWRK1  = KTRROV + 6*NCORD
-      IF (SOLVNT) KWRK1 = KTRROV + 9*NCORD
-      IF (KWRK1 .GE. LWRK) CALL STOPIT('ISOMOL','VIBHES',KWRK1,LWRK)
-      CALL VIBHES(IPRINT,NCORD,GEOM,KTRRO,GRAD,HESS,WRK(KTRROV),
+      IF (VIB_PRJTRO) THEN
+         KTRROV = 1
+         KWRK1  = KTRROV + 6*NCORD
+         IF (SOLVNT) KWRK1 = KTRROV + 9*NCORD
+         IF (KWRK1 .GE. LWRK) CALL STOPIT('ISOMOL','VIBHES',KWRK1,LWRK)
+         CALL VIBHES(IPRINT,NCORD,GEOM,KTRRO,GRAD,HESS,WRK(KTRROV),
      &            NATTYP,WRK(KWRK1))
-      IF (NINTCM .GT. 0 .AND. KTRRO .NE. NCORD - NINTCM) THEN
-         WRITE (LUPRI,'(/A,I2,A,/,A,I2)') ' Number of defined'//
-     &     ' internal coordinates',NINTCM,' is not consistent',
-     &     ' with the number of independent external coordinates',KTRRO
-         CALL QUIT
-     &       ('ABACUS.VIBANA: Inconsistency in number of coordinates')
+         IF (NINTCM .GT. 0 .AND. KTRRO .NE. NCORD - NINTCM) THEN
+            WRITE (LUPRI,'(/A,I2,A,/,A,I2)') ' Number of defined'//
+     &        ' internal coordinates',NINTCM,' is not consistent',
+     &        ' with the number of independent external coordinates',
+     &          KTRRO
+            CALL QUIT
+     &      ('ABACUS.VIBANA: Inconsistency in number of coordinates')
+         END IF
       END IF
 C
 C     *************************************
@@ -528,7 +531,7 @@ C
       NOTALL = .FALSE.
       NONE   = .TRUE.
       DO 150 IREP = 0, MAXREP
-         IF (NCRREP(IREP,1) .GT. NTRREP(IREP)) THEN
+         IF (NCRREP(IREP,1) .GT. NPRREP(IREP)) THEN
             IF (.NOT.DOREPS(IREP)) THEN
                NOTALL = .TRUE.
             ELSE
@@ -4578,4 +4581,54 @@ C
       CALL V3NOM (W)
       RETURN
       END
-!  -- end of abacus/abavib.F --
+
+      SUBROUTINE SET_VIBCTL(CONTROL_KWD)
+C
+C     Keeps track of internal vibrational settings
+C     Nanna H. List 12/2013
+
+#include "implicit.h"
+#include "priunit.h"
+#include "mxcent.h"
+#include "cbivib.h"
+      character (len=*) :: CONTROL_KWD
+      logical           :: prjtro_optinf
+      logical, save     :: vib_prjtro_save, set=.false.
+
+      if (CONTROL_KWD == 'Copy_PRJTRO') then
+         set = .true.
+         vib_prjtro_save = vib_prjtro
+         vib_prjtro = prjtro_optinf()
+         IF (vib_prjtro .neqv. vib_prjtro_save) then
+            WRITE(lupri,'(/A,L10)')
+     &        'INFO: tra-rot projection in vibrational analysis'//
+     &        ' changed to ',vib_prjtro
+         end if
+      else if (CONTROL_KWD  == 'Reset') then
+         if (.not. set) then
+            write(lupri,*) 'ERROR: cannot reset in SET_VIBCTL'
+            call quit('ERROR: cannot reset in SET_VIBCTL')
+         end if
+         vib_prjtro = vib_prjtro_save
+      else 
+         call quit('input to SET_VIBCTL is unknown')
+      end if
+
+      end subroutine set_vibctl
+
+      logical function prjtro_optinf()
+
+!     purpose: transfer PRJTRO from optinf.h
+!     (used in SET_VIBCTL because one cannot include
+!     optinf.h and cbivib.h in same subroutine)
+
+#include "implicit.h"
+#include "mxcent.h"
+#include "optinf.h"
+
+      prjtro_optinf = PRJTRO
+
+      return
+      end function prjtro_optinf
+
+! --- end of abavib.F ---

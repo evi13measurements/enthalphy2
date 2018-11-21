@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -42,7 +36,8 @@ C
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
-      PARAMETER (NTABLE = 13)
+C      PARAMETER (NTABLE = 13)
+      PARAMETER (NTABLE = 14)
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
       LOGICAL LNEXC2
 #include "abainf.h"
@@ -54,7 +49,10 @@ C
 C
       DATA TABLE /'.HIRPA ', '.SOPW4 ', '.DIRECT', '.AORPA ', '.DCRPA ',
      &            '.AOSOP ', '.AOSOC ', '.SOPCHK', '.AOTEST', '.NSAVMX',
-     &            '.NEXCI2', '.THREX2', '.AOHRP '/
+CPi
+C     &            '.NEXCI2', '.THREX2', '.AOHRP '/
+     &            '.NEXCI2', '.THREX2', '.AOHRP ', '.AOCC2 '/
+Cend-Pi
 C     
 C------------------
 C     Set defaults.
@@ -69,8 +67,11 @@ C
       SOPCHK = .FALSE.
       AOTEST = .FALSE.
 CPFP
-      AOHRP = .FALSE.
+      AOHRP  = .FALSE.
 Cend-PFP
+CPi
+      AOCC2  = .FALSE.
+Cend-Pi
 C
       NSAVMX = 3
       NSAVMXORIG = 3
@@ -94,8 +95,11 @@ C
             IF (TABLE(I) .EQ. WORD) THEN
 CPFP
 C               GOTO (1,2,3,4,5,6,7,8,9,10,11,12), I
-               GOTO (1,2,3,4,5,6,7,8,9,10,11,12,13), I
+C               GOTO (1,2,3,4,5,6,7,8,9,10,11,12,13), I
 Cend-PFP
+CPi
+               GOTO (1,2,3,4,5,6,7,8,9,10,11,12,13,14), I
+Cend-Pi
             END IF
   200    CONTINUE
          IF (WORD .EQ. '.OPTION') THEN
@@ -106,52 +110,55 @@ Cend-PFP
      &       '" not recognized in SOPPA.'
          CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
          CALL QUIT('Illegal keyword in SOPPA')
-    1    CONTINUE
+    1    CONTINUE !.HIRPA
             HIRPA  = .TRUE.
             GOTO 100
-    2    CONTINUE
+    2    CONTINUE !.SOPW4
             SOPW4  = .TRUE.
             GOTO 100
-    3    CONTINUE
+    3    CONTINUE !.DIRECT
             IF (CCPPA) THEN
                AOSOC = .TRUE.
             ELSE 
                AOSOP = .TRUE.
             ENDIF
             GOTO 100
-    4    CONTINUE
+    4    CONTINUE !.AORPA
             AORPA  = .TRUE.
             GOTO 100
-    5    CONTINUE
+    5    CONTINUE !.DCRPA
             DCRPA  = .TRUE.
             AORPA  = .TRUE.
             GOTO 100
-    6    CONTINUE
+    6    CONTINUE !.AOSOP
             AOSOP  = .TRUE.
             GOTO 100
-    7    CONTINUE
+    7    CONTINUE !.AOSOC
             AOSOC  = .TRUE.
             GOTO 100
-    8    CONTINUE
+    8    CONTINUE !.SOPCHK
             SOPCHK = .TRUE.
             GOTO 100
-    9    CONTINUE
+    9    CONTINUE !.AOTEST
             AOTEST = .TRUE.
             GOTO 100
-   10    CONTINUE
+   10    CONTINUE !.NSAVMX
             READ (LUCMD,*) NSAVMX
             NSAVMXORIG = NSAVMX
             GOTO 100
-   11    CONTINUE
+   11    CONTINUE !.NEXCI2
             LNEXC2 = .TRUE.
 C           NSYM is set to 8 since NSYM has not yet been set !!
             READ (LUCMD,*) (NEXCI2(I),I=1,NSYM)
             GOTO 100
-   12    CONTINUE
+   12    CONTINUE !.THREX2
             READ (LUCMD,*) THREX2
             GOTO 100
-   13    CONTINUE
+   13    CONTINUE !.AOHRP
             AOHRP  = .TRUE.
+            GOTO 100
+   14    CONTINUE !.AOCC2
+            AOCC2  = .TRUE.
             GOTO 100
       ELSE IF (PROMPT .EQ. '*') THEN
          GOTO 300
@@ -185,6 +192,10 @@ Cend-PFP
      &       '    (Ref.: K. L. Bak, H. Koch, J. Oddershede,',
      &       ' O. Christiansen and S. P. A. Sauer',
      &       '     J. Chem. Phys. 112, 4173-4185 (2000))'
+CPi
+         IF (AOCC2)  WRITE(LUPRI,'(A)')
+     &       ' AO integral driven SOPPA(CC2) :'
+Cend-Pi
          IF (AOSOC)  WRITE(LUPRI,'(A,/,A,A,/,A,A)')
      &       ' AO integral driven SOPPA(CCSD)',
      &       '    (Ref.: H. H. Falden, K. R. Falster-Hansen, ',

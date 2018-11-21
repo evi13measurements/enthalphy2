@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 #ifdef OLD_REVISIONLOG
@@ -69,6 +63,8 @@ C  /* Deck rspdrv */
 C
 C Driver for RESPONSE.
 C
+      use pelib_interface, only: use_pelib
+
 #include "implicit.h"
 C
       DIMENSION WRK(LWRK)
@@ -131,7 +127,9 @@ C     *************************
 C
 C Define wave function variables, also if SIRIUS has not been called
 C
-      CALL SETSIR(WRK,LWRK)
+      CALL SETSIR(.FALSE.,WRK,LWRK)
+      ! false means no 2-el. integral transformation by SETSIR
+      ! (done below when we have found out what level is needed)
 C
 C Define variables that are common for all perturbation symmetries
 C
@@ -156,8 +154,8 @@ C
       CALL RSPACT
 C
       IF (INPTES) THEN
-         WRITE(LUPRI,'(//A/)') ' *** END of input test for RESPONSE ***'
-         CALL QUIT('*** END of input test for RESPONSE ***')
+         WRITE(LUPRI,'(//A/)')' *** End of input test for **RESPONS ***'
+         CALL QUIT('*** End of input test for **RESPONS ***')
       END IF
       CALL FLSHFO(LUPRI)
 C
@@ -242,10 +240,20 @@ C           are needed in rspoli.F (if .not. NEWTRA then
 C           only occ-occ Dirac dist. are saved on MODRCINT).
 C           hjaaj Nov 2001
          ELSE
-            JTRLVL = -4
+            IF (DIRFCK) THEN
+               JTRLVL = -3
+            ELSE
+               JTRLVL = -4
+            END IF
          END IF
          FLAGSV = DORSP
          DORSP = .TRUE.
+C          (FLAG(14) true tells that old mo integral file exists)
+C          (FLAG(34) false tells that mo integrals needed)
+C          SIR_INTOPEN returns FLAG(14) false if no mo integral file
+C              or if ITRLVL on file too small.
+         FLAG(14) = .TRUE.
+         FLAG(34) = .FALSE.
          CALL SIR_INTOPEN
          DORSP = FLAGSV
          CALL TRACTL(JTRLVL,WRK(KCMO),WRK(KWTRA),LWTRA)
@@ -258,15 +266,15 @@ C           hjaaj Nov 2001
       END IF
 C
 C     ALLOCATE WORK SPACE FOR MATRICES THAT WILL BE KEPT DURING THE
-C     WHOLE RESPONSE CALCULATION AND READ IN THE MATRICES
+C     WHOLE RESPONSE CALCULATION AND READ IN THESE MATRICES
 C
       NEED_PVX = DORESP .OR. N2AVTOT .GT. 0
       KFREE  = 1
       LFREE  = LWRK
-      CALL MEMGET('REAL',KINDX,LCINDX,WRK,KFREE,LFREE)
-      CALL MEMGET('REAL',KCMO ,NCMOT ,WRK,KFREE,LFREE)
+      CALL MEMGET2('REAL','INDX',KINDX,LCINDX,WRK,KFREE,LFREE)
+      CALL MEMGET2('REAL','CMO' ,KCMO ,NCMOT ,WRK,KFREE,LFREE)
       LUDV   = NACTT*NACTT*2
-      CALL MEMGET('REAL',KUDV ,LUDV  ,WRK,KFREE,LFREE)
+      CALL MEMGET2('REAL','UDV' ,KUDV ,LUDV  ,WRK,KFREE,LFREE)
       IF (RSPCI) THEN
          CALL MEMGET('REAL',KPVX ,0     ,WRK,KFREE,LFREE)
          CALL MEMGET('REAL',KFOCK,0     ,WRK,KFREE,LFREE)
@@ -288,8 +296,8 @@ C NEED ONLY SINGLET TWO ELECTRON DENSITY MATRIX
          CALL MEMGET('REAL',KFC  ,NNORBT,WRK,KFREE,LFREE)
          CALL MEMGET('REAL',KFV  ,NNORBT,WRK,KFREE,LFREE)
       END IF
-      CALL MEMGET('REAL',KFCAC,NNASHX,WRK,KFREE,LFREE)
-      CALL MEMGET('REAL',KH2AC,NNASHX*NNASHX,WRK,KFREE,LFREE)
+      CALL MEMGET2('REAL','FCAC',KFCAC,NNASHX,WRK,KFREE,LFREE)
+      CALL MEMGET2('REAL','H2AC',KH2AC,NNASHX*NNASHX,WRK,KFREE,LFREE)
       KTOT  =  KFREE
       KWRK1  = KFREE
       LWRK1  = LFREE
@@ -326,8 +334,6 @@ C
          CALL TITLER('DFT response calculation (TD-DFT)','*',103)
       ELSE IF (HSROHF) THEN
          CALL TITLER('High-spin ROHF response calculation','*',103)
-      ELSE IF (TDHF) THEN
-         CALL TITLER('RHF response calculation (TDHF)','*',103)
       ELSE IF (CCPPA) THEN
          CALL TITLER('SOPPA(CCSD) response calculation','*',103)
          IF (PARCAL) CALL PARQUIT('SOPPA(CCSD) RESPONSE')
@@ -336,11 +342,18 @@ C
          IF (PARCAL) CALL PARQUIT('SOPPA RESPONSE')
       ELSE IF (RSPCI) THEN
          CALL TITLER('CI response calculation','*',103)
+      ELSE IF (TDHF) THEN
+         CALL TITLER('RHF response calculation (TDHF)','*',103)
       ELSE
          CALL TITLER('MCSCF response calculation','*',103)
          ! IF (PARCAL) CALL PARQUIT('MCSCF RESPONSE')
       END IF
 C
+      IF (USE_PELIB()) THEN
+         IF (TRPFLG) THEN
+         ! edh: Insert quit of CREF have MULTIPLICITY NEQ 0!
+         END IF
+      END IF
 C
       CALL ASSERT_TRIPLET_RESPONSE_WITH_DETERMINANTS()
 C
@@ -388,7 +401,7 @@ C
 C
          END IF
 C
-C Include triplet one-electron density 
+C Include triplet one-electron density
 C
             CALL RSPDM(IREFSY,IREFSY,NCREF,NCREF,WRK(KCREF),WRK(KCREF),
      *                 WRK(KUDV+N2ASHX),WRK(KFREE),
@@ -478,7 +491,7 @@ C     =============================================
 C
       IF (ABSORP .OR. (ABSLRS .AND. (NCONF.GT.1))) THEN
 C     Use the old linear response solver
-C     for MCSCF (or SCF if OLDCPP is requested by user)         
+C     for MCSCF (or SCF if OLDCPP is requested by user)
          CALL ABSCALC(WRK(KCMO),WRK(KUDV),WRK(KPVX),WRK(KFOCK),
      *                WRK(KFC),WRK(KFV),WRK(KFCAC),WRK(KH2AC),
      *                WRK(KINDX),WRK(KWRK1),LWRK1)
@@ -731,24 +744,25 @@ C     end of this input module
                GO TO (1,2,3,4,5,6,7,8,9,10,11), I
             END IF
          END DO
-C
-         WRITE (LUPRI,'(/,3A,/)')
-     *        ' Keyword ',WORD,' not recognized in RSPREA.'
+
+         WRITE (LUPRI,'(/3A/)')
+     &       ' Keyword ',WORD,' not recognized under **RESPONS.'
          CALL PRTAB(NTABLE,TABLE,WORD//' input keywords',LUPRI)
 
-         CALL QUIT(' ILLEGAL "*" OPTION IN RSPREA')
+         CALL QUIT('Illegal "*" option under **RESPONS')
       ELSE
-         WRITE (LUPRI,'(/,3A,/)')
-     *      '@PROMPT "',PROMPT,'" ILLEGAL OR OUT OF ORDER.'
-         CALL QUIT(' PROGRAM STOPPED IN RSPREA, ERROR IN PROMPT')
+         WRITE (LUPRI,'(/3A/)') '@ Prompt "',PROMPT,
+     &      '" illegal or out of order under **RESPONS'
+         CALL PRTAB(NTABLE,TABLE,WORD//' input keywords',LUPRI)
+         CALL QUIT('ERROR IN A **RESPONS PROMPT')
       END IF
  2    WORD = '*RESPON'
       CALL RSPINP(WORD)
       GO TO 200
- 3    CALL LINEAR(WORD)
+ 3    CALL LINEAR_INPUT(WORD)
       GO TO 200
 
- 4    call quadra(word)
+ 4    call quadra_input(word)
 #ifndef DISABLE_XC_RESPONSE_SANITY_CHECK
       if (dodft) then
          if (.not. fun_is_ready_for_qr()) then
@@ -764,10 +778,12 @@ C
 #endif
       go to 200
 
- 5    call cubic(word)
+ 5    call cubic_input(word)
+
+      IF (CRCAL.OR.TOMOM.OR.TPAMP) THEN
 ! JMHO: quit if CUBIC and PCM (until bug is found)
       if (pcm) then
-        call quit('PCM and cubic response not available')
+         call quit('Cubic response not available for PCM')
       end if
 #ifndef DISABLE_XC_RESPONSE_SANITY_CHECK
       if (dodft) then
@@ -782,6 +798,11 @@ C
          end if
       end if
 #endif
+      IF ( CISRPA .OR. TDA ) THEN
+         CALL QUIT('Cubic response not available for .CISRPA and .TDA')
+      END IF
+      END IF ! cubic response activated
+
       go to 200
 
  6    CALL C6INP(WORD)
@@ -862,12 +883,11 @@ C
 C
       IF (.NOT.SET) THEN
          SET = .TRUE.
-         IF (.NOT. DIRFCK) DIRFCK = DIRCAL
+         IF (.NOT. DIRFCK)             DIRFCK = DIRCAL
          IF (DOHFSRDFT .OR. DOMCSRDFT) DIRFCK = .TRUE.
          IF (NASHT .LE. 1 .OR. HSROHF) NOITRA = DIRFCK
-         IF (DOMCSRDFT .OR. DOMC) NOITRA = .FALSE.
-         IF (DOMC) DIRFCK = .FALSE.
-         MAXPHP = 100
+         IF (DOMCSRDFT .OR. DOMC)      NOITRA = .FALSE.
+         MAXPHP  = 100
          N1AVTOT = 0
          N2AVTOT = 0
          TRDQF = .FALSE.
@@ -894,9 +914,10 @@ C
                  CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
                  GO TO 100
                END IF
-               WRITE (LUPRI,'(/,3A,/)') '@KEYWORD "',WORD,
-     *            '" NOT RECOGNIZED IN RSPINP.'
-               CALL QUIT(' ILLEGAL KEYWORD IN RSPINP ')
+               WRITE (LUPRI,'(/4A/)') '@ Keyword "',WORD,
+     &            '" not recognized for ',WORD1
+               CALL PRTAB(NTABLE,TABLE,WORD1//' input keywords',LUPRI)
+               CALL QUIT('ILLEGAL KEYWORD FOR **RESPONS ')
     1          CONTINUE ! .INPTEST
                   INPTES = .TRUE.
                GO TO 100
@@ -1028,14 +1049,14 @@ C              .PROP2Average
   300 CONTINUE
       IF (ICHANG .GT. 0) THEN
          CALL HEADER('CHANGES OF DEFAULTS FOR RSPINP:',0)
-         IF (INPTES) WRITE(LUPRI,'(/A,L1)')
-     *      ' INPUT TEST.  INPTES = ',INPTES
-         IF (TDA) WRITE(LUPRI,'(/A,L1)')
-     *      ' TAMM-DANCOFF APPROXIMATION (B = 0). TDA=',TDA
+         IF (INPTES) WRITE(LUPRI,'(//A//)')
+     &      '@ *RESPONS INPUT TEST.  STOP AFTER INPUT.'
+         IF (TDA) WRITE(LUPRI,'(/A)')
+     *      ' TAMM-DANCOFF APPROXIMATION (B-matrix = 0).'
          IF (DODFT .AND. CISRPA)
      *      CALL QUIT('TDDFT CALC WITH .CIS KEYWORD - USE .TDA INSTEAD')
          IF (CISRPA) WRITE(LUPRI,'(/A,L1)')
-     *      ' CI SINGLES CALCULATION (RPA/TDA (B = 0)). CIS=',CISRPA
+     *      ' CI SINGLES CALCULATION (RPA/TDA (B-matrix = 0)).'
          IF (HIRPA)  THEN
             WRITE(LUPRI,'(/A)')
      *   ' Higher RPA Polarization Propagator Approximation -- HRPA'
@@ -1053,7 +1074,8 @@ C              .PROP2Average
          IF (DIRFCK) THEN
             WRITE(LUPRI,'(/A)')
      *      ' AO-direct Fock matrix calculations.'
-         ELSE IF (NOITRA) THEN
+         END IF
+         IF (NOITRA .and. NASHT.gt.1 .and. .not.HSROHF) THEN
             WRITE(LUPRI,'(/2A,L1)')
      *      ' MO integrals for RESPONS are already available.'
      *      ,'  NOITRA = ',NOITRA
@@ -1076,9 +1098,8 @@ C              .PROP2Average
      *      ' Diagonal orbital E[2] shifted with ORBSFT =',ORBSFT
          IF (ORBSPC) WRITE(LUPRI,'(/A)') ' .ORBSPC:'//
      *      ' Calculation with only orbital operators included.'
-         IF (.NOT.NOS0MX) WRITE(LUPRI,'(/2A,L1)')
-     *      ' S(0) sum rule calculated in mixed representation',
-     *      ' NOS0MX = ',NOS0MX
+         IF (.NOT.NOS0MX) WRITE(LUPRI,'(/A)')
+     *      ' S(0) sum rule calculated in mixed representation.'
          IF (OPTORB) WRITE(LUPRI,'(/2A,/A,L1)')
      *      ' .OPTORB: Orbital trial vectors calculated with optimal',
      *      ' orbital trial vector algorithm.'
@@ -1089,7 +1110,7 @@ C              .PROP2Average
      *      ' PHPRES = ',PHPRES
          IF (ABSLRS) THEN
            IF (ABS_MAXRM.NE.600) WRITE(LUPRI,'(/A,I6)')
-     *        ' MAX DIMENSION OF REDUCED SPACE. ABS_MAXRM =',ABS_MAXRM
+     *        ' Max dimension of reduced space. ABS_MAXRM =',ABS_MAXRM
          ELSE
            IF (MAXRM.NE.600) WRITE(LUPRI,'(/A,I6)')
      *        ' Max dimension of reduced space. MAXRM =',MAXRM
@@ -1256,6 +1277,7 @@ C  Initializing ABSORP
       DATA ABSORP/.FALSE./,ABS_INTERVAL/.FALSE./,ABS_REDUCE/.FALSE./
       DATA ABS_ALPHA/.FALSE./,ABS_BETA/.FALSE./,ABS_GAMMA/.FALSE./
       DATA ABS_SHG/.FALSE./,ABS_MCD/.FALSE./,ABS_ANALYZE/.FALSE./
+      DATA ABS_VELOCI/.FALSE./,ABS_NGD/.FALSE./,ABS_GDCOMPLEX/.FALSE./
       DATA NFREQ_BATCH/10/,MAX_MACRO/30/,MAX_MICRO/10/,MAX_ITORB/5/
       DATA NEXCITED_STATES/2/,IPRABS/0/
       DATA NFREQ_ALPHA/1/,NFREQ_BETA_B/1/,NFREQ_BETA_C/1/
@@ -1301,7 +1323,8 @@ C tbp, may 2005: keywords .ECD  (electronic circular dichroism) and
 C                         .OECD (oriented electronic circular dichroism)
 C                for linear response residues introduced.
 C
-      use pelib_interface, only: use_pelib
+      use pelib_interface, only: use_pelib, pelib_ifc_dolf, 
+     &                                     pelib_ifc_lf
 #include "implicit.h"
 #include "mxcent.h"
 #include "pcmdef.h"
@@ -1384,15 +1407,37 @@ C
                LPPOP( INDPRP('XDIPLEN ')) = .TRUE.
                LPPOP( INDPRP('YDIPLEN ')) = .TRUE.
                LPPOP( INDPRP('ZDIPLEN ')) = .TRUE.
+               IF (USE_PELIB()) THEN
+                 IF (PELIB_IFC_DOLF()) THEN
+                   LPPOP( INDPRP('XLFDIPLN')) = .TRUE.
+                   LPPOP( INDPRP('YLFDIPLN')) = .TRUE.
+                   LPPOP( INDPRP('ZLFDIPLN')) = .TRUE.
+                 END IF
+               END IF
                GO TO 100
  2             CONTINUE   ! .DIPLNX
                LPPOP( INDPRP('XDIPLEN ')) = .TRUE.
+               IF (USE_PELIB()) THEN
+                 IF (PELIB_IFC_DOLF()) THEN
+                   LPPOP( INDPRP('XLFDIPLN')) = .TRUE.
+                 END IF
+               END IF
                GO TO 100
  3             CONTINUE   ! .DIPLNY
                LPPOP( INDPRP('YDIPLEN ')) = .TRUE.
+               IF (USE_PELIB()) THEN
+                 IF (PELIB_IFC_DOLF()) THEN
+                   LPPOP( INDPRP('YLFDIPLN')) = .TRUE.
+                 END IF
+               END IF
                GO TO 100
  4             CONTINUE   ! .DIPLNZ
                LPPOP( INDPRP('ZDIPLEN ')) = .TRUE.
+               IF (USE_PELIB()) THEN
+                 IF (PELIB_IFC_DOLF()) THEN
+                   LPPOP( INDPRP('ZLFDIPLN')) = .TRUE.
+                 END IF
+               END IF
                GO TO 100
  5             CONTINUE   ! .DIPVEL
                LPPOP( INDPRP('XDIPVEL ')) = .TRUE.
@@ -1428,6 +1473,7 @@ C
                LPPOP( INDPRP('XZQUADRU')) = .TRUE.
                LPPOP( INDPRP('YYQUADRU')) = .TRUE.
                LPPOP( INDPRP('YZQUADRU')) = .TRUE.
+               LPPOP( INDPRP('ZZQUADRU')) = .TRUE.
                GO TO 100
  14            CONTINUE   ! .QUADXX
                LPPOP( INDPRP('XXQUADRU')) = .TRUE.
@@ -1981,6 +2027,8 @@ C
                   LLROP( INDPRP('XZQUADRU')) = .TRUE.
                   LLROP( INDPRP('YYQUADRU')) = .TRUE.
                   LLROP( INDPRP('YZQUADRU')) = .TRUE.
+                  LLROP( INDPRP('ZZQUADRU')) = .TRUE.
+
                GO TO 100
  14            CONTINUE
                   LLROP( INDPRP('XXQUADRU')) = .TRUE.
@@ -2145,7 +2193,7 @@ C
  40            CONTINUE
                CALL GPOPEN(LUPROP,'AOPROPER','UNKNOWN',' ',
      &                     'UNFORMATTED',IDUMMY,.FALSE.)
- 199           CONTINUE
+ 199           CONTINUE ! .FERMI contact
                IF (NXTLAB(LABFND,RTNLBL,LUPROP)) THEN
                   IF (LABFND(1:3) .EQ. 'FC ')
      &                 LLROP(INDPRP(LABFND)) = .TRUE.
@@ -2154,7 +2202,7 @@ C
                CALL GPCLOSE(LUPROP,'KEEP')
                GO TO 100
 C
- 41            CONTINUE
+ 41            CONTINUE ! .SPIN-Dipole
                CALL GPOPEN(LUPROP,'AOPROPER','UNKNOWN',' ',
      &                     'UNFORMATTED',IDUMMY,.FALSE.)
  198           CONTINUE
@@ -2291,7 +2339,7 @@ C
          ENDIF
 
          IF (QMNPMM) THEN
-             WRITE(LUPRI,'(A)') ' QM/NP/MM response calculation' 
+             WRITE(LUPRI,'(A)') ' QM/NP/MM response calculation'
          END IF
 
          IF (USE_PELIB()) THEN
@@ -2453,6 +2501,7 @@ C
                   LC6OP( INDPRP('XZQUADRU')) = .TRUE.
                   LC6OP( INDPRP('YYQUADRU')) = .TRUE.
                   LC6OP( INDPRP('YZQUADRU')) = .TRUE.
+                  LC6OP( INDPRP('ZZQUADRU')) = .TRUE.
                GO TO 100
    14          CONTINUE
                   LC6OP( INDPRP('XXQUADRU')) = .TRUE.
@@ -3948,7 +3997,7 @@ C
 C
 C CALCULATE DIAGONAL CONFIGURATION PART OF E[2]
 C
-         CALL REWSPL(LURSP4)
+         REWIND (LURSP4)
          IF (KZCONF.GE.1) THEN
             KECDIA = 1
             KWRK1  = KECDIA + KZCONF
@@ -4086,6 +4135,9 @@ C   We assume that either the SIRIUS module or the SETSIR
 C   subroutine has been called before RSPMC.
 C
       use pelib_interface, only: use_pelib
+#if defined (HAS_PCMSOLVER)
+      use pcm_config, only: pcm_configuration, pcm_cfg
+#endif
 #include "implicit.h"
 #include "infdim.h"
 C
@@ -4142,13 +4194,15 @@ C
 C
 C     If any triplet operators, then we must use determinants
 C     in RESPONSE also for the reference symmetry, even if
-C     CSF's were used in SIRIUS. /hjaaj May 2001
+C     CSFs were used in SIRIUS. /hjaaj May 2001
 C
       MCONRF = NCONRF
       IF (TRPFLG .AND. .NOT.FLAG(27) .AND. .NOT.TDHF) THEN
-         FLAG(27) = .TRUE.
+         FLAG(27) = .TRUE. ! use determinants, not CSFs
 C        ... call setsir to reset Sirius common blocks to determinants
-         CALL SETSIR(WRK,LWRK)
+         CALL SETSIR(.FALSE.,WRK,LWRK)
+         ! false means no 2-el. integral transformation by SETSIR
+         ! (already done if needed in RESPONS)
       END IF
       NCONRF = MAX(1,NCONRF) ! SETSIR(abaset.F) sets NCONRF=0 for Hartree-Fock
                              ! in RSP - especially for RSPESR - we want NCREF=1 for HSROHF
@@ -4366,6 +4420,14 @@ Cjje
         DO I = 1,NNORBT
            FC(I) = FC(I) + WRK(I)
         ENDDO
+#if defined (HAS_PCMSOLVER)
+      else if (pcm_cfg%do_pcm) then
+       CALL MOLLAB('EXTPCMMAT',LUSIFC,LUPRI)
+       CALL READT (LUSIFC,NNORBT,WRK)
+       DO I = 1,NNORBT
+          FC(I) = FC(I) + WRK(I)
+       ENDDO
+#endif
       END IF
 Cjje
 C
@@ -4522,7 +4584,7 @@ C *** End of GETREF
 C
       RETURN
       END
-      SUBROUTINE LINEAR(WORD)
+      SUBROUTINE LINEAR_INPUT(WORD)
 C
 C Linear response input
 C
@@ -4570,7 +4632,7 @@ C
       RETURN
       END
 
-      SUBROUTINE QUADRA(WORD)
+      SUBROUTINE QUADRA_INPUT(WORD)
 C
 C Quadratic response input
 C
@@ -4677,7 +4739,7 @@ C
 C
       RETURN
       END
-      SUBROUTINE CUBIC(WORD)
+      SUBROUTINE CUBIC_INPUT(WORD)
 C
 C Cubic response input
 C
@@ -4756,7 +4818,7 @@ C
 C
       PARAMETER ( NTABLE = 1 )
       CHARACTER WORD*7, STRING*7
-      PARAMETER ( STRING = '*ESG' )
+      PARAMETER ( STRING = '*ESG   ' )
       ESG = .TRUE.
 C
 C A single residue of the linear response function is calculated
@@ -4962,7 +5024,7 @@ C  *** END OF ESG
 C
       RETURN
       END
-    
+
       SUBROUTINE ASSERT_TRIPLET_RESPONSE_WITH_DETERMINANTS()
       IMPLICIT NONE
 #include <maxorb.h>
@@ -4971,11 +5033,11 @@ C
 #include <priunit.h>
       CALL QENTER('ASSERT_TRIPLET_RESPONSE_WITH_DETERMINANTS')
       IF (TRPFLG .AND. .NOT.FLAG(27) .AND. .NOT.TDHF) THEN
-         WRITE(LUPRI, *) 
+         WRITE(LUPRI, *)
      &      'Please use **WAVE FUNCTION *OPTIMIZATION .DETERMINANTS'
          CALL QUIT(
      &      'A TRIPLET RESPONSE CALCULATION REQUIRES DETERMINANTS'
-     &      ) 
+     &      )
       END IF
       CALL QEXIT('ASSERT_TRIPLET_RESPONSE_WITH_DETERMINANTS')
       END

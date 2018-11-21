@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -51,7 +45,7 @@ C
 C 17/9 - 1990 Hans Agren, Revised Sep 2007-Nov 2009, Hans Joergen Aa. Jensen
 C
 #include "implicit.h"
-      PARAMETER (NTABLE = 11)
+      PARAMETER (NTABLE = 13)
       CHARACTER WORD*7, WORD1*7, PROMPT*1, TABLE(NTABLE)*7
       LOGICAL ALLOPT
 C
@@ -67,7 +61,7 @@ C
 C
       DATA TABLE /'.MP2 FR','.PRINT ','.NO OV ','.TDASOP','.SC_SRM',
      &            '.SRINTS','.SCSMP2','.SOSMP2','.MP2 SC','.LEVELS',
-     &            '.DCPT2'/
+     &            '.DCPT2 ','.RSDHF ','.SAVE W'/
 CMAERKE 900918: MP2SAV not implemented, should it be?
 C
 C     ***** PROCESS INPUT FOR MP2INP *****
@@ -81,7 +75,7 @@ C
             DO 1102 II = 1, NTABLE
                IF (TABLE(II) .EQ. WORD) THEN
                   GO TO (101,102,103,104,105,106,107,108,109,110,
-     &                   111),II
+     &                   111,112,113),II
                END IF
  1102       CONTINUE
             IF (WORD .EQ. '.OPTION') THEN
@@ -163,11 +157,39 @@ C *** Option 9 >MP2 SCALED< Scaled MP2 calculation
      &   'More than one of .SCSMP2, .SOSPMP2, .MP2 SCALED specified.')
       MP2_SCALED = .TRUE.
       GO TO 100
-C *** Option 10 >LEVELSHIFT< Level-shift of  MP2 denominator
+C *** Option 10 >LEVELSHIFT< Level-shift of MP2 denominator
   110 READ(LUCMD,*) MP2_LSHIFT
       GO TO 100
 C FH  Option 11 DCPT2 for MP2 calculation
   111 DCPT2 = .TRUE.
+      GO TO 100
+C *** Option 12 >RSDHF< compute the RSDHf energy
+#ifdef MOD_SRDFT
+  112 DO_RSDHF = .TRUE.
+      SRMP2_SRINTS = .TRUE.   ! .RSDHF activates .SRINTS
+!     LAMSR = 1.0D0           ! original RSDHf model 
+      READ(LUCMD,*) LAMSR     ! read the fraction lambda of srHFX and
+!                               lr-sr MP2 coupling  
+      write(lupri,*)''
+      write(lupri,*)'just after reading, lamsr =', LAMSR
+      write(lupri,*)''
+!
+! Manu: Caution ! what follows cannot be used as such otherwise HF-srDFT
+! is performed with this sr functional ...
+!
+!     SR_FUNCS = 'NULL SRCMDLDA' ! no sr exchange, only (complementary "md") sr correlation
+!                                        functional
+!     CALL SRFUN_INPUT(SR_FUNCS)
+!
+#else
+  112 CONTINUE
+      call quit(
+     &   '.RSDHF option not included in this non-srdft version')
+#endif
+      GO TO 100
+C *** Option 13 .SAVE WF1 : save first order wave function
+  113 CONTINUE
+         SAVE_MP2WF1 = .TRUE.
       GO TO 100
 C ==========================================================================
  2000 CONTINUE
@@ -263,6 +285,12 @@ C
      *,' Reference: H.J.Aa.Jensen, P.Jorgensen, H.Agren, and J.Olsen,'
      *,'            J. Chem. Phys. 88, 3834 (1988); 89, 5354 (1988)'
 C
+      IF (SRMP2_SRINTS .AND. .NOT.DO_RSDHF) THEN
+         FLAG(25) = .FALSE. ! do NOT calculate first order wave function coefficients for SOPPA if we quit after MP2
+      END IF
+      IF (SAVE_MP2WF1) THEN
+         FLAG(25) = .TRUE. ! DO calculaate first order wave function coeffients if requested in input
+      END IF
 C
       KFRSAV= 1
       KFREE = KFRSAV
@@ -346,7 +374,7 @@ C         standard srMP2 "EMP2" from AOTWOINT integrals (i.e. long-range integra
             DOSRIN = .FALSE.
             SRINTS = .FALSE.
             IF (LUINTA .LE. 0) CALL GPOPEN(LUINTA,AO2INTFILE_LABEL,
-     &         'OLD',' ','UNFORMATTED',IDUMMY,.FALSE.)
+     &         'UNKNOWN',' ','UNFORMATTED',IDUMMY,.FALSE.)
             CALL GPCLOSE(LUINTA,'DELETE')
          ELSE
             WRITE(LUPRI,'(/A)')
@@ -1344,7 +1372,7 @@ C
 C
       IF (LSCRA .LT. N2BASX) CALL ERRWRK('MP2FCK',-N2BASX,LSCRA)
 C
-      CALL READMO(CMO,9,SCRA,LSCRA)
+      CALL READMO(CMO,9)
 
 C
 C     Step 1 : Construct or read the inactive Fock matrix
@@ -1358,7 +1386,7 @@ C
          KCMO_diff = KCMO  + NCMOT
          KWRK      = KCMO_diff  + NCMOT
          LWRK      = LSCRA - KWRK
-         CALL RD_SIRIFC('CMO',FOUND,SCRA(KCMO),SCRA(KWRK),LWRK)
+         CALL RD_SIRIFC('CMO',FOUND,SCRA(KCMO))
          CALL DCOPY(NCMOT,CMO,1,SCRA(KCMO_diff),1)
          CALL DAXPY(NCMOT,-1.0D0,CMO,1,SCRA(KCMO_diff),1)
          KCMO_diff_MAX = KCMO_diff - 1 + IDAMAX(NCMOT,SCRA(KCMO_diff),1)
@@ -1386,7 +1414,7 @@ C
             CALL PRORB(CMO       ,.FALSE.,LUPRI)
             CALL QUIT('CMO on SIRIFC not same as CMO from SIRIUS.RST')
          END IF
-         CALL RD_SIRIFC('FC for MP2',FOUND,FC,SCRA,LSCRA)
+         CALL RD_SIRIFC('FC for MP2',FOUND,FC)
          IF (.NOT. FOUND) THEN
             CALL QUIT('Info for "FC for MP2" not found on SIRIFC')
          END IF

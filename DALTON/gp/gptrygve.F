@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -28,6 +22,7 @@ C General Purpose utility routines (originally) introduced in Dalton by Trygve H
 C or one of his students
 C
 ! Dirac uses INT_STAR8 and Dalton used VAR_INT64;
+! If one set then set the other:
 #ifdef INT_STAR8
 #define VAR_INT64
 #endif
@@ -97,6 +92,52 @@ C        Jun 06 hjaaj: do not print times less than 0.1 seconds
                LOUT = 18 + 10 + 3
             END IF
             CALL TIMTXT(OUT_TEXT(1:LOUT),TIME,LUPRI)
+            CALL FLSHFO(LUPRI)
+         END IF
+      END IF
+      RETURN
+      END
+C  /* Deck newtimer */
+      SUBROUTINE newTIMER(TEXT)
+!
+!   Feb 2016 hjaaj:
+!   newTIMER prints both used CPU time and used WALL time,
+!   while the old TIMER subroutine only prints used CPU time.
+!   Also, TIMSTR and WALSTR are saved internally and not
+!   returned to calling routine (as TIMSTR,TIMEND are in old TIMER)
+!
+#include "implicit.h"
+#include "priunit.h"
+      CHARACTER TEXT*(*), OUT_TEXT*51, BLANK*10
+      PARAMETER ( BLANK = '          ')
+      REAL*8, SAVE :: TIMSTR, TIMEND, WALSTR, WALEND
+C
+      IF (TEXT(1:5) .EQ. 'START') THEN
+         CALL GETTIM(TIMSTR,WALSTR)
+      ELSE
+         CALL GETTIM(TIMEND,WALEND)
+
+         TIME   = TIMEND - TIMSTR
+         WALLT  = WALEND - WALSTR
+         TIMSTR = TIMEND
+         WALSTR = WALEND
+
+         IF (TIME .GT. 0.1D0 .OR. WALLT .GT. 0.1D0) THEN
+C        Jun 06 hjaaj: do not print times less than 0.1 seconds
+            LTEXT = LNBLNK(TEXT)
+            LTEXT = MIN(30,LTEXT)
+            IF (LTEXT .GE. 10) THEN
+               OUT_TEXT = ' CPU  time used in '//TEXT(1:LTEXT)//' is'
+               LOUT = 19 + LTEXT + 3
+            ELSE
+               LBLANK = 10 - LTEXT
+               OUT_TEXT = ' CPU  time used in '//TEXT(1:LTEXT)//
+     &                    BLANK(1:LBLANK)//' is'
+               LOUT = 19 + 10 + 3
+            END IF
+            CALL TIMTXT(OUT_TEXT(1:LOUT),TIME,LUPRI)
+            OUT_TEXT(2:5) = 'WALL'
+            CALL TIMTXT(OUT_TEXT(1:LOUT),WALLT,LUPRI)
             CALL FLSHFO(LUPRI)
          END IF
       END IF
@@ -285,6 +326,67 @@ C
       STOP 100
 #endif
       END
+C  /* quit_no_error */
+      SUBROUTINE QUIT_NO_ERROR(TEXT)
+C
+C exit with error code of zero
+C (QUIT exits with error code of 100)
+C
+#include "implicit.h"
+#if defined (VAR_MPI)
+      INCLUDE 'mpif.h'
+#endif
+#include "priunit.h"
+#include "maxorb.h"
+C INFPAR: MYNUM
+#include "infpar.h"
+      CHARACTER TEXT*(*)
+C
+C     Stamp date and time and hostname to output
+C     (if output unit has been defined yet)
+C
+      IF (LUPRI .GE. 0) THEN
+         LUPRIN = LUPRI
+      ELSE IF (LUERR .GE. 0) THEN
+         LUPRIN = LUERR
+      ELSE
+         LUPRIN = 6
+      END IF
+      CALL TSTAMP('  --- Requested STOP by user input ---',LUPRIN)
+#if defined (VAR_MPI)
+      IF (MYNUM .GT. 0) THEN
+         WRITE (LUPRIN,'(/A,I6/2A/)')
+     &   '@ MPI SLAVE, node no.:',MYNUM, '@ Reason: ',TEXT
+         IF (LUPRIN .NE. LUERR)
+     &   WRITE (LUERR,'(/A,I6/2A/)')
+     &   ' MPI SLAVE, node no.:',MYNUM, ' Reason: ',TEXT
+      ELSE
+         WRITE (LUPRIN,'(/A,I6/2A/)')
+     &   '@ MPI MASTER, node no.:',MYNUM, '@ Reason: ',TEXT
+         IF (LUPRIN .NE. LUERR)
+     &   WRITE (LUERR,'(/A,I6/2A/)')
+     &   ' MPI MASTER, node no.:',MYNUM, ' Reason: ',TEXT
+      END IF
+#else
+      WRITE (LUPRIN,'(/2A/)') '@ Reason: ',TEXT
+      IF (LUPRIN .NE. LUERR) THEN
+         CALL TSTAMP('  --- Requested STOP by user input---',LUERR)
+         WRITE (LUERR,'(/2A/)') '@ Reason: ',TEXT
+      END IF
+#endif
+      CALL GETTIM(CTOT,WTOT)
+      CALL TIMTXT(' Total CPU  time used in DALTON:',CTOT,LUPRIN)
+      CALL TIMTXT(' Total wall time used in DALTON:',WTOT,LUPRIN)
+      CALL QTRACE(LUPRIN)
+      flush(LUPRIN)
+C
+#if defined (VAR_MPI)
+      IERR = 0
+C     ... define exit code to the environment for MPI_ABORT
+      CALL MPI_ABORT(MPI_COMM_WORLD,IERR,IERROR)
+#endif
+      STOP 0
+      END
 C  /* Deck parquit */
       SUBROUTINE PARQUIT(TEXT)
 C Purpose:
@@ -458,7 +560,7 @@ C
          OLDDX = .FALSE.
   600  CONTINUE
 #endif
-#if !defined (SYS_CRAY) && !defined (SYS_AIX) && !defined (SYS_HPUX) && !defined (SYS_DEC) && !defined (SYS_IRIX) && !defined (SYS_NEC) && !defined (SYS_T3D) && !defined (SYS_LINUX) && !defined (SYS_SUN) && !defined (SYS_HAL) && !defined (SYS_T90) && !defined (SYS_DARWIN)
+#if !defined (SYS_CRAY) && !defined (SYS_AIX) && !defined (SYS_HPUX) && !defined (SYS_DEC) && !defined (SYS_IRIX) && !defined (SYS_NEC) && !defined (SYS_T3D) && !defined (SYS_LINUX) && !defined (SYS_SUN) && !defined (SYS_HAL) && !defined (SYS_T90) && !defined (SYS_DARWIN) && !defined (SYS_FREEBSD)
  >>>>> insert appropriate OPEN statements in OPENDX.
 #endif
       RETURN
@@ -1172,11 +1274,15 @@ C
       CALL QUIT('ERROR (GPOPEN) ILLEGAL FILE NUMBER REQUESTED')
 C
  9003 CONTINUE
-      WRITE (LUGPPRI,'(//A//A,I5/2A//A)')
+      WRITE (LUGPPRI,'(//A//A,I5/2A//A/)')
      &   '--> ERROR (GPOPEN) TRYING TO USE A FILE NUMBER ALREADY IN USE'
      &  ,'--> Offending UNIT number: ',LUNIT,
      &   '--> Name of offending file (if any): ', FILENM(1:FILELN),
      &   '### Please report the problem on http://daltonforum.org'
+      WRITE(LUPRI,'(2A)')
+     &   ' Input parameter status : ',STATIN,
+     &   ' Input parameter access : ',ACCEIN,
+     &   ' Input parameter format : ',FORMIN
       INQUIRE(UNIT=LUNIT,OPENED=FEXST)
       IF (FEXST) THEN
          INQUIRE(UNIT=LUNIT,NAME=FILENM)
@@ -1458,6 +1564,32 @@ C
       END IF
       RETURN
       END
+C  /* Deck gpinq_print */
+      SUBROUTINE GPINQ_print(LU, TASK)
+
+C     H. J. Aa. Jensen, Jan. 2017
+
+C     Print requested file information to LUPRI
+
+#include "implicit.h"
+#include "priunit.h"
+      CHARACTER*(*) TASK
+      CHARACTER FILENM*80
+      INTEGER   LU, FILELN
+      CALL QENTER('GPINQ_print')
+      IF (LU .LE. 0) THEN
+         CALL QUIT('Error, file unit < 0')
+      ELSE IF (TASK(1:4) .EQ. 'NAME') THEN
+         INQUIRE(UNIT=LU,NAME=FILENM)
+         FILELN = LNBLNK(FILENM)
+         WRITE(LUPRI,'(/2A)')
+     &      ' GPINQ_print: file name is ',FILENM(1:FILELN)
+      ELSE
+         CALL QUIT('Unknown inquire status requested: '//TASK)
+      END IF
+      CALL QEXIT('GPINQ_print')
+      RETURN
+      END
 C /* Deck UPCASE */
       SUBROUTINE UPCASE(WORD)
 C
@@ -1487,7 +1619,8 @@ C        ......... then whole line is a comment line, we skip it
 C
       DO I = 1, LEN_WORD
          K = INDEX(LOWER,WORD(I:I))
-         IF (K .NE. 0) WORD(I:I)=UPPER(K:K)
+         IF (K .NE. 0) WORD(I:I) = UPPER(K:K)
+         IF (ICHAR(WORD(I:I)) .EQ. 9) WORD(I:I) = ' ' ! change tab to blank
       END DO
 C
  9000 CONTINUE

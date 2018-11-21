@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 #if defined (VAR_DEBUG)
@@ -233,7 +227,7 @@ C
       NZCVEC = MZCONF(1)
       LREFST = .TRUE.
       CALL IPSET(0,0,1,1)
-      CALL HSO2CR(IGRSYM,IGRSPI,X2TRS,DUMMY2,NZYVEC,NZCVEC,ISYMV,ISYMDN,
+      CALL HSO2CR(IGRSYM,IGRSPI,X2TRS,VDUMMY,NZYVEC,NZCVEC,ISYMV,ISYMDN,
      *              XINDX,OVLAP,UDV,PV,WRK(KX2X),WRK(KFREE),LFREE,KZYVR,
      *              LCON,LORB,LREFST,IDAX,INTSYM,IOPSPI,ISPINV,
      *              IKLVL,WRK(KZYM),ISYMV,ZYMC,ISYMC,MJWOP)
@@ -579,7 +573,7 @@ C
       LREFST = .TRUE.
       CALL IPSET(0,0,1,1)
       IF (LCON) THEN
-         CALL HSO2CR(IGRSYM,IGRSPI,A2TRS,DUMMY2,NZYVEC,NZCVEC,
+         CALL HSO2CR(IGRSYM,IGRSPI,A2TRS,VDUMMY,NZYVEC,NZCVEC,
      *              ISYMV,ISYMDN,
      *              XINDX,OVLAP,UDV,PV,WRK(KA2X),WRK(KFREE),LFREE,KZYVR,
      *              LCON,.FALSE.,LREFST,IDAX,INTSYM,IOPSPI,ISPINV,
@@ -595,7 +589,7 @@ C        multiply ZYMAT with 1/2 for orbital part
          CALL DSCAL(N2ORBX,DH,WRK(KZYM),1)
          CALL DZERO(WRK(KA2X),N2ORBX)
          CALL OITH1(ISYMV,WRK(KZYM),OPMAT,WRK(KA2X),IOPSYM)
-         CALL HSO2CR(IGRSYM,IGRSPI,A2TRS,DUMMY2,NZYVEC,NZCVEC,
+         CALL HSO2CR(IGRSYM,IGRSPI,A2TRS,VDUMMY,NZYVEC,NZCVEC,
      *           ISYMV,ISYMDN,
      *           XINDX,OVLAP,UDV,PV,WRK(KA2X),WRK(KFREE),LFREE,KZYVR,
      *           .FALSE.,LORB,LREFST,IDAX,INTSYM,IOPSPI,ISPINV,
@@ -1353,7 +1347,7 @@ C  Transform to SO
 C
          ISYMDM(1)=0
          ISYMDM(2)=VECSYM-1
-         CALL SKLFCK(WORK(KF),DUMMY,WORK(KFREE),LFREE,
+         CALL SKLFCK(WORK(KF),VDUMMY,WORK(KFREE),LFREE,
      &               IPRTWO,.FALSE.,
      &               .FALSE.,.FALSE.,.FALSE.,.TRUE.,IDUMMY,.TRUE.,NDMAT,
      &               ISYMDM,IFCTYP,IDUMMY,.TRUE.)

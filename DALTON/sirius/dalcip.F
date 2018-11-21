@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
       subroutine dalcip(nela,nelb,ndet,c,ne,trou,part,nd,nm,
@@ -581,7 +575,7 @@ c---------------------------------------------------------------
       allocate(occu(norb,ndet))
       allocate(iel(norb))
 c      allocate(npos(norb))   !wrong should be maximum of a deter space
-      allocate(npos(1000))    !covers 12-open shell
+      allocate(npos(2000))    !covers more than 12-open shell
       do iec=0,nexmax
        do idet=idet1,idet1+iecci(iec)-1
         read(lun15)c(idet),nec,(ibu(i),ipa(i),i=1,nec)
@@ -654,7 +648,7 @@ c      allocate(npos(norb))   !wrong should be maximum of a deter space
                 enddo
              endif
             enddo
-            if((kdet-ifirst+1).gt.1000)then
+            if((kdet-ifirst+1).gt.2000)then
                print*,'givepos: arg of npos too large'
                CALL QUIT('givepos: arg of npos too large')
             endif

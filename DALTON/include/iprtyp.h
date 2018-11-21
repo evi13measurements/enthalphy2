@@ -42,13 +42,13 @@
 #define LUCITA_WORK 42
 #define MEP_WORK 43
 #define POLARIZABLE_EMBEDDING 44
+#define QFIT_WORK 45
 #define GEN1INT_INIT 79
 #define GEN1INT_GET_INT 80
 #define GEN1INT_GET_EXPT 81
 #define GEN1INT_GET_CUBE 82
 #define CGTO_DIFF_ERI_INIT 83
 #define XCINT_MPI_WAKEUP_SIGNAL 84
-#define PARA_RP_ERES 85
 #define SLAVESLEEP 86
 #define PARA_SO_ERES 87
 #define QMCMM_WORK 90
@@ -57,3 +57,6 @@
 #define efs_generate_basis_work   130
 #define efs_init_2efock_work      131
 #define efs_fock_update_work      132
+#define pcmsolver_npetes2_work    133
+#define pcmsolver_pcmbsol_work    134
+#define CALL_FCKTRA_DISTRIBUTED   201

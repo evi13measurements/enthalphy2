@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -33,11 +27,15 @@ C
       LOGICAL NEWDEF
       CHARACTER PROMPT*1, WORD*7, TABLE(NTABLE)*7, WORD1*7
 C
+! gnrinf.h : DIRCAL,?
+! infpar.h : PARHER
 #include "cbiher.h"
 #include "cbieri.h"
 #include "erisel.h"
 #include "eribuf.h"
 #include "gnrinf.h"
+#include "infpar.h"
+
       DATA TABLE /'.SKIP  ', '.PRINT ', '.TIME  ', '.RETURN', '.AOBTCH',
      &            '.NOPSAB', '.NOPSCD', '.NOPS12', '.OFFCNT', '.NO12GS',
      &            '.NEWCR1', '.NONCAN', '.WRITEA', '.NOWRIT', '.GABAB ',
@@ -202,7 +200,7 @@ C
       IF (ICHANG .EQ. 0) RETURN
       IF (NEWDEF) THEN
          CALL HEADER('Changes of defaults for ER2INP:',1)
-         IF (.NOT.RUNERI .AND. .NOT. (DIRCAL .OR. PARCAL)) THEN
+         IF (.NOT.RUNERI .AND. .NOT. (DIRCAL .OR. PARHER)) THEN
             WRITE (LUPRI,'(A)') ' No two-electron integrals calculated.'
          ELSE
             IF (IPRERI .NE. IPRDEF) WRITE (LUPRI,'(A,I5)')
@@ -651,7 +649,7 @@ C
 C     AOSOPPA in parallel makes use of slaves in this subroutine.
 C     hence the slaves are redirected to parts of the code normally
 C     only available to the master.
-      if (aorpa.or.aohrp.or.aosop.or.dcrpa.or.aosoc)
+      if (aorpa.or.aohrp.or.aosop.or.dcrpa.or.aosoc.or.aocc2)
      &   USE_SLAVE_CODE = .FALSE.
 #endif
 C

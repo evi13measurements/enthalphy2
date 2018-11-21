@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -56,10 +50,12 @@ C MOTECC-90: This module, SIROUT, is described in the input/ouput
 C            Documentation of MOTECC-90.
 C
 #ifdef HAS_PCMSOLVER
-      use pcmmod_cfg
+      use pcm_config, only: pcm_configuration, pcm_cfg
 #endif
       use qmcmm_fock, only: scf_qmnpmm_out
       use pelib_interface, only: use_pelib
+      use qfitlib_interface, only: qfitlib_ifc_sirius_fit,
+     * qfitlib_ifc_initialize, qfitlib_ifc_results
 #include "implicit.h"
 C
 #include "litinfo.h"
@@ -315,14 +311,14 @@ csonia 04/10/95
      &         ' The molecule is placed in a static field.',
      &         ' Field strength (a.u.)          Field operator',
      &         ' ---------------------          --------------'
-csonia 04/10/95                                                               
+csonia 04/10/95
          DO 100 IFIELD = 1,NFIELD
             WRITE (LUPRI,'(1P,G18.8,18X,A8)')
      *         EFIELD(IFIELD),LFIELD(IFIELD)
 csonia 04/10/95
             IF (LUCME.GT.0) WRITE (LUCME,'(1P,G18.8,18X,A8)')
      &         EFIELD(IFIELD), LFIELD(IFIELD)
-csonia 04/10/95                                                            
+csonia 04/10/95
   100    CONTINUE
          WRITE (LUPRI,'()')
       END IF
@@ -348,7 +344,7 @@ csonia 04/10/95
      *           ,'dielectric constant =',EPS
          END IF
 #ifdef HAS_PCMSOLVER
-      ELSE IF (pcmmod_is_pcm_calculation) THEN
+      ELSE IF (pcm_cfg%do_pcm) THEN
          WRITE (LUPRI,'(/5X,A,(/10X,A,F12.6))')
      *        'SOLVATION MODEL: polarizable continuum model (PCM),'
          WRITE(LUPRI,'(5X,A24,F20.12)') 'Solvation energy:     ',ESOLT
@@ -407,7 +403,7 @@ C        MCSCF calculation
          IF (FLAG(16) .OR. PCM) WRITE (LUPRI,5025) ESOLT
          IF (USE_PELIB()) WRITE(LUPRI,5026) ESOLT
          WRITE (LUPRI,5030) GRDNRM
-      ELSE IF (DORHF) THEN
+      ELSE IF (DOSCF) THEN
          IF (DOHFSRDFT) THEN
            WRITE (LUPRI,5023) EMCSCF,POTNUC,(EMCSCF-POTNUC-ESOLT)
          ELSE IF (.NOT.DODFT) THEN
@@ -434,7 +430,7 @@ C        ... DIIS-DFT or QC-DFT optimization
 
       IF (QMMM .AND. MMPROP) THEN
         CALL MM_PROPS(WRK(KFREE),LFREE,IPQMMM)
-      ENDIF 
+      ENDIF
 
  5000 FORMAT(/'@    Spin multiplicity:',T31,I5,
      *       /'@    Spatial symmetry:',T31,I5,
@@ -501,7 +497,9 @@ C
       ENDIF
 
       IF (QFIT) THEN
-         CALL QFITGSCALC(WRK(KCMO),WRK,KFREE,LFREE)
+         CALL QFITLIB_IFC_INITIALIZE
+         CALL QFITLIB_IFC_SIRIUS_FIT(WRK(KCMO), WRK(KFREE), LFREE)
+         CALL QFITLIB_IFC_RESULTS
       ENDIF
 
       IF (MOLDEN) THEN
@@ -513,7 +511,7 @@ C
      &                   WRK(KUCMO), WRK(KOVEC))
          CALL MEMREL('SIROUT.MOLDEN_MOS',WRK,KREL2,KREL2,KFREE,LFREE)
       END IF ! (MOLDEN)
-C     
+C
 C ***  Print final MCSCF orbitals ***
 C
       IF (IPRI4 .GE. 5) P4FLAG(5) = .TRUE.

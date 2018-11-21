@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -64,16 +58,21 @@ C
 !  distribution of distributions per chain.
 !TRACD,TRAAB: insert symmetry check in write-to-file loop, gprof showed
 !  for Neon that a lot of time was used in skipping zero integrals.
-!901028-hjaaj
-! TRACTL: new MFRO(1:NSYM) = 0 because wrong integral indices are
-!    written to LUINTM if MFRO(isym) .ne. 0
 !901025-hjaaj
 ! TRACTL: JTER=1 only if IPRTRA.gt.1, print TIME IN SORTA if iprtra.gt.0
 !900801-hjaaj
 ! Moved writing of pre-MOLTWOEL information on LUINTM from TRAAB to TRACTL;
 !   added NSYM,NORB,NBAS and CMO to information.
 ! TRACTL: check ITRLVL,CMO against LUINTM information, abandon transformation
-drcctl if ITRLVL.gt.0 (not ci) and usedrc
+!   if the needed mo integrals already available.
+! SIR_INTOPEN: revised ITRLVL check against LUINTM for levels 2 and 3;
+!   rationalized file openings for different computer types;
+!   write warning if flag(14) and integrals not found.
+!900307-hjaaj
+! TRACTL: empty LUINTM in beginning of transformation to give more disk
+! space for temporary files during the transformation.
+!900305-hjaaj
+! TRACTL: only call drcctl if ITRLVL.gt.0 (not ci) and usedrc
 ! MAERKE: usikkert,indfoer USEDRC el. LVLDRC i parameterliste til TRACTL
 !900302-hjaaj
 ! TRACTL: reset /CBGETD/ to tell any H2AC on disk now obsolete.
@@ -90,7 +89,6 @@ drcctl if ITRLVL.gt.0 (not ci) and usedrc
 !891208-hjaaj
 ! SORTA,TRACD,TRAAB: print threshold for discarding integrals
 ! TRACTL: if (thrp.le.0) thrp=1.d-12 (was 1.d-9)
-!         if (thrq.le.0) thrq=1.d-12 (was 1.d-8)
 !891116-hjaaj
 ! NXTH2M,NXTH2D: more tests that buffers are allocated/have not been
 !   corrupted. Release buffer allocation when no more buffers.
@@ -98,7 +96,7 @@ drcctl if ITRLVL.gt.0 (not ci) and usedrc
 ! Write label 'END INTM' at end of LUINTM in TRAAB
 ! Write total time in tracd,sortb,traab in tractl if iprtra .gt.0
 !    and only write TRANSFORMATION level each time if iprtra .gt. 0
-!    and corrected 890615 tractl output error (wrt. ITRSAV) in TRACTL
+!    and corrected 890615 tractl output error in TRACTL
 !890220-hjaaj
 ! traab,tracd -- NOSYNC directive for read direct access to TRI(*)
 !===========================================================================
@@ -162,7 +160,10 @@ C
      &     /'integral transformation (from 1988 ;-) )',
      &      'because more than 255 basis functions.'
       END IF
-      IF (NEWTRA) THEN
+      IF (FCKTRA_TYPE .gt. 0) THEN
+         CALL SIR_INTOPEN_FCKTRA
+         ! RETURN -- no, continue below to create MOTWOINT for now
+      ELSE IF (NEWTRA) THEN
          CALL SIR_INTOPEN_NEWTRA
          RETURN
       END IF
@@ -197,7 +198,9 @@ C
             IF (LUINTM .LE. 0) CALL GPOPEN(LUINTM,FNINTM,'OLD',' ',
      &                                     'UNFORMATTED',IDUMMY,.FALSE.)
             REWIND (LUINTM)
-            IF (.NOT.FNDLAB('MOLTWOEL',LUINTM)) THEN
+            IF (FCKTRA_TYPE .GT. 0) THEN
+               ICASE    = 0
+            ELSE IF (.NOT.FNDLAB('MOLTWOEL',LUINTM)) THEN ! not for FCKTRA, MOLTWOEL only for "old" transformation
                ICASE    = 2
                FLAG(14) = .FALSE.
             ELSE
@@ -207,15 +210,22 @@ C     ... use of old AOSRTINT.DA may be possible
             END IF
             IF (FLAG(14)) THEN
                KTRLVL = ABS(ITRLVL)
-               CALL REWSPL(LUINTM)
+               REWIND (LUINTM)
                READ (LUINTM)
                READ (LUINTM) LBINTM, JTRLVL
-               IF (JTRLVL .EQ. 3 .AND. KTRLVL .EQ. 2) KTRLVL =  7
-               IF (JTRLVL .EQ. 2 .AND. KTRLVL .EQ. 3) KTRLVL =  2
-               IF (JTRLVL .LT. KTRLVL) THEN
-                  FLAG(14) = .FALSE.
-                  ICASE = 3
+               ! Special tests because JTRLVL .gt. KTRLVL does not always mean all required integrals available
+               IF (JTRLVL .EQ. 3 .AND. KTRLVL .EQ. 2) THEN
+                  FLAG(14) = .FALSE. ! (aa|ii) and (ai|ai) missing
+               ELSE IF (JTRLVL .EQ. 2 .AND. KTRLVL .EQ. 3) THEN
+                  ! OK
+               ELSE IF (JTRLVL .EQ. 6 .AND. KTRLVL .EQ. 4) THEN
+                  FLAG(14) = .FALSE. ! (gg|ii) and (gi|gi) missing
+               ELSE IF (JTRLVL .EQ. 6 .AND. KTRLVL .EQ. 5) THEN
+                  FLAG(14) = .FALSE. ! (gg|gi) missing
+               ELSE IF (JTRLVL .LT. KTRLVL) THEN
+                  FLAG(14) = .FALSE. ! some integrals  missing
                END IF
+               IF (.NOT. FLAG(14)) ICASE = 3
             END IF
          ELSE
             FLAG(14) = .FALSE.
@@ -224,9 +234,9 @@ C           no old luintm opened, then old integrals not available
      &                                     'UNFORMATTED',IDUMMY,.FALSE.)
          END IF
          IF (OLDTRA .AND. ICASE .GT. 0) THEN
-            NWARN = NWARN + 1
+            NINFO = NINFO + 1
             WRITE (LUPRI,'(/A,I2,3(/A))')
-     *         ' WARNING SIR_INTOPEN, old integral transformation not'
+     *         ' INFO SIR_INTOPEN, old integral transformation not'
      *       //' found as expected, ICASE =',ICASE,
      *         ' - ICASE = 1: MO integral file MOTWOINT does not exist',
      *         ' - ICASE = 2: no MO integrals on MOTWOINT',
@@ -243,7 +253,7 @@ C
       RETURN
       END
 C  /* Deck sorta */
-      SUBROUTINE SORTA(LUDA,RINT,IINT,SCR,ISCR,MEMSX,MEMTX,IT)
+      SUBROUTINE SORTA(LUDA,RINT,IINTPK,SCR,ISCR,MEMSX,MEMTX,IT)
 C
 C....   THIS SUBROUTINE PERFORMS A SORT OF THE AO INTEGRAL FILE PRIOR
 C....    TO THE FIRST HALF OF THE TWO-ELECTRON TRANSFORMATION. THE
@@ -260,7 +270,7 @@ C
 C....    FORMAL PARAMETERS
 C
 C....       RINT --  START ADDRESS OF INTEGRAL BUFFER FOR AO FILE
-C...        IINT --  (AS RINT - ALLOWS INTEGER ADDRESSING)
+C...        IINTPK--  (AS RINT - ALLOWS INTEGER*4 ADDRESSING)
 C....       SCR  --  START OF SCRATCH WORK AREA
 C....       ISCR --  (AS SCR - ALLOWS INTEGER ADDRESSING)
 C....       MEMS --  LENGTH OF SCRATCH SORT AREA
@@ -268,8 +278,9 @@ C....       MEMT --    **   *    **    TRANSFORMATION AREA
 C
 #include "implicit.h"
       DIMENSION ISCR(*),SCR(*),RINT(*)
-      INTEGER*4 IINT(*)
+      INTEGER*4 IINTPK(*)
       INTEGER   IT(*)
+      INTEGER, ALLOCATABLE :: IINDX4(:,:)
 #include "iratdef.h"
 #include "dummy.h"
 C
@@ -288,7 +299,7 @@ C
 C
 C....    PARAMETERS USED HERE
 C
-C....    THRQ: THRESHOLD TO DISCARD INTEGRALS DURING SORT
+C....    THRP: THRESHOLD TO DISCARD INTEGRALS DURING SORT
 C              -- FROM /INFTRA/ , DEFINED IN INPUT --
 C
 C....    LDAMAX: MAXIMUM DA BUFFER LENGTH (-- now set in TRACTL --)
@@ -380,15 +391,7 @@ C
       CALL MOLLAB('BASINFO ',LUINTA,LUPRI)
       READ (LUINTA) NSYMAO, NAOS,LBUFAO,NIBUFAO,NBITSAO, LENINT4
 C
-      IF (NBITSAO .NE. 8) THEN
-         CALL QUIT(
-     &   'Only 8 bit index packing on AOTWOINT has been implemented')
-      END IF
-C
-      IBITMASK  = 2**NBITSAO - 1
-      IBITSHR_1 = 3*NBITSAO
-      IBITSHR_2 = 2*NBITSAO
-      IBITSHR_3 =   NBITSAO
+      allocate(IINDX4(4,LBUFAO))
 C
 C...  OPEN DIRECT ACCESS FILE FOR SORTED AO INTEGRALS "AOSRTINT.DA"
 C
@@ -410,7 +413,7 @@ C
 C
 C....   AO INTEGRAL FILE SPEC; MOLECULE FORMAT
 C
-      LRINT  = 2*LBUFAO ! factor 2 because IINT is always integer*4
+      LRINT  = 2*LBUFAO ! factor 2 because IINTPK is always integer*4
       LENINT = (2+NIBUFAO)*LBUFAO + 1
       IF (LENINT .NE. LENINT4)
      &   CALL QUIT('LENINT .ne. LENINT4 from AOTWOINT')
@@ -437,51 +440,52 @@ C
 C....    INITIALIZE BUFFERS
 C
          KAP = 0
-         DO 30 K = 1,NOB
+         DO K = 1,NOB
             KAP = KAP + LBUF
             ISCR(KAP-1) = -1
-            ISCR(KAP)   = 0
-30       CONTINUE
+            ISCR(KAP)   =  0
+         END DO
 C
 C....    BEGIN LOOP OVER THE INTEGRAL FILE
 C
 C....    REWIND IT FIRST
 C
-         CALL REWSPL(LUINTA)
+         REWIND(LUINTA)
          CALL MOLLAB('BASTWOEL',LUINTA,LUPRI)
-1        CONTINUE
-         CALL READI4(LUINTA,LENINT,IINT)
-         NINT = IINT(LENINT)
-         IF(NINT.EQ.0)GOTO 1
-         IF(NINT.EQ.-1)GOTO 2
+ 1       CONTINUE
+         CALL READI4(LUINTA,LENINT,IINTPK)
+         CALL AOLAB4(IINTPK(LRINT+1),LBUFAO,NIBUFAO,NBITSAO,
+     &      IINDX4,LENGTH)
+         IF(LENGTH.EQ. 0)GOTO 1
+         IF(LENGTH.EQ.-1)GOTO 2
 C
 C....    LOOP OVER INTEGRALS
 C
-         DO 3 M = 1,NINT
+         DO 3 M = 1,LENGTH
 C
 C....    PICK UP INTEGRAL, LABEL AND UNPACK THE LATTER
 C....    NOTE THAT STANDARD ORDER IS NOT CERTAIN IN SYMINT, SO
 C....    P.LT.Q ETC  IS TESTED FOR.
 C
-            LABEL = IINT(M+LRINT)
             VALUE = RINT(M)
 C
 C....    CHECK INTEGRAL AGAINST THRESHOLD
 C
-         IF (ABS(VALUE).LT.THRQ) GOTO 3
-            ISS=IAND(ISHFT(LABEL,-IBITSHR_1),IBITMASK)
-            IR =IAND(ISHFT(LABEL,-IBITSHR_2),IBITMASK)
-            IQ =IAND(ISHFT(LABEL,-IBITSHR_3),IBITMASK)
-            IP =IAND(       LABEL           ,IBITMASK)
-            IF (IP.GE.IQ) THEN
-               IPQ = IT(IP) + IQ
+         IF (ABS(VALUE).LT.THRP) GOTO 3
+
+            JS = IINDX4(4,M)
+            JR = IINDX4(3,M)
+            JQ = IINDX4(2,M)
+            JP = IINDX4(1,M)
+            IF (JP.GE.JQ) THEN
+               IPQ = IT(JP) + JQ
             ELSE
-               IPQ = IT(IQ) + IP
+               IPQ = IT(JQ) + JP
             END IF
-            IF (IR.GE.ISS) THEN
-               IRS = IT(IR) + ISS
+            IF (JR.GE.JS) THEN
+               IRS = IT(JR) + JS
             ELSE
-               IRS = IT(ISS) + IR
+               IRS = IT(JS) + JR
             END IF
 C
 C....    CHECK PQ FIRST
@@ -586,22 +590,23 @@ C
          PNZ = (LPQRS*2-NMBASX) * 100
          PNZ = ISUM / PNZ
          WRITE (LUPRI,202) NDAREC,(IDISK-1),PNZ
-         WRITE (LUPRI,203) THRQ
+         WRITE (LUPRI,203) THRP
       END IF
+      deallocate(IINDX4)
       CALL QEXIT('SORTA ')
       RETURN
 C
 C....    FORMAT STATEMENTS
 C
   200 FORMAT(/' FIRST HALF-SORT STATISTICS'
-     1       /'  NUMBER OF PASSES OVER AO FILE',T30,I7
-     2       /'  NUMBER OF BLOCKS PER CHAIN',T27,I10
-     3       /'  TOTAL NUMBER OF CHAINS',T27,I10
-     4       /'  NUMBER OF BUFFERS PER PASS',T27,I10/)
-  201 FORMAT('  NUMBER OF INTEGRALS PER DIRECT ACCESS BUFFER',I10)
-  202 FORMAT(/'  NUMBER OF DA RECORDS FOR ALL INTEGRALS',I8
-     1       /'  NUMBER OF DA RECORDS ACTUALLY USED    ',I8
-     2       /'  PERCENT NON-ZERO AO INTEGRALS',F17.2)
+     1       /'  NUMBER OF PASSES OVER AO FILE',T33,I4
+     2       /'  NUMBER OF BLOCKS PER CHAIN',T30,I7
+     3       /'  TOTAL NUMBER OF CHAINS',T30,I7
+     4       /'  NUMBER OF BUFFERS PER PASS',T30,I7/)
+  201 FORMAT('  NUMBER OF INTEGRALS PER DIRECT ACCESS BUFFER',I6)
+  202 FORMAT(/'  NUMBER OF DA RECORDS FOR ALL INTEGRALS',I6
+     1       /'  NUMBER OF DA RECORDS ACTUALLY USED    ',I6
+     2       /'  PERCENT NON-ZERO AO INTEGRALS',F15.2)
   203 FORMAT(/'  THRESHOLD FOR DISCARDING INTEGRALS',1P,D10.2)
       END
 C  /* Deck sortb */
@@ -780,16 +785,16 @@ C
    30    CONTINUE
 C
 C....    BEGIN READING THE INTEGRAL FILE
-         CALL REWSPL(LUHALF)
+         REWIND(LUHALF)
     1    CONTINUE
          CALL READI(LUHALF,LENINT,IINT)
-         NINT = IINT(LENINT-1)
-         IF(NINT.EQ.0)GOTO 1
-         IF(NINT.EQ.-1)GOTO 2
+         LENGTH = IINT(LENINT-1)
+         IF(LENGTH.EQ.0)GOTO 1
+         IF(LENGTH.EQ.-1)GOTO 2
 C
 C....    LOOP OVER THE INTEGRALS IN THIS BUFFER
 C
-         DO 3 M = 1,NINT
+         DO 3 M = 1,LENGTH
 C
 C....    PICK UP INTEGRAL AND LABEL, UNPACK IPQ, IC, AND ID
 C
@@ -875,14 +880,14 @@ C
 C....    FORMAT STATEMENTS
 C
   200 FORMAT(/,' SECOND HALF-SORT STATISTICS'/
-     1  '  NUMBER OF PASSES OVER FILE',T30,I7/
-     2  '  NUMBER OF BLOCKS PER CHAIN',T27,I10/
-     3  '  TOTAL NUMBER OF CHAINS',T27,I10/
-     4  '  NUMBER OF BUFFERS PER PASS',T27,I10/)
-  201 FORMAT(' NUMBER OF INTEGRALS PER DIRECT ACCESS BUFFER',I10)
-  202 FORMAT(/'  NUMBER OF DA RECORDS FOR ALL INTEGRALS',I8
-     1       /'  NUMBER OF DA RECORDS ACTUALLY USED    ',I8
-     2       /'  PERCENT NON-ZERO INTEGRALS',F20.2)
+     1  '  NUMBER OF PASSES OVER FILE',T33,I4/
+     2  '  NUMBER OF BLOCKS PER CHAIN',T30,I7/
+     3  '  TOTAL NUMBER OF CHAINS',T30,I7/
+     4  '  NUMBER OF BUFFERS PER PASS',T30,I7/)
+  201 FORMAT(' NUMBER OF INTEGRALS PER DIRECT ACCESS BUFFER',I6)
+  202 FORMAT(/'  NUMBER OF DA RECORDS FOR ALL INTEGRALS',I6
+     1       /'  NUMBER OF DA RECORDS ACTUALLY USED    ',I6
+     2       /'  PERCENT NON-ZERO INTEGRALS',F18.2)
       END
 C  /* Deck tracd */
 #include "vdir.h"
@@ -924,13 +929,12 @@ C
 #include "ibtdef.h"
 C
       CALL QENTER('TRACD ')
-CHJ-START-840726
-      IF (ITRLVL.GE.2 .AND. ITRLVL.LT.4) THEN
+      IF (ITRLVL.EQ.2 .OR. ITRLVL.EQ.3 .OR. ITRLVL.EQ.6) THEN
+CHJ-840726: skip (some) inactive orbitals
          NXISHT = MORBT-MSSHT-MASHT
       ELSE
          NXISHT = 0
       END IF
-CHJ-END-840726
       IF (IPRTRA .GE. 100) THEN
          WRITE (LUPRI,*) 'Test output from TRACD'
          WRITE (LUPRI,*) 'ITRLVL =',ITRLVL
@@ -954,7 +958,7 @@ C     ***** LPQCD : NUMBER OF INTEGRALS (PQ/CD)
 C
 C     ***** REWIND FILE FOR HALF TRANSFORMED INTEGRALS LUHALF *****
 C
-      CALL REWSPL(LUHALF)
+      REWIND(LUHALF)
 C
 C     ***** START TRANSFORMATION   *****
 C     ***** LOOP OVER ALL PAIRS PQ *****
@@ -1059,7 +1063,7 @@ C                 ***** SET LOOP LIMITS FOR ORBITAL C *****
                   ELSE IF (ITRLVL.EQ.10) THEN
                      NCRMIN = 1
                      NDRMIN = 1
-                  ELSE IF (ITRLVL.GE.2 .AND. ITRLVL.LT.4) THEN
+                  ELSE IF (ITRLVL.EQ.2 .OR. ITRLVL.EQ.3) THEN
                      IF (ISS.GT.ISR) THEN
                         NCRMIN = MOCC(ISR)+1
                         NDRMIN = MISH(ISS)+1
@@ -1073,7 +1077,7 @@ C                       ISP=ISQ=ISR=ISS, but we always
 C                       need (iu/ and (ui/, so no gain here )
                      END IF
                   ELSE
-C                 -- ITRLVL.EQ.1 or 4 or 5:
+C                 -- ITRLVL.EQ.1 or 4 or 5 or 6:
                      IF (ISS.GT.ISR) THEN
                         NCRMIN = MOCC(ISR)+1
                      ELSE
@@ -1088,7 +1092,7 @@ C                 -- ITRLVL.EQ.1 or 4 or 5:
                GO TO 150
             END IF
 C
-C     ***** START ADDRESSES FOR MO'S   *****
+C     ***** START ADDRESSES FOR MOs    *****
 C     ***** SET THE ARRAY PQRD TO ZERO *****
             IMOR = JCMO(ISR) + NCRMIN + (NR-JBASR-1)*MORBR
             IMOS = JCMO(ISS) + NDRMIN
@@ -1104,7 +1108,7 @@ C              ***** COMPUTE POSITION OF APPROPRIATE INTEGRAL *****
                   IPQRS = IPQRS2 + NS
                END IF
                PQRS = TRI(IPQRS)
-C              ***** LOOP OVER MO'S OF SYMMETRY ISS *****
+C              ***** LOOP OVER MOs OF SYMMETRY ISS *****
                IF (ABS(PQRS).GE.THRP)
      *         CALL DAXPY(NNDR,PQRS,CMOT(IMOS),1,PQRD(NDRMIN),1)
                IMOS = IMOS + MORBS
@@ -1174,8 +1178,8 @@ C
             ELSE
 C           -- IC .LE. MOCCT
                IF (IC.LE.NXISHT) THEN
-                  IF (ITRLVL.EQ.3) GO TO 170
-C                ( if ITRLVL.eq.3 neglect (ii/aa) integrals )
+                  IF (ITRLVL.NE.2) GO TO 170
+C                ( if ITRLVL.eq.2 include (ii/aa) integrals )
                   IDMIN = IC
 C                ( only (ii/ inac-inac distributions needed )
                ELSE
@@ -1233,7 +1237,7 @@ C     ***** WRITE END BUFFER *****
 C
       IOUTB(LOUT21)=-1
       CALL WRITI(LUHALF,LOUT22,IOUTB)
-      CALL REWSPL(LUHALF)
+      REWIND(LUHALF)
       IF (JTER.EQ.1) THEN
          WRITE(LUPRI,1000) LUHALF,LPQCD
          WRITE(LUPRI,1100) THRP
@@ -1320,13 +1324,11 @@ C
      *   'integrals'/2X,'Int. no.',4X,'C',4X,'D',4X,'A',4X,'B',
      *   10X,'Value')
       END IF
-CHJ-START-840726
-      IF (ITRLVL.GE.2 .AND. ITRLVL.LT.4) THEN
-        NXISHT = MORBT-MASHT-MSSHT
+      IF (ITRLVL.EQ.2 .OR. ITRLVL.EQ.3 .OR. ITRLVL.EQ.6) THEN
+        NXISHT = MORBT-MASHT-MSSHT ! skip inactive
       ELSE
         NXISHT = 0
       END IF
-CHJ-END-840726
 C ************** LENGTH OF BUFFER FOR ABCD on LUINTM
       LOUT  =LBINTM
       LOUTI =IRAT*LOUT
@@ -1365,7 +1367,7 @@ C     should never happen.
       ELSE
          ICMAX=MORBT
       END IF
-      IF (ITRLVL.LE.5) THEN
+      IF (ITRLVL.LE.6) THEN
          MAXID = MOCCT
       ELSE
          MAXID = MORBT
@@ -1484,9 +1486,9 @@ C                     (870628-hjaaj)
                   IF (IC.LE.NXISHT) THEN
 C                 (  we now know IC .eq. ID,
 C                    this distribution is for (ii/aa) integrals )
-                     IF (ITRLVL.EQ.3 .OR. ISPA.NE.ISC) GO TO 150
+                     IF (ITRLVL.NE.2 .OR. ISPA.NE.ISC) GO TO 150
 C                  ( we only need (ii/aa) with sym(a) .eq. sym(i) )
-C                  ( if ITRLVL.eq.3, neglect (ii/aa) integrals )
+C                  ( if ITRLVL.eq.3 or 6, neglect (ii/aa) integrals )
                      NARMIN = MOCCA+1
                      NARMAX = MORBA
                      NBRMIN = NARMIN
@@ -1502,8 +1504,8 @@ CHJ-S-841125
                   IF (ID.LE.NXISHT) THEN
 C                 ( symmetry tested above, this is (ai/,
 C                   used for (ai/ai) )
-C                 ( if ITRLVL.eq.3, neglect (ai/ai) integrals )
-                     IF (ITRLVL.EQ.3 .OR. ISPA.NE.ISC) GO TO 150
+C                 ( if ITRLVL.eq.2 include (ai/ai) integrals )
+                     IF (ITRLVL.NE.2 .OR. ISPA.NE.ISC) GO TO 150
                      NARMIN = NCR
                      NARMAX = NCR
                      NBRMIN = NDR
@@ -1565,7 +1567,7 @@ C        ***** FIND POSITION OF INTEGRAL (PQ/CD) *****
             IPQCD = NCDP   + IT(NQ)
          END IF
          PQCD=TRI(IPQCD)
-C        ***** LOOP OVER MO'S OF SYMMETRY ISQB *****
+C        ***** LOOP OVER MOs OF SYMMETRY ISQB  *****
 C        ***** AND TRANSFORM SECOND INDEX      *****
          IF (ABS(PQCD) .GE. THRP)
      *      CALL DAXPY(NNBR,PQCD,CMOT(IMOQ),1,PBCD(NBRMIN),1)
@@ -1679,7 +1681,7 @@ C     ***** WRITE LAST BUFFER *****
       IOUTB(LOUT21)=-1
       CALL WRITI(LUINTM,LOUT22,IOUTB)
       WRITE(LUINTM)LAB123,TABLE(2)
-      CALL REWSPL(LUINTM)
+      REWIND(LUINTM)
       DFIN=SECOND()
       DTIM=DFIN-DST
       IF (JTER.EQ.1) THEN
@@ -1703,7 +1705,7 @@ C   050125-hjaaj: new TRACTL_1 for dynamic allocation
 C
 C Input:
 C  KTRLVL, abs(KTRLVL) is transformation level, DELDA = (KTRLVL.lt.0)
-C  CMO,   mo coefficients
+C  CMO,   MO coefficients
 C  WORK,  work array
 C  KWORK, actual length of work array
 C
@@ -1715,6 +1717,7 @@ C
 #include "lbmxsq.h"
 C
 C Used from common blocks:
+C exeinf.h : FTRCTL, ITRLVL_LAST, LVLDRC_LAST
 C
 #include "priunit.h"
 #include "inforb.h"
@@ -1724,9 +1727,8 @@ C
 #include "inftap.h"
 #include "gnrinf.h"
 C
-      DIMENSION MFRO(8)
-      LOGICAL VFIRST, FOPEN, DELDA, FEXIST, USEDRC_SAVE
-      SAVE VFIRST, IPRTRA_SAVE, LDBUF, LRBUF, ITRSAV
+      LOGICAL VFIRST, FOPEN, DELDA, FEXIST
+      SAVE VFIRST, IPRTRA_SAVE, LDBUF, LRBUF
       DATA VFIRST /.TRUE./
 C
 C     VFIRST is is used to control setting of print level, see below.
@@ -1736,12 +1738,13 @@ C
       EXTERNAL BDTRA
 C
       IF (VFIRST) THEN
-C        if SIRIUS has been called, IPRTRA_SAVE will have value
-C        from SIRIUS in all TRACTL calls, if SIRIUS has
-C        not been called before ABACUS is called, then
-C        the value specified in RHSINP for DERTRA is
-C        used. This makes sure that the SIRIUS value is
-C        always used if it has been defined.
+C        If SIRIUS has been called, the print level IPRTRA_SAVE will have the value
+C        from SIRIUS in all TRACTL calls.
+C        If SIRIUS has not been called before ABACUS is called, then
+C        the value specified in RHSINP for DERTRA is used.
+C        This makes sure that the SIRIUS value is
+C        always used if it has been defined, and the abacus
+C        value is different.
 C
          IPRTRA_SAVE = IPRTRA
          VFIRST = .FALSE.
@@ -1749,16 +1752,54 @@ C
          IPRTRA = IPRTRA_SAVE
       END IF
 C
-      ITRLVL = ABS( KTRLVL )
-      USEDRC_SAVE = USEDRC
+C  FTRCTL in exeinf.h forces integral sort and transformation,
+C      FTRCTL is true if Hermit has calculated a new AOTWOINT file
+C      since last call of TRACTL, or if integral type has changed
+C      (example: switch between AO2SRINT and AOTWOINT for srDFT)
 C
-      IF (NEWTRA) THEN
+      IF (FTRCTL) THEN ! new geometry, force new integral transformation
+         ITRLVL_LAST = -999
+         LVLDRC_LAST = -999
+         LSRTAO = 0 ! force new integral sort and transformation in TRACTL_1
+         FTRCTL = .FALSE.
+      END IF
+C
+      ITRLVL = ABS( KTRLVL )
+C
+      IF (IPRTRA .GE. 0) THEN
+         CALL GETTIM(TCPU0,TWALL0)
+      END IF
+
+C     ***** SET THRESHOLDS *****
+C     *********** THRP: THRESHOLD USED IN TRACD AND TRAAB
+C     ***********       AND THRESHOLD USED IN SORTA FOR INTEGRALS (PQ/RS)
+      IF (THRP.LE.1.D-16) THEN
+         WRITE(LUPRI,'(/A,1P,D10.2,A,D10.2)')
+     &      ' INFO: Changed THRP threshold used in 2-el.'//
+     &      ' integral transformation from',THRP,' to',1.D-14
+         THRP=1.D-14
+      END IF
+C
+      IF (FCKTRA_TYPE .gt. 0) THEN
+         NEWTRA_USEDRC = .FALSE. ! FCKTRA_DRCCTL not implemented yet
+         CALL SIR_FCKTRA_CTL('COUL',KTRLVL,THRP,CMO,WORK,KWORK)
+      ELSE IF (NEWTRA) THEN
          IF (ITRLVL .EQ. 0 .OR. ITRLVL .GE. 5) THEN ! zeroth, third or fourth order transformation
-            USEDRC = .FALSE. ! use DRCCTL and not Dirac integrals from N_TRACTL
+            NEWTRA_USEDRC = .FALSE. ! use DRCCTL and not Dirac integrals from N_TRACTL
+            ! because a lot of MO integrals are calculated twice in N_TRACTL if ITRLVL .ge. 5
+         ELSE
+            NEWTRA_USEDRC = USEDRC
          END IF
          CALL N_TRACTL(KTRLVL,CMO,WORK,KWORK)
-         NEWTRA_USEDRC = USEDRC
-         IF ( USEDRC_SAVE ) USEDRC = .TRUE.
+         IF ( NEWTRA_USEDRC ) USEDRC = .TRUE.
+         ITRLVL_LAST = ITRLVL
+         IF (NEWTRA_USEDRC) THEN
+            IF (ITRLVL .EQ. 1 .OR. ITRLVL .EQ. 3) THEN ! see sirntra.F(TRALVL)
+               LVLDRC_SAVE = 0 ! act-act Dirac integrals
+            ELSE
+               LVLDRC_SAVE = 1 ! occ-occ Dirac integrals
+            END IF
+         END IF
       ELSE
          NEWTRA_USEDRC = .FALSE.
          KFRSAV = 1
@@ -1772,10 +1813,24 @@ C
          CALL TRACTL_1(KTRLVL,CMO,WORK(KITSMO),WORK(KITSAO),
      &        WORK(KITSW),WORK(KITSX),WORK(KIT),WORK(KFREE),LFREE)
          CALL MEMREL('TRACTL_1',WORK,KFRSAV,KFRSAV,KFREE,LFREE)
+         ! ITRLVL_LAST is set inside TRACTL_1, if integral transformation is not abandoned
       END IF
+
+      IF (IPRTRA .GE. 0) THEN
+         CALL GETTIM(TCPU,TWALL)
+         TCPU  = TCPU -TCPU0
+         TWALL = TWALL-TWALL0
+         WRITE(LUPRI,2100) ITRLVL, TCPU, TWALL
+      END IF
+ 2100 FORMAT(/' 2-el. integral transformation level ',I0,':',
+     &       ' Total CPU and WALL times (sec)',2F12.3)
 C
 C     Sort mo integrals to Dirac form, if requested
 C
+      IF (IPRTRA .GE. 5) THEN
+         WRITE(LUPRI,*) 'USEDRC, NEWTRA_USEDRC, ITRLVL:',
+     &                   USEDRC, NEWTRA_USEDRC, ITRLVL
+      END IF
       IF (USEDRC .AND. .NOT.NEWTRA_USEDRC .AND. ITRLVL .GT. 0) THEN
          CALL GETTIM(TCPU0,TWALL0)
          IF (ITRLVL .GE. 4) THEN
@@ -1793,6 +1848,7 @@ C           ... all active-active distributions
             WRITE(LUPRI,2200) TCPU, TWALL
          END IF
          CALL FLSHFO(LUPRI)
+         LVLDRC_LAST = LVLDRC
       END IF
  2200 FORMAT(/' Sorting integrals to Dirac format:',
      &        ' Total CPU and WALL times (sec)',2F12.3)
@@ -1817,16 +1873,11 @@ C                 of IT, ITSMO, ITSAO, ITSW, ITSX
 C
 C Input:
 C  KTRLVL, abs(KTRLVL) is transformation level, DELDA = (KTRLVL.lt.0)
-C  CMO,   mo coefficients
+C  CMO,   MO coefficients
 C  WORK,  work array
 C  KWORK, actual length of work array
 C  MWORK, desired length of work array
 C         (dependent on size of physical memory)
-C
-C  FTRCTL in exeinf.h forces integral sort and transformation,
-C      FTRCTL is true if and only if Hermit has calculated
-C      a new AOTWOINT file since last call of TRACTL.
-C
 C
 C  SUBROUTINE CALLS:
 C          SORTA (BIN SORT OF INTEGRALS (PQ/RS))
@@ -1849,6 +1900,7 @@ C
       PARAMETER (DM1 = -1.0D0)
 C
 C Used from common blocks:
+C exeinf.h : ITRLVL_LAST
 C CBGETDIS : IAD*
 C INFDIM   : MWORK
 C
@@ -1862,9 +1914,8 @@ C
 #include "gnrinf.h"
 #include "cbgetdis.h"
 C
-      DIMENSION MFRO(8)
       LOGICAL FOPEN, DELDA, FEXIST
-      SAVE LDBUF, LRBUF, ITRSAV
+      SAVE LDBUF, LRBUF
 C
       CALL QENTER('TRACTL_1')
       ITRLVL = ABS(KTRLVL)
@@ -1877,18 +1928,11 @@ C
          WRITE(LUPRI,*) 'MWORK  = ', MWORK
       END IF
       IF (IPRTRA .GE. 20) THEN
-         WRITE(LUPRI,*) ' CMO array '
+         WRITE(LUPRI,*) 'CMO array'
          CALL PRORB(CMO,.FALSE.,LUPRI)
       END IF
 C
-      IF (FTRCTL) THEN
-         ITRSAV = 999
-         LSRTAO = 0
-C        ... force new integral sort and transformation
-         FTRCTL = .FALSE.
-      END IF
-      IF (ITRLVL .NE. ITRSAV) THEN
-         ITRSAV = ITRLVL
+      IF (ITRLVL .NE. ITRLVL_LAST) THEN
          IF (IPRTRA .GT. 1) THEN
             JTER   = 1
          ELSE
@@ -1898,16 +1942,6 @@ C        ... force new integral sort and transformation
       LWORK = MIN(KWORK,MWORK)
       IF (JTER.EQ.1) WRITE(LUPRI,903) LWORK
   903 FORMAT(/' WORKING AREA IN TRANSFORMATION SECTION ',I10)
-C     ***** SET THRESHOLDS *****
-C     *********** THRP: THRESHOLD USED IN TRACD AND TRAAB
-C     *********** THRQ: THRESHOLD USED IN SORTA FOR INTEGRALS (PQ/RS)
-      IF (THRP.LE.1.D-16) THEN
-         WRITE(LUPRI,'(/A,1P,D10.2,A,D10.2)')
-     &      ' INFO: Changed THRP threshold used in'//
-     &      ' integral transformation from',THRP,' to',1.D-14
-         THRP=1.D-14
-      END IF
-      THRQ = THRP * 0.1D0
 C
 C     ***** Reset /CBGETD/ because any H2AC on disk will be
 C           obsolete after transformation.
@@ -1933,22 +1967,25 @@ C                     (all four indices active orbitals)
 C           ITRLVL=1: first order transformation  (gv|xy)
 C                     (first index all orbitals, other indices active orbitals)
 C           ITRLVL=2: SIRIUS 2. order transformation, include (ii|aa) and (ia|ia)
-C                     (uv|ab), (ua|vb), (ii|aa), and (ia|ia)
+C                     included: (uv|ab), (ua|vb), (ii|aa), and (ia|ia)
 C                     (two indices active orbitals, other indices secondary orbitals)
 C           ITRLVL=3: SIRIUS 2. order transformation, neglect (ii|aa) and (ia|ia)
-C                     (uv|ab) and (ua|vb)
+C                     included: (uv|ab) and (ua|vb)
 C           ITRLVL=4: full 2. order transformation (o1 o2|g1 g2) and (o1 g1|o2 g2)
 C                     (two indices occupied orbitals, other indices general orbitals)
 C
 C           ITRLVL=5: third order transformation (g1 g2|g3 o)
 C                     (Three indices all orbitals, last index occupied orbitals)
 C
+C           ITRLVL=6: third order transformation (g1 g2|g3 u)
+C                     (Three indices all orbitals, last index active orbitals)
+C
 C           ITRLVL=10: Full integral transformation (g1 g2|g3 g4)
 C
       IF (IPRTRA.GT.0) WRITE (LUPRI,'(/A,I4)')
      &   ' 2-ELECTRON INTEGRAL TRANSFORMATION SECTION; PARAMETER =',
      &   ITRLVL
-      IF (ITRLVL.GT.5 .AND. ITRLVL .NE. 10) THEN
+      IF (ITRLVL.GT.6 .AND. ITRLVL .NE. 10) THEN
          WRITE (LUPRI,'(//A)')
      1      ' TRACTL_1, parameter outside valid range'
          CALL QTRACE(LUPRI)
@@ -1956,18 +1993,15 @@ C
       END IF
 C
 C     ***** Assign INTTRA from INFORB *****
-C     Note: index on LUITM are wrong if MFRO(ISYM) .ne. 0 !!
       MSYM = NSYM
-      DO 5 ISYM = 1,NSYM
-         MFRO(ISYM) = 0
-         MISH(ISYM) = NISH(ISYM) - MFRO(ISYM)
+      DO 5 ISYM = 1,8
+         MISH(ISYM) = NISH(ISYM)
          MASH(ISYM) = NASH(ISYM)
          MSSH(ISYM) = NSSH(ISYM)
          MBAS(ISYM) = NBAS(ISYM)
     5 CONTINUE
       IF (IPRTRA .GE. 5) THEN
          WRITE(LUPRI,*) 'MSYM',MSYM
-         WRITE(LUPRI,*) 'MFRO',MFRO(1:8)
          WRITE(LUPRI,*) 'MISH',MISH(1:8)
          WRITE(LUPRI,*) 'MASH',MASH(1:8)
          WRITE(LUPRI,*) 'MSSH',MSSH(1:8)
@@ -2070,9 +2104,10 @@ C     ***** ITSX REORDERS BACK                          *****
 C
       IF (ITRLVL.EQ.0) GO TO 42
       IF (ITRLVL.EQ.10) GO TO 43
-      IF (ITRLVL.EQ.1 .OR. ITRLVL.GE.4) GO TO 199
+      IF (ITRLVL.EQ.1 .OR. ITRLVL.EQ.4 .OR. ITRLVL.EQ.5) GO TO 199
 C
-C     --- ITRLVL.EQ.2 .OR. ITRLVL.EQ.3:
+C     --- ITRLVL.EQ.2 .OR. ITRLVL.EQ.3 .OR. ITRLVL.EQ.6:
+C         (inactive, active and secondary orbital lists)
 C
       I    = 0
       IO   = 0
@@ -2104,6 +2139,7 @@ C
       GO TO 44
 C
 C     --- ITRLVL.EQ.1 .OR. ITRLVL.EQ.4 .OR. ITRLVL.EQ.5
+C         (inactive orbitals in occupied list)
 C
   199 CONTINUE
       I    = 0
@@ -2128,6 +2164,7 @@ C
       GO TO 44
 C
 C     --- ITRLVL.EQ.0:
+C         (inactive orbitals in secondary list)
 C
    42 I    = 0
       ISEC = MASHT
@@ -2247,9 +2284,6 @@ C
    45 CONTINUE
 C
       DST = SECOND()
-      IF (IPRTRA .GE. 0) THEN
-         CALL GETTIM(TCPU0,TWALL0)
-      END IF
 C
 C     900801-hjaaj: check if transformation already done
 C     971201-hjaaj: code moved to here (was too late)
@@ -2260,14 +2294,17 @@ C        called before first call to TRACTL_1 !!!!!!
 C        SIR_INTOPEN will set LSRTAO = -1 if LUINTM exists with
 C        a 'MOLTWOEL' label. Whenever TRACTL_1 has performed
 C        a transformation LSRTAO will be = +1.
-C     
-C   
+C
+C
       IF (LSRTAO .NE. 0) THEN
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          READ  (LUINTM) NPQ,LDABUF,(LASTAD(I),I=1,2500)
          READ  (LUINTM) LBINT1,JTRLVL
          IF (JTRLVL .EQ. 3 .AND. ITRLVL .EQ. 2) JTRLVL = -1
          IF (JTRLVL .EQ. 2 .AND. ITRLVL .EQ. 3) JTRLVL =  3
+         IF (JTRLVL .EQ. 5 .AND. ITRLVL .EQ. 6) JTRLVL =  6
+         IF (JTRLVL .EQ. 6 .AND. ITRLVL .EQ. 4) JTRLVL = -1 ! (gg|ii) and (gi|gi) missing
+         IF (JTRLVL .EQ. 6 .AND. ITRLVL .EQ. 5) JTRLVL = -1 ! (gg|gi) missing
          IF (JTRLVL .GE. ITRLVL) THEN
 C           read CMO matrix from LUINTM
 C           and subtract from input CMO matrix
@@ -2289,13 +2326,16 @@ C           and subtract from input CMO matrix
                GO TO 9999
             END IF
          END IF
+         ITRLVL_LAST = ITRLVL ! cannot be earlier, because we might have abandoned integral transformation
+      ELSE
+         ITRLVL_LAST = ITRLVL
       END IF
       IF (LSRTAO .LT. 0) THEN
 C     ... check if old LUDA exist, if yes then check if file
 C         is consistent with LUINTM information /890302-hjaaj
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          READ  (LUINTM) NPQ,LDABUF,(LASTAD(I),I=1,2500)
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          LBUF = (IRAT + 1)*LDABUF + 2
          CALL GPINQ('AOSRTINT.DA','EXIST',FEXIST)
          IF (FEXIST) THEN
@@ -2345,14 +2385,14 @@ C        CALL SORTA(RINT,IINT,SCR,ISCR,MEMSX,MEMTX,IT)
          DST  = DFIN
          IF (IPRTRA.GT.0) WRITE (LUPRI,46) DTIM
    46    FORMAT(/' TIME IN SORTA',F10.2)
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          WRITE (LUINTM) NPQ,LDABUF,(LASTAD(I),I=1,2500)
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          LSRTAO = 1
       ELSE
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          READ  (LUINTM) NPQ,LDABUF,(LASTAD(I),I=1,2500)
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
 C
          LTRIPQ = NPQ*NMBASX
          LBUF = (IRAT + 1)*LDABUF + 2
@@ -2377,9 +2417,8 @@ C
       DO 720 ISYM=1,NSYM
          MORBI=MORB(ISYM)
       IF(MORBI.EQ.0) GO TO 720
-         MFROI=MFRO(ISYM)
          MBASI=NBAS(ISYM)
-         I1   = 1   + ICMO(ISYM) + MFROI*MBASI
+         I1   = 1   + ICMO(ISYM)
          I2   = LW1 + JCMO(ISYM)
          CALL MTRSP(MBASI,MORBI,CMO(I1),MBASI,WORK(I2),MORBI)
   720 CONTINUE
@@ -2432,21 +2471,20 @@ C
       DO 820 ISYM=1,NSYM
          MORBI=MORB(ISYM)
       IF(MORBI.EQ.0) GO TO 820
-         MFROI=MFRO(ISYM)
          MBASI=NBAS(ISYM)
-         I1   = 1   + ICMO(ISYM) + MFROI*MBASI
+         I1   = 1   + ICMO(ISYM)
          I2   = LW1 + JCMO(ISYM)
          CALL MTRSP(MBASI,MORBI,CMO(I1),MBASI,WORK(I2),MORBI)
   820 CONTINUE
 C
 C ***** save information about AO DA file (LUDA) on LUINTM
 C
-      CALL REWSPL(LUINTM)
+      REWIND(LUINTM)
       READ  (LUINTM)
 C 831014-hjaaj: maybe here also save LUINTM buffer length
 C 860731-hjaaj: done
       WRITE (LUINTM) LBINTM,ITRLVL,NSYM,NORB,NBAS
-      WRITE (LUINTM) (CMO(I),I=1,NCMOT)
+      WRITE (LUINTM) CMO(1:NCMOT)
       WRITE (LUINTM) MISH(1:8), MASH(1:8)
 C
       CALL TRAAB(ITRLVL,LUDA2,WORK(LW1),WORK(LW2),WORK(LW2),
@@ -2458,14 +2496,6 @@ C
       DTIM = DFIN - DSTTRA
       IF (IPRTRA .GT. 0) WRITE (LUPRI,49) DTIM
    49 FORMAT(' TOTAL TIME IN TRACD,SORTB,TRAAB',F10.2)
-      IF (IPRTRA .GE. 0) THEN
-         CALL GETTIM(TCPU,TWALL)
-         TCPU  = TCPU -TCPU0
-         TWALL = TWALL-TWALL0
-         WRITE(LUPRI,2200) TCPU, TWALL
-      END IF
- 2200 FORMAT(/' Integral transformation: Total CPU and WALL times (sec)'
-     &       ,2F12.3)
 C
 C set JTER to 2 to suppress printing on next call of TRACTL_1/hj-840710
       IF (IPRTRA .LT. 10) JTER = 2
@@ -2537,16 +2567,26 @@ C
       DIMENSION H2CD(*),NEEDTP(-4:6),WRK(LFREE)
 C
 C Used from common blocks:
+C   INFORB : N2ORBX
 C   INFTAP : LUINTM,LBINTM
 C
+#include "inforb.h"
 #include "inftap.h"
 #include "inftra.h"
-C   
+C
 C
       SAVE KBUF, KIBUF, KNEXT
       DATA KNEXT /-1/
 C
-      IF (NEWTRA) THEN
+      IF (FCKTRA_TYPE .gt. 0) THEN
+         IF (LFREE .LT. N2ORBX) THEN
+            write(lupri,*) 'KFREE, LFREE, IDIST',KFREE,LFREE,IDIST
+            write(lupri,*) 'N2ORBX',N2ORBX
+            call QUIT('too little memory for FCKTRA_NXTH2M')
+         END IF
+         CALL FCKTRA_NXTH2M(IC,ID,H2CD,NEEDTP,WRK(KFREE),IDIST)
+         RETURN
+      ELSE IF (NEWTRA) THEN
          CALL N_NXTH2M(IC,ID,H2CD,NEEDTP,WRK,KFREE,LFREE,IDIST)
          RETURN
       END IF
@@ -2559,7 +2599,7 @@ C         lvlmol=10 for full integral transformation)
 C     and allocate space for buffers.
 C
       IF (IDIST .EQ. 0) THEN
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          READ (LUINTM,ERR=998,END=999)
          READ (LUINTM,ERR=998,END=999) LBINTM, LVLMOL
          LVLMIN = 0
@@ -2579,7 +2619,7 @@ C        distributions must be available (needtp .gt. 0).
             CALL QUIT('NXTH2M error, LVLMOL too small')
          END IF
 C
-C        We need to keep BUF and IBUF consecutively in memory. 
+C        We need to keep BUF and IBUF consecutively in memory.
 C        IBUF(LBINTM + 1) = LENGTH of record
 C        K.Ruud, April 2000
 C
@@ -2687,7 +2727,7 @@ C     If first read (IDIST .EQ. 0)
 C     then setup for reading MO integrals ...
 C
       IF (IDIST .EQ. 0) THEN
-         CALL REWSPL(LUINTM)
+         REWIND(LUINTM)
          CALL MOLLAB('MOLTWOEL',LUINTM,LUPRI)
  100     CONTINUE
          READ (LUINTM) BUF, IBUF, LENGTH
@@ -2809,8 +2849,11 @@ C
       DIMENSION H2CD(*),NEEDTP(-4:6),WRK(LFREE)
 C
 C Used from common blocks:
-C   INFTAP : LUINTD,LBINTD
+C   INFORB : NCMOT
+C   INFTAP : LBINTD
+C   INFTRA : NEWTRA, NEWTRA_USEDRC, ?
 C
+#include "inforb.h"
 #include "inftap.h"
 #include "inftra.h"
 C
@@ -2819,7 +2862,10 @@ C
       SAVE    KBUF, KIBUF, KNEXT
       DATA    KNEXT /-1/
 C
-      IF (NEWTRA .AND. NEWTRA_USEDRC) THEN
+      IF (FCKTRA_TYPE .gt. 0 .AND. NEWTRA_USEDRC) THEN
+         CALL FCKTRA_NXTH2D(IC,ID,H2CD,NEEDTP,IDIST)
+         RETURN
+      ELSE IF (NEWTRA .AND. NEWTRA_USEDRC) THEN
          CALL N_NXTH2D(IC,ID,H2CD,NEEDTP,WRK,KFREE,LFREE,IDIST)
          RETURN
       END IF
@@ -2840,7 +2886,14 @@ C
          END IF
          REWIND LUINTD
          CALL MOLLAB('DRCINFO ',LUINTD,LUPRI)
-         READ (LUINTD) LBINTD, LVLDRC
+         READ (LUINTD) LBINTD, LVLDRC, NCMOT_OLD
+         IF (NCMOT_OLD .NE. NCMOT) THEN
+            WRITE (LUPRI,*)
+     &         'NXTH2D error, wrong dimension of CMO array'
+            WRITE (LUPRI,*) 'dim(CMO) on MODRCINT ',NCMOT_OLD
+            WRITE (LUPRI,*) 'dim(CMO) now         ',NCMOT
+            CALL QUIT('NXTH2D error, old MODRCINT not correct')
+         END IF
          LVLMIN = 0
          IF (NEEDTP(1).NE.0 .OR. NEEDTP(2).NE.0) LVLMIN = 1
          IF (NEEDTP(4).NE.0 .OR. NEEDTP(5).NE.0 .OR.
@@ -2853,8 +2906,8 @@ C
             CALL QTRACE(LUPRI)
             CALL QUIT('NXTH2D error, LVLDRC too small')
          END IF
-         CALL MEMGET('REAL',KBUF ,LBINTD,WRK,KFREE,LFREE)
-         CALL MEMGET('INTE',KIBUF,LBINTD,WRK,KFREE,LFREE)
+         CALL MEMGET2('REAL','BUF' ,KBUF ,LBINTD,WRK,KFREE,LFREE)
+         CALL MEMGET2('INTE','IBUF',KIBUF,LBINTD,WRK,KFREE,LFREE)
          KNEXT = KFREE
       ELSE
 C        ... check that BUF,IBUF has not been destroyed by calling
@@ -2920,9 +2973,10 @@ C
 C ****************************************************************
 C
 #include "implicit.h"
-#include "inftap.h"
-      DIMENSION H2CD(NORBT,NORBT),BUF(LBINTD),IBUF(LBINTD)
-      DIMENSION NEEDTP(-4:6)
+#include "priunit.h"
+      REAL*8    H2CD(NORBT,NORBT),BUF(LBINTD)
+      INTEGER*2 IBUF(2,LBINTD)
+      INTEGER   NEEDTP(-4:6)
 C
 C
 C Used from common blocks:
@@ -2934,9 +2988,13 @@ C
 #include "maxorb.h"
 #include "inforb.h"
 #include "infind.h"
+#include "inftap.h"
 C
 #include "orbtypdef.h"
 C
+      INTEGER*4 INDCDN, INDCD, LENGTH
+      INTEGER*2 INDCD2(2)
+      EQUIVALENCE (INDCD, INDCD2)
       SAVE INDCDN, LENGTH
 C
 #include "ibtdef.h"
@@ -2949,15 +3007,14 @@ C
       IF (IDIST .EQ. 0) THEN
          REWIND LUINTD
          CALL MOLLAB('DRCTWOEL',LUINTD,LUPRI)
-  100    READ (LUINTD) BUF,IBUF,LENGTH
-         IF (LENGTH.EQ.0) GOTO 100
-         IF (LENGTH.EQ.-1) THEN
+  100    READ (LUINTD) BUF,IBUF,LENGTH,INDCDN
+         IF (INDCDN.LT.0) THEN
             WRITE (LUPRI,'(/A)')
      &         ' **** NXTH2D-ERROR *** no MO integrals on LUINTD'
             CALL QTRACE(LUPRI)
             CALL QUIT('*** ERROR ***(NXTH2D) no mo integrals on LUINTD')
          END IF
-         INDCDN = IAND(ISHFT(IBUF(1),-16),IBT16)
+         IF (LENGTH.EQ.0) GOTO 100
       END IF
 C
 C *** Initialize H2CD
@@ -2981,8 +3038,8 @@ C        Last distribution has been read
       END IF
       INDCD = INDCDN
       IDIST = IDIST + 1
-      IC = IAND(ISHFT(INDCD,-8),IBT08)
-      ID = IAND(       INDCD,   IBT08)
+      IC = INDCD2(1)
+      ID = INDCD2(2)
       ITYPC  = IOBTYP(IC)
       ITYPD  = IOBTYP(ID)
       ITYPCD = IDBTYP(ITYPC,ITYPD)
@@ -2993,13 +3050,7 @@ C        Last distribution has been read
 C        ... first buffer is already in BUF,IBUF
       END IF
 C
-  300 READ (LUINTD) BUF,IBUF,LENGTH
-      IF (LENGTH.EQ.0) GO TO 300
-      IF (LENGTH.EQ.-1) THEN
-         INDCDN = -1
-      ELSE
-         INDCDN = IAND(ISHFT(IBUF(1),-16),IBT16)
-      END IF
+  300 READ (LUINTD) BUF,IBUF,LENGTH,INDCDN
       IF (INDCDN.NE.INDCD) THEN
 C        ... finished reading the INDCD distribution
 C            if not needed (ITYPCD .eq. 0) go find type of
@@ -3010,19 +3061,21 @@ C            new INDCDN distribution
             GO TO 9999
          END IF
       END IF
+      IF (LENGTH.EQ.0) GO TO 300
       IF (ITYPCD.EQ.0) GO TO 300
 C
   400 DO 450 I = 1,LENGTH
-         IA = IAND(ISHFT(IBUF(I),-8),IBT08)
-         IB = IAND(       IBUF(I),   IBT08)
+         IA = IBUF(1,I)
+         IB = IBUF(2,I)
          H2CD(IA,IB) = BUF(I)
   450 CONTINUE
       GO TO 300
 C
 C*******************************************************************
 C
-C End of subroutine NXTH2D
+C End of subroutine NX2H2D
 C
  9999 CONTINUE
       RETURN
       END
+! -- end of sirtra.F --

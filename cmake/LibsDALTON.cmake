@@ -24,7 +24,7 @@ endif()
 if(ENABLE_CHEMSHELL)
     set(DALTON_FIXED_FORTRAN_SOURCES
         ${DALTON_FIXED_FORTRAN_SOURCES}
-        ${CMAKE_SOURCE_DIR}/DALTON/abacus/dalton.F
+        ${CMAKE_SOURCE_DIR}/DALTON/main/dalton.F
         )
 endif()
 
@@ -35,6 +35,17 @@ add_library(
     ${DALTON_FIXED_FORTRAN_SOURCES}
     ${CMAKE_BINARY_DIR}/binary_info.F90
     )
+
+if(ENABLE_PCMSOLVER)
+  add_dependencies(dalton pcmsolver)
+  get_target_property(_incdirs dalton INCLUDE_DIRECTORIES)
+  set(_incdirs ${_incdirs} ${PROJECT_BINARY_DIR}/external/pcmsolver/src/pcmsolver-build/modules)
+  set_target_properties(dalton PROPERTIES INCLUDE_DIRECTORIES "${_incdirs}")
+  set(DALTON_LIBS
+    ${PCMSOLVER_LIBS}
+    ${DALTON_LIBS}
+    )
+endif()
 
 add_dependencies(dalton generate_binary_info)
 
@@ -86,10 +97,6 @@ if(ENABLE_GEN1INT)
         )
 endif()
 
-if(ENABLE_QFITLIB)
-    include(LibsQFITlib)
-    add_dependencies(dalton qfitlib)
-endif()
 
 if(ENABLE_OPENRSP)
     include(LibsOpenRSP)
@@ -97,17 +104,7 @@ endif()
 
 include(LibsPElib)
 
-if(ENABLE_PCMSOLVER)
-    set(PARENT_DEFINITIONS "-DPRG_DALTON -DDALTON_MASTER")
-    if(MPI_FOUND)
-        set(PARENT_DEFINITIONS "${PARENT_DEFINITIONS} -DVAR_MPI")
-    endif()
-    add_dependencies(dalton pcmsolver)
-    set(DALTON_LIBS
-        ${PCMSOLVER_LIBS}
-        ${DALTON_LIBS}
-        )
-endif()
+include(LibsQFITlib)
 
 if(ENABLE_QMMM_CUDA)
     add_subdirectory(external/qmmm_cuda)
@@ -121,7 +118,7 @@ endif()
 if(NOT ENABLE_CHEMSHELL)
     add_executable(
         dalton.x
-        ${CMAKE_SOURCE_DIR}/DALTON/abacus/dalton.F
+        ${CMAKE_SOURCE_DIR}/DALTON/main/dalton.F
         )
 
     set_property(TARGET dalton.x PROPERTY LINKER_LANGUAGE Fortran)
@@ -134,21 +131,4 @@ if(NOT ENABLE_CHEMSHELL)
         )
 endif()
 
-# compile utilities
-
-file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/tools)
-
-add_library(peter_utils_blocks ${CMAKE_SOURCE_DIR}/DALTON/tools/blocks.f90)
-
-add_executable(tools/aces2dalton ${CMAKE_SOURCE_DIR}/DALTON/tools/aces2dalton.f90)
-add_executable(tools/xyz2dalton  ${CMAKE_SOURCE_DIR}/DALTON/tools/xyz2dalton.f90)
-add_executable(tools/distances   ${CMAKE_SOURCE_DIR}/DALTON/tools/distances.f90)
-
-target_link_libraries(tools/aces2dalton peter_utils_blocks)
-target_link_libraries(tools/xyz2dalton  peter_utils_blocks)
-target_link_libraries(tools/distances   peter_utils_blocks)
-
-add_executable(tools/FChk2HES ${CMAKE_SOURCE_DIR}/DALTON/tools/FChk2HES.f)
-add_executable(tools/labread  ${CMAKE_SOURCE_DIR}/DALTON/tools/labread.f)
-# radovan: compilation broken
-#add_executable(tools/ODCPRG   ${CMAKE_SOURCE_DIR}/DALTON/tools/ODCPRG.f)
+add_subdirectory(DALTON/tools ${CMAKE_BINARY_DIR}/tools)

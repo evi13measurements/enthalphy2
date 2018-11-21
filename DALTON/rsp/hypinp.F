@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -596,7 +590,7 @@ C  /* Deck smoinp */
 C
 C Sonia: added MCDBTE section (1999)
 C
-      use pelib_interface, only: use_pelib
+      use pelib_interface, only: use_pelib, pelib_ifc_dolf
 #include "implicit.h"
 C
 #include "priunit.h"
@@ -946,15 +940,39 @@ C                 B operators
                GO TO 100
  24            CONTINUE
                   TWOPHO = .TRUE.
-                  LABEL='XDIPLEN'
-                  ASMOP( INDPRP(LABEL)) = .TRUE.
-                  BSMOP( INDPRP(LABEL)) = .TRUE.
-                  LABEL='YDIPLEN'
-                  ASMOP( INDPRP(LABEL)) = .TRUE.
-                  BSMOP( INDPRP(LABEL)) = .TRUE.
-                  LABEL='ZDIPLEN'
-                  ASMOP( INDPRP(LABEL)) = .TRUE.
-                  BSMOP( INDPRP(LABEL)) = .TRUE.
+                  IF (USE_PELIB()) THEN
+                     IF (PELIB_IFC_DOLF()) THEN
+                        LABEL='XLFDIPLN'
+                        ASMOP( INDPRP(LABEL)) = .TRUE.
+                        BSMOP( INDPRP(LABEL)) = .TRUE.
+                        LABEL='YLFDIPLN'
+                        ASMOP( INDPRP(LABEL)) = .TRUE.
+                        BSMOP( INDPRP(LABEL)) = .TRUE.
+                        LABEL='ZLFDIPLN'
+                        ASMOP( INDPRP(LABEL)) = .TRUE.
+                        BSMOP( INDPRP(LABEL)) = .TRUE.
+                     ELSE
+                        LABEL='XDIPLEN'
+                        ASMOP( INDPRP(LABEL)) = .TRUE.
+                        BSMOP( INDPRP(LABEL)) = .TRUE.
+                        LABEL='YDIPLEN'
+                        ASMOP( INDPRP(LABEL)) = .TRUE.
+                        BSMOP( INDPRP(LABEL)) = .TRUE.
+                        LABEL='ZDIPLEN'
+                        ASMOP( INDPRP(LABEL)) = .TRUE.
+                        BSMOP( INDPRP(LABEL)) = .TRUE.
+                     END IF
+                  ELSE
+                     LABEL='XDIPLEN'
+                     ASMOP( INDPRP(LABEL)) = .TRUE.
+                     BSMOP( INDPRP(LABEL)) = .TRUE.
+                     LABEL='YDIPLEN'
+                     ASMOP( INDPRP(LABEL)) = .TRUE.
+                     BSMOP( INDPRP(LABEL)) = .TRUE.
+                     LABEL='ZDIPLEN'
+                     ASMOP( INDPRP(LABEL)) = .TRUE.
+                     BSMOP( INDPRP(LABEL)) = .TRUE.
+                  END IF
                GO TO 100
  25            CONTINUE
                   MCDCAL=.TRUE.
@@ -1464,13 +1482,13 @@ C
 #include "priunit.h"
 C
 C panor:
-C     DOESA=.TRUE.
+C     If DOESA=.TRUE, then:
 C     For excited state absorption we require the B-state to be the
 C     first state of symmetry ESASYM and that the C-state is separate
 C     from the B-state.
 C
       DO 300 ICSYM = 1,NSYM
-         IF (DOESA .OR. EXMTES) THEN
+         IF (DOESA .OR. EXMTES .OR. ISPINB.NE.ISPINC) THEN
             NBSYME = NSYM
          ELSE
             NBSYME = ICSYM

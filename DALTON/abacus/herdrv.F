@@ -1,24 +1,18 @@
 !
-!...   Copyright (c) 2015 by the authors of Dalton (see below).
-!...   All Rights Reserved.
-!...
-!...   The source code in this file is part of
-!...   "Dalton, a molecular electronic structure program,
-!...    Release DALTON2016 (2015), see http://daltonprogram.org"
-!...
-!...   This source code is provided under a written licence and may be
-!...   used, copied, transmitted, or stored only in accord with that
-!...   written licence.
-!...
-!...   In particular, no part of the source code or compiled modules may
-!...   be distributed outside the research group of the licence holder.
-!...   This means also that persons (e.g. post-docs) leaving the research
-!...   group of the licence holder may not take any part of Dalton,
-!...   including modified files, with him/her, unless that person has
-!...   obtained his/her own licence.
-!...
-!...   For further information, including how to get a licence, see:
-!...      http://daltonprogram.org
+!  Dalton, a molecular electronic structure program
+!  Copyright (C) 2018 by the authors of Dalton.
+!
+!  This program is free software; you can redistribute it and/or
+!  modify it under the terms of the GNU Lesser General Public
+!  License version 2.1 as published by the Free Software Foundation.
+!
+!  This program is distributed in the hope that it will be useful,
+!  but WITHOUT ANY WARRANTY; without even the implied warranty of
+!  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+!  Lesser General Public License for more details.
+!
+!  If a copy of the GNU LGPL v2.1 was not distributed with this
+!  code, you can obtain one at https://www.gnu.org/licenses/old-licenses/lgpl-2.1.en.html.
 !
 !
 C
@@ -87,7 +81,6 @@ C
 #include "inftap.h"
 #include "huckel.h"
 #include "r12int.h"
-#include "nuclei.h"
 #include "pcmlog.h"
 C
 Cholesky
@@ -318,7 +311,7 @@ C
 #include "maxaqn.h"
 C
 C     NTABLE has been increased 118 (WK/UniKA/07-25-2005).
-      PARAMETER (NDIR = 9, NTABLE = 145)
+      PARAMETER (NDIR = 9, NTABLE = 146)
       PARAMETER (D0 = 0.0D0, D1 = 1.0D0, D4 = 4.0D0, D10 = 1.0D1)
       CHARACTER WORD*7, PROMPT*1, TABDIR(NDIR)*7, TABLE(NTABLE)*7,
      &          WORD1*7
@@ -438,8 +431,8 @@ C     Bin Gao, Oct. 3, 2011
      &             '.NEWTRA', '.KINADI', '.GENINT', '.S2MBRA',
 !                    241        242        243        244
      &             '.S2MKET', '.S2MMIX', '.LRINTS', '.NORMAO',
-!                    245
-     &             '.TWOBYT'/
+!                    245        246
+     &             '.TWOBYT', '.LFDIPL'/
 C
 C
       CALL QENTER('HERINP')
@@ -530,7 +523,7 @@ C
      &                211,212,213,214,215,216,217,218,219,220,
      &                221,222,223,224,225,226,227,228,229,230,
      &                231,232,233,234,235,236,237,238,239,240,
-     &                241,242,243,244,245), I
+     &                241,242,243,244,245,246), I
             END IF
          END DO
             IF (WORD .EQ. '.OPTION') THEN
@@ -903,21 +896,9 @@ c ach
             THETA  = .TRUE.
             ONEPRP = .TRUE.
             GO TO 100
-  177    CONTINUE
-C&&& Nuclear model
-            READ (LUCMD, *,IOSTAT=IOS) INUC
-            IF (IOS.NE.0) THEN
-              CALL QUIT('Error in reading nuclear model INUC  !')
-            ENDIF
-            IF    (INUC.EQ.1) THEN
-              GAUNUC = .FALSE.
-            ELSEIF(INUC.EQ.2) THEN
-              GAUNUC = .TRUE.
-            ELSE
-              WRITE(LUPRI,'(//3A,I5)')
-     &         '*** ERROR ',WORD1,' *** Unknown nuclear model:',INUC
-              CALL QUIT('*** ERROR '//WORD1//': Unknown nuclear model')
-            ENDIF
+  177    CONTINUE ! .NUCMOD
+            CALL QUIT(
+     &      'ERROR, .NUCMOD has been moved to *MOLBAS input section')
             GO TO 100
 !      .SORT Integrals
   178    CONTINUE
@@ -1322,6 +1303,10 @@ cs            ENDIF
   245    CONTINUE   ! .TWOBYTEPACKING
             TWOBYTEPACKING = .TRUE.
             GO TO 100 
+  246    CONTINUE
+            LFDIPLN = .TRUE.
+            ONEPRP = .TRUE.
+            GO TO 100
       ELSE IF (PROMPT .EQ. '*') THEN
          GO TO 300
       ELSE
@@ -1337,12 +1322,6 @@ cLig <>
      &               .OR. RPSO
       IF (TSTINP) WRITE (LUPRI,'(/A/)') ' @@ Input test run only !!!'
       WRITE (LUPRI,'(/A,I5)') ' Default print level:    ',IPRDEF
-      IF(GAUNUC) THEN
-        WRITE(LUPRI,'(/A)') ' * Nuclear model: '//
-     &    'Gaussian charge distribution.'
-      ELSE
-        WRITE(LUPRI,'(/A)') ' * Nuclear model: Point charge'
-      ENDIF
       IF (SPNORB .AND. SOTEST) THEN
          WRITE (LUPRI,'(/A)')
      *    ' FATAL ERROR in input: .SPIN-ORBIT and .SOTEST cannot '/
@@ -1529,7 +1508,7 @@ C copied from linsca abacus/herdrv.F, Bin Gao, December 17, 2009
          IF (ELGDIL) WRITE (LUPRI,'(10X,A)')
      &     '- Diamagnetic one-electron spin-orbit (London)'
          IF (MNF_SO) WRITE (LUPRI,'(10X,A)')
-     &     '- Mean field spin-orbit integrals'
+     &     '- Mean field spin-orbit integrals (AMFI)'
          IF (NELFLD) WRITE (LUPRI,'(10X,A)')
      &     '- Electric field at the nuclei'
          IF (NSNLTS) WRITE(LUPRI,'(10X,A)')
@@ -1679,6 +1658,8 @@ cLig added message to display for RPSO and RAGNMO optiion
      &      '  computation of CTOCD-DZ magnetizability in an'//
      &      '  analytical way'
 cLig
+         IF (LFDIPLN) WRITE (LUPRI,'(10X,A)')
+     &     '- Effective dipole operator - only possible with PE library'
       END IF
 
       WRITE (LUPRI,'(4(/A,3F20.12))')
@@ -2203,7 +2184,7 @@ C
 #include "cbiher.h"
 #include "cbihrs.h"
       SAVE SET
-      DATA TABLE /'.SKIP  ', '.PRINT ', '.NOSYMM', 'xxxxxxx', '.THRESH',
+      DATA TABLE /'.SKIP  ', '.PRINT ', '.NOSYMM', '.ONLY J', '.THRESH',
      &            'XXXXXXX', 'XXXXXXX', 'XXXXXXX', 'XXXXXXX', 'XXXXXXX'/
       DATA SET/.FALSE./
 C
@@ -2225,6 +2206,7 @@ C
       RUNSUP = SUPMAT
       IPRSUP = IPRDEF
       NOSSUP = .FALSE.
+      ONLY_J = .FALSE.
       THRSUP = -1.0D0
 C
       NEWDEF = WORD .EQ. '*SUPINT'
@@ -2264,6 +2246,7 @@ C
                   NOSSUP = .TRUE.
                GO TO 100
     4          CONTINUE
+                  ONLY_J = .TRUE.
                GO TO 100
     5          CONTINUE
                   READ (LUCMD,*) THRSUP
@@ -2295,12 +2278,18 @@ C
       END IF
   300 CONTINUE
       IF (ICHANG .EQ. 0) GOTO 199
-      IF (RUNSUP. AND. NEWDEF) THEN
-         CALL HEADER('Changes of defaults for SUPINT:',1)
+      IF (NEWDEF) THEN
+         CALL HEADER('Changes of defaults for *SUPINT:',1)
          IF (IPRSUP .NE. IPRDEF) WRITE (LUPRI,'(A,I5)')
-     &         ' Print level in SUPINT:',IPRSUP
+     &         ' Print level                        :',IPRSUP
+         IF (ONLY_J) THEN
+            WRITE(LUPRI,'(A)') ' Only Coulomb (no exchange)'
+         ELSE
+            WRITE(LUPRI,'(A)') ' P-supermatrix integrals,'//
+     &         ' (if requested for DFT: with scaled exchange)'
+         END IF
          IF (THRSUP .NE. -1.0D0) WRITE (LUPRI,'(A,D12.2)')
-     &         ' Threshold for supermatrix integrals:', THRSUP
+     &         ' Threshold for supermatrix integrals:',THRSUP
          IF (NOSSUP) THEN
             WRITE (LUPRI,'(A)') ' No symmetry used in SUPINT.'
          ELSE
@@ -2450,6 +2439,8 @@ C
             CALL TIMER('HUCKEL',TIMSTR,TIMEND)
             CALL FLSHFO(LUPRI)
          END IF
+      END IF ! RUNONE
+      IF (RUNONE .OR. ONEPRP) THEN
 C
 C           ***** Overlap integrals *****
 C
@@ -2471,6 +2462,21 @@ C
             CALL PR1INT('POPOVLP',WORK,LWORK,IDUMMY,
      &                  IDUMMY,TRIANG,PROPRI,IPRONE)
             CALL TIMER('POPOVLP',TIMSTR,TIMEND)
+            CALL FLSHFO(LUPRI)
+C
+C           R**2 and R**4 integrals /hjaaj Nov 2017
+C
+            CALL TIMER('START ',TIMSTR,TIMEND)
+            IORDER = 2
+            CALL PR1INT('R2     ',WORK,LWORK,IORDER,
+     &                  IDUMMY,TRIANG,PROPRI,IPRONE)
+            CALL TIMER('R2     ',TIMSTR,TIMEND)
+            CALL FLSHFO(LUPRI)
+            CALL TIMER('START ',TIMSTR,TIMEND)
+            IORDER = 4
+            CALL PR1INT('R4     ',WORK,LWORK,IORDER,
+     &                  IDUMMY,TRIANG,PROPRI,IPRONE)
+            CALL TIMER('R4     ',TIMSTR,TIMEND)
             CALL FLSHFO(LUPRI)
 C
 C           ***** Dipole length integrals *****
@@ -2528,6 +2534,19 @@ C
                CALL PR1INT('DIPVEL ',WORK,LWORK,IDUMMY,
      &                     IDUMMY,TRIANG,PROPRI,IPRONE)
                CALL TIMER('DIPVEL',TIMSTR,TIMEND)
+               CALL FLSHFO(LUPRI)
+            END IF
+C
+C           ***** Effective dipole integrals *****
+C           - only when polarizable environment turned on
+C             using PE library - otherwise they are just
+C             standard dipole integrals
+
+            IF (LFDIPLN) THEN
+               CALL TIMER('START ',TIMSTR,TIMEND)
+               CALL PR1INT('LFDIPLN',WORK,LWORK,IDUMMY,
+     &                     IDUMMY,TRIANG,PROPRI,IPRONE)
+               CALL TIMER('LFDIPL',TIMSTR,TIMEND)
                CALL FLSHFO(LUPRI)
             END IF
 C
@@ -3527,8 +3546,8 @@ C
                CALL FLSHFO(LUPRI)
             END IF
 cLig
-         END IF
-      END IF  ! (RUNONE)
+         END IF ! (ONEPRP)
+      END IF  ! (RUNONE .OR. ONEPRP)
       RUNONE = .TRUE. ! enable one-electron integrals for next iteration if e.g. geometry optimization
 C
 C     Determine number of different integrals in R12 method (WK/UniKA/19-11-2002).
@@ -3830,23 +3849,29 @@ C
 C
 C Used from common blocks:
 C  GNRINF: DIRCAL, DOSRIN
+C  CBIHER: ONEPRP
 C  CBIHR1: RUNONE
 C  CBIHR2: RUNTWO
 C  INFTAP: LUINTA, LUSRINT
+#include "mxcent.h"
 #include "gnrinf.h"
+#include "cbiher.h"
 #include "cbihr1.h"
 #include "cbihr2.h"
 #include "inftap.h"
 C
-      LOGICAL AOEXIST, DIRCAL_SAV, RUNONE_SAV, RUNTWO_SAV !, DOSRIN_SAV
+      LOGICAL AOEXIST, DIRCAL_SAV, RUNONE_SAV, ONEPRP_SAV, RUNTWO_SAV !, DOSRIN_SAV
 C
+      CALL QENTER('MAKE_AOTWOINT')
       CALL GPINQ('AOTWOINT','EXIST',AOEXIST)
       IF (.NOT. AOEXIST) THEN
          RUNONE_SAV = RUNONE
+         ONEPRP_SAV = ONEPRP
          RUNTWO_SAV = RUNTWO
 !        DOSRIN_SAV = DOSRIN
          DIRCAL_SAV = DIRCAL
          RUNONE = .FALSE.
+         ONEPRP = .FALSE.
          RUNTWO = .TRUE.
 !        DOSRIN = DOSRIN .AND. .NOT.DIRCAL
          DIRCAL = .FALSE.
@@ -3861,13 +3886,17 @@ C        Open LUINTA/LUSRINT for new integrals
             CALL GPOPEN(LUSRINT,'AOSR2INT','UNKNOWN',' ',' ',
      &                  IDUMMY,.FALSE.)
          END IF
+         IF (LUPROP .LT. 0)
+     &   CALL GPOPEN(LUPROP,'AOPROPER','OLD',' ',' ',IDUMMY,.FALSE.)
          CALL HERINT(WORK,LWORK)
          RUNONE = RUNONE_SAV
+         ONEPRP = ONEPRP_SAV
          RUNTWO = RUNTWO_SAV
 !        DOSRIN = DOSRIN_SAV
          DIRCAL = DIRCAL_SAV
       END IF
 
+      CALL QEXIT('MAKE_AOTWOINT')
       RETURN
       END
 #endif /* ifndef PRG_DIRAC */
@@ -4068,7 +4097,7 @@ C
       no2so  = .false.
       SOTEST = .FALSE.
       NOTWO  = DIRCAL
-      TWOBYTEPACKING = NBASIS .GT. 255   ! then we need two bytes to pack indices
+      TWOBYTEPACKING = .FALSE.
       SECMOM = .FALSE.
       CARMOM = .FALSE.
       SPHMOM = .FALSE.
@@ -4162,6 +4191,7 @@ C
       DPTOVL = .FALSE.
       DPTPOT = .FALSE.
       XDDXR3 = .FALSE.
+      LFDIPLN = .FALSE.
 C     Initialize R12 logical variables R12CAL (WK/UniKA/04-11-2002).
       R12DIA = .TRUE.
       R12SVD = .FALSE.
@@ -4234,17 +4264,6 @@ C
 Cholesky
       IF (CHOINT) NOTWO = .TRUE.
 Cholesky
-C
-CTSAUE
-C    Initialize nuclear model in NUCLEI
-C      1 - Point nucleus
-C      2 - Gaussian nucleus
-C
-      IF(RELCAL) THEN
-        GAUNUC = .TRUE.
-      ELSE
-        GAUNUC = .FALSE.
-      ENDIF
 C     
 C     Initialize /CBISOL/ (10-Dec-92 th+hjaaj)
 C     -- not used in Hermit; SOLVNT must be false
@@ -4282,9 +4301,9 @@ C
 C
 C     Open Mean-field input file generate in READIN
 C
-      LUTMP2   = -1
+      LUAMFI_INP   = -1
       LUMNFPRP = -1
-      CALL GPOPEN(LUTMP2,'AMFI_MNF.INP','OLD',' ','FORMATTED',
+      CALL GPOPEN(LUAMFI_INP,'AMFI_MNF.INP','OLD',' ','FORMATTED',
      &            IDUMMY,.FALSE.)
       CALL GPOPEN(LUMNFPRP,'AOPROPER.MNF','UNKNOWN',' ','UNFORMATTED',
      &            IDUMMY,.FALSE.)
@@ -4298,7 +4317,7 @@ C     We loop over symmetry-independent centers
 C
       REWIND (LUMNFPRP)
       DO IATOM = 1, NUCIND
-         CALL AMFI(LUTMP2,LUMNFPRP,BREIT,GAUNUC,GNUEXP(IATOM),
+         CALL AMFI(LUAMFI_INP,LUMNFPRP,BREIT,GAUNUC,GNUEXP(IATOM),
      &             WORK,LWORK)
       END DO
 C
@@ -4308,7 +4327,7 @@ C
       REWIND (LUMNFPRP)
       CALL SYMTRAFO(LUMNFPRP,PROPRI,IPRINT,WORK,LWORK)
 C
-      CALL GPCLOSE(LUTMP2,'KEEP')
+      CALL GPCLOSE(LUAMFI_INP,'KEEP')
       CALL GPCLOSE(LUMNFPRP,'DELETE')
       RETURN
       END
