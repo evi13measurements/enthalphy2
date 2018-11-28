@@ -802,10 +802,9 @@ C They are:
 C  IROW ISW ISX ISMO ISAO NSM ICH  IOBTYP (but not IWOP)
 C
 C loop to set up triangular indexing array ...
-      IROW(1) = 0
-         DO 400 I = 1,LIROW
-            IROW(I+1) = IROW(I) + I
-  400    CONTINUE
+      DO I = 1,LIROW
+         IROW(I) = (I*(I-1))/2
+      END DO
 C
 C setup of IOBTYP (1=frozen, 2=inactive, 3=active, 4=secondary)
 C
