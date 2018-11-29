@@ -148,6 +148,11 @@ configure_script(
     ${CMAKE_BINARY_DIR}/dalton_config.h
     )
 
+configure_script(
+    ${CMAKE_SOURCE_DIR}/WESTA/wes-ac.in
+    ${CMAKE_BINARY_DIR}/wes-ac
+    )
+
 # if BLAS and/or LAPACK not found, add own sources to the list of
 # sources to compile
 if(USE_BUILTIN_BLAS)

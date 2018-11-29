@@ -12,28 +12,42 @@
 
 params=$*
 
-WESTA_DALTON=${DALTON:-"/people/disk2/hjj/prog/svnDalton_trunk/bin/dalton -M 6000 "}
-WESTA="/people/disk2/hjj/prog/westa/westa.x"
+
+# radovan: this is to figure out the location of this script
+# http://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-stored-in
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+    SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+    SOURCE="$(readlink "$SOURCE")"
+    # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+    [[ $SOURCE != /* ]] && SOURCE="$SCRIPT_DIR/$SOURCE"
+done
+SCRIPT_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+
+DALTON_SCRIPT=$SCRIPT_DIR/dalton
+WESTA_EXECUTABLE=$SCRIPT_DIR/westa.x
+
 
 WRKDIR=`pwd`
 SCRDIR=/scratch/$USER
 
 IERR=0
 if [ "$1" = "-r" ]; then
- shift
- RESTART=${1%\.tar.gz}
- shift
- OLDTAR=${RESTART}.tar.gz
- if [ ! -r ${OLDTAR} ]; then
-  echo "ERROR, restart file $OLDTAR is not readable/does not exist"
-  IERR=1
- fi
+   shift
+   RESTART=${1%\.tar.gz}
+   shift
+   OLDTAR=${RESTART}.tar.gz
+   if [ ! -r ${OLDTAR} ]; then
+      echo "ERROR, restart file $OLDTAR is not readable/does not exist"
+      IERR=1
+   fi
 else
- OLDTAR=norestart
+   OLDTAR=norestart
 fi
 
 if [ $# -lt 5 ]; then
-   echo ERROR: too few arguments
+   echo 'ERROR: too few arguments (less than five)'
+   exit 1
 fi
 
 DALAINP=${1%\.dal}
@@ -111,10 +125,10 @@ SCRDIR_A=$SCRDIR/$MOLAINP
 echo "wes-ac: geometry A in " $SCRDIR_A
 
 if [ -f $OLDTAR ]; then
-   $WESTA_DALTON -D -t $SCRDIR_A -f $RESTART  $DALAINP  $MOLAINP
+   $DALTON_SCRIPT -D -t $SCRDIR_A -noappend -f $RESTART  $DALAINP  $MOLAINP
    ierr=$?
 else
-   $WESTA_DALTON -D -t $SCRDIR_A  $DALAINP  $MOLAINP
+   $DALTON_SCRIPT -D -t $SCRDIR_A -noappend  $DALAINP  $MOLAINP
    ierr=$?
 fi
 if [ $ierr -ne 0 ]; then
@@ -152,7 +166,7 @@ SCRDIR_B=$SCRDIR/$MOLBINP
 echo "wes-ac: geometry B in " $SCRDIR_B
 
 if [ -f $OUTTAR ]; then
-   $WESTA_DALTON -D -t $SCRDIR_B -f $AJOB  $DALBINP  $MOLBINP
+   $DALTON_SCRIPT -D -t $SCRDIR_B -noappend -f $AJOB  $DALBINP  $MOLBINP
    ierr=$?
    if [ $ierr -ne 0 ]; then
       echo "Error in Dalton on geometry B, exit code $ierr"
@@ -161,7 +175,7 @@ if [ -f $OUTTAR ]; then
 else
    echo "ERROR: $OUTTAR was not created"
    exit 1
-   $WESTA_DALTON -D -t $SCRDIR_B           $DALBINP  $MOLBINP
+   $DALTON_SCRIPT -D -t $SCRDIR_B -noappend           $DALBINP  $MOLBINP
 fi
 
 cd $SCRDIR_B
@@ -189,7 +203,7 @@ while [ -r ${WESINP}.inp ]; do
 
    cd $WESDIR
    echo "Running westa on $WESINP, output in $WESOUT"
-   $WESTA < $WESINP > $WRKDIR/$WESOUT
+   $WESTA_EXECUTABLE < $WESINP > $WRKDIR/$WESOUT
    cd $WRKDIR
 
 #
