@@ -2,6 +2,21 @@
 
 ## [2019.alpha] (Dalton2019 alpha)
 
+### Added
+- added information about .MS2 input option to manual, quit if invalid value specified.
+
+## [2018.2alpha] (unreleased)
+
+### Fixed
+- more robust .STEX input (old failed with gfortran 8); changed documentation accordingly.
+
+## [2018.1] (2019-01-14)
+
+### Fixed
+- Error in code for 2-el integral transformation level 4 (used in some cases for MCSCF). Error was not in Dalton2016.
+- Error in export for FDE fixed.
+- Compilation with PGI compilers now possible (but code with pelib or qfit using gen1int is not working).
+
 ## [2018.0] (2018-11-19)
 
 ### New features added

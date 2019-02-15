@@ -45,7 +45,7 @@
    CALL PUTWA(UNIT, SOURCE, ADDR, COUNT, IERR) 
 
    Currently the I/O is syncronous and unbuffered */
-#define _BSD_SOURCE 1
+#define _DEFAULT_SOURCE 1
 #define _LARGEFILE64_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
@@ -295,7 +295,7 @@ FSYM(getwa)(const INTEGER *unit, double *result, const INTEGER *addr,
 {
   size_t nbytes, con2;
   off64_t where, con1;
-  double start, end;
+  double start=0, end;
   struct w_file *file;
 
   if (first_call)
@@ -365,7 +365,7 @@ FSYM(putwa)(const INTEGER *unit, const double *source, const INTEGER *addr,
 {
   size_t nbytes,con2;
   off64_t where, con1;
-  double start, end;
+  double start=0, end;
   struct w_file *file;
 
   if (first_call)
