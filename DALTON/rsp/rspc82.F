@@ -2781,10 +2781,7 @@ C
 #include "infind.h"
 #include "infpri.h"
 #include "absorp.h"
-CPFP
-C#include "mxcent.h"
-C#include "spnout.h"
-Cend-PFP
+C
       INTEGER, ALLOCATABLE ::  IVENU(:)
 C
       LOGICAL LINEQ
@@ -3146,8 +3143,7 @@ C
             NNZYRED = (KZYRED*(KZYRED+1))/2
             CALL DCOPY(NNZYRED,REDS,1,BCVEC,1)
             WRITE (lupri,*) 'S[2] reduced matrix'
-CPFP avoid writing the matrices within SOSOSC!
-c            IF (.NOT. SOSOSC) THEN
+CPFP  It is necessary to avoid writing the matrices within SOSOSC!
             CALL outpak(bcvec,kzyred,-1,lupri)
             CALL JACO(BCVEC,BCVEC(KK1),KZYRED,KZYRED,0,
      &          BCVEC(KK2),BCVEC(KK3))
@@ -3158,12 +3154,10 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of S[2] reduced matrix'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
-c            END IF
 Cend-PFP
             CALL DCOPY(NNZYRED,REDE,1,BCVEC,1)
             WRITE (lupri,*) 'E[2] reduced matrix'
-CPFP avoid writing the matrices within SOSOSC!
-c            IF (.NOT. SOSOSC) THEN
+CPFP  It is necessary to avoid writing the matrices within SOSOSC!
             CALL outpak(bcvec,kzyred,-1,lupri)
             CALL JACO(BCVEC,BCVEC(KK1),KZYRED,KZYRED,0,
      &          BCVEC(KK2),BCVEC(KK3))
@@ -3174,7 +3168,6 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of E[2] reduced matrix'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
-c            END IF
 Cend-PFP
          END IF
          IF (IPRRSP .GE. 10) THEN
@@ -3221,8 +3214,8 @@ C
       DIMENSION XINDX(*),FCAC(*),H2AC(*)
 C
 CPFP 17-01-2017 Needed for SOS-module
-C      PARAMETER (MAXST=400)
-      PARAMETER (MAXST=1500)
+      PARAMETER (MAXST=400)
+C      PARAMETER (MAXST=1500)
 Cend-PFP
       DIMENSION STVAL(MAXST),ISTART(MAXST),IEQUAL(MAXST)
 C

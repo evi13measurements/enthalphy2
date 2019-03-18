@@ -1289,8 +1289,10 @@ CPFP: 27/03-2006: SOS for spin-spin coupling included
  16            CONTINUE
                   SOSSPN = .TRUE.
                   SOSOCS = .TRUE.
-C      NSTATI: Initial state, NASTAF: Final state, NITRST:step of the jump
                   READ (LUCMD,*) NSTATI,NSTATF,NITRST
+C      NSTATI: Initial number of pseudo-excited states used in the localization SOSOCC procedure
+C      NSTATF: Final number pseudo-excited states to be reached in the localization SOSOCC procedure
+C      NITRST: Number of the pseudo-excited states in the step used to go from  NSTATI to NSTATF in the localization SOSOCC procedure
                GOTO 100
 CPFP  03-12-2015 adding an automatic convergence.
  17            CONTINUE
@@ -1298,16 +1300,17 @@ CPFP  03-12-2015 adding an automatic convergence.
                   SOSOSC = .TRUE.
                   READ (LUCMD,*) NSTATI,NSTATF,NITRST
 C      NCSSCC: Number of SSCC (taken from the output, i.e. the 1st, 2nd, etc) to apply the convergence,
+C      NCTERM: The term of the SSCC, {\it i.e.} from 1 to 4 for terms DSO, PSO, SD and FC, and the isotorpic J itself 5.
 C      THRSLO: Threshold of the convergence in \%,
 C      NCMTHD: Method of convergence to be used
 C              1: comparison between the last two values
 C              2: comparison between the last and the response value
-C              3: combination of 1 and 2 methods 
+C              3: combination of 1 and 2 methods
 C              4: comparison with the extrapolated value from a polynomial method
 C              5: comparison with the extrapolated value from a retional method
 C              6: comparison with the extrapolated value from a splines method
 C              7: comparison with the extrapolated value from a y = a + b*tanh (c*x) function
-C              8: another fitting of method 7. 
+C              8: Debugging-purposes only: Another fitting of method 7
                   READ (LUCMD,*) NCSSCC,NCTERM,NCMTHD,THRSLO
                GOTO 100
  18            CONTINUE

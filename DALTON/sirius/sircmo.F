@@ -1446,26 +1446,46 @@ C
 C
 C *** FORMAT statements
 C
+CPFP Added condition for different formats according to the needs
+C
  2400 FORMAT(/' Molecular orbitals for symmetry species',I2,'  (',A,')'
      &       /' ------------------------------------------------')
+C
 CPFP
- 2600 FORMAT(/'    Orbital ',7I12)
- 2620 FORMAT( '    Sup.sym.',7I12)
-C 2800 FORMAT(I4,1X,A4,':',A4,7F9.4)
- 2800 FORMAT(I4,1X,A4,':',A4,7F12.8)
+C      Default
+ 2600  FORMAT(/'    Orbital ',7I9)
+ 2620  FORMAT( '    Sup.sym.',7I9)
+ 2800  FORMAT(I4,1X,A4,':',A4,7F9.4)
+C      Within SOS-localization of orbitals
+ 2610  FORMAT(/'    Orbital ',7I12)
+ 2625  FORMAT( '    Sup.sym.',7I12)
+ 2810  FORMAT(I4,1X,A4,':',A4,7F12.8)
 Cend-PFP
 C
 C *** Print molecular orbitals
-CPFP
       IF (PROCC .AND. .NOT. CMOPRI) THEN
-C         THRPRI = 1.0D-2
+CPFP
+        IF (EXFOMO) THEN
+C       Within the SOS-localization of orbitals
          THRPRI = 1.0D-8
-C         WRITE(IOUT,'(/A,F7.4,A)')
          WRITE(IOUT,'(/A,F15.12,A)')
      &   ' (Only coefficients >',THRPRI,' are printed.)'
+        ELSE
+C       Default
+         THRPRI = 1.0D-2
+         WRITE(IOUT,'(/A,F7.4,A)')
+     &   ' (Only coefficients >',THRPRI,' are printed.)'
+        END IF
+Cend-PFP
       ELSE
-C         THRPRI = 1.0D-4
+CPFP
+        IF (EXFOMO) THEN
+C      Within the SOS-localization of orbitals
          THRPRI = 1.0D-8
+        ELSE
+C      Default
+         THRPRI = 1.0D-4
+        END IF
       END IF
 Cend-PFP
 C
@@ -1498,8 +1518,20 @@ C
             ISTMO =IEND*NBASI+ICMOI
             IEND  =MIN(IEND+7,NENDI)
             IEMO  =NBASI*(IEND-1)+ICMOI
+      IF (EXFOMO) THEN
+C      Within the SOS-localization of orbitals
+            WRITE(IOUT,2610) (I,I=IST,IEND)
+      ELSE
+C      Default
             WRITE(IOUT,2600) (I,I=IST,IEND)
+      END IF
+      IF (EXFOMO) THEN
+C      Within the SOS-localization of orbitals
+            IF (SUPSYM) WRITE(IOUT,2625) (ISSMO(ISTORB+I),I=IST,IEND)
+      ELSE
+C      Default
             IF (SUPSYM) WRITE(IOUT,2620) (ISSMO(ISTORB+I),I=IST,IEND)
+      END IF
             DO 200 I=1,MBASI
                JSMO=ISTMO+I
                JEMO=IEMO+I
@@ -1507,8 +1539,17 @@ C
                DO J=JSMO,JEMO,NBASI
                   IF ( ABS(CMO(J)) .GE. THRPRI ) JJ = 1
                END DO
+CPFP
+             IF (EXFOMO) THEN
+C      Within SOS-localization of orbitals
+               IF (JJ .EQ. 1) WRITE(IOUT,2810) I,CENT(I+ISTBAS),
+     *            TYPE(I+ISTBAS),(CMO(J),J=JSMO,JEMO,NBASI)
+             ELSE
+C      Default
                IF (JJ .EQ. 1) WRITE(IOUT,2800) I,CENT(I+ISTBAS),
      *            TYPE(I+ISTBAS),(CMO(J),J=JSMO,JEMO,NBASI)
+             END IF
+Cend-PFP
   200       CONTINUE
          IF (IEND.NE.NENDI) GO TO 100
 C

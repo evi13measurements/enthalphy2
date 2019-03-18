@@ -1890,6 +1890,29 @@ accumulated coupling constants will be printed. The occupied orbitals
 can be canonical Hartree-Fock or Kohn-Sham orbitals or can be localized
 with the \Key{LOCALI} keyword in the \Sec{*PROPERTIES} section.
 
+\item [\Key{SOSOSC}]\verb| |\newline
+ \verb|READ (LUCMD, * ) NSTATI,NSTATF,NITRST|\newline
+See SOSOCS option above.\newline
+ \verb|READ (LUCMD, * ) NCSSCC,NCTERM,NCMTHD,THRSLO|\newline
+     NCSSCC: is the number of SSCC's (taken from the output, i.e.
+             the 1st, 2nd, etc) to apply the convergence.\newline
+     NCTERM: The term of the SSCC, {\it i.e.} from 1 to 4 for terms
+             DSO, PSO, SD and FC, and the isotropic J itself 5.\newline
+     NCMTHD: Method of convergence to be used:\newline
+              1: Comparison between the last two values.\newline
+              2: Comparison between the last and the response value.\newline
+              3: Combination of 1 and 2 methods.\newline
+              4: Comparison with the extrapolated value from a polynomial method.\newline
+              5: Comparison with the extrapolated value from a rational method.\newline
+              6: Comparison with the extrapolated value from a splines method.\newline
+              7: Comparison with the extrapolated value from a $y = a + b\cdot tanh (c \cdot x)$
+                 function \cite{zps-ICP143-244107-2015}.\newline
+              8: Debugging-purposes only: Another fitting of method 7\newline
+     THRSLO: Threshold of the convergence in \% .\newline
+The occupied orbitals can be canonical Hartree-Fock or Kohn-Sham orbitals or can be localized
+with the \Key{LOCALI} keyword in the \Sec{*PROPERTIES} section.
+
+
 \item [\Key{SINGST}]\verb| |\newline
  \verb|READ (LUCMD, *) NSTATS|\newline
 Only the contributions from the \verb|NSTATS| lowest singlet states are

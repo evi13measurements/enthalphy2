@@ -619,10 +619,16 @@ C
 C     LMOORD   True if mo:s have to be reordered
 C     BOYORB   True if Boys localization to be used
 C     PIPORB   True if Pipek localization to be used
+CPFP-20-03-18 Keywords for PIPEK-MEZEY localization of orbitals and
+C             a extention of the default format for writing the Molecular 
+C             Orbitals just after DIIS calculation
 C
       LMOORD = .FALSE.
       BOYORB = .FALSE.
       PIPORB = .FALSE.
+      EXFOMO = .FALSE.
+C
+Cend-PFP
 C
 C     THRSSY   the threshold for identifying supersymmetries and
 C              their degeneracy based on matrix elements of the
@@ -1104,7 +1110,10 @@ C               these may be converged orbitals thus MAXCIT = 20
       END IF
       IF (MAXMAC .LT. 0) THEN
          IF (ISTATE .EQ. 1) THEN
+CPFP  Feb-2019 How to change it from DALTON.INP
             MAXMAC = 25
+C            MAXMAC = 50
+Cend-PFP
          ELSE
             MAXMAC = 40
          END IF
@@ -4178,6 +4187,10 @@ C *** Option 16 >THRSSY< read super symmetry threshold
       GO TO 100
 C
 *** Option 17 >LOCALI< localize molecular orbitals
+CPFP-2019-03-18 Addition of a keyword "" to write the molecular
+C               orbital coefitients with a format different then the default.
+C               Addition of a keyword "PIPLOC" to procide with the Pipek-Mey
+C               localization procedure.
   117 INLOC = INLOC + 1
       IF (INLOC .GT. 1) THEN
          INPERR = INPERR + 1
@@ -4201,12 +4214,16 @@ C
       ELSE IF (INDEX(REWORD,'PIPLOC') .GT. 0) THEN
          PIPORB = .TRUE.
          CALL QUIT('Pipek-Mezey localization not yet implemented')
+      ELSE IF (INDEX(REWORD,'MOEXFO') .GT. 0) THEN
+         EXFOMO = .TRUE.
+C         CALL QUIT('Write the Molecular Orbital Coefitients in an extended format')
       ELSE
          WRITE(LUPRI,'(3A/A)') '"',REWORD(1:7),'" is incorrect input'//
      *         ' after ".LOCALI"',' Select " BOYLOC" or " PIPLOC"'
          INPERR = INPERR + 1
       END IF
       GO TO 100
+Cend-PFP
 C
 C *** Option 18 >R12ORB< 
   118 READ (LUCMD,*) (NRXR12(I), I=1,NSYM)
@@ -4215,7 +4232,7 @@ C
 C ---
 C
  9000 CONTINUE
-      IF (BOYORB .OR. PIPORB .OR. BOYSEL) THEN
+      IF (BOYORB .OR. PIPORB .OR. BOYSEL .OR. EXFOMO) THEN
          IF (SUPSYM) THEN
             WRITE(LUPRI,'(/A)')
      &      'WARNING: .SUPSYM ignored because incompatible with .LOCALI'
@@ -5797,6 +5814,11 @@ C
       IF (BOYORB .AND. (DOSCF .OR. DOMC)) WRITE(IWUNIT,'(/5X,A)')
      &   'Boys localization of all doubly occupied orbitals'//
      %   ' will be performed after RHF/DFT/MCSCF'
+CPFP
+      IF (EXFOMO) WRITE(IWUNIT,'(/5X,A)')
+     &   'Extend the format of the Molecular Orbitals coefitients,'//
+     &   ' for localization purposes '
+Cend-PFP
  1100 FORMAT(/5X,'Orbital specifications',
      *       /5X,'======================',
      *       /'@    Abelian symmetry species',T38,'  All |',8I5)
