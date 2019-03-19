@@ -1997,8 +1997,6 @@ CAMT quit here to catch this...
       ENDIF
 CAMT--------------
       IF (USE_PELIB()) THEN
-        WRITE(LUPRI,'(6X,A)') 'Environment is modeled using'//
-     &                 ' the polarizable embedding scheme (PE library).'
         IF (POLAR) THEN
          WRITE (LUPRI,'(4A)') 'ERROR: .POLARI and .PEQM are not',
      &                        ' compatible. Please use either .ALPHA',
