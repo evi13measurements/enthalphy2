@@ -66,8 +66,8 @@ C
 #include "inforb.h"
 C
 CSPAS:31.05.11: MULLOC is not yet working correctly
-C      DATA TABLE /'.FOSBOY','.FBOVIR','.FBSETV','.FBSTVO','.MULLOC',
-       DATA TABLE /'.FOSBOY','.FBOVIR','.FBSETV','.FBSTVO','.XXXXXX',
+       DATA TABLE /'.FOSBOY','.FBOVIR','.FBSETV','.FBSTVO','.MULLOC',
+C       DATA TABLE /'.FOSBOY','.FBOVIR','.FBSETV','.FBSTVO','.XXXXXX',
 CKeinSPASmehr
 CPFP 17-01-2016 for Pipek
 C     &             '.FBOCIN','.FBOOCC','.LABOCC','.LABVIR','.XXXXXX'/
@@ -372,7 +372,13 @@ C
      &      '  occupied orbital(s). Non-localization for :'
             WRITE(LUPRI,*)  (NTOC2L(I),I=1,NAUXO)
          END IF
-C
+CPFP 20190321 Addition of PIPEK-MEZEY Localization of MO's
+         IF (PIPEKL) THEN
+            WRITE (LUPRI,'(/,2X,A,I5,A,/)')
+     &      ' PIPEKL: Pipek-Mezey localization of all',
+     &      ' occupied orbitals'
+         END IF
+Cend-PFP
          IF (LABOCC) THEN
             WRITE (LUPRI,'(/,2X,A,A,/)')
      &      ' LABOCC: Labels are added to localized occupied',
@@ -800,8 +806,6 @@ C         IF(CHANGE.GE.TENM10) GO TO 360
 C
 C          FINISHED WITH LOCALIZATION CYCLES
 C
-
-C
 C        TRANSFORM TO FINAL ORBITALS, COPY VIRTUAL SPACE
 C
 C      write(17,*)'sub poploc-line 274'
@@ -813,20 +817,21 @@ C      CALL MRARBR(VECIN,m,m,m,CL,m,m,VECOUT,m)
 C      write(17,*)'sub poploc-line 279'
 C      stop
 C
-C LLEVO VECOUT(NBA,NBA) A LA FORMA CMO
-       K=0
-      DO J=1,NLOC
-       DO I=1,NBASIS
-        K=K+1
-         CMO(K)=VECOUT(I,J)
+C      Take VECOUT(NBA,NBA) to the form CMO
+C
+      K = 0
+      DO J = 1, NLOC
+       DO I = 1, NBASIS
+        K = K + 1
+         CMO(K) = VECOUT(I,J)
        END DO
       END DO
 C
-      K=NLOC*NBASIS
-      DO J=NLOC+1,NBASIS
-       DO I=1,NBASIS
-        K=K+1
-         CMO(K)=VECIN(I,J)
+      K = NLOC*NBASIS
+      DO J = NLOC+1, NBASIS
+       DO I = 1, NBASIS
+        K = K + 1
+         CMO(K) = VECIN(I,J)
        END DO
       END DO
 
@@ -920,7 +925,7 @@ C
      &                   WORK(KIAMN),WORK(KIPR))
 C
 C--------------------------------------------------------
-C           Here we make the transformation from symmetry 
+C           Here we make the transformation from symmetry
 C           orbitals to cgto's orbitals (POPTRA)
 C--------------------------------------------------------
 C
@@ -928,8 +933,8 @@ C
      &                   WORK(KJTRAN),WORK(KITRAN),WORK(KCTRAN),
      &                   WORK(KMOG),WORK(KSS1))
 C
-C--------------------------------------------------- 
-C           Here we calculated the matrix population 
+C---------------------------------------------------
+C           Here we calculated the matrix population
 C           PAST betwen two molecular orbitals
 C---------------------------------------------------
 C
@@ -937,7 +942,7 @@ C
      &                   WORK(KNUMB),WORK(KMOG),WORK(KSS1))
 C
 C-----------------------------------------------
-C           Finally we proceed with localization 
+C           Finally we proceed with localization
 C           method and we obtain SS -> CLOCO
 C-----------------------------------------------
 C

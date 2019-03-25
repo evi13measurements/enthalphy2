@@ -620,7 +620,7 @@ C     LMOORD   True if mo:s have to be reordered
 C     BOYORB   True if Boys localization to be used
 C     PIPORB   True if Pipek localization to be used
 CPFP-20-03-18 Keywords for PIPEK-MEZEY localization of orbitals and
-C             a extention of the default format for writing the Molecular 
+C             a extention of the default format for writing the Molecular
 C             Orbitals just after DIIS calculation
 C
       LMOORD = .FALSE.
@@ -1110,7 +1110,7 @@ C               these may be converged orbitals thus MAXCIT = 20
       END IF
       IF (MAXMAC .LT. 0) THEN
          IF (ISTATE .EQ. 1) THEN
-CPFP  Feb-2019 How to change it from DALTON.INP
+CPFP  Feb-2019 How to change this from DALTON.INP ??
             MAXMAC = 25
 C            MAXMAC = 50
 Cend-PFP
@@ -4185,10 +4185,17 @@ C *** Option 16 >THRSSY< read super symmetry threshold
       GO TO 100
 C
 *** Option 17 >LOCALI< localize molecular orbitals
-CPFP-2019-03-18 Addition of a keyword "" to write the molecular
+CPFP-2019-03-18 Addition of a keyword "BOYORB" to write the molecular
 C               orbital coefitients with a format different then the default.
-C               Addition of a keyword "PIPLOC" to procide with the Pipek-Mey
+C               Addition of a keyword "PIPLOC" to procide with the Pipek-Mezey
 C               localization procedure.
+C               Addition of a keyword "BOYSEL" to procide with the selection
+C               of the MO's to be localized within BOYORB.
+C               localization procedure.
+C               Addition of a keyword "EXFOMO" to expand the format of the
+C               MO's writen just below DIIS.
+C               Addition of a keyword "..." to procide with ...
+C
   117 INLOC = INLOC + 1
       IF (INLOC .GT. 1) THEN
          INPERR = INPERR + 1
@@ -4214,7 +4221,6 @@ C               localization procedure.
          CALL QUIT('Pipek-Mezey localization not yet implemented')
       ELSE IF (INDEX(REWORD,'MOEXFO') .GT. 0) THEN
          EXFOMO = .TRUE.
-C         CALL QUIT('Write the Molecular Orbital Coefitients in an extended format')
       ELSE
          WRITE(LUPRI,'(3A/A)') '"',REWORD(1:7),'" is incorrect input'//
      *         ' after ".LOCALI"',' Select " BOYLOC" or " PIPLOC"'

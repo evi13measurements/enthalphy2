@@ -968,9 +968,10 @@ C
 C
 C     Local arrays:
 C
-CPFP
-C      PARAMETER (MAXVEC = 120)
-      PARAMETER (MAXVEC = 800)
+CPFP 17-01-2017 Needed for SOS-module
+C    Use the largest for Localization of MO's
+      PARAMETER (MAXVEC = 120)
+C      PARAMETER (MAXVEC = 800)
 Cend-PFP
       DIMENSION JLDP(MAXVEC)
 C
