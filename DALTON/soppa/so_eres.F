@@ -997,10 +997,13 @@ C           Calculate and add the Fock-term to A in eq. (40).
 C---------------------------------------------------------
 C
             DTIME      = SECOND()
+C aksp for testing current DIRAC implementation of HRPA
+C comment out function call to SO_RES_FCK below
             CALL SO_RES_FCK(WORK(KRES1E),LRES1E,WORK(KRES1D),LRES1D,
      &                      WORK(KTR1E),LTR1E,WORK(KTR1D),
      &                      LTR1D,FOCKD,LFOCKD,DENSIJ,LDENSIJ,DENSAB,
      &                      LDENSAB,ISYRES,ISYMTR,DO_DEX)
+
 
             DTIME      = SECOND()   - DTIME
             SOTIME(21) = SOTIME(21) + DTIME

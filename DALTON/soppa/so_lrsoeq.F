@@ -268,6 +268,8 @@ C
          CALL GETTIM (DUMMY,WTIMES)
          DTIME      = SECOND()
          IF (MODEL .EQ. 'AORPA') THEN
+C aksp debug for dirac
+            WRITE(LUPRI,*)'calling so_sres for model eq aorpa'
             CALL SO_SRES(NOLDTR,NNEWTR,DENSIJ,LDENSIJ,DENSAB,LDENSAB,
      &                   ISYMTR,WORK(KEND1),LWORK1)
          ENDIF

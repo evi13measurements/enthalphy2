@@ -2617,7 +2617,7 @@ C
       END
 C  /* Deck spires */
       SUBROUTINE SPIRES(SPNDSO,SPNPSO,SPNSD,SPNFC,SPSDFC,
-     &                  WORK,LWORK)
+     &                  WORK,LWORK,MDLNM)
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
@@ -2626,6 +2626,7 @@ C  /* Deck spires */
      &          SPNSD (MXCOOR,MXCOOR), SPNFC (MXCOOR,MXCOOR),
      &          SPSDFC(MXCOOR,MXCOOR)
       DIMENSION WORK(LWORK)
+      CHARACTER MDLNM*14
 C
 C Allocate necessary work space
 C
@@ -2641,12 +2642,14 @@ C
       IF (KLAST .GT. LWORK) CALL STOPIT('SPIRES',' ',KLAST,LWORK)
       CALL SPIRE1(SPNDSO,SPNPSO,SPNSD,SPNFC,SPSDFC,
      &            WORK(KCHES),WORK(KISOT),WORK(KANIS),WORK(KASYM),
-     &            WORK(KSPAR),WORK(KAPAR),WORK(KCSTRA),WORK(KSCTRA))
+     &            WORK(KSPAR),WORK(KAPAR),WORK(KCSTRA),WORK(KSCTRA),
+     &            MDLNM)
       RETURN
       END
 C  /* Deck spire1 */
       SUBROUTINE SPIRE1(SPNDSO,SPNPSO,SPNSD,SPNFC,SPSDFC,CHESS,
-     &                  AVEISO,ANISO,ASYM,SPAR,APAR,CSTRA,SCTRA)
+     &                  AVEISO,ANISO,ASYM,SPAR,APAR,CSTRA,SCTRA,
+     &                  MDLNM)
 #include "implicit.h"
 #include "priunit.h"
 #include "dummy.h"
@@ -2655,6 +2658,7 @@ C  /* Deck spire1 */
       PARAMETER (AUTOHZ = ALPHA2*ALPHA2/(4*XFAMU*XFAMU*PMASS*PMASS)
      &                   *XTHZ)
       LOGICAL TEST
+      CHARACTER MDLNM*14
 #include "mxcent.h"
 #include "maxaqn.h"
 #include "maxorb.h"
@@ -2734,9 +2738,9 @@ C
 C     *** Final indirect spin-spin coupling analysis. ***
 C
       IF (SPNISO) THEN
-         CALL ISOSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR)
+         CALL ISOSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR,MDLNM)
       ELSE
-         CALL FNLSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR)
+         CALL FNLSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR,MDLNM)
       END IF
 C
 C     *****************************************************
@@ -2753,7 +2757,8 @@ C
 C
 C
 C  /* Deck isospn */
-      SUBROUTINE ISOSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR)
+      SUBROUTINE ISOSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR,MDLNM)
+C aksp added MDLNM
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
@@ -2764,12 +2769,15 @@ C  /* Deck isospn */
       PARAMETER (D3 = 3.0D0, D0 = 0.0D0)
       PARAMETER (AUTOHZ = ALPHA2*ALPHA2/(4*XFAMU*XFAMU*PMASS*PMASS)
      &                   *XTHZ)
-      CHARACTER LAPRPC*8, LANAM1*8, LANAM2*8
+      CHARACTER LAPRPC*8, LANAM1*8, LANAM2*8, MDLNM*14
+C aksp added MDLNM
 #include "dorps.h"
 #include "nuclei.h"
 #include "symmet.h"
 #include "spnout.h"
 #include "abainf.h"
+Caksp added infrsp.h for SOPPA
+#include "infrsp.h"
       LOGICAL TEST
       DIMENSION CHESS(3*NUCDEP,3*NUCDEP,6),
      &                AVEISO(NUCDEP*(NUCDEP + 1)/2,5),
@@ -2876,9 +2884,18 @@ C
                   IATIJ = IATOM1*(IATOM1 -1 )/2 + IATOM2
                   NZ1 = IZATOM(I1)
                   NZ2 = IZATOM(I2)
-                  CALL TITLER('Indirect spin-spin coupling between '//
+C aksp added MDLNM//
+                  IF (SOPPA) THEN
+                     CALL TITLER(MDLNM//
+     &               'Indirect spin-spin coupling between '//
      &               NAMDEP(IATOM1)//' and '//
      &               NAMDEP(IATOM2)//':','=',-1)
+                  ELSE
+                     CALL TITLER(
+     &               'Indirect spin-spin coupling between '//
+     &               NAMDEP(IATOM1)//' and '//
+     &               NAMDEP(IATOM2)//':','=',-1)
+                  ENDIF
                   GVAL1 = DISOTP(NZ1,ISOTPS(IATOM1),'GVAL')
                   IF (GVAL1 .NE. 0) THEN
                      GVAL2 = DISOTP(NZ2,ISOTPS(IATOM2),'GVAL')
@@ -2972,7 +2989,8 @@ C
 C
 C
 C  /* Deck fnlspn */
-      SUBROUTINE FNLSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR)
+      SUBROUTINE FNLSPN(CHESS,AVEISO,ANISO,ASYM,SPAR,APAR,MDLNM)
+Caksp added MDLNM
 #include "implicit.h"
 #include "priunit.h"
 #include "mxcent.h"
@@ -2987,6 +3005,8 @@ C  /* Deck fnlspn */
 #include "nuclei.h"
 #include "symmet.h"
 #include "spnout.h"
+Caksp added infrsp.h for SOPPA
+#include "infrsp.h"
       LOGICAL TEST
       DIMENSION CHESS(3*NUCDEP,3*NUCDEP,6),
      &                AVEISO(NUCDEP*(NUCDEP + 1)/2,5),
@@ -2995,6 +3015,8 @@ C  /* Deck fnlspn */
      &                SPAR  (NUCDEP*(NUCDEP + 1)/2  ),
      &                APAR  (NUCDEP*(NUCDEP + 1)/2  ),
      &                COUPLM(3,3)
+      CHARACTER MDLNM*14
+C aksp added MDLNM
 
 C
 C     *** Calculate the various spin parameters. ***
@@ -3093,9 +3115,18 @@ C
                   IATIJ = IATOM1*(IATOM1 -1 )/2 + IATOM2
                   NZ1 = IZATOM(I1)
                   NZ2 = IZATOM(I2)
-                  CALL TITLER('Indirect spin-spin coupling between '//
+Caksp added MDLNM
+                  IF (SOPPA)THEN
+                     CALL TITLER(MDLNM//
+     &               'Indirect spin-spin coupling between '//
      &               NAMDEP(IATOM1)//' and '//
      &               NAMDEP(IATOM2)//':','=',-1)
+                  ELSE
+                     CALL TITLER(
+     &               'Indirect spin-spin coupling between '//
+     &               NAMDEP(IATOM1)//' and '//
+     &               NAMDEP(IATOM2)//':','=',-1)
+                  ENDIF
                   TEST = .FALSE.
                   DO 90 ISO1 = 1, 5
                      GVAL1 = DISOTP(NZ1,ISO1,'GVAL')

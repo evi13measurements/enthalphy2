@@ -25,7 +25,10 @@ C
 C  /* Deck abactl */
       SUBROUTINE ABACTL(WORK,LWORK)
 C
-      USE SO_INFO, ONLY: SO_NUM_ACTIVE_MODELS, SO_ANY_ACTIVE_MODELS
+      USE SO_INFO, ONLY: SO_NUM_ACTIVE_MODELS, SO_ANY_ACTIVE_MODELS,
+     &                   SOP_NUM_MODELS, SO_GET_ACTIVE_MODELS,
+     &                   SOP_MODEL_RPA,SOP_MODEL_RPAD, SOP_MODEL_HRPAD
+Caksp added SOP_NUM_MODELS, SO_GET_ACTIVE_MODELS, SOP_MODEL_RPA, SOP_MODEL_RPAD, SOP_MODEL_HRPAD
       use pelib_interface, only: use_pelib
 C
 #include "implicit.h"
@@ -36,6 +39,9 @@ C
 #include "dummy.h"
       PARAMETER (D0 = 0.0D0)
       DIMENSION WORK(LWORK)
+      INTEGER NTURN
+      logical :: active_models(sop_num_models)
+Caksp added NTURN and active models(sop_num_models)
 C
 #include "abainf.h"
 #include "cbisol.h"
@@ -64,7 +70,7 @@ C
       LOGICAL PROPTY, OLDDX, DFTADX
 #include "past.h"
 C
-      CHARACTER LABEL1*8, STHELP*10
+      CHARACTER LABEL1*8, STHELP*10,MDLNM*14
 C---------------------------------------------------------------------
 C
       IF (SKIPAB) RETURN
@@ -308,13 +314,20 @@ C     ***** Relaxation terms (singlet) *****
 C     **************************************
 C
       CALL GETTIM(TIMSTR,TIMDUM)
+C aksp add
+      CALL SO_GET_ACTIVE_MODELS(ACTIVE_MODELS)
+C
+      NTURN = 1
+1010  CONTINUE
+C aksp add end
       IF (.NOT. PASREL) THEN
       IF (MOLHES .OR. SHIELD .OR. MAGSUS .OR. VCD .OR.
      &    DIPDER .OR. POLAR .OR. QPGRAD .OR. (SPNSPN .AND. DOPSO) .OR.
      &    ECD .OR. VROA .OR. MOLGFA .OR. SPINRO .OR. OPTROT
      &    .AND. .NOT. USE_PELIB()) THEN
          CALL RELAX(WORK(KPSO),WORK(KSD),WORK(KFC),WORK(KSDFC),
-     &              WORK(KLAST),LWRK,PASREL,.FALSE.)
+     &              WORK(KLAST),LWRK,PASREL,.FALSE.,NTURN,MDLNM)
+C aksp added NTURN and MDLNM to RELAX
          IF (PASREL) CALL ABAWRIT_RESTART
          CALL FLSHFO(LUPRI)
       END IF
@@ -327,7 +340,8 @@ C
       IF (.NOT. PASRTR) THEN
       IF (SPNSPN .AND. (DOSD .OR. DOFC .OR. DOSDFC) ) THEN
          CALL RELAX(WORK(KPSO),WORK(KSD),WORK(KFC),WORK(KSDFC),
-     &              WORK(KLAST),LWRK,PASRTR,.TRUE.)
+     &              WORK(KLAST),LWRK,PASRTR,.TRUE.,NTURN,MDLNM)
+C aksp added NTURN  and MDLNM to relax
          IF (PASRTR) CALL ABAWRIT_RESTART
          CALL FLSHFO(LUPRI)
       END IF
@@ -660,10 +674,22 @@ CClark:end
      &            WORK(KSECMT),
      &            WORK(KRMLEN),WORK(KRQLEN),WORK(KRLEN),
      &            WORK(KRMVEL),WORK(KRQVEL),WORK(KRVEL),
-     &            WORK(KSLEN),WORK(KSVEL),WORK(KLAST),LWRK3)
+     &            WORK(KSLEN),WORK(KSVEL),WORK(KLAST),LWRK3,MDLNM)
       IF (IPRDEF .GE. 0)
      &   CALL GEOANA(CORD,.TRUE.,.FALSE.,NBONDS,-1,WORK(KLAST),LWRK3)
       CALL FLSHFO(LUPRI)
+C aksp add
+      IF (ACTIVE_MODELS(SOP_MODEL_RPAD).OR.
+     &   ACTIVE_MODELS(SOP_MODEL_HRPD)) THEN
+         IF (NTURN.LT.4) THEN
+            NTURN = NTURN +1
+            PASREL = .FALSE.
+            PASRTR = .FALSE.
+            GOTO 1010
+         ENDIF
+      ENDIF
+C aksp add end
+
 C
 C     *************************
 C     ***** Geometry walk *****
@@ -2292,7 +2318,7 @@ CClark:11/01/2016
 CClark:end
      &                  FONAC,FONA2,FOVIBG,SECMAT,
      &                  RMLEN,RQLEN,RLEN,RMVEL,RQVEL,RVEL,SLEN,SVEL,
-     &                  WORK,LWORK)
+     &                  WORK,LWORK,MDLNM)
 C
 C --- Final results from ABACUS ---
 C
@@ -2326,6 +2352,7 @@ CClark:end
      &          RMLEN(*), RQLEN(*), RLEN(*),
      &          RMVEL(*), RQVEL(*), RVEL(*), SLEN(*), SVEL(*)
       LOGICAL OD, FIRST
+      CHARACTER MDLNM*14
 #include "gnrinf.h"
 #include "abainf.h"
 #include "nuclei.h"
@@ -2836,7 +2863,7 @@ C
 C     Spin-spin-couplings constants
 C
       IF (SPNSPN) THEN
-         CALL SPIRES(SPNDSO,SPNPSO,SPNSD,SPNFC,SPSDFC,WORK,LWORK)
+         CALL SPIRES(SPNDSO,SPNPSO,SPNSD,SPNFC,SPSDFC,WORK,LWORK,MDLNM)
       END IF
 
       CALL ABAWRIT_TAYMOL(ERGMOL,GRDMOL,HESMOL,NCOOR)

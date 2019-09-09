@@ -125,7 +125,9 @@ C
       RETURN
       END
 C  /* Deck relax */
-      SUBROUTINE RELAX(SPNPSO,SPNSD,SPNFC,SPSDFC,WORK,LWORK,PASS,DOTRPL)
+      SUBROUTINE RELAX(SPNPSO,SPNSD,SPNFC,SPSDFC,WORK,LWORK,PASS,DOTRPL,
+     &                 NTURN,MODEL)
+CNTURN added by aksp
 C
 C     Written 23-jan-1985 Hans Joergen Aa. Jensen
 C     Modified 14-jun-1985 tuh
@@ -144,6 +146,10 @@ C
 C
       LOGICAL PASS, OLDDX, DOREAL, DOIMAG, DOSEL, DOTRPL, SELLER
       DIMENSION SPNPSO(*),SPNSD(*), SPNFC(*), SPSDFC(*), WORK(LWORK)
+C aksp add
+      INTEGER NTURN
+      CHARACTER MODEL*14
+C aksp add end
 
 #ifdef VAR_G95
       real(8), allocatable :: fc_contribution(:, :)
@@ -369,7 +375,9 @@ C
                   ELSE
                      IMODE_SO = ITYPE
                   END IF 
-                  CALL SO_READPROP(WORK(KREL),NVEC,IMODE_SO,ISYM)
+                  CALL SO_READPROP2(MODEL,WORK(KREL),NVEC,IMODE_SO,ISYM,
+     &                              NTURN)
+C aksp using so_readprop2 rather than so_readprop
                ELSE IF (SELLER) THEN
                   CALL ABASEL(WORK(KREL),WORK(KWRK),LWRK,NVEC,DOSEL,
      &                        SYMTST,LUGD,LURD,ITYPE,

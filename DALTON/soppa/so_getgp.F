@@ -145,6 +145,8 @@ C     Calculate second order contribution to 1p-1h part of the
 C     gradient property vector.
 C-------------------------------------------------------------
 C
+C aksp for testing current HRPA implementation in DIRAC comment out
+C the call to SO_SECGP
       CALL SO_SECGP(GPVC1,LGPVC1H,WORK(KPRP1),LPRP1,ISYMTR,DENSIJ,
      &              LDENSIJ,DENSAB,LDENSAB,DENSAI,LDENSAI)
 C     HRPA calculations should stop here, right?

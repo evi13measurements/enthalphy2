@@ -72,7 +72,8 @@ C
       CHARACTER(len=65), parameter :: dashl = ' -------------------'//
      &               '---------------------------------------------'
 C
-      LOGICAL DOUBLE_CORR
+      LOGICAL DOUBLE_CORR, DCALC
+C DCALC added by AKSP
       character(len=9), parameter :: myname = 'SO_RSPLRS'
       integer :: num_active
       logical :: active_models(sop_num_models)
@@ -111,6 +112,8 @@ C      ACTIVE_MODELS(SOP_MODEL_RPAD)=.FALSE.
          ACTIVE_MODELS(SOP_MODEL_HRPA)=.TRUE.
       END IF
 C end AKSP 7-3-17
+C aksp add dcalc default
+      DCALC = .FALSE.
       NUM_ACTIVE = COUNT ( ACTIVE_MODELS )
 C
       RPA_ONLY = ACTIVE_MODELS(SOP_MODEL_RPA) .AND.
@@ -231,8 +234,8 @@ C
       CALL SO_PRPINT('LINEAR',NLBTOT,WORK(KEND1),LWORK1)
 C
 C     Find some otherway of setting this?
-C
-      NSAVMX = 3
+CAKSP we don't want to overwrite user input:
+C      NSAVMX = 3
       WRITE(LUPRI,'(/,1X,A,I2,/)')
      &'Maximum number of trial vectors for each'//
      &' property is ',NSAVMX
@@ -335,10 +338,12 @@ C while sop_use_seller is true
             IF (ACTIVE_MODELS(SOP_MODEL_RPAD)
      &          .AND.(MODEL.EQ.'AORPA'))THEN
                SOP_USE_SELLER =.TRUE.
+               DCALC = .TRUE.
             END IF
             IF(ACTIVE_MODELS(SOP_MODEL_HRPAD)
      &          .AND.(MODEL.EQ.'AOHRP'))THEN
                SOP_USE_SELLER = .TRUE.
+               DCALC = .TRUE.
             END IF
 CAKSP 7-3-17 if doubles correction model iterative calculations
 C are not needed - they have been made.
@@ -431,7 +436,24 @@ CAKSP 7-3-17 if RPA(D)
 C
             IF ((IMODE.GT.0).AND.LAST_MODEL) THEN
                WRITE(LU_DUMP) ISYM
+Caksp add
+               WRITE(LU_DUMP) MODEL//'        :'
+Caksp add end
                WRITE(LU_DUMP) WORK(KPROP:KPROP+LPROP-1)
+Caksp add
+               IF (DOUBLE_CORR) THEN
+                  WRITE(LU_DUMP) ISYM
+                  WRITE(LU_DUMP) MODEL//' singles:'
+                  WRITE(LU_DUMP) WORK(KPROP1:KPROP1+LPROP-1)
+                  WRITE(LU_DUMP) ISYM
+                  WRITE(LU_DUMP) MODEL//' doubles:'
+                  WRITE(LU_DUMP) WORK(KPROP2:KPROP2+LPROP-1)
+               ENDIF
+            ELSEIF (DCALC.AND.(IMODE.GT.0)) THEN
+                  WRITE(LU_DUMP) ISYM
+                  WRITE(LU_DUMP) MODEL//'        :'
+                  WRITE(LU_DUMP) WORK(KPROP:KPROP+LPROP-1)
+C aksp add end
             ELSE
 CAKSP For doubles corrected model write out singles and doubles
 C     contributions
@@ -647,6 +669,44 @@ C     We now have all info for SO_RSPLRS
          if (this_sym .eq. isym) exit
          read (lu, end=900)
       end do
+      read (lu) rel
+C     This factor is needed for triplet properties...
+      if (imode.eq.3) rel = -0.25D0*rel
+
+      CALL GPCLOSE(lu,'KEEP')
+      return
+
+ 900  CALL QUIT('ERROR reading file '//fn_prop(imode))
+
+      END SUBROUTINE
+
+      SUBROUTINE SO_READPROP2(MODEL,REL,NOP,IMODE,ISYM,NTURN)
+
+      use so_info, only: fn_prop, sop_dp
+      implicit none
+      real(sop_dp), intent(out) :: rel(nop,nop)
+      integer, intent(in) :: nop, imode, isym, nturn
+      integer :: lu, idummy, this_sym, n
+      logical :: ldummy
+      CHARACTER MODEL*14, MDLDM*14
+      REAL RELDM(NOP,NOP)
+
+      LU = -1
+      n=0
+      CALL GPOPEN(LU, fn_prop(imode),'OLD',' ',
+     &            'UNFORMATTED',IDUMMY,LDUMMY)
+      rewind(lu)
+      do
+         read (lu, end=900) this_sym
+         if (this_sym .eq. isym) then
+            n=n+1
+            if (n .eq. nturn) goto 1111
+         endif
+         read (lu, end=900) mdldm
+         read (lu, end=900) reldm
+      end do
+1111  continue
+      read (lu) model
       read (lu) rel
 C     This factor is needed for triplet properties...
       if (imode.eq.3) rel = -0.25D0*rel

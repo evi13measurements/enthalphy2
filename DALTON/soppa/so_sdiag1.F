@@ -47,6 +47,8 @@ C
 C
                KOFFAB = KOFF2 + NVIR(ISYMA)*(A-1) + A
                KOFFAI = KOFF3 + NVIR(ISYMA)*(I-1) + A
+Caksp for testing current DIRAC HRPA commnt out
+C" + DENSIJ(KOFFIJ) - DENSAB(KOFFAB)" below
 C
                DIAG1(KOFFAI) = ONE + DENSIJ(KOFFIJ) - DENSAB(KOFFAB)
 C
