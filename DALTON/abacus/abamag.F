@@ -1321,7 +1321,6 @@ C              8: Debugging-purposes only: Another fitting of method 7
  20            CONTINUE
                GOTO 100
 Cend-PFP
-Cend-PFP
             ELSE IF (PROMPT .EQ. '*') THEN
                GOTO 300
             ELSE
