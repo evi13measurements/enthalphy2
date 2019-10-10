@@ -20,8 +20,6 @@
 !      in the CC module for address pointers)
 
       INTEGER    MXCORB_CC
-!PFP usefull for Local-auto
-       PARAMETER (MXCORB_CC = 600 )
-!       PARAMETER (MXCORB_CC = 1200 )
-!end-PFP
+      PARAMETER (MXCORB_CC = 600 )
+
 ! -- end of maxorb.h --
