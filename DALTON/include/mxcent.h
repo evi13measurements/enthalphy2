@@ -12,8 +12,5 @@
 !     around 2000 - 3000!!! Remember to set MXQM3 = MXCENT_QM in qm3.h!!!
 !
       INTEGER MXCENT_QM, MXCENT, MXCOOR
-!PFP Useful for Local-auto
-!      PARAMETER (MXCENT_QM = 1500, MXCENT = 1500, MXCOOR = 3*MXCENT)
       PARAMETER (MXCENT_QM = 500, MXCENT = 500, MXCOOR = 3*MXCENT)
-!end-PFP
 ! -- end of mxcent.h --
