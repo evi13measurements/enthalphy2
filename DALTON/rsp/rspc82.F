@@ -3213,11 +3213,7 @@ C
       LOGICAL BINMEM
       DIMENSION XINDX(*),FCAC(*),H2AC(*)
 C
-CPFP 17-01-2017 Needed for SOS-module
-C    Use the largest for Localization of MO's
       PARAMETER (MAXST=400)
-C      PARAMETER (MAXST=1500)
-Cend-PFP
       DIMENSION STVAL(MAXST),ISTART(MAXST),IEQUAL(MAXST)
 C
 #include "ibndxdef.h"
