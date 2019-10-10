@@ -3168,7 +3168,6 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of E[2] reduced matrix'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
-Cend-PFP
          END IF
          IF (IPRRSP .GE. 10) THEN
             IF (IPRRSP .GE. 25) THEN
