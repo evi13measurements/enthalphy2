@@ -3143,7 +3143,6 @@ C
             NNZYRED = (KZYRED*(KZYRED+1))/2
             CALL DCOPY(NNZYRED,REDS,1,BCVEC,1)
             WRITE (lupri,*) 'S[2] reduced matrix'
-CPFP  It is necessary to avoid writing the matrices within SOSOSC!
             CALL outpak(bcvec,kzyred,-1,lupri)
             CALL JACO(BCVEC,BCVEC(KK1),KZYRED,KZYRED,0,
      &          BCVEC(KK2),BCVEC(KK3))
