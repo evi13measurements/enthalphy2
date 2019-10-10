@@ -13,10 +13,7 @@
       PARAMETER (MXSHEL = 1500, MXPRIM = 15000 )
 !PFP  usefull for Local-auto
       PARAMETER (MXCORB = 5000, MXORBT = MXCORB*(MXCORB + 1)/2 )
-       PARAMETER (MAXOCC = 1500 )
-!       PARAMETER (MXCORB = 10000, MXORBT = MXCORB*(MXCORB + 1)/2 )
-!       PARAMETER (MAXOCC = 2500 )
-!end-PFP
+      PARAMETER (MAXOCC = 1500 )
 
 !     MXCORB_CC = max number of orbitals in CC modules
 !     (normally less than MXCORB because of a lot of static allocations
