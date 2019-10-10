@@ -1110,10 +1110,7 @@ C               these may be converged orbitals thus MAXCIT = 20
       END IF
       IF (MAXMAC .LT. 0) THEN
          IF (ISTATE .EQ. 1) THEN
-CPFP  Feb-2019 How to change this from DALTON.INP ??
             MAXMAC = 25
-C            MAXMAC = 50
-Cend-PFP
          ELSE
             MAXMAC = 40
          END IF
