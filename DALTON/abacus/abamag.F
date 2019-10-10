@@ -1407,7 +1407,6 @@ CPFP: 27/03-2006: SOS for spin-spin coupling included
       NITRST= 0
 CPFP 03-12-2015 Including the automatic convergence
       SOSOCC= .FALSE.
-C      SINGUL= .FALSE.
       NCSSCC=0
       THRSLO=1.0D0
       NCMTHD=0
