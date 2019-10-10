@@ -1411,7 +1411,6 @@ CPFP 03-12-2015 Including the automatic convergence
       THRSLO=1.0D0
       NCMTHD=0
 Cend-PFP
-Cend-PFP
       RETURN
       END
 C  /* Deck trpinp */
