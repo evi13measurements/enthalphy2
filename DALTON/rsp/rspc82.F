@@ -3154,7 +3154,6 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of S[2] reduced matrix'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
-Cend-PFP
             CALL DCOPY(NNZYRED,REDE,1,BCVEC,1)
             WRITE (lupri,*) 'E[2] reduced matrix'
 CPFP  It is necessary to avoid writing the matrices within SOSOSC!
