@@ -5820,7 +5820,7 @@ C
      %   ' will be performed after RHF/DFT/MCSCF'
 CPFP
       IF (EXFOMO) WRITE(IWUNIT,'(/5X,A)')
-     &   'Extend the format of the Molecular Orbitals coefitients,'//
+     &   'Extend the format of the molecular orbital coefficients,'//
      &   ' for localization purposes '
 Cend-PFP
  1100 FORMAT(/5X,'Orbital specifications',
