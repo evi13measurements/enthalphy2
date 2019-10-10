@@ -2004,7 +2004,6 @@ CAMT--------------
      &                        ' frequency to zero.'
          CALL QUIT('ERROR: .POLARI and .PEQM are not compatible'//
      &             ' (see output file for more details)')
-
         END IF
         IF ((MAGSUS .OR. MOLGFA) .AND. .NOT. NOLOND) THEN
          WRITE (LUPRI,'(4A)') 'ERROR: .MAGNET and .MOLGFA are not',
