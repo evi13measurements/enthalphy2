@@ -1912,6 +1912,12 @@ See SOSOCS option above.\newline
 The occupied orbitals can be canonical Hartree-Fock or Kohn-Sham orbitals or can be localized
 with the \Key{LOCALI} keyword in the \Sec{*PROPERTIES} section.
 
+Warning: To run calculations with localization, with a razonable basis set, it is necessary to
+increase, around twice the default values at least, the following parameters MXCORB, MAXOCC,
+MXCORB_CC, MXCENT_QM, MXQM3, MAXST, MAXMAC and MAXVEC in the corresponding files maxorb.h,
+mxcent.h, qm3.h, rspc82.F, sirinp.F and mcdrsp.F respectively. Such an increase produces fails of
+the following test cases: geoopt_preopt, geoopt_prop, geoopt_freeze, prop_vibg1, prop_vibg2 and
+pehf_molgrad and, in concecuenses, all calculation related with these items.
 
 \item [\Key{SINGST}]\verb| |\newline
  \verb|READ (LUCMD, *) NSTATS|\newline

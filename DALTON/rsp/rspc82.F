@@ -2775,6 +2775,9 @@ C
 #include "maxorb.h"
 #include "maxash.h"
 #include "priunit.h"
+CPFP to include EXFOMO for the conditinal when runing local-auto
+#include "infinp.h"
+Cend-PFP
 #include "inftap.h"
 #include "infrsp.h"
 #include "wrkrsp.h"
@@ -3141,6 +3144,11 @@ C
          IF (ISNDX(2) .GT. 0 .OR. ISNDX(1) .NE. ISNDX(3) .OR.
      &       IPRRSP .GE. 30) THEN
             NNZYRED = (KZYRED*(KZYRED+1))/2
+CPFP  It is necessary to avoid writing the matrices within SOSOSC!
+           IF (EXFOMO) THEN
+             WRITE (lupri,*) 'Avoid writing S[2] reduced matrix'
+             WRITE (lupri,*) 'Avoid writing E[2] reduced matrix'
+           ELSE
             CALL DCOPY(NNZYRED,REDS,1,BCVEC,1)
             WRITE (lupri,*) 'S[2] reduced matrix'
             CALL outpak(bcvec,kzyred,-1,lupri)
@@ -3165,6 +3173,8 @@ C           CALL JACO(F,V,NB,NMAX,NROWV,BIG,JBIG)
             ! CALL ORDER(WRK,BCVEC,KZYRED,0)
             WRITE(LUPRI,*) 'The eigenvalues of E[2] reduced matrix'
             CALL OUTPUT(BCVEC,1,2,1,KZRED,2,KZRED,-1,LUPRI)
+           END IF
+Cend-PFP
          END IF
          IF (IPRRSP .GE. 10) THEN
             IF (IPRRSP .GE. 25) THEN
